@@ -1,11 +1,15 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { Test } from './test/test';
-import { App } from './app';
+import { Test1 } from './test1/test1';
+import { Unauthorized } from './unauthorized/unauthorized';
+import { LoginComponent } from './login/login';
+import { AuthGuard } from './auth/auth';
+import { RoleGuard }      from './auth/role.guard';
 
 export const routes: Routes = [
-  { path: 'test', component: Test },
-  // you can keep your existing home component or point '' to Test
-  { path: '', redirectTo: 'test', pathMatch: 'full' },
-  { path: '**', redirectTo: 'test' }
+  { path: 'login', component: LoginComponent },
+  { path: 'test', component: Test, canActivate: [AuthGuard, RoleGuard] },
+  { path: 'test1', component: Test1, canActivate: [AuthGuard, RoleGuard], data: { permission: 'test1' } },
+  { path: 'unauthorized', component: Unauthorized },
+  { path: '**', redirectTo: '' }
 ];
