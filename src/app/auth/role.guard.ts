@@ -11,13 +11,15 @@ export class RoleGuard implements CanActivate {
   private router = inject(Router);
 
   async canActivate(route: ActivatedRouteSnapshot): Promise<boolean> {
-    const perm = route.data['permission'] as string;
-    await this.authz.loadPermissions();
-    if (this.authz.hasPermission(perm)) {
-      return true;
-    }
-    // Optionally navigate to a “not authorized” page
+  const perm = route.data['permission'] as string;
+  const roles = await this.authz.loadPermissions();
+  
+  console.log('🛡 RoleGuard checking for', perm, 'against', roles);
+  if (roles.includes(perm)) {
+    return true;
+  } else {
     this.router.navigate(['/unauthorized']);
     return false;
   }
+}
 }

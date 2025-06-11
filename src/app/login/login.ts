@@ -41,8 +41,15 @@ export class LoginComponent implements OnInit {
   }
 
   verifyOTP() {
-    this.confirmation.confirm(this.otp)
-      .then(() => location.replace('/test'))
-      .catch(err => console.error('Bad OTP', err));
-  }
+  this.confirmation.confirm(this.otp)
+    .then(userCred => {
+      // userCred.user is now signed in, but may not have phoneNumber yet
+      return userCred.user.reload();      // ← force a refresh from server
+    })
+    .then(() => {
+      console.log('🔄 User reloaded:', getAuth().currentUser);
+      location.replace('/test');
+    })
+    .catch(err => console.error('Bad OTP or reload failed', err));
+}
 }

@@ -10,21 +10,39 @@ export class AuthorizationService {
 
   constructor(private http: HttpClient) {}
 
-  async loadPermissions(): Promise<string[]> {
-  if (this.perms) return this.perms;
+ async loadPermissions(): Promise<string[]> {
+  if (this.perms) {
+    console.log('⚡️ Permissions (cached):', this.perms);
+    return this.perms;
+  }
 
   const auth = getAuth();
   const user = auth.currentUser;
-  if (!user) throw new Error('Not signed in');
+  console.log('🔍 loadPermissions: currentUser =', user);
 
-  // Prefer phoneNumber, but fall back to uid
-  const userId = encodeURIComponent(user.phoneNumber ?? user.uid);
+  if (!user) {
+    console.warn('⚠️ No user signed in!');
+    return [];
+  }
 
-  const url = `${environment.apiBaseUrl}/users/${userId}/roles`;
-  this.perms = await this.http.get<string[]>(url).toPromise() ?? [];
-  return this.perms;
+  // Try to read phoneNumber, fall back to UID if needed
+  const id = user.phoneNumber ?? user.uid;
+  console.log('🔍 Using user ID for roles lookup:', id);
+
+  const phoneId = encodeURIComponent(id);
+  const url = `${environment.apiBaseUrl}/users/${phoneId}/roles`;
+  console.log('🔍 Fetching roles from:', url);
+
+  try {
+    const roles = await this.http.get<string[]>(url).toPromise() ?? [];
+    console.log('✅ Received roles:', roles);
+    this.perms = roles;
+    return roles;
+  } catch (err) {
+    console.error('❌ Error fetching roles:', err);
+    return [];
+  }
 }
-
 
   hasPermission(perm: string): boolean {
     // safe-check: if perms is undefined or empty, returns false
