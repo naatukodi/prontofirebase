@@ -6,32 +6,28 @@ import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthorizationService {
-  private perms: string[]|null = null;
+  private perms: string[] = [];
 
   constructor(private http: HttpClient) {}
 
   async loadPermissions(): Promise<string[]> {
-    if (this.perms) {
-      return this.perms;
-    }
+  if (this.perms) return this.perms;
 
-    // Grab the signed-in user's phone number from Firebase Auth
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user?.phoneNumber) {
-      throw new Error('No phone number available on the signed-in user');
-    }
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
 
-    // Build the URL: /api/users/{phoneNumber}/roles
-    const phoneId = encodeURIComponent(user.phoneNumber);
-    const url = `${environment.apiBaseUrl}/users/${phoneId}/roles`;
+  // Prefer phoneNumber, but fall back to uid
+  const userId = encodeURIComponent(user.phoneNumber ?? user.uid);
 
-    // Fetch and cache
-    this.perms = await this.http.get<string[]>(url).toPromise() || [];
-    return this.perms;
-  }
+  const url = `${environment.apiBaseUrl}/users/${userId}/roles`;
+  this.perms = await this.http.get<string[]>(url).toPromise() ?? [];
+  return this.perms;
+}
+
 
   hasPermission(perm: string): boolean {
-    return !!this.perms?.includes(perm);
+    // safe-check: if perms is undefined or empty, returns false
+    return this.perms?.includes(perm) ?? false;
   }
 }
