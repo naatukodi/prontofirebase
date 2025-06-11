@@ -11,7 +11,7 @@
     ]
   },
   "hosting": {
-    "public": "public",
+    "public": "dist/prontofirebase",
     "ignore": [
       "firebase.json",
       "**/.*",
