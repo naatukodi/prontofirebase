@@ -8,8 +8,8 @@ import { RoleGuard }      from './auth/role.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: 'test', component: Test, canActivate: [AuthGuard, RoleGuard] },
-  { path: 'test1', component: Test1, canActivate: [AuthGuard, RoleGuard], data: { permission: 'test1' } },
+  { path: 'test', component: Test, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewTest' } },
+  { path: 'test1', component: Test1, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewTest1' } },
   { path: 'unauthorized', component: Unauthorized },
   { path: '**', redirectTo: '' }
 ];
