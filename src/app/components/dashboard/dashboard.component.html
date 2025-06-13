@@ -1,0 +1,44 @@
+<!-- src/app/dashboard/dashboard.component.html -->
+<mat-accordion *ngIf="!loading && !error" class="dashboard-grid">
+  <mat-expansion-panel *ngFor="let v of claims">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        {{ v.vehicleNumber }} — {{ v.applicantName }}
+      </mat-panel-title>
+      <mat-panel-description>
+        {{ v.createdAt | date:'medium' }}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <!-- workflow buttons -->
+    <div class="workflow-buttons">
+      <button
+        mat-button
+        type="button"
+        *ngFor="let step of steps; let i = index"
+        [ngStyle]="getStepIndex(v) === i
+          ? {'background-color':'green','color':'white'}
+          : {'background-color':'lightgrey','color':'black'}"
+        (click)="step === 'Stakeholder' && goToStakeholder(v)"
+        (click)="step === 'BackEnd' && goToValuation(v)"
+        (click)="step === 'AVO' && goToInspection(v)"
+        (click)="step === 'QC' && goToQualityControl(v)"
+        (click)="step === 'FinalReport' && goToFinalReport(v)"
+      >
+        {{ step }}
+      </button>
+    </div>
+
+
+    <!-- applicant & contact -->
+    <section class="mt-2">
+      <h4>Applicant</h4>
+      <p>{{ v.applicantName }} — {{ v.applicantContact }}</p>
+    </section>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<div *ngIf="loading">Loading valuations…</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<router-outlet></router-outlet>
