@@ -1,1 +1,35 @@
-<p>login works!</p>
+<div class="login-container">
+  <h1>Login with Phone</h1>
+  <!-- invisible recaptcha -->
+  <div id="recaptcha-container"></div>
+
+  <form (submit)="$event.preventDefault()">
+    <label for="phone">Phone number</label>
+    <input
+      id="phone"
+      type="tel"
+      [(ngModel)]="phone"
+      name="phone"
+      placeholder="+91XXXXXXXXXX"
+      required
+    />
+    <button type="button" class="btn primary" (click)="sendOTP()">
+      Send OTP
+    </button>
+
+    <div *ngIf="confirmation" class="otp-section">
+      <label for="otp">Enter OTP</label>
+      <input
+        id="otp"
+        type="text"
+        [(ngModel)]="otp"
+        name="otp"
+        placeholder="123456"
+        required
+      />
+      <button type="button" class="btn primary" (click)="verifyOTP()">
+        Verify
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,43 +1,57 @@
 // src/app/services/authorization.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { AuthService } from './auth.service';
-import { environment } from '../../environments/environment';
+import { HttpClient }        from '@angular/common/http';
+import { AuthService }       from './auth.service';
+import { environment }       from '../../environments/environment';
+
+const STORAGE_KEY = 'pronto_user_roles';
 
 @Injectable({ providedIn: 'root' })
 export class AuthorizationService {
-  private http = inject(HttpClient);
+  private http    = inject(HttpClient);
   private authSvc = inject(AuthService);
 
-  /** null = not yet loaded; [] = loaded but empty */
+  // in-memory cache
   private perms: string[] | null = null;
 
+  /** Load roles (memory → storage → API) */
   async loadPermissions(): Promise<string[]> {
-    // return cache if loaded
+    // 1) in-memory?
     if (this.perms !== null) {
-      console.log('⚡️ Permissions (cached):', this.perms);
       return this.perms;
     }
 
-    // wait for the user to be available
-    const user = await this.authSvc.getCurrentUser();
-    console.log('🔍 loadPermissions: currentUser =', user);
+    // 2) localStorage?
+    const fromStorage = localStorage.getItem(STORAGE_KEY);
+    if (fromStorage) {
+      try {
+        this.perms = JSON.parse(fromStorage) as string[];
+        console.log('⚡️ Permissions (from localStorage):', this.perms);
+        return this.perms;
+      } catch {
+        // corrupt JSON? clear it
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
 
-    if (!user || !user.phoneNumber) {
-      console.warn('⚠️ No user signed in or missing phoneNumber!');
+    // 3) fall back to API
+    const user = await this.authSvc.getCurrentUser();
+    if (!user?.phoneNumber) {
       this.perms = [];
       return [];
     }
 
-    // URL-encode phone number
     const phoneId = encodeURIComponent(user.phoneNumber);
-    const url = `${environment.apiBaseUrl}/users/${phoneId}/roles`;
-    console.log('🔍 Fetching roles from:', url);
+    const url     = `${environment.apiBaseUrl}/users/${phoneId}/roles`;
 
     try {
       const roles = (await this.http.get<string[]>(url).toPromise()) || [];
-      console.log('✅ Received roles:', roles);
       this.perms = roles;
+
+      // persist to storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(roles));
+      console.log('✅ Permissions fetched & cached:', roles);
+
       return roles;
     } catch (err) {
       console.error('❌ Error fetching roles:', err);
@@ -46,7 +60,14 @@ export class AuthorizationService {
     }
   }
 
+  /** Quick check in guards/components */
   hasPermission(perm: string): boolean {
     return this.perms?.includes(perm) ?? false;
+  }
+
+  /** Call this on logout to clear caches */
+  clearPermissions() {
+    this.perms = null;
+    localStorage.removeItem(STORAGE_KEY);
   }
 }
