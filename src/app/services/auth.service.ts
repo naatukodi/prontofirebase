@@ -1,11 +1,13 @@
 // src/app/services/auth.service.ts
 import { Injectable, inject } from '@angular/core';
-import { Auth, authState, User } from '@angular/fire/auth';
+import { Auth, authState, User, signOut } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = inject(Auth);
+  private router = inject(Router);
   /** The URL the user tried to access before login */
   returnUrl = '/';
 
@@ -21,5 +23,11 @@ export class AuthService {
       return user.getIdToken(true);
     }
     return null;
+  }
+
+  async logout() {
+    await signOut(this.auth);
+    // clear any cached roles, returnUrl etc.
+    this.router.navigate(['/login']);
   }
 }
