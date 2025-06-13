@@ -21,7 +21,6 @@ import { Observable }       from 'rxjs';
 
       <!-- only show Logout when user is signed in -->
       <button
-        *ngIf="(user$ | async) as user"
         mat-button
         (click)="authSvc.logout()">
         Logout
