@@ -1,0 +1,60 @@
+<!-- src/app/shared/workflow-buttons/workflow-buttons.component.html -->
+
+<div class="button-group">
+  <!-- Stakeholder Tab -->
+  <button
+   *ngIf="canViewStakeholder()"
+    mat-button
+    [routerLink]="['/valuations', id, 'stakeholder']"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    routerLinkActive="active-step">
+    Stake Holder
+  </button>
+
+  <!-- Vehicle Details Tab -->
+  <button
+    *ngIf="canViewVehicleDetails()"
+    mat-button
+    [routerLink]="['/valuation', id, 'vehicle-details']"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    routerLinkActive="active-step"
+  >
+    Backend
+  </button>
+
+  <!-- Inspection Tab -->
+  <button
+    *ngIf="canViewInspection()"
+    mat-button
+    [routerLink]="['/valuation', id, 'inspection']"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    routerLinkActive="active-step"
+  >
+  >
+    AVO
+  </button>
+
+  <!-- Quality Control Tab -->
+  <button
+    *ngIf="canViewQualityControl()"
+    mat-button
+    [routerLink]="['/valuation', id, 'quality-control']"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    routerLinkActive="active-step"
+  >
+    QC
+  </button>
+
+  <!-- Final Report Tab -->
+  <button
+    *ngIf="canViewFinalReport()"
+    mat-button
+    [routerLink]="['/valuation', id, 'final-report']"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    routerLinkActive="active-step"
+  >
+    Final Report
+  </button>
+</div>
+
+<router-outlet></router-outlet>

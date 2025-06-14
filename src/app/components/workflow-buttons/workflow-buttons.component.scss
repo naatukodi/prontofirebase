@@ -1,0 +1,47 @@
+/* src/app/shared/workflow-buttons/workflow-buttons.component.scss */
+
+/* Container for all tab buttons */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin: 1rem 0;
+}
+
+/* Base styling for every button */
+.button-group button {
+  background-color: #e0e0e0;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 25px 16px; // Increased vertical padding
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: none;
+  transition: background-color 0.2s ease;
+}
+
+.button-group button:hover {
+  background-color: #d5d5d5;
+}
+
+/* Active‐step: solid green background, white text */
+.button-group button.active-step {
+  background-color: #008000;
+  color: #fff;
+}
+
+.button-group button.active-step:hover {
+  background-color: #007300;
+}
+
+/* (Optional) Loading & error states—if you ever add them back later */
+.loading,
+.error {
+  text-align: center;
+  padding: 16px;
+}
+
+.error {
+  color: #f44336;
+}

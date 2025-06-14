@@ -1,0 +1,100 @@
+<div *ngIf="loading">Loading stakeholder…</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<ng-container *ngIf="!loading && !error">
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+  <!-- Stakeholder -->
+  <fieldset class="nested-group">
+    <legend>Stakeholder</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Name of Stakeholder</mat-label>
+        <input matInput [value]="stakeholder.name" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Executive Name</mat-label>
+        <input matInput [value]="stakeholder.executiveName" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Contact Number</mat-label>
+        <input matInput [value]="stakeholder.executiveContact" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>WhatsApp Number</mat-label>
+        <input matInput [value]="stakeholder.executiveWhatsapp" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Email ID</mat-label>
+        <input matInput [value]="stakeholder.executiveEmail" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Applicant -->
+  <fieldset class="nested-group">
+    <legend>Applicant</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Name</mat-label>
+        <input matInput [value]="stakeholder.applicant.name" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Contact</mat-label>
+        <input matInput [value]="stakeholder.applicant.contact" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Documents -->
+  <fieldset class="nested-group">
+    <legend>Documents</legend>
+    <div class="grid">
+      <div class="file-upload">
+        <label>RC</label>
+        <a [href]="getDocumentFilePath('RC')"
+           target="_blank">
+          Download
+        </a>
+      </div>
+      <div class="file-upload">
+        <label>Insurance</label>
+        <a [href]="getDocumentFilePath('Insurance')"
+           target="_blank">
+          Download
+        </a>
+      </div>
+      <div class="file-upload" style="grid-column: span 2;">
+        <label>Others</label>
+        <ng-container *ngFor="let doc of otherDocuments">
+          <a [href]="doc.filePath" target="_blank">{{ doc.type }}</a>
+        </ng-container>
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="onEdit()">
+      Edit
+    </button>
+    <button mat-raised-button color="warn" (click)="onDelete()">
+      Delete
+    </button>
+    <button mat-raised-button color="warn" (click)="onBack()">
+      Back
+    </button>
+  </div>
+</ng-container>
+
+<router-outlet></router-outlet>

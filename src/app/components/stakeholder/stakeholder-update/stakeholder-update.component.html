@@ -1,0 +1,149 @@
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Stakeholder Update</h2>
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+  <!-- Stakeholder Group -->
+  <fieldset class="nested-group">
+    <legend>Stakeholder</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Name of Stakeholder</mat-label>
+        <mat-select formControlName="stakeholderName">
+          <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">
+            {{ opt }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Executive Name</mat-label>
+        <input matInput formControlName="stakeholderExecutiveName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Contact Number</mat-label>
+        <input matInput formControlName="stakeholderExecutiveContact" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>WhatsApp Number</mat-label>
+        <input matInput formControlName="stakeholderExecutiveWhatsapp" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Email ID</mat-label>
+        <input matInput formControlName="stakeholderExecutiveEmail" />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Applicant Group -->
+  <fieldset class="nested-group">
+    <legend>Applicant</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Name</mat-label>
+        <input matInput formControlName="applicantName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Contact</mat-label>
+        <input matInput formControlName="applicantContact" />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Vehicle Details Group -->
+  <fieldset class="nested-group">
+    <legend>Vehicle Details</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Number</mat-label>
+        <input matInput formControlName="vehicleNumber" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Segment</mat-label>
+        <input matInput formControlName="vehicleSegment" />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Document Upload Group -->
+  <fieldset class="nested-group">
+    <legend>Documents</legend>
+    <div class="grid">
+      <div class="file-upload">
+        <label for="rcFile">Upload RC</label>
+        <input
+          id="rcFile"
+          type="file"
+          (change)="onFileChange($event, 'rcFile')"
+          accept=".pdf,.jpg,.png"
+        />
+      </div>
+
+      <div class="file-upload">
+        <label for="insuranceFile">Upload Insurance</label>
+        <input
+          id="insuranceFile"
+          type="file"
+          (change)="onFileChange($event, 'insuranceFile')"
+          accept=".pdf,.jpg,.png"
+        />
+      </div>
+
+      <div class="file-upload">
+        <label for="otherFiles">Upload Others</label>
+        <input
+          id="otherFiles"
+          type="file"
+          multiple
+          (change)="onMultiFileChange($event)"
+          accept=".pdf,.jpg,.png"
+        />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Action Buttons -->
+  <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
+    <button
+      mat-raised-button
+      color="accent"
+      type="button"
+      [disabled]="saving"
+      (click)="onSave()"
+    >
+      {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+    </button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="saving"
+    >
+      {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+    </button>
+    
+    <button
+      mat-raised-button
+      color="warn"
+      type="button"
+      [disabled]="saving"
+      (click)="onCancel()"
+    >
+      Cancel
+    </button>
+  </div>
+</form>
+
+
+<router-outlet></router-outlet>

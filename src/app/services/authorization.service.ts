@@ -65,6 +65,12 @@ export class AuthorizationService {
     return this.perms?.includes(perm) ?? false;
   }
 
+  /** Returns true if the user has _any_ of the given permissions. */
+  hasAnyPermission(perms: string[]): boolean {
+    if (!this.perms) { return false; }
+    return perms.some(p => this.perms!.includes(p));
+  }
+
   /** Call this on logout to clear caches */
   clearPermissions() {
     this.perms = null;

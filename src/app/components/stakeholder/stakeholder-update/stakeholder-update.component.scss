@@ -1,0 +1,46 @@
+form {
+    max-width: 800px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .nested-group {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 16px;
+    border-radius: 4px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  
+    > * {
+      width: 100%;
+    }
+  }
+  
+  .error {
+    color: #f44336;
+  }
+  
+  /* Style for file upload sections */
+  .file-upload {
+    display: flex;
+    flex-direction: column;
+  
+    label {
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.6);
+      margin-bottom: 4px;
+    }
+  
+    input[type="file"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  }
+  

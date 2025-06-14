@@ -6,19 +6,7 @@ import { Valuation } from '../../models/valuation.model';
 
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { MatExpansionModule }    from '@angular/material/expansion';
-import { MatToolbarModule }      from '@angular/material/toolbar';
-import { MatFormFieldModule }    from '@angular/material/form-field';
-import { MatInputModule }        from '@angular/material/input';
-import { MatButtonModule }       from '@angular/material/button';
-import { MatDatepickerModule }   from '@angular/material/datepicker';
-import { MatNativeDateModule }   from '@angular/material/core';
-import { MatIconModule }         from '@angular/material/icon';
-import { MatCheckboxModule }     from '@angular/material/checkbox';
-import { MatSelectModule }       from '@angular/material/select';
-import { MatTabsModule }         from '@angular/material/tabs';
-import { MatSnackBarModule }     from '@angular/material/snack-bar';
+import { SharedModule } from '../shared/shared.module/shared.module';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,19 +14,7 @@ import { MatSnackBarModule }     from '@angular/material/snack-bar';
   imports: [
     RouterModule,
     CommonModule,
-    // Angular Material
-    MatExpansionModule,
-    MatToolbarModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatCheckboxModule,
-    MatSelectModule,
-    MatTabsModule,
-    MatSnackBarModule,
+    SharedModule,
   ],
   styleUrls: ['./dashboard.component.scss']
 })
