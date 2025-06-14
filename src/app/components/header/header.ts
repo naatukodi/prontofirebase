@@ -5,13 +5,12 @@ import { MatButtonModule }  from '@angular/material/button';
 import { RouterModule }     from '@angular/router';
 import { AuthService }      from '../../services/auth.service';
 import { Auth, authState, User } from '@angular/fire/auth';
-import { AsyncPipe }        from '@angular/common';
 import { Observable }       from 'rxjs';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule, RouterModule, AsyncPipe],
+  imports: [MatToolbarModule, MatButtonModule, RouterModule],
   template: `
     <mat-toolbar color="primary" class="app-toolbar">
       <span class="app-title">Pronto</span>

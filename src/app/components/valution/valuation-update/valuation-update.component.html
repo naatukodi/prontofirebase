@@ -1,0 +1,489 @@
+<!-- src/app/valuation‐update/valuation‐update.component.html -->
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Valuation Update</h2>
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+  <!-- Loading & Error -->
+  <div *ngIf="loading">Loading vehicle details …</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- VEHICLE IDENTIFICATION GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Vehicle Identification</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Registration Number</mat-label>
+          <input
+            matInput
+            formControlName="registrationNumber"
+            readonly
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Make</mat-label>
+          <input
+            matInput
+            formControlName="make"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Model</mat-label>
+          <input
+            matInput
+            formControlName="model"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Body Type</mat-label>
+          <input
+            matInput
+            formControlName="bodyType"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Year of Mfg</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="yearOfMfg"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Month of Mfg</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="monthOfMfg"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ENGINE & SPECS GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Manufacturing & Engine Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Engine Number</mat-label>
+          <input
+            matInput
+            formControlName="engineNumber"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis Number</mat-label>
+          <input
+            matInput
+            formControlName="chassisNumber"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Engine CC</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="engineCC"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Gross Vehicle Weight</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="grossVehicleWeight"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Seating Capacity</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="seatingCapacity"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- REGISTRATION & RTO GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Registration & RTO</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Date of Registration</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="dateOfRegistration"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>RTO</mat-label>
+          <input
+            matInput
+            formControlName="rto"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Class of Vehicle</mat-label>
+          <input
+            matInput
+            formControlName="classOfVehicle"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Category Code</mat-label>
+          <input
+            matInput
+            formControlName="categoryCode"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Norms Type</mat-label>
+          <input
+            matInput
+            formControlName="normsType"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Maker Variant</mat-label>
+          <input
+            matInput
+            formControlName="makerVariant"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- OWNER & ADDRESS GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Owner & Address</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Owner Name</mat-label>
+          <input
+            matInput
+            formControlName="ownerName"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Present Address</mat-label>
+          <input
+            matInput
+            formControlName="presentAddress"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permanent Address</mat-label>
+          <input
+            matInput
+            formControlName="permanentAddress"
+          />
+        </mat-form-field>
+
+        <mat-checkbox formControlName="hypothecation">
+          Hypothecation
+        </mat-checkbox>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Lender</mat-label>
+          <input
+            matInput
+            formControlName="lender"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- INSURANCE GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Insurance Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Insurer</mat-label>
+          <input
+            matInput
+            formControlName="insurer"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Insurance Policy No</mat-label>
+          <input
+            matInput
+            formControlName="insurancePolicyNo"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Insurance Valid Up To</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="insuranceValidUpTo"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- PERMIT & FITNESS GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Permit & Fitness</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Permit No</mat-label>
+          <input
+            matInput
+            formControlName="permitNo"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Valid Up To</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="permitValidUpTo"
+            [value]="form.get('permitValidUpTo')?.value || ''"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Type</mat-label>
+          <input
+            matInput
+            formControlName="permitType"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Issued On</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="permitIssued"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit From</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="permitFrom"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fitness No</mat-label>
+          <input
+            matInput
+            formControlName="fitnessNo"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fitness Valid To</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="fitnessValidTo"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- POLLUTION & TAX GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Pollution Certificate & Tax</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Pollution Certificate No</mat-label>
+          <input
+            matInput
+            formControlName="pollutionCertificateNumber"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Pollution Valid Up To</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="pollutionCertificateUpto"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Tax Upto</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="taxUpto"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Tax Paid Up To</mat-label>
+          <input
+            matInput
+            formControlName="taxPaidUpTo"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ADDITIONAL INFO GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Additional Info</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>IDV</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="idv"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Ex‐Showroom Price</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="exShowroomPrice"
+          />
+        </mat-form-field>
+
+        <mat-checkbox formControlName="backlistStatus">
+          Backlist Status
+        </mat-checkbox>
+
+        <mat-checkbox formControlName="rcStatus">
+          RC Status
+        </mat-checkbox>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Manufactured Date</mat-label>
+          <input
+            matInput
+            type="date"
+            formControlName="manufacturedDate"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stencil Trace URL</mat-label>
+          <input
+            matInput
+            formControlName="stencilTraceUrl"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis No Photo URL</mat-label>
+          <input
+            matInput
+            formControlName="chassisNoPhotoUrl"
+          />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- DOCUMENT UPLOAD GROUP -->
+    <fieldset class="nested‐group">
+      <legend>Documents</legend>
+      <div class="grid">
+        <!-- RC File -->
+        <div class="file-upload">
+          <label for="rcFile">Upload RC</label>
+          <input
+            id="rcFile"
+            type="file"
+            (change)="onFileChange($event, 'rcFile')"
+            accept=".pdf,.jpg,.png"
+          />
+        </div>
+
+        <!-- Insurance File -->
+        <div class="file-upload">
+          <label for="insuranceFile">Upload Insurance</label>
+          <input
+            id="insuranceFile"
+            type="file"
+            (change)="onFileChange($event, 'insuranceFile')"
+            accept=".pdf,.jpg,.png"
+          />
+        </div>
+
+        <!-- Other Documents -->
+        <div class="file-upload" style="grid-column: span 2;">
+          <label for="otherFiles">Upload Other Documents</label>
+          <input
+            id="otherFiles"
+            type="file"
+            multiple
+            (change)="onMultiFileChange($event)"
+            accept=".pdf,.jpg,.png"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ACTION BUTTONS -->
+    <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
+      <button
+        mat-raised-button
+        color="accent"
+        type="button"
+        [disabled]="saving"
+        (click)="onSave()"
+      >
+        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="saving"
+      >
+        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="warn"
+        type="button"
+        [disabled]="saving"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+    </div>
+  </ng-container>
+</form>
+
+<router-outlet></router-outlet>

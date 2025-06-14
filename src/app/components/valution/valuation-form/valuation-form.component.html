@@ -1,0 +1,213 @@
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <h2>New Valuation</h2>
+    
+        <!-- Top‐level fields -->
+        <mat-form-field>
+        <input matInput placeholder="Adjuster User ID" formControlName="adjusterUserId" required>
+        </mat-form-field>
+        <mat-form-field>
+        <input matInput placeholder="Status" formControlName="status" required>
+        </mat-form-field>
+        <mat-form-field>
+        <input matInput [matDatepicker]="accPicker" placeholder="Accident Date"
+                formControlName="accidentDate" required>
+        <mat-datepicker-toggle matSuffix [for]="accPicker"></mat-datepicker-toggle>
+        <mat-datepicker #accPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+        <input matInput placeholder="Accident Location" formControlName="accidentLocation" required>
+        </mat-form-field>
+        <mat-form-field>
+        <input matInput placeholder="Policy Number" formControlName="policyNumber" required>
+        </mat-form-field>
+
+        <!-- Applicant group -->
+    <fieldset formGroupName="applicant" class="nested-group">
+        <legend>Applicant</legend>
+
+        <mat-form-field>
+        <input
+            matInput
+            placeholder="Name"
+            formControlName="name"
+            required
+        >
+        </mat-form-field>
+
+        <mat-form-field>
+        <input
+            matInput
+            placeholder="Contact"
+            formControlName="contact"
+            required
+        >
+        </mat-form-field>
+    </fieldset>
+    
+        <!-- Stakeholder group -->
+        <fieldset formGroupName="stakeholder" class="nested-group">
+        <legend>Stakeholder</legend>
+        <mat-form-field>
+            <input matInput placeholder="Name" formControlName="name">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Executive Name" formControlName="executiveName">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Executive Contact" formControlName="executiveContact">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Executive Whatsapp" formControlName="executiveWhatsapp">
+        </mat-form-field>
+        </fieldset>
+    
+        <!-- Vehicle Details group -->
+        <fieldset formGroupName="vehicleDetails" class="nested-group">
+        <legend>Vehicle Details</legend>
+    
+        <mat-form-field>
+            <input matInput placeholder="Registration Number" formControlName="registrationNumber" required>
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Segment" formControlName="segment">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Make" formControlName="make">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Model" formControlName="model">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput type="number" placeholder="Year of Manufacture" formControlName="yearMfg">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Present Address" formControlName="presentAddress">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Permanent Address" formControlName="permanentAddress">
+        </mat-form-field>
+    
+        <mat-checkbox formControlName="hypothecation">Hypothecation</mat-checkbox>
+    
+        <mat-form-field>
+            <input matInput placeholder="Insurer" formControlName="insurer">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput [matDatepicker]="regPicker" placeholder="Date of Registration"
+                formControlName="dateOfRegistration">
+            <mat-datepicker-toggle matSuffix [for]="regPicker"></mat-datepicker-toggle>
+            <mat-datepicker #regPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Vehicle Class" formControlName="vehicleClass">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput type="number" placeholder="Engine CC" formControlName="engineCC">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput type="number" placeholder="GVW" formControlName="gvw">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput type="number" placeholder="Seating Capacity" formControlName="seatingCapacity">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput [matDatepicker]="polPicker" placeholder="Policy Valid Up To"
+                formControlName="policyValidUpTo">
+            <mat-datepicker-toggle matSuffix [for]="polPicker"></mat-datepicker-toggle>
+            <mat-datepicker #polPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput type="number" placeholder="IDV" formControlName="idv">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput placeholder="Permit No." formControlName="permitNo">
+        </mat-form-field>
+        <mat-form-field>
+            <input matInput [matDatepicker]="permPicker" placeholder="Permit Valid Up To"
+                formControlName="permitValidUpTo">
+            <mat-datepicker-toggle matSuffix [for]="permPicker"></mat-datepicker-toggle>
+            <mat-datepicker #permPicker></mat-datepicker>
+        </mat-form-field>
+    
+        <!-- Nested documents under vehicleDetails -->
+        <section formArrayName="documents">
+            <h4>Vehicle Documents</h4>
+            <div *ngFor="let doc of vehicleDocs.controls; let i = index" [formGroupName]="i" class="array-item">
+            <mat-form-field>
+                <input matInput placeholder="Type" formControlName="type">
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput placeholder="File Path" formControlName="filePath">
+            </mat-form-field>
+            <button mat-icon-button color="warn" (click)="removeVehicleDoc(i)">
+                <mat-icon>delete</mat-icon>
+            </button>
+            </div>
+            <button mat-button type="button" (click)="addVehicleDoc()">+ Add Document</button>
+        </section>
+        </fieldset>
+    
+        <!-- Top‐level Documents array -->
+        <section formArrayName="documents">
+        <h3>Documents</h3>
+        <div *ngFor="let doc of documents.controls; let i = index" [formGroupName]="i" class="array-item">
+            <mat-form-field>
+            <input matInput placeholder="Type" formControlName="type">
+            </mat-form-field>
+            <mat-form-field>
+            <input matInput placeholder="File Path" formControlName="filePath">
+            </mat-form-field>
+            <button mat-icon-button color="warn" (click)="removeDocument(i)">
+            <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+        <button mat-button type="button" (click)="addDocument()">+ Add Document</button>
+        </section>
+    
+        <!-- Components array -->
+        <section formArrayName="components">
+        <h3>Components</h3>
+        <div *ngFor="let comp of components.controls; let i = index" [formGroupName]="i" class="array-item">
+            <mat-form-field>
+            <input matInput type="number" placeholder="Type ID" formControlName="componentTypeId">
+            </mat-form-field>
+            <mat-form-field>
+            <input matInput placeholder="Condition" formControlName="condition">
+            </mat-form-field>
+            <mat-form-field>
+            <input matInput placeholder="Remarks" formControlName="remarks">
+            </mat-form-field>
+            <button mat-icon-button color="warn" (click)="removeComponent(i)">
+            <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+        <button mat-button type="button" (click)="addComponent()">+ Add Component</button>
+        </section>
+    
+        <!-- Workflow array -->
+        <section formArrayName="workflow">
+        <h3>Workflow Steps</h3>
+        <div *ngFor="let w of workflow.controls; let i = index" [formGroupName]="i" class="array-item">
+            <mat-form-field>
+            <input matInput type="number" placeholder="Template Step ID" formControlName="templateStepId">
+            </mat-form-field>
+            <mat-form-field>
+            <input matInput placeholder="Assigned To" formControlName="assignedToRole">
+            </mat-form-field>
+            <mat-form-field>
+            <input matInput placeholder="Status" formControlName="status">
+            </mat-form-field>
+            <button mat-icon-button color="warn" (click)="removeWorkflow(i)">
+            <mat-icon>delete</mat-icon>
+            </button>
+        </div>
+        <button mat-button type="button" (click)="addWorkflow()">+ Add Step</button>
+        </section>
+    
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+        {{ loading ? 'Saving…' : 'Save Valuation' }}
+        </button>
+        <div *ngIf="error" class="error">{{ error }}</div>
+    </form>
+    
+    <router-outlet></router-outlet>
