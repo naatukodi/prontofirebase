@@ -154,6 +154,7 @@ export class ValuationVehicleDetailsComponent implements OnInit {
       'CanEditVehicleDetails'
     ]);
   }
+  
   canDeleteVehicleDetails() {
     return this.authz.hasAnyPermission(['CanDeleteVehicleDetails']);
   }

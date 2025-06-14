@@ -1,6 +1,4 @@
 import { Routes } from '@angular/router';
-import { Test } from './test/test';
-import { Test1 } from './test1/test1';
 import { MainLayoutComponent } from './components/main-layout/main-layout';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { StakeholderNewComponent } from './components/stakeholder/stakeholder-new/stakeholder-new.component';
@@ -8,6 +6,12 @@ import { StakeholderUpdateComponent } from './components/stakeholder/stakeholder
 import { StakeholderViewComponent } from './components/stakeholder/stakeholder-view/stakeholder-view.component';
 import { ValuationVehicleDetailsComponent } from './components/valution/valuation-vehicle-details/valuation-vehicle-details.component';
 import { ValuationUpdateComponent } from './components/valution/valuation-update/valuation-update.component';
+import { InspectionViewComponent } from './components/inspection/inspection-view/inspection-view.component';
+import { InspectionUpdateComponent } from './components/inspection/inspection-update/inspection-update.component';
+import { VehicleImageUploadComponent } from './components/inspection/vehicle-image-upload/vehicle-image-upload.component';
+import { QualityControlViewComponent } from './components/qc/quality-control-view/quality-control-view.component';
+import { QualityControlUpdateComponent } from './components/qc/quality-control-update/quality-control-update.component';
+import { FinalReportComponent } from './components/Report/final-report/final-report.component';
 
 import { Unauthorized } from './unauthorized/unauthorized';
 import { LoginComponent } from './login/login';
@@ -15,7 +19,6 @@ import { AuthGuard } from './auth/auth';
 import { RoleGuard }      from './auth/role.guard';
 
 export const routes: Routes = [
-   // Public (no header/hero/footer)
   {
     path: 'login',
     component: LoginComponent
@@ -25,7 +28,6 @@ export const routes: Routes = [
     component: MainLayoutComponent,
     canActivate: [AuthGuard],    // optional if you want root protected
     children: [
-    // 1) default: hit “/” → redirect to /dashboard
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewDashboard' } },
   // 2) Stakeholder routes
@@ -35,8 +37,15 @@ export const routes: Routes = [
   // 3) Valuation routes
   { path: 'valuation/:valuationId/vehicle-details', component: ValuationVehicleDetailsComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewVehicleDetails' } },
   { path: 'valuation/:valuationId/vehicle-details/update', component: ValuationUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditVehicleDetails' } },
-  { path: 'test', component: Test, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewTest' } },
-  { path: 'test1', component: Test1, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewTest1' } },
+  // 4) Inspection routes
+  { path: 'valuation/:valuationId/inspection', component: InspectionViewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewInspection' } },
+  { path: 'valuation/:valuationId/inspection/update', component: InspectionUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditInspection' } },
+  { path: 'valuation/:valuationId/inspection/vehicle-image-upload', component: VehicleImageUploadComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditInspection' } },
+  // 5) Quality Control routes
+  { path: 'valuation/:valuationId/quality-control', component: QualityControlViewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewQualityControl' } },
+  { path: 'valuation/:valuationId/quality-control/update', component: QualityControlUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditQualityControl' } },
+  // 6) Final Report route
+  { path: 'valuation/:valuationId/final-report', component: FinalReportComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewFinalReport' } },
   { path: 'unauthorized', component: Unauthorized },
    ]
   },

@@ -1,0 +1,36 @@
+/* src/app/valuation-inspection/valuation-inspection.component.scss */
+
+.nested‐group {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+
+  > * {
+    width: 100%;
+  }
+}
+
+.error {
+  color: #f44336;
+  margin: 16px 0;
+}
+
+.actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  margin-bottom: 8px;
+}

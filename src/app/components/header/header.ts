@@ -4,6 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule }  from '@angular/material/button';
 import { RouterModule }     from '@angular/router';
 import { AuthService }      from '../../services/auth.service';
+import { AuthorizationService } from '../../services/authorization.service';
 import { Auth, authState, User } from '@angular/fire/auth';
 import { Observable }       from 'rxjs';
 
@@ -21,7 +22,7 @@ import { Observable }       from 'rxjs';
       <!-- only show Logout when user is signed in -->
       <button
         mat-button
-        (click)="authSvc.logout()">
+        (click)="onLogout()">
         Logout
       </button>
     </mat-toolbar>
@@ -30,4 +31,10 @@ import { Observable }       from 'rxjs';
 export class HeaderComponent {
   authSvc = inject(AuthService);
   user$: Observable<User | null> = authState(inject(Auth));
+  authzSvc1 = inject(AuthorizationService);
+
+  onLogout(): void {
+    this.authSvc.logout();
+    this.authzSvc1.clearPermissions();
+  }
 }

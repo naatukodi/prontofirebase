@@ -1,0 +1,257 @@
+<!-- src/app/valuation‐inspection/valuation‐inspection.component.html -->
+
+<div *ngIf="loading">Loading inspection details…</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+<ng-container *ngIf="!loading && !error && inspection">
+  <!-- Basic Inspection Info -->
+  <fieldset class="nested‐group">
+    <legend>Inspection Info</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Inspected By</mat-label>
+        <input matInput [value]="inspection.vehicleInspectedBy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Date of Inspection</mat-label>
+        <input
+          matInput
+          [value]="inspection.dateOfInspection | date:'yyyy-MM-dd HH:mm:ss'"
+          readonly
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Inspection Location</mat-label>
+        <input matInput [value]="inspection.inspectionLocation" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Basic Vehicle Checks -->
+  <fieldset class="nested‐group">
+    <legend>Basic Vehicle Checks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Moved</mat-label>
+        <input
+          matInput
+          [value]="inspection.vehicleMoved ? 'Yes' : 'No'"
+          readonly
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Engine Started</mat-label>
+        <input
+          matInput
+          [value]="inspection.engineStarted ? 'Yes' : 'No'"
+          readonly
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Odometer (km)</mat-label>
+        <input matInput [value]="inspection.odometer" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>VIN Plate Present</mat-label>
+        <input
+          matInput
+          [value]="inspection.vinPlate ? 'Yes' : 'No'"
+          readonly
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Body Type</mat-label>
+        <input matInput [value]="inspection.bodyType" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Overall Tyre Condition</mat-label>
+        <input matInput [value]="inspection.overallTyreCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Other Accessories Fitted</mat-label>
+        <input
+          matInput
+          [value]="inspection.otherAccessoryFitment ? 'Yes' : 'No'"
+          readonly
+        />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- External Visual Checks -->
+  <fieldset class="nested‐group">
+    <legend>External Visual Checks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Windshield / Glass</mat-label>
+        <input matInput [value]="inspection.windshieldGlass" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Road Worthy Condition</mat-label>
+        <input
+          matInput
+          [value]="inspection.roadWorthyCondition ? 'OK' : 'Not OK'"
+          readonly
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Engine Condition</mat-label>
+        <input matInput [value]="inspection.engineCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Suspension System</mat-label>
+        <input matInput [value]="inspection.suspensionSystem" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Steering Assembly</mat-label>
+        <input matInput [value]="inspection.steeringAssy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Brake System</mat-label>
+        <input matInput [value]="inspection.brakeSystem" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Structural & Body Checks -->
+  <fieldset class="nested‐group">
+    <legend>Structural & Body Checks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Chassis Condition</mat-label>
+        <input matInput [value]="inspection.chassisCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Body Condition</mat-label>
+        <input matInput [value]="inspection.bodyCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Battery Condition</mat-label>
+        <input matInput [value]="inspection.batteryCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Paint Work</mat-label>
+        <input matInput [value]="inspection.paintWork" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Clutch System</mat-label>
+        <input matInput [value]="inspection.clutchSystem" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Gearbox Assembly</mat-label>
+        <input matInput [value]="inspection.gearBoxAssy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Propeller Shaft</mat-label>
+        <input matInput [value]="inspection.propellerShaft" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Differential Assembly</mat-label>
+        <input matInput [value]="inspection.differentialAssy" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Interior & Electrical Checks -->
+  <fieldset class="nested‐group">
+    <legend>Interior & Electrical Checks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Cabin Condition</mat-label>
+        <input matInput [value]="inspection.cabin" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Dashboard Condition</mat-label>
+        <input matInput [value]="inspection.dashboard" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Seats Condition</mat-label>
+        <input matInput [value]="inspection.seats" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Head Lamps</mat-label>
+        <input matInput [value]="inspection.headLamps" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Electric Assembly</mat-label>
+        <input matInput [value]="inspection.electricAssembly" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Radiator</mat-label>
+        <input matInput [value]="inspection.radiator" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Intercooler</mat-label>
+        <input matInput [value]="inspection.intercooler" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>All Hose & Pipes</mat-label>
+        <input matInput [value]="inspection.allHosePipes" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Photos -->
+  <!-- upload Button -->
+     <fieldset class="nested‐group">
+    <div class="actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onClick()"
+      >
+        View / Upload Images
+      </button>
+    </div>
+    </fieldset>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button 
+    *ngIf="canEditInspection()"
+    mat-raised-button color="primary" (click)="onEdit()">
+      Edit
+    </button>
+    <button *ngIf="canDeleteInspection()" mat-raised-button color="warn" (click)="onDelete()">
+      Delete
+    </button>
+    <button mat-raised-button color="warn" (click)="onBack()">
+      Back
+    </button>
+  </div>
+</ng-container>
+
+<router-outlet></router-outlet>

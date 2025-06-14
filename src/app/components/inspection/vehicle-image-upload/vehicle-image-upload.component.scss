@@ -1,0 +1,190 @@
+/* src/app/vehicle-image-upload/vehicle-image-upload.component.scss */
+
+/* Overall container */
+.upload-container {
+  max-width: 1000px;
+  margin: 24px auto;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.upload-container h2 {
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+/* Global error */
+.error {
+  color: #f44336;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+/* The grid holding each image‐card */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.image-card {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+
+  /* 1) File input sits “above” the preview/label but below the buttons */
+  input[type='file'] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+
+    /* bump this above the static visuals */
+    z-index: 10;
+  }
+
+  /* 2) All non‐interactive visuals sit under the input, but above the label itself */
+  .preview,
+  .label,
+  .progress-wrapper,
+  .field-error {
+    position: relative;
+    z-index: 5;          /* under the input but above the basic .image-card layer */
+    pointer-events: none; /* so taps fall through to the input when needed */
+  }
+
+  /* 3) Upload & Open‐Image buttons must be on top of everything */
+  button,
+  .open-image-btn {
+    position: relative;
+    z-index: 20;         /* highest layer so you can still tap Upload/OpenImage */
+    pointer-events: all;
+  }
+}
+
+/* …rest of your CSS stays exactly as before… */
+
+/* Preview area */
+.preview {
+  width: 180px;
+  height: 120px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+
+.thumbnail {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+/* Gray placeholder */
+.placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #777;
+  font-size: 0.9rem;
+  border-radius: 2px;
+}
+
+/* Label text */
+.label {
+  font-weight: 500;
+  margin-bottom: 6px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.optional {
+  font-size: 0.75rem;
+  color: #555;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+/* Remove default bottom margin on file input */
+input[type='file'] {
+  margin: 0;
+}
+
+/* Upload button styling */
+button[mat-raised-button] {
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+/* “Open Image” button styling */
+.open-image-btn {
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  pointer-events: all;
+}
+
+/* Progress bar container */
+.progress-wrapper {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  pointer-events: none;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.progress-wrapper span {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+  line-height: 20px;
+  pointer-events: none;
+}
+
+/* Field‐level error */
+.field-error {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 4px;
+  pointer-events: none;
+}
+
+/* Back button area */
+.actions {
+  margin-top: 16px;
+  text-align: left;
+}

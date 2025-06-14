@@ -1,0 +1,106 @@
+<!-- src/app/valuation-quality-control/quality-control-view.component.html -->
+
+<div *ngIf="loading" class="loading">Loading quality control details…</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<ng-container *ngIf="!loading && !error && viewModel">
+  <app-workflow-buttons
+    [id]="valuationId"
+    [vehicleNumber]="vehicleNumber"
+    [applicantContact]="applicantContact">
+  </app-workflow-buttons>
+
+  <!-- Quality Control + Price Estimate Info -->
+  <fieldset class="nested-group">
+    <legend>Quality Control & Valuation Estimate</legend>
+
+    <div class="grid">
+
+      <!-- 1. Overall Rating -->
+      <mat-form-field appearance="fill">
+        <mat-label>Overall Rating</mat-label>
+        <input matInput [value]="viewModel.overallRating" readonly />
+      </mat-form-field>
+
+      <!-- 2. Valuation Amount -->
+      <mat-form-field appearance="fill">
+        <mat-label>Valuation Amount (₹)</mat-label>
+        <input matInput [value]="viewModel.valuationAmount" readonly />
+      </mat-form-field>
+
+      <!-- 3. Chassis Punch -->
+      <mat-form-field appearance="fill">
+        <mat-label>Chassis Punch</mat-label>
+        <input matInput [value]="viewModel.chassisPunch" readonly />
+      </mat-form-field>
+
+      <!-- 4. Remarks -->
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea
+          matInput
+          [value]="viewModel.remarks"
+          rows="2"
+          readonly
+        ></textarea>
+      </mat-form-field>
+
+      </div>
+      </fieldset>
+
+      <!-- Valuation Ranges -->
+      <fieldset class="nested-group">
+      <legend>Valuation Ranges</legend>
+      <div class="grid">
+        <!-- 5. Low Range -->
+        <mat-form-field appearance="fill">
+        <mat-label>Low Range (₹ Lacs)</mat-label>
+        <input matInput [value]="viewModel.lowRange" readonly />
+        </mat-form-field>
+
+        <!-- 6. Mid Range -->
+        <mat-form-field appearance="fill">
+        <mat-label>Mid Range (₹ Lacs)</mat-label>
+        <input matInput [value]="viewModel.midRange" readonly />
+        </mat-form-field>
+
+        <!-- 7. High Range -->
+        <mat-form-field appearance="fill">
+        <mat-label>High Range (₹ Lacs)</mat-label>
+        <input matInput [value]="viewModel.highRange" readonly />
+        </mat-form-field>
+      </div>
+      </fieldset>
+
+      <!-- Raw Response -->
+      <fieldset class="nested-group">
+        <legend>AI Analysis</legend>
+        <div style="width: 100%;">
+          <mat-form-field appearance="fill" class="full-width" style="width: 100%;">
+        <mat-label>Raw Response</mat-label>
+        <textarea
+          matInput
+          [value]="viewModel.rawResponse"
+          rows="6"
+          readonly
+          style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"
+        ></textarea>
+          </mat-form-field>
+        </div>
+      </fieldset>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="onEdit()">
+      Edit
+    </button>
+    <button mat-raised-button color="warn" (click)="onDelete()">
+      Delete
+    </button>
+    <button mat-raised-button color="accent" (click)="onBack()">
+      Back
+    </button>
+  </div>
+</ng-container>
+
+<router-outlet></router-outlet>

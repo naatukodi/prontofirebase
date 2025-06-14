@@ -1,0 +1,287 @@
+<!-- src/app/valuation‐inspection‐update/valuation‐inspection‐update.component.html -->
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Inspection Update</h2>
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+  <!-- Loading & Error -->
+  <div *ngIf="loading">Loading inspection details …</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- BASIC INSPECTION INFO -->
+    <fieldset class="nested‐group">
+      <legend>Inspection Info</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Vehicle Inspected By</mat-label>
+          <input matInput formControlName="vehicleInspectedBy" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Date of Inspection</mat-label>
+          <input matInput type="date" formControlName="dateOfInspection" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Inspection Location</mat-label>
+          <input matInput formControlName="inspectionLocation" />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- BASIC VEHICLE CHECKS -->
+    <fieldset class="nested‐group">
+      <legend>Basic Vehicle Checks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Vehicle Moved</mat-label>
+          <mat-select formControlName="vehicleMoved">
+            <mat-option [value]="true">Yes</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Engine Started</mat-label>
+          <mat-select formControlName="engineStarted">
+            <mat-option [value]="true">Yes</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Odometer (km)</mat-label>
+          <input matInput type="number" formControlName="odometer" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>VIN Plate Present</mat-label>
+          <mat-select formControlName="vinPlate">
+            <mat-option [value]="true">Yes</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Body Type</mat-label>
+          <input matInput formControlName="bodyType" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Overall Tyre Condition</mat-label>
+          <input matInput formControlName="overallTyreCondition" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Other Accessories Fitted</mat-label>
+          <mat-select formControlName="otherAccessoryFitment">
+            <mat-option [value]="true">Yes</mat-option>
+            <mat-option [value]="false">No</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- EXTERNAL VISUAL CHECKS -->
+    <fieldset class="nested‐group">
+      <legend>External Visual Checks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Windshield / Glass</mat-label>
+          <input matInput formControlName="windshieldGlass" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Road Worthy Condition</mat-label>
+          <mat-select formControlName="roadWorthyCondition">
+            <mat-option [value]="true">OK</mat-option>
+            <mat-option [value]="false">Not OK</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Engine Condition</mat-label>
+          <input matInput formControlName="engineCondition" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Suspension System</mat-label>
+          <input matInput formControlName="suspensionSystem" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Steering Assembly</mat-label>
+          <input matInput formControlName="steeringAssy" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Brake System</mat-label>
+          <input matInput formControlName="brakeSystem" />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- STRUCTURAL & BODY CHECKS -->
+    <fieldset class="nested‐group">
+      <legend>Structural & Body Checks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis Condition</mat-label>
+          <input matInput formControlName="chassisCondition" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Body Condition</mat-label>
+          <input matInput formControlName="bodyCondition" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Battery Condition</mat-label>
+          <input matInput formControlName="batteryCondition" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Paint Work</mat-label>
+          <input matInput formControlName="paintWork" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Clutch System</mat-label>
+          <input matInput formControlName="clutchSystem" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Gearbox Assembly</mat-label>
+          <input matInput formControlName="gearBoxAssy" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Propeller Shaft</mat-label>
+          <input matInput formControlName="propellerShaft" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Differential Assembly</mat-label>
+          <input matInput formControlName="differentialAssy" />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- INTERIOR & ELECTRICAL CHECKS -->
+    <fieldset class="nested‐group">
+      <legend>Interior & Electrical Checks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Cabin Condition</mat-label>
+          <input matInput formControlName="cabin" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Dashboard Condition</mat-label>
+          <input matInput formControlName="dashboard" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Seats Condition</mat-label>
+          <input matInput formControlName="seats" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Head Lamps</mat-label>
+          <input matInput formControlName="headLamps" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Electric Assembly</mat-label>
+          <input matInput formControlName="electricAssembly" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Radiator</mat-label>
+          <input matInput formControlName="radiator" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Intercooler</mat-label>
+          <input matInput formControlName="intercooler" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>All Hose & Pipes</mat-label>
+          <input matInput formControlName="allHosePipes" />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- PHOTO UPLOAD GROUP 
+    <fieldset class="nested‐group">
+      <legend>Upload New Photos</legend>
+      <div class="grid">
+        <div class="file-upload" style="grid-column: span 2;">
+          <label for="photos">Select Photos</label>
+          <input
+            id="photos"
+            type="file"
+            multiple
+            (change)="onPhotoChange($event)"
+            accept="image/*"
+          />
+          <small>Hold Ctrl (Cmd) to select multiple</small>
+        </div>
+      </div>
+    </fieldset> -->
+
+    <!-- upload Button -->
+     <fieldset class="nested‐group">
+    <div class="actions">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onClick()"
+      >
+        View / Upload Images
+      </button>
+    </div>
+    </fieldset>
+
+    <!-- ACTION BUTTONS -->
+    <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
+      <button
+        mat-raised-button
+        color="accent"
+        type="button"
+        [disabled]="saving"
+        (click)="onSave()"
+      >
+        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="saving"
+      >
+        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="warn"
+        type="button"
+        [disabled]="saving"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+    </div>
+  </ng-container>
+</form>
+
+<router-outlet></router-outlet>

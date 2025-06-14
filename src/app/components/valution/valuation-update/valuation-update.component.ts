@@ -24,6 +24,7 @@ export class ValuationUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
 
+
   form!: FormGroup;
   loading = true;
   error: string | null = null;

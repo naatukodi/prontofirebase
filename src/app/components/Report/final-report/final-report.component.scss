@@ -1,0 +1,59 @@
+/* src/app/components/final-report-view/final-report-view.component.scss */
+
+.nested-group {
+  margin-bottom: 1.5rem;
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.photo-item {
+  text-align: center;
+
+  .thumb {
+    max-width: 100%;
+    max-height: 100px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.error {
+  color: #f44336;
+  margin: 1rem 0;
+}
+
+img {
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+
+  .back-button {
+    margin-right: 1rem; // space to the right of “Back”
+    padding: 0 1rem;    // left and right padding inside the button
+  }
+
+  .download-button {
+    margin-left: 1rem; // space to the left of “Download PDF”
+    padding: 0 1rem;   // left and right padding inside the button
+  }
+}

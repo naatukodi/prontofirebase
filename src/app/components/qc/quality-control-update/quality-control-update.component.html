@@ -1,0 +1,79 @@
+<!-- src/app/valuation-quality-control/quality-control-update.component.html -->
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Quality Control Update</h2>
+
+    <app-workflow-buttons
+        [id]="valuationId"
+        [vehicleNumber]="vehicleNumber"
+        [applicantContact]="applicantContact">
+    </app-workflow-buttons>
+
+  <!-- Loading & Error -->
+  <div *ngIf="loading">Loading quality control details …</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- QUALITY CONTROL FIELDS -->
+    <fieldset class="nested-group">
+      <legend>Quality Control</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Overall Rating</mat-label>
+          <input matInput formControlName="overallRating" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Valuation Amount</mat-label>
+          <input matInput type="number" formControlName="valuationAmount" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis Punch</mat-label>
+          <input matInput formControlName="chassisPunch" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Remarks</mat-label>
+          <textarea
+            matInput
+            formControlName="remarks"
+            rows="3"
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ACTION BUTTONS -->
+    <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
+      <button
+        mat-raised-button
+        color="accent"
+        type="button"
+        [disabled]="saving"
+        (click)="onSave()"
+      >
+        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="saving"
+      >
+        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+      </button>
+
+      <button
+        mat-raised-button
+        color="warn"
+        type="button"
+        [disabled]="saving"
+        (click)="onCancel()"
+      >
+        Cancel
+      </button>
+    </div>
+  </ng-container>
+</form>
