@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common'; 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule, Routes } from '@angular/router';
+import { AuthorizationService } from '../../../services/authorization.service';
 
 @Component({
   selector: 'app-stakeholder-view',
@@ -17,6 +18,8 @@ export class StakeholderViewComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+
+  private authz = inject(AuthorizationService);
 
   loading = true;
   error: string | null = null;
@@ -114,5 +117,16 @@ setOtherDocuments() {
       }
     });
   }
+
+  canEditStakeholder() {
+    return this.authz.hasAnyPermission([
+      'CanCreateStakeholder',
+      'CanEditStakeholder'
+    ]);
+  }
+  canDeleteStakeholder() {
+    return this.authz.hasAnyPermission(['CanDeleteStakeholder']);
+  }
+
 }
 
