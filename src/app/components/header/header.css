@@ -1,4 +1,56 @@
-.mat-toolbar {
-    background: #3f51b5;
-    color: #ffffff;
+/* src/app/header.component.css */
+.sidenav-container {
+  height: 100vh;
+}
+
+.app-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+mat-sidenav-content,
+mat-sidenav {
+  padding-top: 64px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* hide nav-buttons container if no `<div>` so wrap in <div.nav-buttons> */
+.nav-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* ensure the drawer only exists (and is toggled) on mobile */
+/* Prevent title from being clipped or wrapped */
+.app-toolbar .app-title {
+  flex: 0 0 auto;           /* don’t shrink or grow */
+  white-space: nowrap;      /* stay on one line */
+  overflow: visible;        /* allow full text */
+}
+
+/* Force toolbar text to be white on primary */
+.main-layout .mat-toolbar.mat-primary {
+  color: #fff !important;
+}
+
+/* Ensure the drawer background/text contrast */
+.main-layout mat-sidenav {
+  background: #fff;         /* white drawer */
+  color: #000;              /* black text */
+}
+
+/* List-item links in the nav list */
+.main-layout .mat-nav-list .mat-list-item {
+  color: rgba(0,0,0,0.87);  /* default Material body text */
+}
+
+/* Hide any horizontal overflow (prevent cut-off) */
+.sidenav-container {
+  overflow-x: hidden;
 }
