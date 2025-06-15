@@ -33,6 +33,11 @@ html, body {
   margin: 8px 4px;
 }
 
+.main-layout .mat-toolbar.mat-primary {
+  background: #3f51b5;
+  color: #fff;
+}
+
 /* host padding removed—will instead push specific sections down */
 .main-layout {
   display: block;
