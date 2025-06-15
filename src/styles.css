@@ -4,6 +4,9 @@
 /* Layout scoping: only inside <app-main-layout class="main-layout"> */
 /* ------------------------------ */
 
+/* 1) Import Angular Material’s prebuilt theme */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
 /* remove default page margins so toolbar is flush to window edges */
 html, body {
   margin: 0;
@@ -36,6 +39,10 @@ html, body {
 .main-layout .mat-toolbar.mat-primary {
   background: #3f51b5;
   color: #fff;
+}
+
+.main-layout .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  background-color: whitesmoke;
 }
 
 /* host padding removed—will instead push specific sections down */
