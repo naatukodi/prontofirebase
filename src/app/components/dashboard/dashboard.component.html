@@ -14,21 +14,13 @@
     <div class="workflow-buttons">
       <button
         mat-button
-        type="button"
         *ngFor="let step of steps; let i = index"
-        [ngStyle]="getStepIndex(v) === i
-          ? {'background-color':'green','color':'white'}
-          : {'background-color':'lightgrey','color':'black'}"
-        (click)="step === 'Stakeholder' && goToStakeholder(v)"
-        (click)="step === 'BackEnd' && goToValuation(v)"
-        (click)="step === 'AVO' && goToInspection(v)"
-        (click)="step === 'QC' && goToQualityControl(v)"
-        (click)="step === 'FinalReport' && goToFinalReport(v)"
+        [class.active-step]="i === getStepIndex(v)"
+        (click)="onStepClick(step, v)"
       >
         {{ step }}
       </button>
     </div>
-
 
     <!-- applicant & contact -->
     <section class="mt-2">

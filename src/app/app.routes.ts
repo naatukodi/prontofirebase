@@ -32,8 +32,8 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewDashboard' } },
   // 2) Stakeholder routes
   { path: 'stakeholder', component: StakeholderNewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanCreateStakeholder' } },
-  { path: 'valuations/:valuationId/stakeholder/update', component: StakeholderUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditStakeholder' } },
-  { path: 'valuations/:valuationId/stakeholder', component: StakeholderViewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewStakeholder' } },
+  { path: 'valuation/:valuationId/stakeholder/update', component: StakeholderUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditStakeholder' } },
+  { path: 'valuation/:valuationId/stakeholder', component: StakeholderViewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewStakeholder' } },
   // 3) Valuation routes
   { path: 'valuation/:valuationId/vehicle-details', component: ValuationVehicleDetailsComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewVehicleDetails' } },
   { path: 'valuation/:valuationId/vehicle-details/update', component: ValuationUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditVehicleDetails' } },

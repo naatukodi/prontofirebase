@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Claim } from '../models/claim.model';
-import { Valuation } from '../models/valuation.model';
+import { Valuation, WFValuation } from '../models/valuation.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -29,8 +29,8 @@ export class ClaimService {
     return this.http.get<Claim[]>(this.apiUrl, { params });
   }
 
-  getOpenValuations(): Observable<Valuation[]> {
-    return this.http.get<Valuation[]>(`${this.apiUrl}/open`);
+  getOpenValuations(): Observable<WFValuation[]> {
+    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open`);
   }
 
   create(v: Valuation): Observable<Valuation> {
