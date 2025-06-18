@@ -55,7 +55,6 @@ html, body {
 
 /* push hero down by toolbar height so it sits directly underneath */
 .main-layout .hero {
-    margin-top: 64px;  
     background: linear-gradient(135deg, #3f51b5 0%, #2196f3 100%);
     color: white;
     text-align: center;
