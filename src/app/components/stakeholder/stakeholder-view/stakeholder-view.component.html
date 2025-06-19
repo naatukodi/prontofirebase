@@ -37,6 +37,16 @@
         <mat-label>Email ID</mat-label>
         <input matInput [value]="stakeholder.executiveEmail" readonly />
       </mat-form-field>
+
+       <mat-form-field appearance="fill">
+        <mat-label>Valuation Type</mat-label>
+        <input matInput formControlName="valuationType" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" />
+      </mat-form-field>
     </div>
   </fieldset>
 

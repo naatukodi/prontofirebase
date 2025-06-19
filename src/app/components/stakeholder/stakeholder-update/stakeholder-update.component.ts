@@ -82,13 +82,13 @@ stakeholderOptions: string[] = [
     this.form = this.fb.group({
       stakeholderName:           ['', Validators.required],
       stakeholderExecutiveName:  ['', Validators.required],
-      stakeholderExecutiveContact:['', Validators.required],
+      stakeholderExecutiveContact:['', [Validators.pattern('^[0-9]{10}$')]],
       stakeholderExecutiveWhatsapp: [''],
       stakeholderExecutiveEmail: ['',
         [Validators.email]
       ],
       applicantName:             ['', Validators.required],
-      applicantContact:          [this.applicantContact, Validators.required],
+      applicantContact:          [this.applicantContact, [Validators.pattern('^[0-9]{10}$')]],
       vehicleNumber:             ['', Validators.required],
       vehicleSegment:            ['', Validators.required]
     });
@@ -113,7 +113,9 @@ stakeholderOptions: string[] = [
           stakeholderExecutiveEmail: data.executiveEmail,
           applicantName:             data.applicant.name,
           applicantContact:          data.applicant.contact,
-          vehicleNumber:             this.vehicleNumber
+          vehicleNumber:             this.vehicleNumber,
+          valuationType:             data.valuationType,
+          location:                  data.location
         });
         this.loading = false;
       },
@@ -153,6 +155,8 @@ stakeholderOptions: string[] = [
     fd.append('vehicleNumber', v.vehicleNumber);
     fd.append('vehicleSegment', v.vehicleSegment);
     fd.append('valuationId', this.valuationId);
+    fd.append('valuationType', v.valuationType);
+    fd.append('location', v.location);
 
     if (this.rcFile) {
       fd.append('rcFile', this.rcFile, this.rcFile.name);

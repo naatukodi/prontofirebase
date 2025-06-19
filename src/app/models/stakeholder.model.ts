@@ -6,6 +6,8 @@ export interface Stakeholder {
   executiveWhatsapp: string;
   executiveEmail: string;
   vehicleSegment: string;
+  valuationType: string;
+  location: string;
   applicant: {
     name: string;
     contact: string;

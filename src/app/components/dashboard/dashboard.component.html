@@ -3,10 +3,11 @@
   <mat-expansion-panel *ngFor="let v of claims">
     <mat-expansion-panel-header>
       <mat-panel-title>
-        {{ v.vehicleNumber }} — {{ v.applicantName }}
+        {{ v.vehicleNumber }} — {{ v.assignedTo }} - {{ v.assignedToPhoneNumber }} - {{ v.location }}
       </mat-panel-title>
       <mat-panel-description>
-        {{ v.createdAt | date:'medium' }}
+        {{ v.createdAt | date:'medium' }} - 
+        {{ v.status }} - {{ v.redFlag ? 'Red Flag' : 'Normal' }} 
       </mat-panel-description>
     </mat-expansion-panel-header>
 
@@ -25,7 +26,7 @@
     <!-- applicant & contact -->
     <section class="mt-2">
       <h4>Applicant</h4>
-      <p>{{ v.applicantName }} — {{ v.applicantContact }}</p>
+      <p>{{ v.applicantName }} — {{ v.applicantContact }} - {{ v.location }} - {{ v.valuationType }} - {{ v.name }}</p>
     </section>
   </mat-expansion-panel>
 </mat-accordion>

@@ -32,5 +32,7 @@ export interface WFValuation {
   redFlag: boolean | null;      // true/false or null
   remarks: string | null;        // e.g. “Pending documents”
   location: string | null;       // e.g. “Mumbai, India”
+  valuationType: string | null; // e.g. Car, Bike, Truck
+  name: string;            // e.g. "SBI"
   // …and any of the other fields you care about
 }
