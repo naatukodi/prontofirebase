@@ -26,6 +26,14 @@ form {
     color: #f44336;
   }
   
+  .actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-top: 8px;
+    margin-left: 8px;
+}
+
   /* Style for file upload sections */
   .file-upload {
     display: flex;

@@ -25,6 +25,14 @@ form {
   .error {
     color: #f44336;
   }
+
+  .actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-top: 8px;
+    margin-left: 8px;
+}
   
   /* Style for file upload sections */
   .file-upload {
@@ -42,5 +50,7 @@ form {
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+
+    
   }
   

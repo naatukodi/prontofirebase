@@ -46,6 +46,8 @@ img {
 .actions {
   display: flex;
   align-items: center;
+  margin-left: 8px;
+  justify-content: flex-start;
 
   .back-button {
     margin-right: 1rem; // space to the right of “Back”
