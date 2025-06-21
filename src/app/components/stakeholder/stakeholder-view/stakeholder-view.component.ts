@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { SharedModule } from '../../shared/shared.module/shared.module';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthorizationService } from '../../../services/authorization.service';
 
 @Component({
@@ -32,6 +32,17 @@ export class StakeholderViewComponent implements OnInit {
     executiveContact: string;
     executiveWhatsapp: string;
     executiveEmail: string;
+    valuationType: string | null;
+    vehicleSegment: string | null;
+    vehicleLocation: {
+      pincode: string | null;
+      block: string | null;
+      district: string | null;
+      state: string | null;
+      country: string | null;
+      name?: string | null;
+      division?: string | null;
+    };
     applicant: { name: string; contact: string };
     documents: Array<{ type: string; filePath: string; uploadedAt: string }>;
   };
@@ -45,7 +56,7 @@ export class StakeholderViewComponent implements OnInit {
   ngOnInit(): void {
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     this.route.queryParamMap.subscribe(params => {
-      this.vehicleNumber   = params.get('vehicleNumber')!;
+      this.vehicleNumber    = params.get('vehicleNumber')!;
       this.applicantContact = params.get('applicantContact')!;
       this.loadStakeholder();
     });
@@ -61,6 +72,7 @@ export class StakeholderViewComponent implements OnInit {
     ).subscribe({
       next: data => {
         this.stakeholder = data;
+        this.setOtherDocuments();
         this.loading     = false;
       },
       error: err => {
@@ -70,10 +82,14 @@ export class StakeholderViewComponent implements OnInit {
     });
   }
 
+  private setOtherDocuments() {
+    this.otherDocuments = (this.stakeholder.documents || [])
+      .filter(doc => doc.type !== 'RC' && doc.type !== 'Insurance');
+  }
+
   onEdit() {
-    // reuse your existing stakeholder-update route
     this.router.navigate(
-      ['/valuations', this.valuationId, 'stakeholder', 'update'],
+      ['/valuation', this.valuationId, 'stakeholder', 'update'],
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
@@ -84,17 +100,10 @@ export class StakeholderViewComponent implements OnInit {
   }
 
   getDocumentFilePath(type: string): string | undefined {
-  return this.stakeholder?.documents?.find((d: any) => d.type === type)?.filePath;
-}
-
-setOtherDocuments() {
-    // Assuming stakeholder.documents is an array of document objects
-    // and each document has a type, fileName, and filePath property
-    if (this.stakeholder && Array.isArray(this.stakeholder.documents)) {
-      this.otherDocuments = this.stakeholder.documents.filter(
-        doc => doc.type !== 'RC' && doc.type !== 'Insurance'
-      );
-    }
+    return this.stakeholder
+      .documents
+      .find(d => d.type === type)
+      ?.filePath;
   }
 
   onDelete() {
@@ -110,7 +119,7 @@ setOtherDocuments() {
   }
 
   onBack() {
-    this.router.navigate(['/valuation', this.valuationId], {
+    this.router.navigate(['/valuations', this.valuationId], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
         applicantContact: this.applicantContact
@@ -127,6 +136,4 @@ setOtherDocuments() {
   canDeleteStakeholder() {
     return this.authz.hasAnyPermission(['CanDeleteStakeholder']);
   }
-
 }
-

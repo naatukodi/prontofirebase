@@ -3,11 +3,11 @@
 
 <ng-container *ngIf="!loading && !error">
 
-    <app-workflow-buttons
-        [id]="valuationId"
-        [vehicleNumber]="vehicleNumber"
-        [applicantContact]="applicantContact">
-    </app-workflow-buttons>
+  <app-workflow-buttons
+    [id]="valuationId"
+    [vehicleNumber]="vehicleNumber"
+    [applicantContact]="applicantContact">
+  </app-workflow-buttons>
 
   <!-- Stakeholder -->
   <fieldset class="nested-group">
@@ -38,14 +38,36 @@
         <input matInput [value]="stakeholder.executiveEmail" readonly />
       </mat-form-field>
 
-       <mat-form-field appearance="fill">
+      <mat-form-field appearance="fill">
         <mat-label>Valuation Type</mat-label>
-        <input matInput formControlName="valuationType" />
+        <input matInput [value]="stakeholder.valuationType || '-'" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
-        <mat-label>Location</mat-label>
-        <input matInput formControlName="location" />
+        <mat-label>Vehicle Segment</mat-label>
+        <input matInput [value]="stakeholder.vehicleSegment || '-'" readonly />
+      </mat-form-field>
+
+      <!-- Location composite: you can pick whichever sub-fields you want -->
+      <mat-form-field appearance="fill">
+        <mat-label>Pincode</mat-label>
+        <input matInput [value]="stakeholder.vehicleLocation.pincode || '-'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Block</mat-label>
+        <input matInput [value]="stakeholder.vehicleLocation.block || '-'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>District</mat-label>
+        <input matInput [value]="stakeholder.vehicleLocation.district || '-'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>State</mat-label>
+        <input matInput [value]="stakeholder.vehicleLocation.state || '-'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Country</mat-label>
+        <input matInput [value]="stakeholder.vehicleLocation.country || '-'" readonly />
       </mat-form-field>
     </div>
   </fieldset>
@@ -72,15 +94,13 @@
     <div class="grid">
       <div class="file-upload">
         <label>RC</label>
-        <a [href]="getDocumentFilePath('RC')"
-           target="_blank">
+        <a [href]="getDocumentFilePath('RC')" target="_blank">
           Download
         </a>
       </div>
       <div class="file-upload">
         <label>Insurance</label>
-        <a [href]="getDocumentFilePath('Insurance')"
-           target="_blank">
+        <a [href]="getDocumentFilePath('Insurance')" target="_blank">
           Download
         </a>
       </div>
@@ -109,6 +129,7 @@
       Back
     </button>
   </div>
+
 </ng-container>
 
 <router-outlet></router-outlet>

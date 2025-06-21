@@ -1,77 +1,83 @@
+// stakeholder-update.component.ts
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router }   from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { StakeholderService } from '../../../services/stakeholder.service';
-import { Observable } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
+
+import {
+  PincodeService,
+  PincodeModel
+} from '../../../services/pincode.service';
+import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService } from '../../../services/workflow.service';
-import { ValuationService } from '../../../services/valuation.service'; // Import if needed for other services
+import { ValuationService } from '../../../services/valuation.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
+import { RouterModule } from '@angular/router';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { RouterModule, Routes } from '@angular/router';
 
 @Component({
   selector: 'app-stakeholder-update',
-  imports: [SharedModule, WorkflowButtonsComponent, RouterModule],
+  standalone: true,
+  imports: [SharedModule, RouterModule, WorkflowButtonsComponent],
   templateUrl: './stakeholder-update.component.html',
-  styleUrls: ['./stakeholder-update.component.scss'],
-  standalone: true
+  styleUrls: ['./stakeholder-update.component.scss']
 })
 export class StakeholderUpdateComponent implements OnInit {
+  loading = false;
+  form!: FormGroup;
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
 
-stakeholderOptions: string[] = [
-  'State Bank of India (SBI)',
-  'HDFC Bank',
-  'ICICI Bank',
-  'Axis Bank',
-  'IndusInd Bank',
-  'Punjab National Bank (PNB)',
-  'Federal Bank',
-  'Union Bank of India',
-  'Bank of Baroda',
-  'IDFC FIRST Bank',
-  'Karur Vysya Bank',
-  'Kotak Mahindra Bank',
-  'Mahindra Finance',
-  'Bajaj Finserv',
-  'Hero FinCorp',
-  'TVS Credit Services',
-  'Shriram Finance',
-  'Muthoot Capital Services',
-  'Cholamandalam Investment and Finance Company',
-  'Sundaram Finance',
-  'Manappuram Finance',
-  'L&T Finance'
-]; 
-  form!: FormGroup;
-  loading = true;
-  error: string | null = null;
+  stakeholderOptions: string[] = [
+      'State Bank of India (SBI)',
+      'HDFC Bank',
+      'ICICI Bank',
+      'Axis Bank',
+      'IndusInd Bank',
+      'Punjab National Bank (PNB)',
+      'Federal Bank',
+      'Union Bank of India',
+      'Bank of Baroda',
+      'IDFC FIRST Bank',
+      'Karur Vysya Bank',
+      'Kotak Mahindra Bank',
+      'Mahindra Finance',
+      'Bajaj Finserv',
+      'Hero FinCorp',
+      'TVS Credit Services',
+      'Shriram Finance',
+      'Muthoot Capital Services',
+      'Cholamandalam Investment and Finance Company',
+      'Sundaram Finance',
+      'Manappuram Finance',
+      'L&T Finance'
+    ]; 
+  locationOptions: PincodeModel[] = [];
 
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
+  error: string | null = null;
 
   rcFile?: File;
   insuranceFile?: File;
   otherFiles: File[] = [];
 
   constructor(
+    private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private fb: FormBuilder,
+    private pincodeSvc: PincodeService,
     private svc: StakeholderService,
-    private valuationSvc: ValuationService,
-    private workflowSvc: WorkflowService
+    private workflowSvc: WorkflowService,
+    private valuationSvc: ValuationService
   ) {}
 
   ngOnInit(): void {
-    // Read route + query params
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     this.route.queryParamMap.subscribe(params => {
-      this.vehicleNumber    = params.get('vehicleNumber')!;
+      this.vehicleNumber = params.get('vehicleNumber')!;
       this.applicantContact = params.get('applicantContact')!;
       this.initForm();
       this.loadStakeholder();
@@ -80,93 +86,129 @@ stakeholderOptions: string[] = [
 
   private initForm() {
     this.form = this.fb.group({
-      stakeholderName:           ['', Validators.required],
-      stakeholderExecutiveName:  ['', Validators.required],
-      stakeholderExecutiveContact:['', [Validators.pattern('^[0-9]{10}$')]],
+      pincode: ['', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]],
+      stakeholderName: ['', Validators.required],
+      stakeholderExecutiveName: ['', Validators.required],
+      stakeholderExecutiveContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       stakeholderExecutiveWhatsapp: [''],
-      stakeholderExecutiveEmail: ['',
-        [Validators.email]
-      ],
-      applicantName:             ['', Validators.required],
-      applicantContact:          [this.applicantContact, [Validators.pattern('^[0-9]{10}$')]],
-      vehicleNumber:             ['', Validators.required],
-      vehicleSegment:            ['', Validators.required]
+      stakeholderExecutiveEmail: ['', [Validators.email]],
+      valuationType: [''],
+      location: ['', Validators.required],
+      block: [{ value: '', disabled: true }],
+      district: [{ value: '', disabled: true }],
+      division: [{ value: '', disabled: true }],
+      state: [{ value: '', disabled: true }],
+      country: [{ value: '', disabled: true }],
+      applicantName: ['', Validators.required],
+      applicantContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      vehicleNumber: ['', Validators.required],
+      vehicleSegment: ['', Validators.required]
     });
   }
 
-  private loadStakeholder() {
-    this.loading = true;
-    this.error   = null;
-
-    this.svc.getStakeholder(
-      this.valuationId,
-      this.vehicleNumber,
-      this.applicantContact
-    ).subscribe({
-      next: data => {
-        // patch form with existing API data
-        this.form.patchValue({
-          stakeholderName:           data.name,
-          stakeholderExecutiveName:  data.executiveName,
-          stakeholderExecutiveContact: data.executiveContact,
-          stakeholderExecutiveWhatsapp: data.executiveWhatsapp,
-          stakeholderExecutiveEmail: data.executiveEmail,
-          applicantName:             data.applicant.name,
-          applicantContact:          data.applicant.contact,
-          vehicleNumber:             this.vehicleNumber,
-          valuationType:             data.valuationType,
-          location:                  data.location
-        });
-        this.loading = false;
+  onPincodeLookup() {
+    const pin = this.form.get('pincode')!.value;
+    if (!this.form.get('pincode')!.valid) {
+      this.locationOptions = [];
+      return;
+    }
+    this.pincodeSvc.lookup(pin).subscribe({
+      next: offices => {
+        this.locationOptions = offices;
+        this.form.patchValue({ location: '', block: '', district: '', division: '', state: '', country: '' });
       },
-      error: err => {
-        this.error   = err.message || 'Failed to load stakeholder';
-        this.loading = false;
+      error: () => {
+        this.error = 'PIN lookup failed';
+        this.locationOptions = [];
       }
     });
   }
 
-  // single-file handler
-  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this[field] = input.files[0];
-    }
+  onLocationChange(selected: PincodeModel) {
+    this.form.patchValue({
+      block: selected.block,
+      district: selected.district,
+      division: selected.division,
+      state: selected.state,
+      country: selected.country
+    });
   }
 
-  // multi-file handler
+  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) this[field] = input.files[0];
+  }
+
   onMultiFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.otherFiles = input.files ? Array.from(input.files) : [];
   }
 
-  // build FormData for either save or submit
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
+
+    fd.append('pincode', v.pincode);
+    fd.append('locationName', v.location.name);
+    fd.append('block', v.block);
+    fd.append('district', v.district);
+    fd.append('division', v.division);
+    fd.append('state', v.state);
+    fd.append('country', v.country);
 
     fd.append('name', v.stakeholderName);
     fd.append('executiveName', v.stakeholderExecutiveName);
     fd.append('executiveContact', v.stakeholderExecutiveContact);
     fd.append('executiveWhatsapp', v.stakeholderExecutiveWhatsapp || '');
     fd.append('executiveEmail', v.stakeholderExecutiveEmail || '');
+    fd.append('valuationType', v.valuationType);
+
     fd.append('applicantName', v.applicantName);
     fd.append('applicantContact', v.applicantContact);
     fd.append('vehicleNumber', v.vehicleNumber);
     fd.append('vehicleSegment', v.vehicleSegment);
     fd.append('valuationId', this.valuationId);
-    fd.append('valuationType', v.valuationType);
-    fd.append('location', v.location);
 
-    if (this.rcFile) {
-      fd.append('rcFile', this.rcFile, this.rcFile.name);
-    }
-    if (this.insuranceFile) {
-      fd.append('insuranceFile', this.insuranceFile, this.insuranceFile.name);
-    }
-    this.otherFiles.forEach(f => fd.append('otherFiles', f, f.name));
+    if (this.rcFile) fd.append('RcFile', this.rcFile, this.rcFile.name);
+    if (this.insuranceFile) fd.append('InsuranceFile', this.insuranceFile, this.insuranceFile.name);
+    this.otherFiles.forEach(f => fd.append('OtherFiles', f, f.name));
 
     return fd;
+  }
+
+  private loadStakeholder() {
+    this.svc.getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: data => {
+          this.form.patchValue({
+            pincode: data.vehicleLocation.pincode,
+            location: data.vehicleLocation,
+            block: data.vehicleLocation.block,
+            district: data.vehicleLocation.district,
+            division: data.vehicleLocation.division,
+            state: data.vehicleLocation.state,
+            country: data.vehicleLocation.country,
+
+            stakeholderName: data.name,
+            stakeholderExecutiveName: data.executiveName,
+            stakeholderExecutiveContact: data.executiveContact,
+            stakeholderExecutiveWhatsapp: data.executiveWhatsapp,
+            stakeholderExecutiveEmail: data.executiveEmail,
+            valuationType: data.valuationType,
+
+            applicantName: data.applicant.name,
+            applicantContact: data.applicant.contact,
+
+            vehicleNumber: this.vehicleNumber,
+            vehicleSegment: data.vehicleSegment
+          });
+          this.saving = this.loading = false;
+        },
+        error: err => {
+          this.error = err.message || 'Failed to load';
+          this.loading = false;
+        }
+      });
   }
 
   // "Save" (draft) flow
