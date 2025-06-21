@@ -14,7 +14,10 @@ import { FooterComponent } from '../footer/footer';
 
     <section class="hero">
       <div class="hero-content">
-        <h1>Pronto Moto</h1>
+        <h1>
+          <span style="color: green;">Pronto</span>
+          <span style="color: red;">Moto</span>
+        </h1>
         <p>Your one-stop valuations dashboard</p>
       </div>
     </section>
