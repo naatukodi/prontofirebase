@@ -16,16 +16,11 @@
     </mat-error>
   </mat-form-field>
 
-  <app-workflow-buttons
-    [id]="valuationId"
-    [vehicleNumber]="vehicleNumber"
-    [applicantContact]="applicantContact"
-  ></app-workflow-buttons>
-
   <!-- Stakeholder Group -->
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
+
       <mat-form-field appearance="fill">
         <mat-label>Name of Stakeholder</mat-label>
         <mat-select formControlName="stakeholderName">
@@ -76,17 +71,31 @@
         </mat-hint>
       </mat-form-field>
 
-      <!-- Auto-filled fields -->
+      <!-- Auto-filled: Block / City -->
       <mat-form-field appearance="fill">
         <mat-label>Block / City</mat-label>
         <input matInput formControlName="block" [disabled]="true" />
       </mat-form-field>
 
+      <!-- Auto-filled: District -->
+      <mat-form-field appearance="fill">
+        <mat-label>District</mat-label>
+        <input matInput formControlName="district" [disabled]="true" />
+      </mat-form-field>
+
+      <!-- Auto-filled: Division -->
+      <mat-form-field appearance="fill">
+        <mat-label>Division</mat-label>
+        <input matInput formControlName="division" [disabled]="true" />
+      </mat-form-field>
+
+      <!-- Auto-filled: State -->
       <mat-form-field appearance="fill">
         <mat-label>State</mat-label>
         <input matInput formControlName="state" [disabled]="true" />
       </mat-form-field>
 
+      <!-- Auto-filled: Country -->
       <mat-form-field appearance="fill">
         <mat-label>Country</mat-label>
         <input matInput formControlName="country" [disabled]="true" />

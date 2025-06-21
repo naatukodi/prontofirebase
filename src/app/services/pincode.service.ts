@@ -6,6 +6,8 @@ import { environment } from '../../environments/environment';
 export interface PincodeModel {
   name:    string;
   block:   string;
+  district: string;
+  division: string;
   state:   string;
   country: string;
   pincode: string;

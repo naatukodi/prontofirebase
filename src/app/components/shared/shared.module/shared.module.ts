@@ -12,6 +12,7 @@ import { MatCheckboxModule }   from '@angular/material/checkbox';
 import { MatSelectModule }     from '@angular/material/select';
 import { MatTabsModule }       from '@angular/material/tabs';
 import { MatSnackBarModule }   from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -31,7 +32,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatTabsModule,
     MatSnackBarModule,
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatTableModule
   ]
 })
 export class SharedModule {}
