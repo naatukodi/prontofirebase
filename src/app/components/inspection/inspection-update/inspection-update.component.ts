@@ -1,10 +1,11 @@
 // src/app/valuation‐inspection‐update/valuation‐inspection‐update.component.ts
 
+// src/app/valuation-inspection-update/inspection-update.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InspectionService } from '../../../services/inspection.service';
-import { Inspection } from '../../../models/Inspection';               
+import { Inspection } from '../../../models/Inspection';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap } from 'rxjs/operators';
 import { WorkflowService } from '../../../services/workflow.service';
@@ -13,18 +14,29 @@ import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
 
+type ValuationType =
+  | 'four-wheeler'
+  | 'cv'
+  | 'two-wheeler'
+  | 'three-wheeler'
+  | 'tractor'
+  | 'ce';
+
 @Component({
   selector: 'app-valuation-inspection-update',
-  imports: [SharedModule, WorkflowButtonsComponent, RouterModule],
   standalone: true,
+  imports: [SharedModule, WorkflowButtonsComponent, RouterModule],
   templateUrl: './inspection-update.component.html',
   styleUrls: ['./inspection-update.component.scss']
 })
 export class InspectionUpdateComponent implements OnInit {
+  // identifiers
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType: ValuationType | null = null;
 
+  // form state
   form!: FormGroup;
   loading = true;
   error: string | null = null;
@@ -32,8 +44,62 @@ export class InspectionUpdateComponent implements OnInit {
   saveInProgress = false;
   submitInProgress = false;
 
-  // For photo uploads
+  // photo uploads
   photoFiles: File[] = [];
+
+  // visibility map same as view
+ private visibilityMap: Record<ValuationType, string[]> = {
+    'four-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
+      'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
+      'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','paintWork'
+    ],
+    'cv': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
+      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
+      'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
+      'rightSideWing','leftSideWing','tailGate','loadFloor'
+    ],
+    'two-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
+      'seats','speedoMeter','front','rear','paintWork'
+    ],
+    'three-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
+      'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
+      'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
+      'front','rear','axles','airConditioner','audio','paintWork'
+    ],
+    'tractor': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
+      'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
+      'front','rear','axles','paintWork'
+    ],
+    'ce': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
+      'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
+      'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
+      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork'
+    ]
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -46,10 +112,9 @@ export class InspectionUpdateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 1) Read route param: valuationId
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
+    this.valuationType = this.route.snapshot.queryParamMap.get('valuationtype') as ValuationType;
 
-    // 2) Read query params: vehicleNumber, applicantContact
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
@@ -65,14 +130,16 @@ export class InspectionUpdateComponent implements OnInit {
     });
   }
 
+  showField(key: string): boolean {
+  // Only true if valuationType is set and the key is in the visibility map
+  return (this.valuationType != null && this.visibilityMap[this.valuationType]?.includes(key)) ?? false;
+}
+
   private initForm() {
     this.form = this.fb.group({
-      // Basic Inspection Info
       vehicleInspectedBy: ['', Validators.required],
-      dateOfInspection: ['', Validators.required],      // ISO date string (YYYY-MM-DD)
+      dateOfInspection: ['', Validators.required],
       inspectionLocation: ['', Validators.required],
-
-      // Basic Vehicle Checks
       vehicleMoved: [false],
       engineStarted: [false],
       odometer: [0, Validators.min(0)],
@@ -80,49 +147,66 @@ export class InspectionUpdateComponent implements OnInit {
       bodyType: ['', Validators.required],
       overallTyreCondition: ['', Validators.required],
       otherAccessoryFitment: [false],
-
-      // External Visual Checks
       windshieldGlass: ['', Validators.required],
       roadWorthyCondition: [false],
-      engineCondition: ['', Validators.required],
-      suspensionSystem: ['', Validators.required],
-      steeringAssy: ['', Validators.required],
-      brakeSystem: ['', Validators.required],
+      engineCondition: ['', false],
+      suspensionSystem: ['', false],
+      steeringAssy: ['', false],
+      brakeSystem: ['', false],
+      chassisCondition: ['', false],
+      bodyCondition: ['', false],
+      batteryCondition: ['', false],
+      paintWork: ['', false],
+      clutchSystem: ['', false],
+      gearBoxAssy: ['', false],
+      propellerShaft: ['', false],
+      differentialAssy: ['', false],
+      cabin: ['', false],
+      dashboard: ['', false],
+      seats: ['', false],
+      headLamps: ['', false],
+      electricAssembly: ['', false],
+      radiator: ['', false],
+      intercooler: ['', false],
+      allHosePipes: ['', false],
+       // --- new controls to match your template ---
+    fuelSystem: ['', false],
+    exteriorCondition: ['', false],
+    interiorCondition: ['', false],
+    steeringWheel: ['', false],
+    steeringColumn: ['', false],
+    steeringBox: ['', false],
+    steeringLinkages: ['', false],
 
-      // Structural & Body Checks
-      chassisCondition: ['', Validators.required],
-      bodyCondition: ['', Validators.required],
-      batteryCondition: ['', Validators.required],
-      paintWork: ['', Validators.required],
-      clutchSystem: ['', Validators.required],
-      gearBoxAssy: ['', Validators.required],
-      propellerShaft: ['', Validators.required],
-      differentialAssy: ['', Validators.required],
-
-      // Interior & Electrical Checks
-      cabin: ['', Validators.required],
-      dashboard: ['', Validators.required],
-      seats: ['', Validators.required],
-      headLamps: ['', Validators.required],
-      electricAssembly: ['', Validators.required],
-      radiator: ['', Validators.required],
-      intercooler: ['', Validators.required],
-      allHosePipes: ['', Validators.required]
+    bonnet: ['', false],
+    mudguards: ['', false],
+    allGlasses: ['', Validators.required],
+    boom: ['', false],
+    bucket: ['', false],
+    chainTrack:['', false],
+    hydraulicCylinders: ['', false],
+    swingUnit: ['', false],
+    upholestry: ['', false],
+    interiorTrims: ['', false],
+    front: ['', false],
+    rear:['', false],
+    axles:['', false],
+    airConditioner: ['', false],
+    audio: ['', false]
     });
   }
 
   private loadInspection() {
     this.loading = true;
     this.error = null;
-
     this.inspectionSvc
       .getInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
-        next: (data: Inspection) => {
+        next: data => {
           this.patchForm(data);
           this.loading = false;
         },
-        error: (err) => {
+        error: err => {
           this.error = err.message || 'Failed to load inspection details.';
           this.loading = false;
         }
@@ -130,9 +214,10 @@ export class InspectionUpdateComponent implements OnInit {
   }
 
   private patchForm(data: Inspection) {
-    this.form.patchValue({
+    const v = this.form;
+    v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy,
-      dateOfInspection: data.dateOfInspection?.slice(0, 10) || '',
+      dateOfInspection: data.dateOfInspection?.slice(0,10) ?? '',
       inspectionLocation: data.inspectionLocation,
       vehicleMoved: data.vehicleMoved,
       engineStarted: data.engineStarted,
@@ -162,77 +247,55 @@ export class InspectionUpdateComponent implements OnInit {
       electricAssembly: data.electricAssembly,
       radiator: data.radiator,
       intercooler: data.intercooler,
-      allHosePipes: data.allHosePipes
+      allHosePipes: data.allHosePipes,
+      // new fields:
+    fuelSystem: data.fuelSystem,
+    exteriorCondition: data.exteriorCondition,
+    interiorCondition: data.interiorCondition,
+    steeringWheel: data.steeringWheel,
+    steeringColumn: data.steeringColumn,
+    steeringBox: data.steeringBox,
+    steeringLinkages: data.steeringLinkages,
+    bonnet: data.bonnet,
+    mudguards: data.mudguards,
+    allGlasses: data.allGlasses,
+    boom: data.boom,
+    bucket: data.bucket,
+    chainTrack: data.chainTrack,
+    hydraulicCylinders: data.hydraulicCylinders,
+    swingUnit: data.swingUnit,
+    upholestry: data.upholestry,
+    interiorTrims: data.interiorTrims,
+    front: data.front,
+    rear: data.rear,
+    axles: data.axles,
+    airConditioner: data.airConditioner,
+    audio: data.audio
     });
-
-    // We do not preload existing photos into photoFiles (only allow new uploads here).
   }
 
   onPhotoChange(event: Event) {
-    const inputEl = event.target as HTMLInputElement;
-    this.photoFiles = inputEl.files ? Array.from(inputEl.files) : [];
+    const input = event.target as HTMLInputElement;
+    this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
-
-    // Append each field
-    fd.append('vehicleInspectedBy', v.vehicleInspectedBy);
-    fd.append('dateOfInspection', v.dateOfInspection);
-    fd.append('inspectionLocation', v.inspectionLocation);
-    fd.append('vehicleMoved', v.vehicleMoved ? 'true' : 'false');
-    fd.append('engineStarted', v.engineStarted ? 'true' : 'false');
-    fd.append('odometer', v.odometer.toString());
-    fd.append('vinPlate', v.vinPlate ? 'true' : 'false');
-    fd.append('bodyType', v.bodyType);
-    fd.append('overallTyreCondition', v.overallTyreCondition);
-    fd.append('otherAccessoryFitment', v.otherAccessoryFitment ? 'true' : 'false');
-    fd.append('windshieldGlass', v.windshieldGlass);
-    fd.append('roadWorthyCondition', v.roadWorthyCondition ? 'true' : 'false');
-    fd.append('engineCondition', v.engineCondition);
-    fd.append('suspensionSystem', v.suspensionSystem);
-    fd.append('steeringAssy', v.steeringAssy);
-    fd.append('brakeSystem', v.brakeSystem);
-    fd.append('chassisCondition', v.chassisCondition);
-    fd.append('bodyCondition', v.bodyCondition);
-    fd.append('batteryCondition', v.batteryCondition);
-    fd.append('paintWork', v.paintWork);
-    fd.append('clutchSystem', v.clutchSystem);
-    fd.append('gearBoxAssy', v.gearBoxAssy);
-    fd.append('propellerShaft', v.propellerShaft);
-    fd.append('differentialAssy', v.differentialAssy);
-    fd.append('cabin', v.cabin);
-    fd.append('dashboard', v.dashboard);
-    fd.append('seats', v.seats);
-    fd.append('headLamps', v.headLamps);
-    fd.append('electricAssembly', v.electricAssembly);
-    fd.append('radiator', v.radiator);
-    fd.append('intercooler', v.intercooler);
-    fd.append('allHosePipes', v.allHosePipes);
-
-    // Append new photo files
-    this.photoFiles.forEach((file, index) => {
-      fd.append('photos', file, file.name);
-    });
-
-    // Include route identifiers
+    Object.keys(v).forEach(k => fd.append(k, v[k]));
+    this.photoFiles.forEach(file => fd.append('photos', file, file.name));
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
     fd.append('applicantContact', this.applicantContact);
-
     return fd;
   }
 
   onClick() {
-    // Handle the click event for the upload button
     this.router.navigate(['/valuation', this.valuationId, 'inspection','vehicle-image-upload'], {
-      queryParams: {
-        vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
-      }
+      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType }
     });
   }
+
 
   onSave() {
     if (this.form.invalid) {

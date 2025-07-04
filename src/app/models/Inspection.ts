@@ -32,5 +32,33 @@ export interface Inspection {
   radiator: string;
   intercooler: string;
   allHosePipes: string;
+  steeringSystem: string;
+  fuelSystem: string;
+  tyreCondition: string;
+  exteriorCondition: string;
+  interiorCondition: string;
+  electricalSystem: string;
+  gearboxAssembly: string;
+  driveShafts: string;
+  interCooler: string;
+  allGlasses: string;
+  steeringWheel: string;
+  steeringColumn: string;
+  steeringBox: string;
+  steeringLinkages: string;
+  bonnet: string;
+  mudguards: string;
+  boom: string;
+  bucket: string;
+  chainTrack: string;
+  hydraulicCylinders: string;
+  swingUnit: string;
+  upholestry: string;
+  interiorTrims: string;
+  front: string;
+  rear: string;
+  axles: string;
+  airConditioner: string;
+  audio: string;
   photos: string[];             // array of URLs
 }

@@ -1,14 +1,21 @@
-// src/app/valuation‐inspection/valuation‐inspection.component.ts
-
+// src/app/valuation-inspection/inspection-view.component.ts
 import { Component, OnInit } from '@angular/core';
-import { HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Inspection } from '../../../models/Inspection';       
-import { InspectionService } from '../../../services/inspection.service'; 
-import { SharedModule } from '../../shared/shared.module/shared.module'; // Adjust the import path as needed
-import { AuthorizationService } from '../../../services/authorization.service'; // Adjust the import path as needed
+import { Inspection } from '../../../models/Inspection';
+import { InspectionService } from '../../../services/inspection.service';
+import { SharedModule } from '../../shared/shared.module/shared.module';
+import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
+
+type ValuationType =
+  | 'four-wheeler'
+  | 'cv'
+  | 'two-wheeler'
+  | 'three-wheeler'
+  | 'tractor'
+  | 'ce';
 
 @Component({
   selector: 'app-valuation-inspection',
@@ -24,10 +31,64 @@ export class InspectionViewComponent implements OnInit {
 
   private authz = new AuthorizationService();
 
-  // route param & query params
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+
+  valuationType: ValuationType | null = null;
+
+  private visibilityMap: Record<ValuationType, string[]> = {
+    'four-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
+      'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
+      'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','paintWork'
+    ],
+    'cv': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
+      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
+      'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
+      'rightSideWing','leftSideWing','tailGate','loadFloor'
+    ],
+    'two-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
+      'seats','speedoMeter','front','rear','paintWork'
+    ],
+    'three-wheeler': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
+      'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
+      'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
+      'front','rear','axles','airConditioner','audio','paintWork'
+    ],
+    'tractor': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
+      'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
+      'front','rear','axles','paintWork'
+    ],
+    'ce': [
+      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
+      'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
+      'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
+      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork'
+    ]
+  };
 
   constructor(
     private route: ActivatedRoute,
@@ -36,7 +97,8 @@ export class InspectionViewComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 1) Fetch valuationId from route parameters
+    this.valuationType = this.route.snapshot.queryParamMap.get('valuationtype') as ValuationType;
+
     this.route.paramMap.subscribe(params => {
       const vid = params.get('valuationId');
       if (vid) {
@@ -50,7 +112,6 @@ export class InspectionViewComponent implements OnInit {
   }
 
   private loadQueryParamsAndFetch() {
-    // 2) Fetch vehicleNumber & applicantContact from queryParams
     this.route.queryParamMap.subscribe(qp => {
       const vn = qp.get('vehicleNumber');
       const ac = qp.get('applicantContact');
@@ -60,7 +121,7 @@ export class InspectionViewComponent implements OnInit {
         this.fetchInspection();
       } else {
         this.loading = false;
-        this.error = 'Missing required query parameters (vehicleNumber / applicantContact).';
+        this.error = 'Missing required query parameters.';
       }
     });
   }
@@ -69,75 +130,60 @@ export class InspectionViewComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Assuming InspectionService has a getInspection(...) method
     this.inspectionService
-      .getInspectionDetails(
-      this.valuationId,
-      this.vehicleNumber,
-      this.applicantContact
-      ).subscribe({
-      next: data => {
-        this.inspection = data;
-        this.loading = false;
-      },
-      error: err => {
-        this.error = err.message || 'Failed to load inspection';
-        this.loading = false;
-      }
+      .getInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: data => {
+          this.inspection = data;
+          this.loading = false;
+        },
+        error: (err: HttpErrorResponse) => {
+          this.error = err.message || 'Failed to load inspection';
+          this.loading = false;
+        }
       });
+  }
+
+  showField(key: string): boolean {
+    if (!this.valuationType) return false;
+    return this.visibilityMap[this.valuationType]?.includes(key) ?? false;
   }
 
   onClick() {
-    // Handle the click event for the upload button
-    this.router.navigate(['/valuation', this.valuationId, 'inspection','vehicle-image-upload'], {
-      queryParams: {
-        vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
-      }
-    });
-  }
-
-  /** Navigate to an edit screen (implement as needed) */
-  onEdit() {
-    // Navigate to an edit screen for this inspection
     this.router.navigate(
-      ['/valuation', this.valuationId, 'inspection', 'update'],
-      {
-        queryParams: {
-          vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
-        }
-      }
+      ['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'],
+      { queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType } }
     );
   }
 
-  /** Delete (or mark deleted) – implement your own logic if needed */
-  onDelete(): void {
-    if (!confirm('Delete this inspection record?')) return;
-    this.inspectionService
-      .deleteInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
-      .subscribe({
-        next: () => this.router.navigate(['/']),
-        error: (err) => (this.error = err.message || 'Delete failed')
-      });
+  onEdit() {
+    this.router.navigate(
+      ['/valuation', this.valuationId, 'inspection', 'update'],
+      { queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType } }
+    );
   }
 
-  onBack(): void {
-    // Navigate back to the previous screen
-    this.router.navigate(['/valuation', this.valuationId], {
-      queryParams: {
-        vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
-      }
+  onDelete(): void {
+    if (!confirm('Delete this inspection record?')) return;
+    this.inspectionService.deleteInspectionDetails(
+      this.valuationId, this.vehicleNumber, this.applicantContact
+    ).subscribe({
+      next: () => this.router.navigate(['/']),
+      error: err => (this.error = err.message || 'Delete failed')
     });
   }
 
-  canEditInspection() {
-    return this.authz.hasAnyPermission([
-      'CanCreateInspection',
-      'CanEditInspection'
-    ]);
+  onBack(): void {
+    this.router.navigate(
+      ['/valuation', this.valuationId],
+      { queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType } }
+    );
   }
+
+  canEditInspection() {
+    return this.authz.hasAnyPermission(['CanCreateInspection','CanEditInspection']);
+  }
+
   canDeleteInspection() {
     return this.authz.hasAnyPermission(['CanDeleteInspection']);
   }
