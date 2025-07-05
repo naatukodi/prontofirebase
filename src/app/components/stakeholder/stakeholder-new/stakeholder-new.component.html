@@ -1,3 +1,4 @@
+<!-- src/app/valuation-stakeholder-new/stakeholder-new.component.html -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <h2>Stakeholder New Request</h2>
 
@@ -20,7 +21,6 @@
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
-
       <mat-form-field appearance="fill">
         <mat-label>Name of Stakeholder</mat-label>
         <mat-select formControlName="stakeholderName">
@@ -52,7 +52,14 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Valuation Type</mat-label>
-        <input matInput formControlName="valuationType" />
+        <mat-select formControlName="valuationType">
+          <mat-option value="four-wheeler">Four Wheeler</mat-option>
+          <mat-option value="cv">Commercial Vehicle</mat-option>
+          <mat-option value="two-wheeler">Two Wheeler</mat-option>
+          <mat-option value="three-wheeler">Three Wheeler</mat-option>
+          <mat-option value="tractor">Tractor</mat-option>
+          <mat-option value="ce">Commercial Equipment</mat-option>
+        </mat-select>
       </mat-form-field>
 
       <!-- Location dropdown -->
@@ -61,6 +68,7 @@
         <mat-select
           formControlName="location"
           (selectionChange)="onLocationChange($event.value)"
+          [compareWith]="compareByName"
         >
           <mat-option *ngFor="let loc of locationOptions" [value]="loc">
             {{ loc.name }}
@@ -71,34 +79,34 @@
         </mat-hint>
       </mat-form-field>
 
-      <!-- Auto-filled: Block / City -->
+      <!-- Auto-filled / manual: Block / City -->
       <mat-form-field appearance="fill">
         <mat-label>Block / City</mat-label>
-        <input matInput formControlName="block" [disabled]="true" />
+        <input matInput formControlName="block" />
       </mat-form-field>
 
-      <!-- Auto-filled: District -->
+      <!-- Auto-filled / manual: District -->
       <mat-form-field appearance="fill">
         <mat-label>District</mat-label>
-        <input matInput formControlName="district" [disabled]="true" />
+        <input matInput formControlName="district" />
       </mat-form-field>
 
-      <!-- Auto-filled: Division -->
+      <!-- Auto-filled / manual: Division -->
       <mat-form-field appearance="fill">
         <mat-label>Division</mat-label>
-        <input matInput formControlName="division" [disabled]="true" />
+        <input matInput formControlName="division" />
       </mat-form-field>
 
-      <!-- Auto-filled: State -->
+      <!-- Auto-filled / manual: State -->
       <mat-form-field appearance="fill">
         <mat-label>State</mat-label>
-        <input matInput formControlName="state" [disabled]="true" />
+        <input matInput formControlName="state" />
       </mat-form-field>
 
-      <!-- Auto-filled: Country -->
+      <!-- Auto-filled / manual: Country -->
       <mat-form-field appearance="fill">
         <mat-label>Country</mat-label>
-        <input matInput formControlName="country" [disabled]="true" />
+        <input matInput formControlName="country" />
       </mat-form-field>
     </div>
   </fieldset>
