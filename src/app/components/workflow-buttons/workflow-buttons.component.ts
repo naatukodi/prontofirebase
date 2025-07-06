@@ -19,6 +19,7 @@ export class WorkflowButtonsComponent {
   @Input() id!: string;
   @Input() vehicleNumber!: string;
   @Input() applicantContact!: string;
+  @Input() valuationType!: string;
 
   constructor() { }
 

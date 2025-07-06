@@ -23,7 +23,7 @@ export class ValuationUpdateComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
-
+  valuationType!: string;
 
   form!: FormGroup;
   loading = true;
@@ -54,6 +54,7 @@ export class ValuationUpdateComponent implements OnInit {
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
+      this.valuationType = params.get('valuationType')!;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -347,7 +348,8 @@ export class ValuationUpdateComponent implements OnInit {
           this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,
-              applicantContact: this.applicantContact
+              applicantContact: this.applicantContact,
+              valuationType: this.valuationType
             }
           });
         },
@@ -363,7 +365,8 @@ export class ValuationUpdateComponent implements OnInit {
     this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

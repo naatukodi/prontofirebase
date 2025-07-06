@@ -27,6 +27,7 @@ export class ValuationVehicleDetailsComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
 
   constructor(
     private http: HttpClient,
@@ -39,6 +40,7 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     // 1) Fetch valuationId from route parameters
     this.route.paramMap.subscribe(params => {
       const vid = params.get('valuationId');
+      this.valuationType = params.get('valuationType')!;
       if (vid) {
         this.valuationId = vid;
         this.loadQueryParamsAndFetch();
@@ -55,6 +57,7 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     this.route.queryParamMap.subscribe(qp => {
       const vn = qp.get('vehicleNumber');
       const ac = qp.get('applicantContact');
+      this.valuationType = qp.get('valuationType')!;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -71,8 +74,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     this.error = null;
 
     // Build the URL: GET https://…/api/valuations/{valuationId}/vehicledetails
-    const baseUrl = 'https://prontobackend-bhdnbec2fvd3ecfk.eastus2-01.azurewebsites.net';
-    const url = `${baseUrl}/api/valuations/${this.valuationId}/vehicledetails`;
+    const baseUrl = environment.apiBaseUrl;
+    const url = `${baseUrl}/valuations/${this.valuationId}/vehicledetails`;
 
     // Attach query params: vehicleNumber, applicantContact
     const params = new HttpParams()
@@ -118,7 +121,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         }
       }
     );
@@ -143,7 +147,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     this.router.navigate(['/valuation', this.valuationId], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

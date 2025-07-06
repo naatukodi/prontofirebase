@@ -18,6 +18,7 @@ export class StakeholderViewComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
 
   private authz = inject(AuthorizationService);
 
@@ -58,6 +59,7 @@ export class StakeholderViewComponent implements OnInit {
     this.route.queryParamMap.subscribe(params => {
       this.vehicleNumber    = params.get('vehicleNumber')!;
       this.applicantContact = params.get('applicantContact')!;
+      this.valuationType = params.get('valuationType')!;
       this.loadStakeholder();
     });
   }
@@ -93,7 +95,8 @@ export class StakeholderViewComponent implements OnInit {
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         }
       }
     );
@@ -122,7 +125,8 @@ export class StakeholderViewComponent implements OnInit {
     this.router.navigate(['/valuations', this.valuationId], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

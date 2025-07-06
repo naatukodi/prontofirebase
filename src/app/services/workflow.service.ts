@@ -26,11 +26,12 @@ export class WorkflowService {
       null
     );
   }
-  getWorkflowStatus(valuationId: string, vehicleNumber: string, applicantContact: string): Observable<any> {
+  getWorkflowStatus(valuationId: string, vehicleNumber: string, applicantContact: string, valuationType: string): Observable<any> {
     const url = `${this.baseUrl}/${valuationId}/workflow`;
     const params = new HttpParams()
       .set('vehicleNumber', vehicleNumber)
-      .set('applicantContact', applicantContact);
+      .set('applicantContact', applicantContact)
+      .set('valuationType', valuationType);
 
     return this.http.get<any>(url, { params })
       .pipe(

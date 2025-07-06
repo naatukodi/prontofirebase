@@ -6,7 +6,7 @@
    *ngIf="canViewStakeholder()"
     mat-button
     [routerLink]="['/valuation', id, 'stakeholder']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
     routerLinkActive="active-step">
     Stake Holder
   </button>
@@ -16,7 +16,7 @@
     *ngIf="canViewVehicleDetails()"
     mat-button
     [routerLink]="['/valuation', id, 'vehicle-details']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
     routerLinkActive="active-step"
   >
     Backend
@@ -27,7 +27,7 @@
     *ngIf="canViewInspection()"
     mat-button
     [routerLink]="['/valuation', id, 'inspection']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
     routerLinkActive="active-step"
   >
     AVO
@@ -38,7 +38,7 @@
     *ngIf="canViewQualityControl()"
     mat-button
     [routerLink]="['/valuation', id, 'quality-control']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
     routerLinkActive="active-step"
   >
     QC
@@ -49,7 +49,7 @@
     *ngIf="canViewFinalReport()"
     mat-button
     [routerLink]="['/valuation', id, 'final-report']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact }"
+    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
     routerLinkActive="active-step"
   >
     Final Report

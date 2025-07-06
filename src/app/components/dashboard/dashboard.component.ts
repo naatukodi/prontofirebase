@@ -92,7 +92,8 @@ navigateToCurrent(v: WFValuation) {
 private q(v: WFValuation) {
   return {
     vehicleNumber: v.vehicleNumber,
-    applicantContact: v.applicantContact
+    applicantContact: v.applicantContact,
+    valuationType: v.valuationType
   };
 }
 

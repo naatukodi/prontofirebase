@@ -23,6 +23,7 @@ export class QualityControlUpdateComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
 
   form!: FormGroup;
   loading = true;
@@ -43,11 +44,12 @@ export class QualityControlUpdateComponent implements OnInit {
   ngOnInit(): void {
     // 1) Read route param: valuationId
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
-
+    
     // 2) Read query params: vehicleNumber & applicantContact
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
+      this.valuationType = params.get('valuationType')!;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -193,7 +195,8 @@ export class QualityControlUpdateComponent implements OnInit {
           this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,
-              applicantContact: this.applicantContact
+              applicantContact: this.applicantContact,
+              valuationType: this.valuationType
             }
           });
         },
@@ -209,7 +212,8 @@ export class QualityControlUpdateComponent implements OnInit {
     this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

@@ -59,6 +59,7 @@ export class VehicleImageUploadComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
   error: string | null = null;
 
   private authz = new AuthorizationService();
@@ -143,6 +144,7 @@ export class VehicleImageUploadComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.valuationType = this.route.snapshot.paramMap.get('valuationType')!;
     // 1) Grab route param “valuationId”
     this.valuationId = this.route.snapshot.paramMap.get('valuationId') || '';
     if (!this.valuationId) {
@@ -300,7 +302,8 @@ export class VehicleImageUploadComponent implements OnInit {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'update'], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

@@ -28,6 +28,7 @@ export class StakeholderUpdateComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
 
   stakeholderOptions: string[] = [
       'State Bank of India (SBI)',
@@ -79,6 +80,7 @@ export class StakeholderUpdateComponent implements OnInit {
     this.route.queryParamMap.subscribe(params => {
       this.vehicleNumber = params.get('vehicleNumber')!;
       this.applicantContact = params.get('applicantContact')!;
+      this.valuationType = params.get('valuationType')!;
       this.initForm();
       this.loadStakeholder();
     });
@@ -275,7 +277,8 @@ export class StakeholderUpdateComponent implements OnInit {
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         }
       }
     );
@@ -294,7 +297,8 @@ export class StakeholderUpdateComponent implements OnInit {
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         }
       }
     );

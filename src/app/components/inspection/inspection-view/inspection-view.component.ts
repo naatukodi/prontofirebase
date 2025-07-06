@@ -97,8 +97,7 @@ export class InspectionViewComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.valuationType = this.route.snapshot.queryParamMap.get('valuationtype') as ValuationType;
-
+    
     this.route.paramMap.subscribe(params => {
       const vid = params.get('valuationId');
       if (vid) {
@@ -115,6 +114,7 @@ export class InspectionViewComponent implements OnInit {
     this.route.queryParamMap.subscribe(qp => {
       const vn = qp.get('vehicleNumber');
       const ac = qp.get('applicantContact');
+      this.valuationType = qp.get('valuationType') as ValuationType | null;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;

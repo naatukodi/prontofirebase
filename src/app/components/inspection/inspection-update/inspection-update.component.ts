@@ -113,11 +113,11 @@ export class InspectionUpdateComponent implements OnInit {
 
   ngOnInit(): void {
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
-    this.valuationType = this.route.snapshot.queryParamMap.get('valuationtype') as ValuationType;
-
+    
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
+      this.valuationType = params.get('valuationType') as ValuationType | null;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;

@@ -20,6 +20,7 @@ export class FinalReportComponent implements OnInit {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+  valuationType!: string;
 
   loading = true;
   error: string | null = null;
@@ -39,6 +40,7 @@ export class FinalReportComponent implements OnInit {
     this.route.queryParamMap.subscribe((params) => {
       this.vehicleNumber = params.get('vehicleNumber')!;
       this.applicantContact = params.get('applicantContact')!;
+      this.valuationType = params.get('valuationType')!;
       this.loadFinalReport();
     });
   }
@@ -81,6 +83,7 @@ export class FinalReportComponent implements OnInit {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
         applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       },
     });
   }
