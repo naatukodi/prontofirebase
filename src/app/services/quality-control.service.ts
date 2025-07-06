@@ -35,7 +35,7 @@ export class QualityControlService {
     vehicleNumber: string,
     applicantContact: string
   ): Observable<ValuationEstimate> {
-    const url = `${this.baseUrl}/${valuationId}/valuationresponse`;
+    const url = `${this.baseUrl}/${valuationId}/qualitycontrol`;
     const params = new HttpParams()
       .set('vehicleNumber', vehicleNumber)
       .set('applicantContact', applicantContact);
