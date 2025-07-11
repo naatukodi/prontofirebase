@@ -233,6 +233,16 @@ export class StakeholderUpdateComponent implements OnInit {
     ).pipe(
       // After successful update, start workflow
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1,this.vehicleNumber, encodeURIComponent(this.applicantContact)))
+      ,
+      switchMap(() =>
+        this.workflowSvc.updateWorkflowTable(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          'Stakeholder',
+          1
+        )
+      )
     ).subscribe({
       next: (): void => {
         this.saveInProgress = false;
@@ -269,6 +279,16 @@ export class StakeholderUpdateComponent implements OnInit {
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2,this.vehicleNumber, encodeURIComponent(this.applicantContact))),
       // Finally, update vehicle valuation details
       switchMap(() => this.valuationSvc.getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact))
+      ,
+      switchMap(() =>
+        this.workflowSvc.updateWorkflowTable(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          'BackEnd',
+          2
+        )
+      )
     ).subscribe({
       next: () => {
       // after submit, navigate back to View

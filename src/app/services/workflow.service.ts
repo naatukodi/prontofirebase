@@ -26,6 +26,27 @@ export class WorkflowService {
       null
     );
   }
+
+  updateWorkflowTable(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    workflow: string,
+    workflowStepOrder: number
+  ): Observable<void> {
+    const url = `${environment.apiBaseUrl}valuations/${valuationId}/workflow/Table`;
+    const body = {
+      valuationId,
+      vehicleNumber,
+      applicantContact,
+      workflow,
+      workflowStepOrder
+    };
+    return this.http.put<void>(url, body, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   getWorkflowStatus(valuationId: string, vehicleNumber: string, applicantContact: string, valuationType: string): Observable<any> {
     const url = `${this.baseUrl}/${valuationId}/workflow`;
     const params = new HttpParams()

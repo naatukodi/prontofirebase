@@ -144,7 +144,6 @@ export class VehicleImageUploadComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.valuationType = this.route.snapshot.paramMap.get('valuationType')!;
     // 1) Grab route param “valuationId”
     this.valuationId = this.route.snapshot.paramMap.get('valuationId') || '';
     if (!this.valuationId) {
@@ -156,6 +155,7 @@ export class VehicleImageUploadComponent implements OnInit {
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
+      this.valuationType = params.get('valuationType')!;
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;

@@ -134,6 +134,16 @@ export class QualityControlUpdateComponent implements OnInit {
             encodeURIComponent(this.applicantContact)
             )
           )
+          ,
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            'QC',
+            4
+          )
+        )
           )
           .subscribe({
           next: () => {
@@ -186,6 +196,16 @@ export class QualityControlUpdateComponent implements OnInit {
             5, // next workflow step
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
+          )
+        )
+        ,
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            'QC',
+            4
           )
         )
       )

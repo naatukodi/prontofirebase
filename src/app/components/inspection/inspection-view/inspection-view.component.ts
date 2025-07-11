@@ -159,7 +159,7 @@ export class InspectionViewComponent implements OnInit {
   onEdit() {
     this.router.navigate(
       ['/valuation', this.valuationId, 'inspection', 'update'],
-      { queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType } }
+      { queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType } }
     );
   }
 

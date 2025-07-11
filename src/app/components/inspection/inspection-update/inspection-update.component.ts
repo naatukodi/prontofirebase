@@ -2,7 +2,7 @@
 
 // src/app/valuation-inspection-update/inspection-update.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InspectionService } from '../../../services/inspection.service';
 import { Inspection } from '../../../models/Inspection';
@@ -50,14 +50,14 @@ export class InspectionUpdateComponent implements OnInit {
   // visibility map same as view
  private visibilityMap: Record<ValuationType, string[]> = {
     'four-wheeler': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork'
+      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ],
     'cv': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
@@ -67,14 +67,14 @@ export class InspectionUpdateComponent implements OnInit {
       'rightSideWing','leftSideWing','tailGate','loadFloor'
     ],
     'two-wheeler': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
       'seats','speedoMeter','front','rear','paintWork'
     ],
     'three-wheeler': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
@@ -83,7 +83,7 @@ export class InspectionUpdateComponent implements OnInit {
       'front','rear','axles','airConditioner','audio','paintWork'
     ],
     'tractor': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
@@ -91,7 +91,7 @@ export class InspectionUpdateComponent implements OnInit {
       'front','rear','axles','paintWork'
     ],
     'ce': [
-      'inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
@@ -130,25 +130,27 @@ export class InspectionUpdateComponent implements OnInit {
     });
   }
 
-  showField(key: string): boolean {
-  // Only true if valuationType is set and the key is in the visibility map
-  return (this.valuationType != null && this.visibilityMap[this.valuationType]?.includes(key)) ?? false;
-}
+ showField(key: string): boolean {
+    return !!(
+      this.valuationType &&
+      this.visibilityMap[this.valuationType]?.includes(key)
+    );
+  }
 
   private initForm() {
     this.form = this.fb.group({
       vehicleInspectedBy: ['', Validators.required],
       dateOfInspection: ['', Validators.required],
       inspectionLocation: ['', Validators.required],
-      vehicleMoved: [false],
-      engineStarted: [false],
+      vehicleMoved: ['',false],
+      engineStarted: ['',false],
       odometer: [0, Validators.min(0)],
-      vinPlate: [false],
-      bodyType: ['', Validators.required],
-      overallTyreCondition: ['', Validators.required],
-      otherAccessoryFitment: [false],
-      windshieldGlass: ['', Validators.required],
-      roadWorthyCondition: [false],
+      vinPlate: ['',false],
+      bodyType: ['',false],
+      overallTyreCondition: ['',false],
+      otherAccessoryFitment: ['',false],
+      windshieldGlass: ['',false],
+      roadWorthyCondition: ['',false],
       engineCondition: ['', false],
       suspensionSystem: ['', false],
       steeringAssy: ['', false],
@@ -180,7 +182,7 @@ export class InspectionUpdateComponent implements OnInit {
 
     bonnet: ['', false],
     mudguards: ['', false],
-    allGlasses: ['', Validators.required],
+    allGlasses: [false],
     boom: ['', false],
     bucket: ['', false],
     chainTrack:['', false],
@@ -292,8 +294,30 @@ export class InspectionUpdateComponent implements OnInit {
 
   onClick() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection','vehicle-image-upload'], {
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationtype: this.valuationType }
+      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
     });
+  }
+
+  // In your InspectionUpdateComponent:
+
+  /** Only patch visible controls to defaults */
+ public updateDefaultValues(): void {
+    if (!this.valuationType) { return; }
+    const defaults: Record<string, any> = {};
+    Object.keys(this.form.controls).forEach(key => {
+      if (!this.showField(key)) { return; }
+      const control = this.form.get(key)!;
+      if (control.value === '' || control.value == null) {
+        // string or null defaults to 'Good'
+        if (control instanceof FormControl || typeof control.value === 'string') {
+          defaults[key] = 'Good';
+        }
+      } else if (typeof control.value === 'boolean') {
+        // boolean fields default to true
+        defaults[key] = true;
+      }
+    });
+    this.form.patchValue(defaults);
   }
 
 
@@ -311,6 +335,16 @@ export class InspectionUpdateComponent implements OnInit {
       .pipe(
         // After successful update, start workflow
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)))
+        ,
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            'AVO',
+            3
+          )
+        )
       )
       .subscribe({
         next: () => {
@@ -348,6 +382,16 @@ export class InspectionUpdateComponent implements OnInit {
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 4, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
       // Get valuation details from AI
       switchMap(() => this.qualityControlSvc.getValuationDetailsfromAI(this.valuationId, this.vehicleNumber, this.applicantContact))
+      ,
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            'QC',
+            4
+          )
+        )
       )
       .subscribe({
       next: () => {
@@ -355,7 +399,8 @@ export class InspectionUpdateComponent implements OnInit {
         this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
         queryParams: {
           vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         }
         });
       },
@@ -371,7 +416,8 @@ export class InspectionUpdateComponent implements OnInit {
     this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,
-        applicantContact: this.applicantContact
+        applicantContact: this.applicantContact,
+        valuationType: this.valuationType
       }
     });
   }

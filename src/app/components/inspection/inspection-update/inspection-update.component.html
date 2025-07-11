@@ -338,21 +338,27 @@
       </div>
     </fieldset>
 
-    <!-- Action Buttons -->
-     <fieldset>
-    <div class="button-group">
-      <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">
-        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
-      </button>
-
-      <button mat-raised-button color="primary" type="submit" [disabled]="saving">
-        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
-      </button>
-
-      <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">
-        Cancel
+<!-- Default Values & Action Buttons -->
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="updateDefaultValues()">
+        Set Default Values
       </button>
     </div>
+
+    <fieldset>
+      <div class="button-group">
+        <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">
+          {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+        </button>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+        </button>
+
+        <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
     </fieldset>
   </ng-container>
 </form>

@@ -306,6 +306,16 @@ export class ValuationUpdateComponent implements OnInit {
       .pipe(
       // After successful update, start workflow
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact)))
+      ,
+      switchMap(() =>
+        this.workflowSvc.updateWorkflowTable(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          'BackEnd',
+          2
+        )
+      )
       )
       .subscribe({
       next: () => {
@@ -341,6 +351,16 @@ export class ValuationUpdateComponent implements OnInit {
         switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
         // Start workflow with step 2  
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)))
+        ,
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            'AVO',
+            3
+          )
+        )
       )
       .subscribe({
         next: () => {
