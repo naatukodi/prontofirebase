@@ -93,10 +93,10 @@
   <!-- Actions -->
    <fieldset>
   <div class="actions">
-    <button mat-raised-button color="primary" (click)="onEdit()">
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
       Edit
     </button>
-    <button mat-raised-button color="warn" (click)="onDelete()">
+    <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
       Delete
     </button>
     <button mat-raised-button color="accent" (click)="onBack()">

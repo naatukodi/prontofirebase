@@ -42,7 +42,6 @@ export class InspectionViewComponent implements OnInit {
   applicantContact!: string;
   valuationType: ValuationType | null = null;
 
-  private authz = new AuthorizationService();
 
   private visibilityMap: Record<ValuationType, string[]> = {
    'four-wheeler': [
@@ -101,7 +100,8 @@ export class InspectionViewComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private inspectionService: InspectionService
+    private inspectionService: InspectionService,
+    private authz: AuthorizationService 
   ) {}
 
   ngOnInit(): void {
@@ -317,7 +317,7 @@ export class InspectionViewComponent implements OnInit {
   }
 
   canEditInspection() {
-    return this.authz.hasAnyPermission(['CanCreateInspection','CanEditInspection']);
+    return this.authz.hasAnyPermission(['CanEditInspection']);
   }
 
   canDeleteInspection() {
