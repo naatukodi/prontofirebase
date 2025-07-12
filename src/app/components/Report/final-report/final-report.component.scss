@@ -1,61 +1,101 @@
 /* src/app/components/final-report-view/final-report-view.component.scss */
 
-.nested-group {
-  margin-bottom: 1.5rem;
-
-  .grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-}
-
-.photo-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.photo-item {
-  text-align: center;
-
-  .thumb {
-    max-width: 100%;
-    max-height: 100px;
-    object-fit: cover;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-}
-
-.actions {
-  margin-top: 1rem;
+:host {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  max-width: 800px;
+  margin: auto;
+  padding: 16px;
+  gap: 16px;
+  background: #fafafa;
+}
+
+/* Loading & error */
+.loading,
+.error {
+  font-size: 1rem;
 }
 
 .error {
   color: #f44336;
-  margin: 1rem 0;
+  margin: 8px 0;
 }
 
-img {
-  cursor: pointer;
+/* Fieldset styling */
+fieldset.nested-group {
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 16px;
+  border-radius: 4px;
+  background: #fff;
+  margin-bottom: 24px;
+
+  legend {
+    padding: 0 8px;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: rgba(0,0,0,0.87);
+  }
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
-  justify-content: flex-start;
+/* Grid layout for mat-form-fields */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
 
-  .back-button {
-    margin-right: 1rem; // space to the right of “Back”
-    padding: 0 1rem;    // left and right padding inside the button
+  mat-form-field {
+    width: 100%;
+    background: #f5f5f5;
+    border-radius: 4px;
+
+    .mat-form-field-outline {
+      color: rgba(0,0,0,0.12);
+    }
   }
 
-  .download-button {
-    margin-left: 1rem; // space to the left of “Download PDF”
-    padding: 0 1rem;   // left and right padding inside the button
+  textarea[matInput] {
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+}
+
+/* Photo grid styling */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.photo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  div {
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: rgba(0,0,0,0.6);
+    font-weight: 500;
+  }
+
+  .thumb {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 4px;
+  }
+}
+
+/* Action buttons row */
+.actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  margin: 16px 0 0 8px;
+
+  button {
+    min-width: 120px;
   }
 }

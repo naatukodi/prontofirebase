@@ -64,14 +64,14 @@ export class InspectionUpdateComponent implements OnInit {
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
       'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor'
+      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ],
     'two-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork'
+      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ],
     'three-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -80,7 +80,7 @@ export class InspectionUpdateComponent implements OnInit {
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
       'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
       'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork'
+      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ],
     'tractor': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -88,7 +88,7 @@ export class InspectionUpdateComponent implements OnInit {
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
       'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork'
+      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ],
     'ce': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -97,7 +97,7 @@ export class InspectionUpdateComponent implements OnInit {
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
       'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
       'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
-      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork'
+      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
     ]
   };
 
