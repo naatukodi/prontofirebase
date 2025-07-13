@@ -60,6 +60,7 @@ export class StakeholderUpdateComponent implements OnInit {
   saveInProgress = false;
   submitInProgress = false;
   error: string | null = null;
+  saved = false;
 
   rcFile?: File;
   insuranceFile?: File;
@@ -245,8 +246,8 @@ export class StakeholderUpdateComponent implements OnInit {
       )
     ).subscribe({
       next: (): void => {
-        this.saveInProgress = false;
-        this.saving = false;
+        this.saving = this.saveInProgress = false;
+        this.saved = true;
         // Optionally show a snack/toast here
       },
       error: (err: { message?: string }): void => {

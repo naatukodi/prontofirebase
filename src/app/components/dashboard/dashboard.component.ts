@@ -27,11 +27,11 @@ export class DashboardComponent implements OnInit {
     'phone',
     'location',
     'createdAt',
-    'status',
     'redFlag',
-    'currentStep',
     'applicant',
-    'info'
+    'info',
+    'currentStep',
+    'status'
   ];
 
   constructor(

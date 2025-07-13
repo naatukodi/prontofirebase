@@ -31,6 +31,7 @@ export class ValuationUpdateComponent implements OnInit {
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
+  saved = false;
 
   // For file uploads
   rcFile?: File;
@@ -321,6 +322,7 @@ export class ValuationUpdateComponent implements OnInit {
       next: () => {
         this.saveInProgress = false;
         this.saving = false;
+        this.saved = true; // Indicate that save was successful
         this._snackBar.open('Saved successfully', 'Close', {
         duration: 3000,
         horizontalPosition: 'center',

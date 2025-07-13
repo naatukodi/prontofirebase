@@ -185,16 +185,16 @@
       [disabled]="saving"
       (click)="onSave()"
     >
-      {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+      {{ saveInProgress ? 'Saving…' : 'Save' }}
     </button>
 
     <button
       mat-raised-button
       color="primary"
       type="submit"
-      [disabled]="saving"
+      [disabled]="!saved || saving"
     >
-      {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+      {{ submitInProgress ? 'Submitting…' : 'Submit' }}
     </button>
 
     <button

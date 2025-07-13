@@ -2,59 +2,46 @@
 
   <!-- Vehicle # -->
   <ng-container matColumnDef="vehicleNumber">
-    <th mat-header-cell *matHeaderCellDef>Vehicle No.</th>
+    <th mat-header-cell *matHeaderCellDef><b>VEHICLE NO.</b></th>
     <td mat-cell *matCellDef="let v">{{ v.vehicleNumber }}</td>
   </ng-container>
 
   <!-- Assigned To -->
   <ng-container matColumnDef="assignedTo">
-    <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+    <th mat-header-cell *matHeaderCellDef><b>ASSIGNED TO</b></th>
     <td mat-cell *matCellDef="let v">{{ v.assignedTo }}</td>
   </ng-container>
 
   <!-- Phone -->
   <ng-container matColumnDef="phone">
-    <th mat-header-cell *matHeaderCellDef>Phone</th>
+    <th mat-header-cell *matHeaderCellDef><b>PHONE</b></th>
     <td mat-cell *matCellDef="let v">{{ v.assignedToPhoneNumber }}</td>
   </ng-container>
 
   <!-- Location -->
   <ng-container matColumnDef="location">
-    <th mat-header-cell *matHeaderCellDef>Location</th>
+    <th mat-header-cell *matHeaderCellDef><b>LOCATION</b></th>
     <td mat-cell *matCellDef="let v">{{ v.location }}</td>
   </ng-container>
 
   <!-- Created At -->
   <ng-container matColumnDef="createdAt">
-    <th mat-header-cell *matHeaderCellDef>Created</th>
+    <th mat-header-cell *matHeaderCellDef><b>CREATED</b></th>
     <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'short' }}</td>
-  </ng-container>
-
-  <!-- Status -->
-  <ng-container matColumnDef="status">
-    <th mat-header-cell *matHeaderCellDef>Status</th>
-    <td mat-cell *matCellDef="let v">{{ v.status }}</td>
   </ng-container>
 
   <!-- Red Flag -->
   <ng-container matColumnDef="redFlag">
-    <th mat-header-cell *matHeaderCellDef>Flag</th>
+    <th mat-header-cell *matHeaderCellDef><b>FLAG</b></th>
     <td mat-cell *matCellDef="let v">
       <span [class.red]="v.redFlag">{{ v.redFlag ? '⚑' : '' }}</span>
     </td>
   </ng-container>
 
-  <!-- Current Step -->
-  <ng-container matColumnDef="currentStep">
-    <th mat-header-cell *matHeaderCellDef>Current Step</th>
-    <td mat-cell *matCellDef="let v">
-      {{ steps[getStepIndex(v)] }}
-    </td>
-  </ng-container>
 
   <!-- Applicant -->
   <ng-container matColumnDef="applicant">
-    <th mat-header-cell *matHeaderCellDef>Applicant</th>
+    <th mat-header-cell *matHeaderCellDef><b>APPLICANT</b></th>
     <td mat-cell *matCellDef="let v">
       {{ v.applicantName }} ({{ v.applicantContact }})
     </td>
@@ -62,10 +49,24 @@
 
   <!-- Valuation Info -->
   <ng-container matColumnDef="info">
-    <th mat-header-cell *matHeaderCellDef>Valuation</th>
+    <th mat-header-cell *matHeaderCellDef><b>VALUATION</b></th>
     <td mat-cell *matCellDef="let v">
       {{ v.valuationType }} — {{ v.name }}
     </td>
+  </ng-container>
+
+  <!-- Current Step -->
+  <ng-container matColumnDef="currentStep">
+    <th mat-header-cell *matHeaderCellDef><b>CURRENT STEP</b></th>
+    <td mat-cell *matCellDef="let v">
+      {{ steps[getStepIndex(v)] }}
+    </td>
+  </ng-container>
+
+  <!-- Status -->
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef><b>STATUS</b></th>
+    <td mat-cell *matCellDef="let v">{{ v.status }}</td>
   </ng-container>
 
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

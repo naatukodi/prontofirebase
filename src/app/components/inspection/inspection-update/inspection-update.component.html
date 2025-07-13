@@ -13,6 +13,13 @@
   <div *ngIf="loading">Loading inspection details …</div>
   <div *ngIf="error" class="error">{{ error }}</div>
 
+  <!-- Default Values & Action Buttons -->
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="updateDefaultValues()">
+        Set Default Values
+      </button>
+    </div>
+
   <ng-container *ngIf="!loading && !error">
     <!-- Inspection Info -->
     <fieldset class="nested-group">
@@ -351,7 +358,7 @@
           {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
         </button>
 
-        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!saved || saving">
           {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
         </button>
 

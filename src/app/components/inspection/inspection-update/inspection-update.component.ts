@@ -43,6 +43,7 @@ export class InspectionUpdateComponent implements OnInit {
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
+  saved = false;
 
   // photo uploads
   photoFiles: File[] = [];
@@ -350,6 +351,7 @@ export class InspectionUpdateComponent implements OnInit {
         next: () => {
           this.saveInProgress = false;
           this.saving = false;
+          this.saved = true;  // Indicate that save was successful
           this._snackBar.open('Inspection saved successfully', 'Close', {
             duration: 3000,
             horizontalPosition: 'center',

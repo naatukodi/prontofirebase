@@ -31,6 +31,7 @@ export class QualityControlUpdateComponent implements OnInit {
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
+  saved = false;
 
   constructor(
     private fb: FormBuilder,
@@ -149,6 +150,7 @@ export class QualityControlUpdateComponent implements OnInit {
           next: () => {
           this.saveInProgress = false;
           this.saving = false;
+          this.saved = true;  
           this._snackBar.open('Quality control saved successfully', 'Close', {
             duration: 3000,
             horizontalPosition: 'center',
@@ -204,8 +206,8 @@ export class QualityControlUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'QC',
-            4
+            'FinalReport',
+            5
           )
         )
       )

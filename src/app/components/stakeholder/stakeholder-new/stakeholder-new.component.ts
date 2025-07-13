@@ -63,6 +63,8 @@ export class StakeholderNewComponent implements OnInit {
   submitInProgress = false;
   error: string | null = null;
 
+  saved = false;
+
   rcFile?: File;
   insuranceFile?: File;
   otherFiles: File[] = [];
@@ -235,6 +237,7 @@ export class StakeholderNewComponent implements OnInit {
         error: e => {
           this.error = e.message;
           this.saving = this.saveInProgress = false;
+          this.saved = true;  // Indicate that save was attempted
         }
       });
   }

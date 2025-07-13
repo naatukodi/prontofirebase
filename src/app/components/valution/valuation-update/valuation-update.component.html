@@ -470,7 +470,7 @@
         mat-raised-button
         color="primary"
         type="submit"
-        [disabled]="saving"
+        [disabled]="!saved || saving"
       >
         {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
       </button>
