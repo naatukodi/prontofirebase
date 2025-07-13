@@ -13,6 +13,24 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
+  <!-- Actions at Bottom -->
+  <div class="actions">
+  <button
+    mat-raised-button
+    color="primary"
+    class="back-button"
+    (click)="onBack()">
+    Back
+  </button>
+
+  <button
+    mat-raised-button
+    color="accent"
+    (click)="downloadPdf()">
+    Download PDF
+  </button>
+</div>
+
   <!-- Stakeholder Section -->
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>

@@ -45,3 +45,39 @@
 .error {
   color: #f44336;
 }
+
+/* src/app/shared/workflow-buttons/workflow-buttons.component.scss */
+
+.table-loading,
+.table-error {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: rgba(0,0,0,0.6);
+}
+
+.table-error {
+  color: #f44336;
+}
+
+.workflow-table-card {
+  margin: 16px 0;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+
+  mat-card-header {
+    background: #f5f5f5;
+  }
+
+  mat-card-content p {
+    margin: 8px 0;
+  }
+
+  .workflow-accordion {
+  width: 800px;
+  margin: 16px auto;
+}
+
+.panel-content p {
+  margin: 8px 0;
+}
+}

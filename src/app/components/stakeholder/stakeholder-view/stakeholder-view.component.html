@@ -10,6 +10,23 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
+  <!-- Actions -->
+  <div class="actions">
+    <button
+      *ngIf="canEditStakeholder()"
+      mat-raised-button color="primary" (click)="onEdit()">
+      Edit
+    </button>
+    <button
+      *ngIf="canDeleteStakeholder()"
+      mat-raised-button color="warn" (click)="onDelete()">
+      Delete
+    </button>
+    <button mat-raised-button color="warn" (click)="onBack()">
+      Back
+    </button>
+  </div>
+
   <!-- Stakeholder -->
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>

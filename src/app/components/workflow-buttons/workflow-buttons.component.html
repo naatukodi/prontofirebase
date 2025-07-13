@@ -1,59 +1,94 @@
-<!-- src/app/shared/workflow-buttons/workflow-buttons.component.html -->
+  <!-- src/app/shared/workflow-buttons/workflow-buttons.component.html -->
 
-<div class="button-group">
-  <!-- Stakeholder Tab -->
-  <button
-   *ngIf="canViewStakeholder()"
-    mat-button
-    [routerLink]="['/valuation', id, 'stakeholder']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-    routerLinkActive="active-step">
-    Stake Holder
-  </button>
+  <div class="button-group">
+    <!-- Stakeholder Tab -->
+    <button
+    *ngIf="canViewStakeholder()"
+      mat-button
+      [routerLink]="['/valuation', id, 'stakeholder']"
+      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
+      routerLinkActive="active-step">
+      Stake Holder
+    </button>
 
-  <!-- Vehicle Details Tab -->
-  <button
-    *ngIf="canViewVehicleDetails()"
-    mat-button
-    [routerLink]="['/valuation', id, 'vehicle-details']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-    routerLinkActive="active-step"
-  >
-    Backend
-  </button>
+    <!-- Vehicle Details Tab -->
+    <button
+      *ngIf="canViewVehicleDetails()"
+      mat-button
+      [routerLink]="['/valuation', id, 'vehicle-details']"
+      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
+      routerLinkActive="active-step"
+    >
+      Backend
+    </button>
 
-  <!-- Inspection Tab -->
-  <button
-    *ngIf="canViewInspection()"
-    mat-button
-    [routerLink]="['/valuation', id, 'inspection']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-    routerLinkActive="active-step"
-  >
-    AVO
-  </button>
+    <!-- Inspection Tab -->
+    <button
+      *ngIf="canViewInspection()"
+      mat-button
+      [routerLink]="['/valuation', id, 'inspection']"
+      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
+      routerLinkActive="active-step"
+    >
+      AVO
+    </button>
 
-  <!-- Quality Control Tab -->
-  <button
-    *ngIf="canViewQualityControl()"
-    mat-button
-    [routerLink]="['/valuation', id, 'quality-control']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-    routerLinkActive="active-step"
-  >
-    QC
-  </button>
+    <!-- Quality Control Tab -->
+    <button
+      *ngIf="canViewQualityControl()"
+      mat-button
+      [routerLink]="['/valuation', id, 'quality-control']"
+      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
+      routerLinkActive="active-step"
+    >
+      QC
+    </button>
 
-  <!-- Final Report Tab -->
-  <button
-    *ngIf="canViewFinalReport()"
-    mat-button
-    [routerLink]="['/valuation', id, 'final-report']"
-    [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-    routerLinkActive="active-step"
-  >
-    Final Report
-  </button>
-</div>
+    <!-- Final Report Tab -->
+    <button
+      *ngIf="canViewFinalReport()"
+      mat-button
+      [routerLink]="['/valuation', id, 'final-report']"
+      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
+      routerLinkActive="active-step"
+    >
+      Final Report
+    </button>
+  </div>
 
-<router-outlet></router-outlet>
+  <!-- below the tabs: show workflow‐table summary -->
+<div *ngIf="loadingTable" class="table-loading">Loading status…</div>
+<div *ngIf="tableError" class="table-error">{{ tableError }}</div>
+
+<!-- Collapsible workflow-table panel -->
+<mat-accordion class="workflow-accordion" multi>
+  <mat-expansion-panel [expanded]="true">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Workflow Status
+      </mat-panel-title>
+      <mat-panel-description>
+        {{ table?.workflow }} &mdash; step {{ table?.workflowStepOrder }}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <!-- panel content -->
+    <ng-container *ngIf="!loadingTable && table">
+      <div class="panel-content">
+        <p><strong>Status:</strong> {{ table.status }}</p>
+        <p><strong>Created:</strong> {{ table.createdAt | date:'short' }}</p>
+        <p *ngIf="table.completedAt">
+          <strong>Completed:</strong> {{ table.completedAt | date:'short' }}
+        </p>
+        <p><strong>Location:</strong> {{ table.location }}</p>
+        <p><strong>Assigned To:</strong> {{ table.assignedTo || '—' }}</p>
+        <p *ngIf="table.remarks"><strong>Remarks:</strong> {{ table.remarks }}</p>
+      </div>
+    </ng-container>
+
+    <div *ngIf="loadingTable" class="table-loading">Loading status…</div>
+    <div *ngIf="tableError" class="table-error">{{ tableError }}</div>
+  </mat-expansion-panel>
+</mat-accordion>
+
+  <router-outlet></router-outlet>

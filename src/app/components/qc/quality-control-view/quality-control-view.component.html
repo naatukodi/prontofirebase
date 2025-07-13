@@ -11,6 +11,20 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
+  <fieldset>
+  <div class="actions">
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
+      Edit
+    </button>
+    <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
+      Delete
+    </button>
+    <button mat-raised-button color="accent" (click)="onBack()">
+      Back
+    </button>
+  </div>
+  </fieldset>
+
   <!-- Quality Control + Price Estimate Info -->
   <fieldset class="nested-group">
     <legend>Quality Control & Valuation Estimate</legend>

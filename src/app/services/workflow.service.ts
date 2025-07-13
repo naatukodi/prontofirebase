@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { WorkflowTable } from '../models/WorkflowTable';
 
 @Injectable({
   providedIn: 'root'
@@ -61,5 +62,16 @@ export class WorkflowService {
           return throwError(() => err);
         })
       );
+  }
+
+  getTable(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<WorkflowTable> {
+    const url = `${this.baseUrl}/${valuationId}/workflow/Table`;
+    return this.http.get<WorkflowTable>(url, {
+      params: { vehicleNumber, applicantContact }
+    });
   }
 }

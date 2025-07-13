@@ -13,6 +13,7 @@ import { MatSelectModule }     from '@angular/material/select';
 import { MatTabsModule }       from '@angular/material/tabs';
 import { MatSnackBarModule }   from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -33,7 +34,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatSnackBarModule,
     CommonModule,
     ReactiveFormsModule,
-    MatTableModule
+    MatTableModule,
+    MatCardModule
   ]
 })
 export class SharedModule {}
