@@ -18,6 +18,10 @@
       background: #1976d2;
       color: white;
     }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   }
 }
 
@@ -42,16 +46,9 @@
     color: #f44336;
   }
 
-  /* Age highlighting */
-  td.age-1 {
-    background: #fff9c4;
-  }
-  td.age-2 {
-    background: #ffe0b2;
-  }
-  td.age-3plus {
-    background: #ffcdd2;
-  }
+  td.age-1 { background: #fff9c4; }
+  td.age-2 { background: #ffe0b2; }
+  td.age-3plus { background: #ffcdd2; }
 }
 
 .loading,

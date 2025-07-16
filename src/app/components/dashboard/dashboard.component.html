@@ -1,3 +1,4 @@
+<!-- src/app/dashboard/dashboard.component.html -->
 <div class="step-filter">
   <button
     mat-button
@@ -9,15 +10,16 @@
     <button
       mat-button
       [class.active]="selectedStep === s"
+      [disabled]="stepCounts[s] === 0"
       (click)="selectedStep=s; applyFilter()">
       {{ s }} ({{ stepCounts[s] || 0 }})
     </button>
   </ng-container>
 </div>
 
-<table class="dashboard-table" mat-table [dataSource]="filteredClaims">
+<table mat-table [dataSource]="filteredClaims" class="dashboard-table">
 
-  <!-- Vehicle # -->
+  <!-- Vehicle Number -->
   <ng-container matColumnDef="vehicleNumber">
     <th mat-header-cell *matHeaderCellDef>VEHICLE NO.</th>
     <td mat-cell *matCellDef="let v">{{ v.vehicleNumber }}</td>
@@ -96,6 +98,7 @@
     <td mat-cell *matCellDef="let v">{{ v.status }}</td>
   </ng-container>
 
+  <!-- Header & Row Declarations -->
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row
       *matRowDef="let v; columns: displayedColumns"

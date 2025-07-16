@@ -6,6 +6,7 @@ import { SharedModule } from '../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
+import { AuthorizationService } from '../../services/authorization.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,17 +28,9 @@ export class DashboardComponent implements OnInit {
 
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
   displayedColumns = [
-    'vehicleNumber',
-    'assignedTo',
-    'phone',
-    'location',
-    'createdAt',
-    'age',
-    'redFlag',
-    'applicant',
-    'info',
-    'currentStep',
-    'status'
+    'vehicleNumber','assignedTo','phone','location',
+    'createdAt','age','redFlag','applicant','info',
+    'currentStep','status'
   ];
 
   selectedStep = '';
@@ -45,13 +38,15 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private claimService: ClaimService,
-    private router: Router
+    private router: Router,
+    private authz: AuthorizationService   // inject auth service
   ) {}
 
   ngOnInit(): void {
     this.claimService.getOpenValuations().subscribe({
       next: data => {
-        this.claims = data;
+        // only keep those the user can view at all
+        this.claims = data.filter(v => this.canViewStep(this.steps[this.getStepIndex(v)]));
         this.computeStepCounts();
         this.applyFilter();
         this.loading = false;
@@ -64,17 +59,19 @@ export class DashboardComponent implements OnInit {
   }
 
   private computeStepCounts() {
-    this.stepCounts = this.steps.reduce((m, s) => (m[s] = 0, m), {} as any);
+    this.stepCounts = this.steps.reduce((m,s)=>(m[s]=0,m), {} as any);
     for (let v of this.claims) {
-      const key = this.steps[this.getStepIndex(v)] || 'Unknown';
-      this.stepCounts[key] = (this.stepCounts[key] || 0) + 1;
+      const step = this.steps[this.getStepIndex(v)];
+      this.stepCounts[step] = (this.stepCounts[step]||0) + 1;
     }
   }
 
   applyFilter() {
-    this.filteredClaims = this.selectedStep
-      ? this.claims.filter(v => this.steps[this.getStepIndex(v)] === this.selectedStep)
-      : this.claims.slice();
+    this.filteredClaims = this.claims.filter(v => {
+      const step = this.steps[this.getStepIndex(v)];
+      const matchesStep = !this.selectedStep || step === this.selectedStep;
+      return matchesStep;
+    });
   }
 
   getStepIndex(v: WFValuation): number {
@@ -102,8 +99,19 @@ export class DashboardComponent implements OnInit {
   }
 
   ageInDays(v: WFValuation): number {
-    const created = new Date(v.createdAt).getTime();
-    const diff = Date.now() - created;
+    const diff = Date.now() - new Date(v.createdAt).getTime();
     return Math.floor(diff / (1000*60*60*24));
+  }
+
+  /** permission checks */
+  private canViewStep(step: string): boolean {
+    switch (step) {
+      case 'Stakeholder': return this.authz.hasAnyPermission(['CanViewStakeholder','CanCreateStakeholder','CanEditStakeholder']);
+      case 'BackEnd':     return this.authz.hasAnyPermission(['CanViewVehicleDetails','CanCreateVehicleDetails','CanEditVehicleDetails']);
+      case 'AVO':         return this.authz.hasAnyPermission(['CanViewInspection','CanCreateInspection','CanEditInspection']);
+      case 'QC':          return this.authz.hasAnyPermission(['CanViewQualityControl','CanCreateQualityControl','CanEditQualityControl']);
+      case 'FinalReport': return this.authz.hasAnyPermission(['CanViewFinalReport','CanCreateFinalReport','CanEditFinalReport']);
+      default: return false;
+    }
   }
 }
