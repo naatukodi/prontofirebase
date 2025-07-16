@@ -336,10 +336,15 @@
       </div>
     </fieldset>
 
-    <!-- Photos -->
+    <!-- …inside your template… -->
     <fieldset class="nested-group">
       <div class="actions">
-        <button mat-raised-button color="primary" (click)="onClick()">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onClick()"
+          [disabled]="!saved || saving"
+        >
           View / Upload Images
         </button>
       </div>

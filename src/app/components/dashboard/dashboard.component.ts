@@ -4,35 +4,44 @@ import { ClaimService } from '../../services/claim.service';
 import { WFValuation } from '../../models/valuation.model';
 import { SharedModule } from '../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [SharedModule, RouterModule],
+  imports: [
+    SharedModule,
+    RouterModule,
+    MatTableModule,
+    MatButtonModule
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
   claims: WFValuation[] = [];
+  filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
 
-  // Your workflow steps in order:
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
-
-  // Columns shown in the table:
   displayedColumns = [
     'vehicleNumber',
     'assignedTo',
     'phone',
     'location',
     'createdAt',
+    'age',
     'redFlag',
     'applicant',
     'info',
     'currentStep',
     'status'
   ];
+
+  selectedStep = '';
+  stepCounts: Record<string, number> = {};
 
   constructor(
     private claimService: ClaimService,
@@ -43,6 +52,8 @@ export class DashboardComponent implements OnInit {
     this.claimService.getOpenValuations().subscribe({
       next: data => {
         this.claims = data;
+        this.computeStepCounts();
+        this.applyFilter();
         this.loading = false;
       },
       error: () => {
@@ -52,49 +63,47 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  /** Convert 1-based workflowStepOrder to a 0-based index */
+  private computeStepCounts() {
+    this.stepCounts = this.steps.reduce((m, s) => (m[s] = 0, m), {} as any);
+    for (let v of this.claims) {
+      const key = this.steps[this.getStepIndex(v)] || 'Unknown';
+      this.stepCounts[key] = (this.stepCounts[key] || 0) + 1;
+    }
+  }
+
+  applyFilter() {
+    this.filteredClaims = this.selectedStep
+      ? this.claims.filter(v => this.steps[this.getStepIndex(v)] === this.selectedStep)
+      : this.claims.slice();
+  }
+
   getStepIndex(v: WFValuation): number {
     return Math.max(0, v.workflowStepOrder - 1);
   }
 
-  /** Navigate to the route for this valuation’s current step */
-  /** Navigate to the route for this valuation’s current step */
-navigateToCurrent(v: WFValuation) {
-  const idx = this.getStepIndex(v);
-  const step = this.steps[idx];
-  let stepRoute = '';
-
-  switch (step) {
-    case 'Stakeholder':
-      stepRoute = 'stakeholder';
-      break;
-    case 'BackEnd':
-      stepRoute = 'vehicle-details';
-      break;
-    case 'AVO':
-      stepRoute = 'inspection';
-      break;
-    case 'QC':
-      stepRoute = 'quality-control';
-      break;
-    case 'FinalReport':
-      stepRoute = 'final-report';
-      break;
+  navigateToCurrent(v: WFValuation) {
+    const step = this.steps[this.getStepIndex(v)];
+    let route = '';
+    switch (step) {
+      case 'Stakeholder': route = 'stakeholder'; break;
+      case 'BackEnd':     route = 'vehicle-details'; break;
+      case 'AVO':         route = 'inspection'; break;
+      case 'QC':          route = 'quality-control'; break;
+      case 'FinalReport': route = 'final-report'; break;
+    }
+    this.router.navigate(
+      ['/valuation', v.valuationId, route],
+      { queryParams: {
+          vehicleNumber: v.vehicleNumber,
+          applicantContact: v.applicantContact,
+          valuationType: v.valuationType
+      }}
+    );
   }
 
-  // Option A: absolute navigation to /valuation/:id/:step
-  this.router.navigate(
-    ['/valuation', v.valuationId, stepRoute],
-    { queryParams: this.q(v) }
-  );
-}
-
-private q(v: WFValuation) {
-  return {
-    vehicleNumber: v.vehicleNumber,
-    applicantContact: v.applicantContact,
-    valuationType: v.valuationType
-  };
-}
-
+  ageInDays(v: WFValuation): number {
+    const created = new Date(v.createdAt).getTime();
+    const diff = Date.now() - created;
+    return Math.floor(diff / (1000*60*60*24));
+  }
 }

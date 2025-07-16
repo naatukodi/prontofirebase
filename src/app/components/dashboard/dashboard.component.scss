@@ -1,48 +1,65 @@
-/* Table layout and separators */
-.dashboard-table {
-  width: 100%;
-  border-collapse: collapse;
+.step-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 
-  /* Header cells */
-  th.mat-header-cell {
-    padding: 12px 8px;
-    text-align: left;
-    background: #f0f0f0;
-    font-weight: 600;
-  }
+  button {
+    text-transform: none;
+    color: #333;
+    font-weight: 500;
+    border-radius: 4px;
 
-  /* Data cells */
-  td.mat-cell {
-    padding: 8px;
-    border-bottom: 1px solid #ccc;
-  }
-
-  /* Clickable rows with hover effect */
-  tr.mat-row {
-    cursor: pointer;
-
-    &:hover {
-      background-color: #fafafa;
+    &.active {
+      background: #1976d2;
+      color: white;
     }
-  }
-
-  /* Remove bottom border on the last row */
-  tr.mat-row:last-of-type td.mat-cell {
-    border-bottom: none;
-  }
-
-  /* Red-flag styling */
-  .red {
-    color: red;
-    font-weight: bold;
   }
 }
 
-/* Optional: responsive tweaks */
-@media (max-width: 600px) {
-  .dashboard-table th.mat-header-cell,
-  .dashboard-table td.mat-cell {
-    padding: 6px;
-    font-size: 13px;
+.dashboard-table {
+  width: 100%;
+  margin-bottom: 16px;
+
+  th.mat-header-cell {
+    background: #f5f5f5;
+    font-weight: 600;
   }
+
+  td.mat-cell, th.mat-header-cell {
+    padding: 12px 8px;
+  }
+
+  .clickable-row {
+    cursor: pointer;
+  }
+
+  .red {
+    color: #f44336;
+  }
+
+  /* Age highlighting */
+  td.age-1 {
+    background: #fff9c4;
+  }
+  td.age-2 {
+    background: #ffe0b2;
+  }
+  td.age-3plus {
+    background: #ffcdd2;
+  }
+}
+
+.loading,
+.error {
+  margin: 16px 0;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: #f44336;
 }

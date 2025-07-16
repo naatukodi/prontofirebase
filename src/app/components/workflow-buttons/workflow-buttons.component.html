@@ -1,5 +1,40 @@
   <!-- src/app/shared/workflow-buttons/workflow-buttons.component.html -->
 
+  <!-- below the tabs: show workflow‐table summary -->
+<div *ngIf="loadingTable" class="table-loading">Loading status…</div>
+<div *ngIf="tableError" class="table-error">{{ tableError }}</div>
+
+<!-- Collapsible workflow-table panel -->
+<mat-accordion class="workflow-accordion" multi>
+  <mat-expansion-panel [expanded]="true">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Workflow Status
+      </mat-panel-title>
+      <mat-panel-description>
+        {{ table?.workflow }} &mdash; step {{ table?.workflowStepOrder }}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <!-- panel content -->
+    <ng-container *ngIf="!loadingTable && table">
+      <div class="panel-content">
+        <p><strong>Status:</strong> {{ table.status }}</p>
+        <p><strong>Created:</strong> {{ table.createdAt | date:'short' }}</p>
+        <p *ngIf="table.completedAt">
+          <strong>Completed:</strong> {{ table.completedAt | date:'short' }}
+        </p>
+        <p><strong>Location:</strong> {{ table.location }}</p>
+        <p><strong>Assigned To:</strong> {{ table.assignedTo || '—' }}</p>
+        <p *ngIf="table.remarks"><strong>Remarks:</strong> {{ table.remarks }}</p>
+      </div>
+    </ng-container>
+
+    <div *ngIf="loadingTable" class="table-loading">Loading status…</div>
+    <div *ngIf="tableError" class="table-error">{{ tableError }}</div>
+  </mat-expansion-panel>
+</mat-accordion>
+
   <div class="button-group">
     <!-- Stakeholder Tab -->
     <button
@@ -56,39 +91,6 @@
     </button>
   </div>
 
-  <!-- below the tabs: show workflow‐table summary -->
-<div *ngIf="loadingTable" class="table-loading">Loading status…</div>
-<div *ngIf="tableError" class="table-error">{{ tableError }}</div>
 
-<!-- Collapsible workflow-table panel -->
-<mat-accordion class="workflow-accordion" multi>
-  <mat-expansion-panel [expanded]="true">
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Workflow Status
-      </mat-panel-title>
-      <mat-panel-description>
-        {{ table?.workflow }} &mdash; step {{ table?.workflowStepOrder }}
-      </mat-panel-description>
-    </mat-expansion-panel-header>
-
-    <!-- panel content -->
-    <ng-container *ngIf="!loadingTable && table">
-      <div class="panel-content">
-        <p><strong>Status:</strong> {{ table.status }}</p>
-        <p><strong>Created:</strong> {{ table.createdAt | date:'short' }}</p>
-        <p *ngIf="table.completedAt">
-          <strong>Completed:</strong> {{ table.completedAt | date:'short' }}
-        </p>
-        <p><strong>Location:</strong> {{ table.location }}</p>
-        <p><strong>Assigned To:</strong> {{ table.assignedTo || '—' }}</p>
-        <p *ngIf="table.remarks"><strong>Remarks:</strong> {{ table.remarks }}</p>
-      </div>
-    </ng-container>
-
-    <div *ngIf="loadingTable" class="table-loading">Loading status…</div>
-    <div *ngIf="tableError" class="table-error">{{ tableError }}</div>
-  </mat-expansion-panel>
-</mat-accordion>
 
   <router-outlet></router-outlet>

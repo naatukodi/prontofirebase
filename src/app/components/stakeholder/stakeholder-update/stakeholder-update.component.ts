@@ -294,7 +294,7 @@ export class StakeholderUpdateComponent implements OnInit {
       next: () => {
       // after submit, navigate back to View
       this.router.navigate(
-      ['/valuations', this.valuationId, 'stakeholder'],
+      ['/valuation', this.valuationId, 'stakeholder'],
       {
         queryParams: {
           vehicleNumber: this.vehicleNumber,

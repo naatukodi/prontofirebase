@@ -31,10 +31,14 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
     // Iterate through formData and compress images
     for (const [key, value] of (formData as any).entries()) {
       if (value instanceof File && value.type.startsWith('image/')) {
-        const compressedFile = await this.compressImage(value, 0.7); // 0.7 quality
+      if (value.size > 500 * 1024) { // Only compress if size > 500KB
+        const compressedFile = await this.compressImage(value, 0.5); // 0.5 quality
         compressedFormData.append(key, compressedFile, compressedFile.name);
+      } else {
+        compressedFormData.append(key, value, value.name);
+      }
       } else if (typeof value === 'string') {
-        compressedFormData.append(key, value);
+      compressedFormData.append(key, value);
       }
     }
 

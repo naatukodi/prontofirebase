@@ -75,3 +75,8 @@ mat-form-field {
     color: rgba(0,0,0,0.12);
   }
 }
+
+.actions button[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}   
