@@ -2,7 +2,7 @@
 
 // src/app/valuation-inspection-update/inspection-update.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InspectionService } from '../../../services/inspection.service';
 import { Inspection } from '../../../models/Inspection';
@@ -35,6 +35,9 @@ export class InspectionUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType: ValuationType | null = null;
+
+  /** YYYY-MM-DD for today, used in template max= binding */
+  maxDate: string = '';
 
   // form state
   form!: FormGroup;
@@ -113,6 +116,14 @@ export class InspectionUpdateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
+    // compute today’s date
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2,'0');
+    const dd = String(today.getDate()).padStart(2,'0');
+    this.maxDate = `${yyyy}-${mm}-${dd}`;
+
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     
     this.route.queryParamMap.subscribe(params => {
@@ -141,7 +152,13 @@ export class InspectionUpdateComponent implements OnInit {
   private initForm() {
     this.form = this.fb.group({
       vehicleInspectedBy: ['', Validators.required],
-      dateOfInspection: ['', Validators.required],
+      dateOfInspection: [
+        '',
+        [
+          Validators.required,
+          this.pastOrTodayValidator()
+        ]
+      ],
       inspectionLocation: ['', Validators.required],
       vehicleMoved: ['',false],
       engineStarted: ['',false],
@@ -275,6 +292,19 @@ export class InspectionUpdateComponent implements OnInit {
     airConditioner: data.airConditioner,
     audio: data.audio
     });
+  }
+
+    /** Validator: date must be <= today */
+  pastOrTodayValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) return null;
+      const input = new Date(control.value);
+      const today = new Date(this.maxDate);
+      // zero out time for safe comparison
+      input.setHours(0,0,0,0);
+      today.setHours(0,0,0,0);
+      return input <= today ? null : { futureDate: true };
+    };
   }
 
   onPhotoChange(event: Event) {

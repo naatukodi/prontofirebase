@@ -19,14 +19,10 @@
     <!-- panel content -->
     <ng-container *ngIf="!loadingTable && table">
       <div class="panel-content">
-        <p><strong>Status:</strong> {{ table.status }}</p>
-        <p><strong>Created:</strong> {{ table.createdAt | date:'short' }}</p>
-        <p *ngIf="table.completedAt">
-          <strong>Completed:</strong> {{ table.completedAt | date:'short' }}
-        </p>
-        <p><strong>Location:</strong> {{ table.location }}</p>
-        <p><strong>Assigned To:</strong> {{ table.assignedTo || '—' }}</p>
-        <p *ngIf="table.remarks"><strong>Remarks:</strong> {{ table.remarks }}</p>
+        <strong>Vehicle Number:</strong> {{ table.vehicleNumber }} &nbsp; | &nbsp;
+        <strong>Applicant Name:</strong> {{ table.applicantName }} &nbsp; | &nbsp;
+        <strong>Valuation Type:</strong> {{ table.valuationType }} &nbsp; | &nbsp;
+        <strong>Status:</strong> {{ table.status }}
       </div>
     </ng-container>
 

@@ -96,7 +96,7 @@ export class StakeholderNewComponent implements OnInit {
       stakeholderName:            ['', Validators.required],
       stakeholderExecutiveName:   ['', Validators.required],
       stakeholderExecutiveContact:['', Validators.pattern(/^[0-9]{10}$/)],
-      stakeholderExecutiveWhatsapp:[''],
+      stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
       stakeholderExecutiveEmail:  ['', Validators.email],
       valuationType: ['', Validators.required],
 
