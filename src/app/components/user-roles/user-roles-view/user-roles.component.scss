@@ -1,0 +1,56 @@
+.step-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 4px;
+
+  span {
+    font-weight: 600;
+    margin-right: 12px;
+  }
+
+  button {
+    text-transform: none;
+    color: #555;
+    border-radius: 4px;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &.active {
+      background: #1976d2;
+      color: #fff;
+    }
+  }
+}
+
+.roles-table {
+  width: 100%;
+  margin-bottom: 16px;
+
+  th.mat-header-cell {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+
+  td.mat-cell,
+  th.mat-header-cell {
+    padding: 8px 12px;
+  }
+}
+
+.loading,
+.error {
+  margin-top: 16px;
+  font-size: 0.95rem;
+}
+
+.error {
+  color: #f44336;
+}
