@@ -57,9 +57,16 @@
         <input matInput formControlName="stakeholderExecutiveEmail" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+       <mat-form-field appearance="fill">
         <mat-label>Valuation Type</mat-label>
-        <input matInput formControlName="valuationType" />
+        <mat-select formControlName="valuationType">
+          <mat-option value="four-wheeler">Four Wheeler</mat-option>
+          <mat-option value="cv">Commercial Vehicle</mat-option>
+          <mat-option value="two-wheeler">Two Wheeler</mat-option>
+          <mat-option value="three-wheeler">Three Wheeler</mat-option>
+          <mat-option value="tractor">Tractor</mat-option>
+          <mat-option value="ce">Commercial Equipment</mat-option>
+        </mat-select>
       </mat-form-field>
 
       <!-- Location dropdown -->

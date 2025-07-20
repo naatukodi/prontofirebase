@@ -58,7 +58,24 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Valuation Type</mat-label>
-        <input matInput [value]="stakeholder.valuationType || '-'" readonly />
+        <input
+          matInput
+          [value]="
+            stakeholder.valuationType === 'cv'
+              ? 'Commercial Vehicle'
+              : stakeholder.valuationType === 'four-wheeler'
+              ? 'Four Wheeler'
+              : stakeholder.valuationType === 'two-wheeler'
+              ? 'Two Wheeler'
+              : stakeholder.valuationType === 'three-wheeler'
+              ? 'Three Wheeler'
+              : stakeholder.valuationType === 'tractor'
+              ? 'Tractor'
+              : stakeholder.valuationType === 'ce'
+              ? 'Construction Equipment'
+              : (stakeholder.valuationType || '-')"
+          readonly
+        />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
