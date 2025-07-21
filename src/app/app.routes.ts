@@ -12,7 +12,8 @@ import { VehicleImageUploadComponent } from './components/inspection/vehicle-ima
 import { QualityControlViewComponent } from './components/qc/quality-control-view/quality-control-view.component';
 import { QualityControlUpdateComponent } from './components/qc/quality-control-update/quality-control-update.component';
 import { FinalReportComponent } from './components/Report/final-report/final-report.component';
-import { UserRolesComponent } from './components/user-roles/user-roles-view/user-roles.component';
+import { UserRolesComponent } from './components/users/user-roles-view/user-roles.component';
+import { UsersComponent } from './components/users/users/users.component';
 
 import { Unauthorized } from './unauthorized/unauthorized';
 import { LoginComponent } from './login/login';
@@ -48,6 +49,7 @@ export const routes: Routes = [
   // 6) Final Report route
   { path: 'valuation/:valuationId/final-report', component: FinalReportComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewFinalReport' } },
   { path: 'users/:phone/roles', component: UserRolesComponent },
+  { path: 'users', component: UsersComponent },
   { path: 'unauthorized', component: Unauthorized },
    ]
   },
