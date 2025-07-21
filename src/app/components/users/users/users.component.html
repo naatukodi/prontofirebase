@@ -1,0 +1,113 @@
+<!-- src/app/users/users.component.html -->
+<div *ngIf="loading" class="loading">
+  <mat-spinner diameter="40"></mat-spinner>
+  Loading users…
+</div>
+<div *ngIf="error" class="error">{{ error }}</div>
+
+<table
+  mat-table
+  *ngIf="!loading && !error"
+  [dataSource]="users"
+  class="users-table"
+>
+
+  <!-- generate one block per column -->
+  <ng-container matColumnDef="userId">
+    <th mat-header-cell *matHeaderCellDef>USER ID</th>
+    <td mat-cell *matCellDef="let u">{{ u.userId }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>NAME</th>
+    <td mat-cell *matCellDef="let u">{{ u.name }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="email">
+    <th mat-header-cell *matHeaderCellDef>EMAIL</th>
+    <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="roleId">
+    <th mat-header-cell *matHeaderCellDef>ROLE</th>
+    <td mat-cell *matCellDef="let u">{{ u.roleId }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="whatsapp">
+    <th mat-header-cell *matHeaderCellDef>WHATSAPP</th>
+    <td mat-cell *matCellDef="let u">{{ u.whatsapp || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="phoneNumber">
+    <th mat-header-cell *matHeaderCellDef>PHONE</th>
+    <td mat-cell *matCellDef="let u">{{ u.phoneNumber || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="description">
+    <th mat-header-cell *matHeaderCellDef>DESCRIPTION</th>
+    <td mat-cell *matCellDef="let u">{{ u.description || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="branchType">
+    <th mat-header-cell *matHeaderCellDef>BRANCH TYPE</th>
+    <td mat-cell *matCellDef="let u">{{ u.branchType || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="serviceStatus">
+    <th mat-header-cell *matHeaderCellDef>SERVICE STATUS</th>
+    <td mat-cell *matCellDef="let u">{{ u.serviceStatus }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="circle">
+    <th mat-header-cell *matHeaderCellDef>CIRCLE</th>
+    <td mat-cell *matCellDef="let u">{{ u.circle || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="district">
+    <th mat-header-cell *matHeaderCellDef>DISTRICT</th>
+    <td mat-cell *matCellDef="let u">{{ u.district || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="division">
+    <th mat-header-cell *matHeaderCellDef>DIVISION</th>
+    <td mat-cell *matCellDef="let u">{{ u.division || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="region">
+    <th mat-header-cell *matHeaderCellDef>REGION</th>
+    <td mat-cell *matCellDef="let u">{{ u.region || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="block">
+    <th mat-header-cell *matHeaderCellDef>BLOCK</th>
+    <td mat-cell *matCellDef="let u">{{ u.block || '—' }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="state">
+    <th mat-header-cell *matHeaderCellDef>STATE</th>
+    <td mat-cell *matCellDef="let u">{{ u.state }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="country">
+    <th mat-header-cell *matHeaderCellDef>COUNTRY</th>
+    <td mat-cell *matCellDef="let u">{{ u.country }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="pincode">
+    <th mat-header-cell *matHeaderCellDef>PINCODE</th>
+    <td mat-cell *matCellDef="let u">{{ u.pincode || '—' }}</td>
+  </ng-container>
+
+  <!-- header & rows -->
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row        *matRowDef="let r; columns: displayedColumns"></tr>
+</table>
+
+<div class="actions">
+  <button mat-raised-button color="primary" (click)="addUser()">
+    Add User
+  </button>
+  <button mat-raised-button color="accent" (click)="refresh()">
+    Refresh
+  </button>
+</div>

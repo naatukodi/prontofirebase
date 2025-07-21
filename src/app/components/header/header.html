@@ -49,6 +49,15 @@
           <li class="nav-item">
             <a class="nav-link" routerLink="/stakeholder" routerLinkActive="Stakeholder">Stakeholder</a>
           </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Users
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" routerLink="/users" routerLinkActive="users">Users</a></li>
+              <li><a class="dropdown-item" routerLink="/users/add" routerLinkActive="forbusinesses">Add Users</a></li>
+            </ul>
+          </li>
           <li class="nav-item">
             <a class="nav-link" (click)="onLogout(); drawer.close()"routerLinkActive="logout">Logout</a>
           </li>

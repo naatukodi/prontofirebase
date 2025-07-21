@@ -19,6 +19,7 @@ import { Unauthorized } from './unauthorized/unauthorized';
 import { LoginComponent } from './login/login';
 import { AuthGuard } from './auth/auth';
 import { RoleGuard }      from './auth/role.guard';
+import { AddUserComponent } from './components/users/add-user/add-user.component';
 
 export const routes: Routes = [
   {
@@ -48,8 +49,11 @@ export const routes: Routes = [
   { path: 'valuation/:valuationId/quality-control/update', component: QualityControlUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditQualityControl' } },
   // 6) Final Report route
   { path: 'valuation/:valuationId/final-report', component: FinalReportComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewFinalReport' } },
+  
+  // 7) User roles
   { path: 'users/:phone/roles', component: UserRolesComponent },
   { path: 'users', component: UsersComponent },
+  { path: 'users/add', component: AddUserComponent },
   { path: 'unauthorized', component: Unauthorized },
    ]
   },

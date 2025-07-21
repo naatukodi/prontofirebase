@@ -1,0 +1,42 @@
+/* src/app/users/users.component.scss */
+
+.users-table {
+  width: 100%;
+  margin-bottom: 16px;
+
+  th.mat-header-cell {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+
+  td.mat-cell,
+  th.mat-header-cell {
+    padding: 12px 8px;
+  }
+
+  /* let rows be selectable in future if needed */
+  .clickable-row {
+    cursor: pointer;
+  }
+}
+
+.loading,
+.error {
+  margin: 16px 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error {
+  color: #f44336;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-top: 8px;
+    margin-left: 8px;
+}

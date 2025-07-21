@@ -1,0 +1,52 @@
+// src/app/users/users.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { UserModel } from '../models/user.model';
+import { environment } from '../../environments/environment';
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class UsersService {
+  private readonly base = `${environment.apiBaseUrl}/users`;
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<UserModel[]> {
+    return this.http.get<UserModel[]>(`${this.base}/all`);
+  }
+
+  add(user: UserModel): Observable<UserModel> {
+    const payload = {
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      roleId: user.roleId,
+      whatsapp: user.whatsapp,
+      phoneNumber: user.phoneNumber,
+      Description: user.description,
+      BranchType: user.branchType,
+      ServiceStatus: user.serviceStatus,
+      Circle: user.circle,
+      District: user.district,
+      Division: user.division,
+      Region: user.region,
+      Block: user.block,
+      State: user.state,
+      Country: user.country,
+      Pincode: user.pincode
+    };
+
+    // Ensure all fields are present
+      return this.http.post<UserModel>(
+      `${this.base}`,
+      payload
+    );
+  }
+}

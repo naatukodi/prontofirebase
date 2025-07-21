@@ -1,0 +1,115 @@
+    <h2 style="text-align: center;">Add User</h2>
+
+<form [formGroup]="form" class="grid" (ngSubmit)="onSubmit()">
+
+  <mat-form-field appearance="fill">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" />
+    <mat-error *ngIf="form.get('name')!.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" />
+    <mat-error *ngIf="form.get('email')!.hasError('required')">Required</mat-error>
+    <mat-error *ngIf="form.get('email')!.hasError('email')">Invalid email</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Role</mat-label>
+    <mat-select formControlName="roleId">
+      <mat-option *ngFor="let r of roleOptions" [value]="r">{{ r }}</mat-option>
+    </mat-select>
+    <mat-error *ngIf="form.get('roleId')!.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>WhatsApp</mat-label>
+    <input matInput formControlName="whatsapp" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Phone Number</mat-label>
+    <input matInput formControlName="phoneNumber" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Branch Type</mat-label>
+    <mat-select formControlName="branchType">
+      <mat-option *ngFor="let b of branchTypes" [value]="b">{{ b }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Service Status</mat-label>
+    <mat-select formControlName="serviceStatus">
+      <mat-option *ngFor="let s of serviceStatuses" [value]="s">{{ s }}</mat-option>
+    </mat-select>
+    <mat-error *ngIf="form.get('serviceStatus')!.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Pincode</mat-label>
+    <input matInput formControlName="pincode" />
+    <mat-hint *ngIf="loadingPincode">Looking up…</mat-hint>
+    <mat-error *ngIf="form.get('pincode')!.hasError('required')">Required</mat-error>
+    <mat-error *ngIf="form.get('pincode')!.hasError('pattern')">Invalid PIN code</mat-error>
+    <mat-error *ngIf="pincodeError">{{ pincodeError }}</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Location</mat-label>
+    <mat-select
+      formControlName="location"
+      (selectionChange)="onLocationChange($event.value)"
+      [compareWith]="compareByName"
+    >
+      <mat-option *ngFor="let loc of locationOptions" [value]="loc">{{ loc.name }}</mat-option>
+    </mat-select>
+    <mat-hint *ngIf="locationOptions.length === 0">Enter a valid PIN code first</mat-hint>
+    <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Circle</mat-label>
+    <input matInput formControlName="circle" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>District</mat-label>
+    <input matInput formControlName="district" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Division</mat-label>
+    <input matInput formControlName="division" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Region</mat-label>
+    <input matInput formControlName="region" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Block</mat-label>
+    <input matInput formControlName="block" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>State</mat-label>
+    <input matInput formControlName="state" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Country</mat-label>
+    <input matInput formControlName="country" [disabled]="!form.get('location')!.value" />
+  </mat-form-field>
+<div class="actions" style="margin-top:1rem; display:flex; gap:1rem; justify-content: center;">
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+        Add User
+    </button>
+</div>
+</form>
+<div *ngIf="submitError" class="error-message">
+  {{ submitError }}
+</div>
+<router-outlet></router-outlet>
