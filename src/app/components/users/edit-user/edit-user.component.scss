@@ -40,21 +40,40 @@ mat-card {
 }
 
 .roles-buttons {
-  display: flex;
+    display: flex;
+  flex-direction: column;
+  gap: 16px; /* space between rows */
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1rem 0;
 
-  button {
+button {
     flex: 0 0 auto;
     text-transform: none;
     border-color: rgba(0, 0, 0, 0.12);
     color: rgba(0, 0, 0, 0.87);
-  }
+    margin-bottom: 8px; /* space between buttons vertically */
+    margin-right: 8px;  /* space between buttons horizontally */
+}
 
-  button.selected {
+button.selected {
     background-color: #a5d6a7 !important;
     border-color: #81c784 !important;
     color: #1b5e20 !important;
-  }
+}
+
+.role-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* space between buttons */
+}
+
+h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+
 }

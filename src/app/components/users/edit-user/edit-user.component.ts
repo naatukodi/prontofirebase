@@ -45,8 +45,17 @@ export class EditUserComponent implements OnInit {
     'CanViewInspection',
     'CanViewQualityControl',
     'CanViewStakeholder',
-    'CanViewVehicleDetails',
-    'CanEditInspection'  // corrected casing
+    'CanViewVehicleDetails'
+  ];
+
+  // defines your desired ordering
+  private sortOrder = [
+    'Dashboard',
+    'Stakeholder',
+    'VehicleDetails',
+    'Inspection',
+    'QualityControl',
+    'FinalReport'
   ];
 
   // roles assigned to this user
@@ -168,28 +177,57 @@ export class EditUserComponent implements OnInit {
     return a && b ? a.name === b.name : a === b;
   }
 
-  formatRole(key: string) {
-    const s = key.replace(/^Can/, '');
-    return s.replace(/([A-Z])/g, ' $1').trim();
+  toggleRole(role: string) {
+    const has = this.userRoles.includes(role);
+    // call your service here…
+    if (has) {
+      this.userRoles = this.userRoles.filter(r => r !== role);
+    } else {
+      this.userRoles = [...this.userRoles, role];
+    }
   }
 
-  toggleRole(role: string) {
-    const uid = this.form.get('userId')!.value as string;
-    const has = this.userRoles.includes(role);
-    const call$ = has
-      ? this.usersSvc.removeRole(uid, role)
-      : this.usersSvc.addRole(uid, role);
+  formatRole(key: string) {
+    return key
+      .replace(/^Can/, '')
+      .replace(/([A-Z])/g, ' $1')
+      .trim();
+  }
 
-    call$.subscribe({
-      next: () => {
-        this.userRoles = has
-          ? this.userRoles.filter(r => r !== role)
-          : [...this.userRoles, role];
-      },
-      error: () => {
-        this.submitError = `Could not ${has ? 'remove' : 'add'} ${role}`;
+  private getSortIndex(role: string): number {
+    const normalized = role.toLowerCase();
+    for (let i = 0; i < this.sortOrder.length; i++) {
+      if (normalized.includes(this.sortOrder[i].toLowerCase())) {
+        return i;
       }
-    });
+    }
+    return this.sortOrder.length; // things not in your list go last
+  }
+
+  private sortRoles(list: string[]): string[] {
+    return [...list].sort(
+      (a, b) => this.getSortIndex(a) - this.getSortIndex(b)
+    );
+  }
+
+  get editRoles(): string[] {
+    const filtered = this.allRoles.filter(r =>
+      r.toLowerCase().includes('edit')
+    );
+    return this.sortRoles(filtered);
+  }
+
+  get viewRoles(): string[] {
+    const filtered = this.allRoles.filter(r =>
+      r.toLowerCase().includes('view')
+    );
+    return this.sortRoles(filtered);
+  }
+
+  get otherRoles(): string[] {
+    const used = new Set([...this.editRoles, ...this.viewRoles]);
+    const filtered = this.allRoles.filter(r => !used.has(r));
+    return this.sortRoles(filtered);
   }
 
   submit() {
