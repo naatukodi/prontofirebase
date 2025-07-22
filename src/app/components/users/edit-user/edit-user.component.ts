@@ -32,7 +32,7 @@ export class EditUserComponent implements OnInit {
   submitError: string | null = null;
   locationOptions: PincodeModel[] = [];
 
-  // static list of all possible roles — exact casing as in API
+  /** Static list of ALL roles – exact casing as API */
   allRoles = [
     'Admin',
     'CanCreateStakeholder',
@@ -48,7 +48,7 @@ export class EditUserComponent implements OnInit {
     'CanViewVehicleDetails'
   ];
 
-  // defines your desired ordering
+  /** Order preference for grouping/sorting */
   private sortOrder = [
     'Dashboard',
     'Stakeholder',
@@ -58,12 +58,12 @@ export class EditUserComponent implements OnInit {
     'FinalReport'
   ];
 
-  // roles assigned to this user
+  /** Roles assigned to this user (from API) */
   userRoles: string[] = [];
 
-  roleOptions = ['SuperAdmin','StateAdmin','Admin','Stakeholder','BackEnd','AVO','QC','FinalReport'];
-  branchTypes = ['Head Office','onField','Branch'];
-  serviceStatuses = ['Servicable','Non-Servicable'];
+  roleOptions = ['SuperAdmin', 'StateAdmin', 'Admin', 'Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
+  branchTypes = ['Head Office', 'onField', 'Branch'];
+  serviceStatuses = ['Servicable', 'Non-Servicable'];
 
   constructor(
     private fb: FormBuilder,
@@ -74,7 +74,31 @@ export class EditUserComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // build form
+    this.buildForm();
+    this.setupPincodeLookup();
+
+    // Load user → then roles
+    this.route.paramMap.pipe(
+      switchMap(params => {
+        const id = params.get('id')!;
+        return this.usersSvc.getById(id).pipe(
+          tap(user => this.patchUser(user)),
+          switchMap(user => this.usersSvc.getRoles(user.userId))
+        );
+      })
+    ).subscribe({
+      next: roles => {
+        this.userRoles = roles;
+        this.loading = false;
+      },
+      error: () => {
+        this.submitError = 'Failed to load user or roles';
+        this.loading = false;
+      }
+    });
+  }
+
+  private buildForm() {
     this.form = this.fb.group({
       userId: [{ value: '', disabled: true }],
       name: ['', Validators.required],
@@ -95,8 +119,9 @@ export class EditUserComponent implements OnInit {
       state: [{ value: '', disabled: true }],
       country: [{ value: '', disabled: true }]
     });
+  }
 
-    // pincode lookup (unchanged)…
+  private setupPincodeLookup() {
     this.form.get('pincode')!.valueChanges.pipe(
       debounceTime(500),
       distinctUntilChanged(),
@@ -117,47 +142,27 @@ export class EditUserComponent implements OnInit {
         this.locationOptions = [];
       }
     });
+  }
 
-    // load user & roles in parallel, then patch form
-    this.route.paramMap.pipe(
-      switchMap(params => {
-        const id = params.get('id')!;
-        // fetch both user and roles
-        return this.usersSvc.getById(id).pipe(
-          tap(user => {
-            // patch form ASAP
-            this.form.patchValue({
-              userId: user.userId,
-              name: user.name,
-              email: user.email,
-              roleId: user.roleId,
-              whatsapp: user.whatsapp,
-              phoneNumber: user.phoneNumber,
-              description: user.description,
-              branchType: user.branchType,
-              serviceStatus: user.serviceStatus,
-              pincode: user.pincode,
-              circle: user.circle,
-              district: user.district,
-              division: user.division,
-              region: user.region,
-              block: user.block,
-              state: user.state,
-              country: user.country
-            });
-          }),
-          switchMap(user => this.usersSvc.getRoles(user.userId))
-        );
-      })
-    ).subscribe({
-      next: roles => {
-        this.userRoles = roles;
-        this.loading = false;
-      },
-      error: () => {
-        this.submitError = 'Failed to load user or roles';
-        this.loading = false;
-      }
+  private patchUser(user: UserModel) {
+    this.form.patchValue({
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      roleId: user.roleId,
+      whatsapp: user.whatsapp,
+      phoneNumber: user.phoneNumber,
+      description: user.description,
+      branchType: user.branchType,
+      serviceStatus: user.serviceStatus,
+      pincode: user.pincode,
+      circle: user.circle,
+      district: user.district,
+      division: user.division,
+      region: user.region,
+      block: user.block,
+      state: user.state,
+      country: user.country
     });
   }
 
@@ -177,14 +182,34 @@ export class EditUserComponent implements OnInit {
     return a && b ? a.name === b.name : a === b;
   }
 
+  /** Toggle a single role on/off */
   toggleRole(role: string) {
+    const uid = this.form.getRawValue().userId as string;
     const has = this.userRoles.includes(role);
-    // call your service here…
+
+    // optimistic update
     if (has) {
       this.userRoles = this.userRoles.filter(r => r !== role);
     } else {
       this.userRoles = [...this.userRoles, role];
     }
+
+    const call$ = has
+      ? this.usersSvc.removeRole(uid, role)
+      : this.usersSvc.addRole(uid, role);
+
+    call$.subscribe({
+      next: () => { /* OK */ },
+      error: () => {
+        // revert on failure
+        if (has) {
+          this.userRoles = [...this.userRoles, role];
+        } else {
+          this.userRoles = this.userRoles.filter(r => r !== role);
+        }
+        this.submitError = `Could not ${has ? 'remove' : 'add'} ${role}`;
+      }
+    });
   }
 
   formatRole(key: string) {
@@ -195,39 +220,30 @@ export class EditUserComponent implements OnInit {
   }
 
   private getSortIndex(role: string): number {
-    const normalized = role.toLowerCase();
+    const lowered = role.toLowerCase();
     for (let i = 0; i < this.sortOrder.length; i++) {
-      if (normalized.includes(this.sortOrder[i].toLowerCase())) {
+      if (lowered.includes(this.sortOrder[i].toLowerCase())) {
         return i;
       }
     }
-    return this.sortOrder.length; // things not in your list go last
+    return this.sortOrder.length;
   }
 
   private sortRoles(list: string[]): string[] {
-    return [...list].sort(
-      (a, b) => this.getSortIndex(a) - this.getSortIndex(b)
-    );
+    return [...list].sort((a, b) => this.getSortIndex(a) - this.getSortIndex(b));
   }
 
   get editRoles(): string[] {
-    const filtered = this.allRoles.filter(r =>
-      r.toLowerCase().includes('edit')
-    );
-    return this.sortRoles(filtered);
+    return this.sortRoles(this.allRoles.filter(r => r.toLowerCase().includes('edit')));
   }
 
   get viewRoles(): string[] {
-    const filtered = this.allRoles.filter(r =>
-      r.toLowerCase().includes('view')
-    );
-    return this.sortRoles(filtered);
+    return this.sortRoles(this.allRoles.filter(r => r.toLowerCase().includes('view')));
   }
 
   get otherRoles(): string[] {
     const used = new Set([...this.editRoles, ...this.viewRoles]);
-    const filtered = this.allRoles.filter(r => !used.has(r));
-    return this.sortRoles(filtered);
+    return this.sortRoles(this.allRoles.filter(r => !used.has(r)));
   }
 
   submit() {
@@ -236,6 +252,7 @@ export class EditUserComponent implements OnInit {
       return;
     }
     this.submitError = null;
+
     const raw = this.form.getRawValue();
     const payload: UserModel = {
       userId: raw.userId,

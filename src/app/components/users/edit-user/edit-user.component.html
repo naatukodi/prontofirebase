@@ -94,87 +94,90 @@
       <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
     </mat-form-field>
 
-    <!-- Auto‑filled fields -->
+    <!-- Auto-filled fields -->
     <mat-form-field appearance="fill">
       <mat-label>Circle</mat-label>
       <input matInput formControlName="circle" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>District</mat-label>
       <input matInput formControlName="district" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>Division</mat-label>
       <input matInput formControlName="division" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>Region</mat-label>
       <input matInput formControlName="region" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>Block</mat-label>
       <input matInput formControlName="block" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>State</mat-label>
       <input matInput formControlName="state" [disabled]="true" />
     </mat-form-field>
+
     <mat-form-field appearance="fill">
       <mat-label>Country</mat-label>
       <input matInput formControlName="country" [disabled]="true" />
     </mat-form-field>
 
-    <!-- Permissions buttons -->
-    <!-- src/app/users/edit-user/edit-user.component.html -->
+    <!-- ─── Permissions Buttons ─────────────────────────── -->
+
     <div class="roles-buttons full-width">
-
-    <!-- Edit Roles -->
-    <h3>Edit Roles</h3>
-    <div class="role-row">
+      <!-- Edit Roles -->
+      <h3>Edit Roles</h3>
+      <div class="role-row">
         <ng-container *ngFor="let r of editRoles">
-        <button
+          <button
             mat-stroked-button
             [ngClass]="{ 'selected': userRoles.includes(r) }"
             type="button"
             (click)="toggleRole(r)"
-        >
+          >
             {{ formatRole(r) }}
-        </button>
+          </button>
         </ng-container>
-    </div>
+      </div>
 
-    <!-- View Roles -->
-    <h3>View Roles</h3>
-    <div class="role-row">
+      <!-- View Roles -->
+      <h3>View Roles</h3>
+      <div class="role-row">
         <ng-container *ngFor="let r of viewRoles">
-        <button
+          <button
             mat-stroked-button
             [ngClass]="{ 'selected': userRoles.includes(r) }"
             type="button"
             (click)="toggleRole(r)"
-        >
+          >
             {{ formatRole(r) }}
-        </button>
+          </button>
         </ng-container>
-    </div>
+      </div>
 
-    <!-- Other Roles -->
-    <h3>Other Roles</h3>
-    <div class="role-row">
+      <!-- Other Roles -->
+      <h3>Other Roles</h3>
+      <div class="role-row">
         <ng-container *ngFor="let r of otherRoles">
-        <button
+          <button
             mat-stroked-button
             [ngClass]="{ 'selected': userRoles.includes(r) }"
             type="button"
             (click)="toggleRole(r)"
-        >
+          >
             {{ formatRole(r) }}
-        </button>
+          </button>
         </ng-container>
+      </div>
     </div>
-
-    </div>
-
 
     <!-- Actions -->
     <div class="actions">
