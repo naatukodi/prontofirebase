@@ -6,17 +6,20 @@ import { switchMap, debounceTime, distinctUntilChanged, tap } from 'rxjs/operato
 import { UsersService } from '../../../services/users.service';
 import { PincodeService, PincodeModel } from '../../../services/pincode.service';
 import { UserModel } from '../../../models/user.model';
-import { SharedModule } from '../../shared/shared.module/shared.module';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { SharedModule } from '../../shared/shared.module/shared.module';
 
 @Component({
   selector: 'app-edit-user',
   standalone: true,
   imports: [
-    SharedModule,
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     RouterModule,
-    CommonModule
+    SharedModule
   ],
   templateUrl: './edit-user.component.html',
   styleUrls: ['./edit-user.component.scss']
@@ -28,9 +31,30 @@ export class EditUserComponent implements OnInit {
   pincodeError: string | null = null;
   submitError: string | null = null;
   locationOptions: PincodeModel[] = [];
-  roleOptions = ['SuperAdmin','StateAdmin','Admin', 'Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
-branchTypes = ['Head Office', 'onField', 'Branch'];
-serviceStatuses = ['Servicable', 'Non-Servicable'];
+
+  // static list of all possible roles — exact casing as in API
+  allRoles = [
+    'Admin',
+    'CanCreateStakeholder',
+    'CanEditInspection',
+    'CanEditQualityControl',
+    'CanEditStakeholder',
+    'CanEditVehicleDetails',
+    'CanViewDashboard',
+    'CanViewFinalReport',
+    'CanViewInspection',
+    'CanViewQualityControl',
+    'CanViewStakeholder',
+    'CanViewVehicleDetails',
+    'CanEditInspection'  // corrected casing
+  ];
+
+  // roles assigned to this user
+  userRoles: string[] = [];
+
+  roleOptions = ['SuperAdmin','StateAdmin','Admin','Stakeholder','BackEnd','AVO','QC','FinalReport'];
+  branchTypes = ['Head Office','onField','Branch'];
+  serviceStatuses = ['Servicable','Non-Servicable'];
 
   constructor(
     private fb: FormBuilder,
@@ -43,7 +67,7 @@ serviceStatuses = ['Servicable', 'Non-Servicable'];
   ngOnInit() {
     // build form
     this.form = this.fb.group({
-      userId: [{value:'',disabled:true}],
+      userId: [{ value: '', disabled: true }],
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       roleId: ['', Validators.required],
@@ -54,27 +78,27 @@ serviceStatuses = ['Servicable', 'Non-Servicable'];
       serviceStatus: ['Servicable', Validators.required],
       pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
       location: [null, Validators.required],
-      circle: [{value:'',disabled:true}],
-      district: [{value:'',disabled:true}],
-      division: [{value:'',disabled:true}],
-      region: [{value:'',disabled:true}],
-      block: [{value:'',disabled:true}],
-      state: [{value:'',disabled:true}],
-      country: [{value:'',disabled:true}]
+      circle: [{ value: '', disabled: true }],
+      district: [{ value: '', disabled: true }],
+      division: [{ value: '', disabled: true }],
+      region: [{ value: '', disabled: true }],
+      block: [{ value: '', disabled: true }],
+      state: [{ value: '', disabled: true }],
+      country: [{ value: '', disabled: true }]
     });
 
-    // when pincode changes…
+    // pincode lookup (unchanged)…
     this.form.get('pincode')!.valueChanges.pipe(
       debounceTime(500),
       distinctUntilChanged(),
-      tap(_ => { this.loadingPincode = true; this.pincodeError = null; }),
+      tap(() => { this.loadingPincode = true; this.pincodeError = null; }),
       switchMap(pin =>
         this.form.get('pincode')!.valid
           ? this.pinSvc.lookup(pin as string)
           : []
       )
     ).subscribe({
-      next: (opts: PincodeModel[]) => {
+      next: opts => {
         this.loadingPincode = false;
         this.locationOptions = opts;
       },
@@ -85,37 +109,44 @@ serviceStatuses = ['Servicable', 'Non-Servicable'];
       }
     });
 
-    // load the user, then patch form
+    // load user & roles in parallel, then patch form
     this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id')!;
-        return this.usersSvc.getById(id);
+        // fetch both user and roles
+        return this.usersSvc.getById(id).pipe(
+          tap(user => {
+            // patch form ASAP
+            this.form.patchValue({
+              userId: user.userId,
+              name: user.name,
+              email: user.email,
+              roleId: user.roleId,
+              whatsapp: user.whatsapp,
+              phoneNumber: user.phoneNumber,
+              description: user.description,
+              branchType: user.branchType,
+              serviceStatus: user.serviceStatus,
+              pincode: user.pincode,
+              circle: user.circle,
+              district: user.district,
+              division: user.division,
+              region: user.region,
+              block: user.block,
+              state: user.state,
+              country: user.country
+            });
+          }),
+          switchMap(user => this.usersSvc.getRoles(user.userId))
+        );
       })
     ).subscribe({
-      next: user => {
+      next: roles => {
+        this.userRoles = roles;
         this.loading = false;
-        this.form.patchValue({
-          userId: user.userId,
-          name: user.name,
-          email: user.email,
-          roleId: user.roleId,
-          whatsapp: user.whatsapp,
-          phoneNumber: user.phoneNumber,
-          description: user.description,
-          branchType: user.branchType,
-          serviceStatus: user.serviceStatus,
-          pincode: user.pincode,
-          circle: user.circle,
-          district: user.district,
-          division: user.division,
-          region: user.region,
-          block: user.block,
-          state: user.state,
-          country: user.country
-        });
       },
       error: () => {
-        this.submitError = 'Failed to load user';
+        this.submitError = 'Failed to load user or roles';
         this.loading = false;
       }
     });
@@ -135,6 +166,30 @@ serviceStatuses = ['Servicable', 'Non-Servicable'];
 
   compareByName(a: PincodeModel, b: PincodeModel) {
     return a && b ? a.name === b.name : a === b;
+  }
+
+  formatRole(key: string) {
+    const s = key.replace(/^Can/, '');
+    return s.replace(/([A-Z])/g, ' $1').trim();
+  }
+
+  toggleRole(role: string) {
+    const uid = this.form.get('userId')!.value as string;
+    const has = this.userRoles.includes(role);
+    const call$ = has
+      ? this.usersSvc.removeRole(uid, role)
+      : this.usersSvc.addRole(uid, role);
+
+    call$.subscribe({
+      next: () => {
+        this.userRoles = has
+          ? this.userRoles.filter(r => r !== role)
+          : [...this.userRoles, role];
+      },
+      error: () => {
+        this.submitError = `Could not ${has ? 'remove' : 'add'} ${role}`;
+      }
+    });
   }
 
   submit() {
@@ -169,7 +224,8 @@ serviceStatuses = ['Servicable', 'Non-Servicable'];
       error: err => this.submitError = err.message || 'Update failed'
     });
   }
-    onCancel() {
-        this.router.navigate(['/users']);
-    }
+
+  onCancel() {
+    this.router.navigate(['/users']);
+  }
 }

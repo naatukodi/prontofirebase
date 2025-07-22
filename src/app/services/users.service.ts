@@ -49,9 +49,28 @@ add(user: UserModel): Observable<UserModel> {
     );
 }
 
+ /** Assign a role to a user */
+  addRole(userId: string, role: string): Observable<void> {
+    const url = `${this.base}/${encodeURIComponent(userId)}/roles/${role}`;
+    return this.http.post<void>(url, '', { responseType: 'text' as any });
+  }
+
+
+  /** Remove a role from a user */
+  removeRole(userId: string, role: string): Observable<void> {
+    const url = `${this.base}/${encodeURIComponent(userId)}/roles/${role}`;
+    return this.http.delete<void>(url, { responseType: 'text' as any });
+  }
+
 getById(id: string): Observable<UserModel> {
     return this.http.get<UserModel>(`${this.base}/${id}`);
 }
+
+getRoles(userId: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.base}/${encodeURIComponent(userId)}/roles`);
+}
+
+
 
 update(user: UserModel): Observable<UserModel> {
     const payload = {

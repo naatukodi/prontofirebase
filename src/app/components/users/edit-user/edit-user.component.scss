@@ -1,5 +1,4 @@
 /* src/app/users/edit-user/edit-user.component.scss */
-
 :host {
   display: block;
   max-width: 1200px;
@@ -29,17 +28,33 @@ mat-card {
   padding: 2rem;
 }
 
-mat-card h2 {
-  margin-bottom: 1.5rem;
-}
-
 .error {
   color: #f44336;
-  margin-top: 1rem;
   text-align: center;
+  margin-top: 1rem;
 }
 
-mat-spinner {
-  margin: 0 auto;
-  display: block;
+.loading-spinner {
+  text-align: center;
+  padding: 2rem;
+}
+
+.roles-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+
+  button {
+    flex: 0 0 auto;
+    text-transform: none;
+    border-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  button.selected {
+    background-color: #a5d6a7 !important;
+    border-color: #81c784 !important;
+    color: #1b5e20 !important;
+  }
 }
