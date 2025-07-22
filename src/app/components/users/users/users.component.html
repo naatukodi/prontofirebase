@@ -100,7 +100,11 @@
 
   <!-- header & rows -->
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row        *matRowDef="let r; columns: displayedColumns"></tr>
+  <tr mat-row
+      *matRowDef="let v; columns: displayedColumns"
+      class="clickable-row"
+      (click)="onUserClick(v)">
+  </tr>
 </table>
 
 <div class="actions">

@@ -31,7 +31,12 @@ export class UsersComponent implements OnInit {
   ];
 
   constructor(private usersSvc: UsersService, private router: Router) {}
-
+    onUserClick(user: UserModel): void {
+        if (user && user.userId) {
+            this.router.navigate(['/users', user.userId, 'edit']);
+        }
+    }
+    
   ngOnInit(): void {
     this.usersSvc.getAll().subscribe({
       next: data => {

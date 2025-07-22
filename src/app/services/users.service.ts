@@ -22,31 +22,61 @@ export class UsersService {
     return this.http.get<UserModel[]>(`${this.base}/all`);
   }
 
-  add(user: UserModel): Observable<UserModel> {
+add(user: UserModel): Observable<UserModel> {
     const payload = {
-      userId: user.userId,
-      name: user.name,
-      email: user.email,
-      roleId: user.roleId,
-      whatsapp: user.whatsapp,
-      phoneNumber: user.phoneNumber,
-      Description: user.description,
-      BranchType: user.branchType,
-      ServiceStatus: user.serviceStatus,
-      Circle: user.circle,
-      District: user.district,
-      Division: user.division,
-      Region: user.region,
-      Block: user.block,
-      State: user.state,
-      Country: user.country,
-      Pincode: user.pincode
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        roleId: user.roleId,
+        whatsapp: user.whatsapp,
+        phoneNumber: user.phoneNumber,
+        Description: user.description,
+        BranchType: user.branchType,
+        ServiceStatus: user.serviceStatus,
+        Circle: user.circle,
+        District: user.district,
+        Division: user.division,
+        Region: user.region,
+        Block: user.block,
+        State: user.state,
+        Country: user.country,
+        Pincode: user.pincode
     };
 
-    // Ensure all fields are present
-      return this.http.post<UserModel>(
-      `${this.base}`,
-      payload
+    return this.http.post<UserModel>(
+        `${this.base}`,
+        payload
     );
-  }
+}
+
+getById(id: string): Observable<UserModel> {
+    return this.http.get<UserModel>(`${this.base}/${id}`);
+}
+
+update(user: UserModel): Observable<UserModel> {
+    const payload = {
+        userId: user.userId,
+        name: user.name,
+        email: user.email,
+        roleId: user.roleId,
+        whatsapp: user.whatsapp,
+        phoneNumber: user.phoneNumber,
+        Description: user.description,
+        BranchType: user.branchType,
+        ServiceStatus: user.serviceStatus,
+        Circle: user.circle,
+        District: user.district,
+        Division: user.division,
+        Region: user.region,
+        Block: user.block,
+        State: user.state,
+        Country: user.country,
+        Pincode: user.pincode
+    };
+
+    return this.http.post<UserModel>(
+        `${this.base}`,
+        payload
+    );
+}
 }

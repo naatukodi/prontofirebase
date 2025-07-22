@@ -20,6 +20,7 @@ import { LoginComponent } from './login/login';
 import { AuthGuard } from './auth/auth';
 import { RoleGuard }      from './auth/role.guard';
 import { AddUserComponent } from './components/users/add-user/add-user.component';
+import { EditUserComponent } from './components/users/edit-user/edit-user.component';
 
 export const routes: Routes = [
   {
@@ -54,6 +55,7 @@ export const routes: Routes = [
   { path: 'users/:phone/roles', component: UserRolesComponent },
   { path: 'users', component: UsersComponent },
   { path: 'users/add', component: AddUserComponent },
+  { path: 'users/:id/edit', component: EditUserComponent },
   { path: 'unauthorized', component: Unauthorized },
    ]
   },

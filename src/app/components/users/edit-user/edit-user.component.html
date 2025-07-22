@@ -1,13 +1,15 @@
-    <h2 style="text-align: center;">Add User</h2>
+<!-- src/app/users/edit-user/edit-user.component.html -->
+<mat-card *ngIf="!loading; else loadingTpl">
+  <h2 style="text-align:center">Edit User</h2>
 
-<form [formGroup]="form" class="grid" (ngSubmit)="onSubmit()">
+  <form [formGroup]="form" class="grid" (ngSubmit)="submit()">
+    <!-- exactly the same fields as your Add form… -->
+    <mat-form-field appearance="fill">
+      <mat-label>User ID</mat-label>
+      <input matInput formControlName="userId" [disabled]="true" />
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Name</mat-label>
-    <input matInput formControlName="name" />
-    <mat-error *ngIf="form.get('name')!.hasError('required')">Required</mat-error>
-  </mat-form-field>
-
+   
   <mat-form-field appearance="fill">
     <mat-label>Email</mat-label>
     <input matInput formControlName="email" />
@@ -53,29 +55,32 @@
     <mat-error *ngIf="form.get('serviceStatus')!.hasError('required')">Required</mat-error>
   </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Pincode</mat-label>
-    <input matInput formControlName="pincode" />
-    <mat-hint *ngIf="loadingPincode">Looking up…</mat-hint>
-    <mat-error *ngIf="form.get('pincode')!.hasError('required')">Required</mat-error>
-    <mat-error *ngIf="form.get('pincode')!.hasError('pattern')">Invalid PIN code</mat-error>
-    <mat-error *ngIf="pincodeError">{{ pincodeError }}</mat-error>
-  </mat-form-field>
+    <!-- Pincode / Location cascade… -->
+    <mat-form-field appearance="fill">
+      <mat-label>Pincode</mat-label>
+      <input matInput formControlName="pincode" />
+      <mat-hint *ngIf="loadingPincode">Looking up…</mat-hint>
+      <mat-error *ngIf="form.get('pincode')!.hasError('required')">Required</mat-error>
+      <mat-error *ngIf="form.get('pincode')!.hasError('pattern')">Invalid</mat-error>
+      <mat-error *ngIf="pincodeError">{{pincodeError}}</mat-error>
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Location</mat-label>
-    <mat-select
-      formControlName="location"
-      (selectionChange)="onLocationChange($event.value)"
-      [compareWith]="compareByName"
-    >
-      <mat-option *ngFor="let loc of locationOptions" [value]="loc">{{ loc.name }}</mat-option>
-    </mat-select>
-    <mat-hint *ngIf="locationOptions.length === 0">Enter a valid PIN code first</mat-hint>
-    <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
-  </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Location</mat-label>
+      <mat-select
+        formControlName="location"
+        (selectionChange)="onLocationChange($event.value)"
+        [compareWith]="compareByName"
+      >
+        <mat-option *ngFor="let loc of locationOptions" [value]="loc">
+          {{loc.name}}
+        </mat-option>
+      </mat-select>
+      <mat-hint *ngIf="locationOptions.length===0">Enter a valid PIN first</mat-hint>
+      <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
+    <mat-form-field appearance="fill">
     <mat-label>Circle</mat-label>
     <input matInput formControlName="circle" [disabled]="!form.get('location')!.value" />
   </mat-form-field>
@@ -103,14 +108,27 @@
     <mat-label>Country</mat-label>
     <input matInput formControlName="country" [disabled]="!form.get('location')!.value" />
   </mat-form-field>
-<div class="actions" style="margin-top:1rem; display:flex; gap:1rem; justify-content: center;">
-    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-        Add User
-    </button>
-    <button mat-raised-button color="warn" (click)="onCancel()">Cancel</button>
-</div>
-</form>
-<div *ngIf="submitError" class="error-message">
-  {{ submitError }}
-</div>
-<router-outlet></router-outlet>
+
+    <!-- Circle, District, … Country (disabled inputs) -->
+
+    <div class="actions" style="text-align:center; margin-top:1rem">
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+        Save Changes
+      </button>
+    </div>
+    <div class="actions" style="text-align:center; margin-top:1rem">
+      <button mat-raised-button color="warn" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+
+  <div *ngIf="submitError" class="error" style="text-align:center; margin-top:1rem">
+    {{ submitError }}
+  </div>
+</mat-card>
+
+<ng-template #loadingTpl>
+  <div style="text-align:center; padding:2rem">
+    <mat-spinner></mat-spinner>
+    <p>Loading user…</p>
+  </div>
+</ng-template>

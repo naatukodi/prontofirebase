@@ -1,0 +1,45 @@
+/* src/app/users/edit-user/edit-user.component.scss */
+
+:host {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+mat-card {
+  padding: 2rem;
+}
+
+mat-card h2 {
+  margin-bottom: 1.5rem;
+}
+
+.error {
+  color: #f44336;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+mat-spinner {
+  margin: 0 auto;
+  display: block;
+}
