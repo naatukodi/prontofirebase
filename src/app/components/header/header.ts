@@ -1,24 +1,17 @@
 import { Component, ViewChild, inject } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatListModule } from '@angular/material/list';
+import { RouterModule } from '@angular/router';
+import { SharedModule } from '../shared/shared.module/shared.module';
+
+import { Auth, authState, User } from '@angular/fire/auth';
+import { Observable, of } from 'rxjs';
+import { map, switchMap, shareReplay } from 'rxjs/operators';
 
 import { AuthService } from '../../services/auth.service';
 import { AuthorizationService } from '../../services/authorization.service';
-
-import { Auth, authState, User } from '@angular/fire/auth';
 import { UsersService } from '../../services/users.service';
-
-import { Observable, of } from 'rxjs';
-import { map, switchMap, shareReplay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
@@ -26,14 +19,7 @@ import { map, switchMap, shareReplay } from 'rxjs/operators';
   imports: [
     CommonModule,
     RouterModule,
-    // Material (kept because you might still use Mat-sidenav / icons)
-    MatToolbarModule,
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatListModule
+    SharedModule
   ],
   templateUrl: './header.html',
   styleUrls: ['./header.css']
@@ -52,26 +38,40 @@ export class HeaderComponent {
     .observe(['(max-width: 768px)'])
     .pipe(map(r => r.matches));
 
-  /** Firebase user observable */
+  /** Firebase auth user */
   user$: Observable<User | null> = authState(this.auth);
 
-  /**
-   * Resolved display name from your API:
-   * - Uses phoneNumber or uid/email to call getById()
-   * - Falls back to Firebase displayName/email if API has nothing
-   */
+  /** Display name from API or Firebase fallback */
   userName$: Observable<string> = this.user$.pipe(
     switchMap(u => {
       if (!u) return of('');
       const id = this.resolveId(u);
-      if (!id) {
-        // fall back directly
-        return of(this.fallbackName(u));
-      }
+      if (!id) return of(this.fallbackName(u));
       return this.usersSvc.getById(id).pipe(
-        map(model => (model?.name?.trim() || this.fallbackName(u)))
+        map(m => (m?.name?.trim() || this.fallbackName(u)))
       );
     }),
+    shareReplay(1)
+  );
+
+  /** Roles from backend */
+  roles$: Observable<string[]> = this.user$.pipe(
+    switchMap(u => {
+      if (!u) return of<string[]>([]);
+      const phone = u.phoneNumber ?? '';
+      return phone ? this.usersSvc.getRoles(phone) : of<string[]>([]);
+    }),
+    shareReplay(1)
+  );
+
+  /** Derived flags */
+  isAdmin$: Observable<boolean> = this.roles$.pipe(
+    map(roles => roles.includes('Admin')),
+    shareReplay(1)
+  );
+
+  canEditStakeholder$: Observable<boolean> = this.roles$.pipe(
+    map(roles => roles.includes('CanEditStakeholder')),
     shareReplay(1)
   );
 

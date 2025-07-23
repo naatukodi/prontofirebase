@@ -1,4 +1,3 @@
-<!-- Using Bootstrap navbar (your current markup) -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
 
@@ -16,11 +15,8 @@
       </span>
     </a>
 
-    <!-- User name BEFORE menu -->
-    <span class="navbar-text ms-auto" *ngIf="userName$ | async as uname; else noUser">
-      Hello {{ uname }}
-    </span>
-    <ng-template #noUser></ng-template>
+    <!-- User name before menu -->
+    <span class="navbar-text ms-3 me-auto" *ngIf="userName$ | async as uname"> Hello {{ uname }}</span>
 
     <!-- Toggler -->
     <button
@@ -42,11 +38,13 @@
           <a class="nav-link" routerLink="/" routerLinkActive="active">Dashboard</a>
         </li>
 
-        <li class="nav-item">
+        <!-- Stakeholder only for CanEditStakeholder -->
+        <li class="nav-item" *ngIf="canEditStakeholder$ | async">
           <a class="nav-link" routerLink="/stakeholder" routerLinkActive="active">Stakeholder</a>
         </li>
 
-        <li class="nav-item dropdown">
+        <!-- Users menu only for Admin -->
+        <li class="nav-item dropdown" *ngIf="isAdmin$ | async">
           <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             Users
           </a>
