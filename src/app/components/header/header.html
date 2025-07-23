@@ -1,67 +1,66 @@
-<!-- src/app/header.component.html
-<mat-sidenav-container class="sidenav-container">
-    <mat-sidenav #drawer
-                             mode="over"
-                             (closedStart)="drawer.close()"
-                             class="sidenav">
+<!-- Using Bootstrap navbar (your current markup) -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
 
-        <mat-nav-list>
-            <a mat-list-item routerLink="/"            (click)="drawer.close()">Dashboard</a>
-            <a mat-list-item routerLink="/stakeholder" (click)="drawer.close()">Stakeholder</a>
-            <a mat-list-item (click)="onLogout(); drawer.close()">Logout</a>
-        </mat-nav-list>
+    <!-- Brand -->
+    <a class="navbar-brand d-flex align-items-center" routerLink="/">
+      <img
+        src="https://prontomoto.azureedge.net/artifacts/prontomoto_icon.png"
+        alt="Icon"
+        width="42"
+        height="42"
+        class="me-2"
+      />
+      <span class="navbar-title">
+        <span style="color: green;">Pronto</span> <span style="color: red;">Moto</span>
+      </span>
+    </a>
 
-    </mat-sidenav>
+    <!-- User name BEFORE menu -->
+    <span class="navbar-text ms-auto" *ngIf="userName$ | async as uname; else noUser">
+      Hello {{ uname }}
+    </span>
+    <ng-template #noUser></ng-template>
 
-    <mat-sidenav-content>
-        <mat-toolbar color="primary" class="app-toolbar">
-            <button mat-icon-button (click)="drawer.toggle()">
-                <mat-icon>menu</mat-icon>
-            </button>
+    <!-- Toggler -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-            <span class="app-title">Pronto</span>
-            <span class="spacer"></span>
-        </mat-toolbar>
+    <!-- Nav items -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
-        <router-outlet></router-outlet>
-    </mat-sidenav-content>
-</mat-sidenav-container>  -->
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active">Dashboard</a>
+        </li>
 
-<!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" routerLink="/">
-        <img src="https://prontomoto.azureedge.net/artifacts/prontomoto_icon.png" alt="Icon" width="42" height="42" class="me-2">
-        <span class="navbar-title">
-            <span style="color: green;">Pronto</span> <span style="color: red;">Moto</span>
-        </span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-              data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" 
-              aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" routerLink=" " routerLinkActive="home">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/stakeholder" routerLinkActive="Stakeholder">Stakeholder</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Users
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" routerLink="/users" routerLinkActive="users">Users</a></li>
-              <li><a class="dropdown-item" routerLink="/users/add" routerLinkActive="adduser">Add User</a></li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" (click)="onLogout(); drawer.close()"routerLinkActive="logout">Logout</a>
-          </li>
-        </ul>
-      </div>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/stakeholder" routerLinkActive="active">Stakeholder</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            Users
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" routerLink="/users" routerLinkActive="active">Users</a></li>
+            <li><a class="dropdown-item" routerLink="/users/add" routerLinkActive="active">Add User</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" (click)="onLogout()" routerLinkActive="active">Logout</a>
+        </li>
+
+      </ul>
     </div>
-  </nav>
+  </div>
+</nav>

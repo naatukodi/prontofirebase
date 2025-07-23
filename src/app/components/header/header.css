@@ -54,3 +54,14 @@ mat-sidenav {
 .sidenav-container {
   overflow-x: hidden;
 }
+
+.navbar-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.navbar-text {
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
