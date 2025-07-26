@@ -6,6 +6,8 @@ import { AuthorizationService } from '../../services/authorization.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { WorkflowTable } from '../../models/WorkflowTable';
 import { SharedModule } from '../shared/shared.module/shared.module';
+import { UserModel } from '../../models/user.model';
+import { UsersService } from '../../services/users.service';
 
 @Component({
   selector: 'app-workflow-buttons',
@@ -27,12 +29,37 @@ export class WorkflowButtonsComponent {
   public table?: WorkflowTable;
   public loadingTable = false;
   public tableError: string | null = null;
+  assignedUser?: UserModel;
+  error?: string;
+  loadingAssigned = false;
 
   constructor(
-    private tableSvc: WorkflowService
+    private tableSvc: WorkflowService,
+    private usersSvc: UsersService
   ) { }
 
   private authz = inject(AuthorizationService);
+
+  ngOnInit(): void {
+    // after you have valuationId, vehicleNumber, applicantContact:
+    this.loadAssignedUser();
+  }
+
+  private loadAssignedUser() {
+      this.loadingAssigned = true;
+      this.usersSvc
+        .getAssignedUser(this.id, this.vehicleNumber, this.applicantContact)
+        .subscribe({
+          next: user => {
+            this.assignedUser = user;
+            this.loadingAssigned = false;
+          },
+          error: err => {
+            this.error = err.message || 'Failed to load assigned user';
+            this.loadingAssigned = false;
+          }
+        });
+    }
 
   ngOnChanges(changes: SimpleChanges) {
     // whenever inputs change, re-fetch

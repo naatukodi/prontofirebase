@@ -25,6 +25,25 @@
         <strong>Status:</strong> {{ table.status }}
       </div>
     </ng-container>
+    <br/>
+
+    <div *ngIf="loadingAssigned" class="loading-spinner">
+      <mat-spinner diameter="24"></mat-spinner> Loading…
+    </div>
+
+    <ng-container *ngIf="assignedUser; else noAssigned">
+        <span>
+          <strong>Currently Assigned User:</strong>
+          &nbsp;|&nbsp;
+          <strong>{{ assignedUser.name }}</strong>
+          &nbsp;|&nbsp;{{ assignedUser.phoneNumber }}
+          &nbsp;|&nbsp;{{ assignedUser.email }}
+          &nbsp;|&nbsp;{{ assignedUser.whatsapp }}
+        </span>
+    </ng-container>
+    <ng-template #noAssigned>
+      <span><strong>No user is currently assigned.</strong></span>
+    </ng-template>
 
     <div *ngIf="loadingTable" class="table-loading">Loading status…</div>
     <div *ngIf="tableError" class="table-error">{{ tableError }}</div>

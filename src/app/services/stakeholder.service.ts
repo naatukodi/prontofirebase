@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Stakeholder } from '../models/stakeholder.model';
+import { UserModel } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class StakeholderService {
@@ -51,6 +52,26 @@ private base = `${environment.apiBaseUrl}/Valuations`;
       { params }
     );
   }
+
+  assignBackend(
+      valuationId: string,
+      vehicleNumber: string,
+      applicantContact: string,
+      name: string,
+      phone: string,
+      email: string,
+      whatsapp: string
+    ): Observable<void> {
+      const url = `${this.base}/${valuationId}/vehicledetails/assignment`
+        + `?valuationId=${encodeURIComponent(valuationId)}`
+        + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
+        + `&applicantContact=${encodeURIComponent(applicantContact)}`
+        + `&assignedTo=${encodeURIComponent(name)}`
+        + `&assignedToPhoneNumber=${encodeURIComponent(phone)}`
+        + `&assignedToEmail=${encodeURIComponent(email)}`
+        + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
+      return this.http.post<void>(url, '');
+}
 
   newStakeholder(
   valuationId: string,
