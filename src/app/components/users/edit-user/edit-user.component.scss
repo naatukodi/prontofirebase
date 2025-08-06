@@ -72,3 +72,20 @@ mat-card {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.7);
 }
+
+button.selected {
+  background-color: #e8f5e9;
+  border-color: #81c784;
+}
+
+.district-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+

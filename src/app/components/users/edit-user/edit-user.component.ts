@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module/shared.module';
+import { catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-edit-user',
@@ -60,6 +62,12 @@ export class EditUserComponent implements OnInit {
 
   /** Roles assigned to this user (from API) */
   userRoles: string[] = [];
+  // near top of class
+  allStates: { key: string; name: string; districtCount: number }[] = [];
+  userStates: string[] = [];
+  selectedStateKey: string | null = null;
+  allDistricts: string[] = [];
+  userDistricts: string[] = [];
 
   roleOptions = ['SuperAdmin', 'StateAdmin', 'Admin', 'Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
   branchTypes = ['Head Office', 'onField', 'Branch'];
@@ -89,6 +97,7 @@ export class EditUserComponent implements OnInit {
     ).subscribe({
       next: roles => {
         this.userRoles = roles;
+        this.loadStates();
         this.loading = false;
       },
       error: () => {
@@ -177,6 +186,92 @@ export class EditUserComponent implements OnInit {
       country: sel.country
     });
   }
+
+  private loadStates() {
+  const uid = this.form.getRawValue().userId as string;
+
+  // 1️⃣ fetch master list
+  this.usersSvc.getStates().pipe(
+    tap(states => this.allStates = states),
+    // 2️⃣ then fetch user’s
+    switchMap(() => this.usersSvc.getUserStates(uid))
+  ).subscribe({
+    next: userStates => this.userStates = userStates,
+    error: () => this.submitError = 'Failed to load states'
+  });
+}
+
+toggleState(stateName: string) {
+  const uid = this.form.getRawValue().userId as string;
+  const already = this.userStates.includes(stateName);
+
+  // optimistic UI
+  this.userStates = already
+    ? this.userStates.filter(s => s !== stateName)
+    : [...this.userStates, stateName];
+
+  const call$ = already
+    ? this.usersSvc.removeState(uid, stateName)
+    : this.usersSvc.addState(uid, stateName);
+
+  call$.subscribe({
+    error: () => {
+      // revert on failure
+      this.userStates = already
+        ? [...this.userStates, stateName]
+        : this.userStates.filter(s => s !== stateName);
+      this.submitError = `Could not ${already ? 'remove' : 'add'} ${stateName}`;
+    }
+  });
+}
+
+get userStateOptions(): { key: string; name: string; districtCount: number }[] {
+  return this.allStates.filter(s => this.userStates.includes(s.name));
+}
+
+onDistrictStateChange(stateKey: string) {
+  this.submitError = null;               // clear old error
+  this.selectedStateKey = stateKey;
+  const uid = this.form.getRawValue().userId as string;
+
+  this.usersSvc.getDistricts(stateKey).pipe(
+    tap(list => this.allDistricts = list),
+    switchMap(() =>
+      this.usersSvc.getUserDistricts(uid).pipe(
+        catchError(() => of([]))         // if user-districts call fails, return empty array
+      )
+    )
+  ).subscribe({
+    next: list => this.userDistricts = list,
+    error: () => this.submitError = 'Failed to load districts'
+  });
+}
+
+
+toggleDistrict(district: string) {
+  const uid = this.form.getRawValue().userId as string;
+  const has = this.userDistricts.includes(district);
+
+  // optimistic UI update
+  this.userDistricts = has
+    ? this.userDistricts.filter(d => d !== district)
+    : [...this.userDistricts, district];
+
+  const call$ = has
+    ? this.usersSvc.removeDistrict(uid, district)
+    : this.usersSvc.addDistrict(uid, district);
+
+  call$.subscribe({
+    error: () => {
+      // revert on failure
+      this.userDistricts = has
+        ? [...this.userDistricts, district]
+        : this.userDistricts.filter(d => d !== district);
+      this.submitError = `Could not ${has ? 'remove' : 'add'} ${district}`;
+    }
+  });
+}
+
 
   compareByName(a: PincodeModel, b: PincodeModel) {
     return a && b ? a.name === b.name : a === b;

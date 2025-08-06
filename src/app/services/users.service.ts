@@ -74,6 +74,50 @@ getRoles(userId: string): Observable<string[]> {
     return this.http.get<UserModel[]>(`${this.base}/roles/${permission}`);
   }
 
+getStates(): Observable<{ key: string; name: string; districtCount: number }[]> {
+  return this.http.get<any[]>(`${environment.apiBaseUrl}/states`);
+}
+
+getUserStates(userId: string): Observable<string[]> {
+  return this.http.get<string[]>(`${environment.apiBaseUrl}/users/${userId}/States`);
+}
+
+addState(userId: string, state: string): Observable<void> {
+  return this.http.post<void>(
+    `${environment.apiBaseUrl}/users/${userId}/States`,
+    JSON.stringify(state),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+}
+
+removeState(userId: string, state: string): Observable<void> {
+  return this.http.delete<void>(
+    `${environment.apiBaseUrl}/users/${userId}/States/${encodeURIComponent(state)}`
+  );
+}
+
+getDistricts(stateKey: string): Observable<string[]> {
+  return this.http.get<string[]>(`${environment.apiBaseUrl}/states/${stateKey}/districts`);
+}
+
+getUserDistricts(userId: string): Observable<string[]> {
+  return this.http.get<string[]>(`${environment.apiBaseUrl}/users/${userId}/Districts`);
+}
+
+addDistrict(userId: string, district: string): Observable<void> {
+  return this.http.post<void>(
+    `${environment.apiBaseUrl}/users/${userId}/Districts`,
+    JSON.stringify(district),
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+}
+
+removeDistrict(userId: string, district: string): Observable<void> {
+  return this.http.delete<void>(
+    `${environment.apiBaseUrl}/users/${userId}/Districts/${encodeURIComponent(district)}`
+  );
+}
+
 getAssignedUser(
     valuationId: string,
     vehicleNumber: string,

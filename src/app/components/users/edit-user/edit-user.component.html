@@ -179,6 +179,54 @@
       </div>
     </div>
 
+    <!-- ─── States Selection ─────────────────────────── -->
+    <div class="states-buttons full-width">
+      <h3>States</h3>
+      <div class="state-row district-row">
+        <ng-container *ngFor="let s of allStates">
+          <button
+            mat-stroked-button
+            [ngClass]="{'selected': userStates.includes(s.name)}"
+            type="button"
+            (click)="toggleState(s.name)"
+          >
+            {{ s.name }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+     <!-- ─── District Selection ─────────────────────────── -->
+    <div class="districts-section  full-width">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Select State for Districts</mat-label>
+        <mat-select
+          [(value)]="selectedStateKey"
+          (selectionChange)="onDistrictStateChange($event.value)"
+        >
+          <mat-option *ngFor="let s of userStateOptions" [value]="s.key">
+            {{ s.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="districts-buttons full-width" *ngIf="allDistricts.length">
+        <h3>Districts</h3>
+        <div class="district-row">
+          <ng-container *ngFor="let d of allDistricts">
+            <button
+              mat-stroked-button
+              [ngClass]="{ 'selected': userDistricts.includes(d) }"
+              type="button"
+              (click)="toggleDistrict(d)"
+            >
+              {{ d }}
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="actions">
       <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
