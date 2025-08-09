@@ -17,4 +17,6 @@ export interface UserModel {
   state: string | null;
   country: string | null;
   pincode: string | null;
+  assignedDistricts: string | null;
+  assignedStates: string | null;
 }

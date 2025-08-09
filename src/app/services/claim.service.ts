@@ -38,6 +38,34 @@ export class ClaimService {
   }
 
   /**
+   * Fetch open valuations filtered by one or more state keys
+   */
+  getByStates(stateKeys: string[]): Observable<WFValuation[]> {
+    let params = new HttpParams();
+    stateKeys.forEach(key => {
+      params = params.append('stateKeys', key);
+    });
+    return this.http.get<WFValuation[]>(
+      `${this.apiUrl}/workflows/open/filter/states`,
+      { params }
+    );
+  }
+
+  /**
+   * Fetch open valuations filtered by one or more district keys
+   */
+  getByDistricts(districtKeys: string[]): Observable<WFValuation[]> {
+    let params = new HttpParams();
+    districtKeys.forEach(key => {
+      params = params.append('districtKeys', key);
+    });
+    return this.http.get<WFValuation[]>(
+      `${this.apiUrl}/workflows/open/filter/districts`,
+      { params }
+    );
+  }
+
+  /**
    * Patch stakeholder for a valuation
    * @param id Valuation ID
    * @param stakeholderData Data to patch

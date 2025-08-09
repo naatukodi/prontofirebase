@@ -7,6 +7,10 @@ import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthorizationService } from '../../services/authorization.service';
+import { AuthService }       from '../../services/auth.service';
+import { UsersService } from '../../services/users.service';
+import { UserModel } from '../../models/user.model';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,20 +37,81 @@ export class DashboardComponent implements OnInit {
     'currentStep','status'
   ];
 
+  private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin','AVO'];  // ← new
+
   selectedStep = '';
   stepCounts: Record<string, number> = {};
 
   constructor(
     private claimService: ClaimService,
+    private userService: UsersService,
     private router: Router,
-    private authz: AuthorizationService   // inject auth service
+    private authz: AuthorizationService,
+    private authService: AuthService
   ) {}
 
-  ngOnInit(): void {
-    this.claimService.getOpenValuations().subscribe({
+  async ngOnInit(): Promise<void> {
+    try {
+      const user = await this.authService.getCurrentUser();      // ← fixed
+      if (!user || !user.phoneNumber) {
+        this.error = 'Failed to load user details';
+        this.loading = false;
+        return;
+      }
+      this.userService.getById(user.phoneNumber).subscribe({
+        next: user => this.loadClaimsForUser(user),
+        error: () => {
+          this.error = 'Failed to load user details';
+          this.loading = false;
+        }
+      });
+    } catch (err) {
+      this.error = 'Failed to load user details';
+      this.loading = false;
+    }
+  }
+
+  // optional: safe JSON parser (handles string/array/null)
+  private parseJsonArray(value: unknown): string[] {                                    // ← new
+    if (!value) return [];
+    if (Array.isArray(value)) return value as string[];
+    if (typeof value === 'string') {
+      try { return JSON.parse(value) ?? []; } catch { return []; }
+    }
+    return [];
+  }
+
+    // 4) New helper to branch on role/assignments
+  private loadClaimsForUser(user: UserModel) {
+    let obs$: Observable<any>;
+
+    if (this.noAssignmentExemptRoles.includes(user.roleId)) {
+      obs$ = this.claimService.getOpenValuations();
+    } else if (user.roleId === 'AVO') {
+      obs$ = this.claimService.getAll(user.userId); // Only valuations assigned to this AVO
+    } else {
+      const states: string[] = JSON.parse(user.assignedStates || '[]');
+      const districts: string[] = JSON.parse(user.assignedDistricts || '[]');
+
+      if (districts.length) {
+        obs$ = this.claimService.getByDistricts(districts);
+      } else if (states.length) {
+        obs$ = this.claimService.getByStates(states);
+      } else {
+        // No assignments → show nothing
+        this.claims = [];
+        this.filteredClaims = [];
+        this.computeStepCounts();
+        this.loading = false;
+        return; // Exit before subscribe
+      }
+    }
+
+    obs$.subscribe({
       next: data => {
-        // only keep those the user can view at all
-        this.claims = data.filter(v => this.canViewStep(this.steps[this.getStepIndex(v)]));
+        this.claims = data.filter((v: WFValuation) =>
+          this.canViewStep(this.steps[this.getStepIndex(v)])
+        );
         this.computeStepCounts();
         this.applyFilter();
         this.loading = false;
@@ -57,6 +122,7 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+
 
   private computeStepCounts() {
     this.stepCounts = this.steps.reduce((m,s)=>(m[s]=0,m), {} as any);
