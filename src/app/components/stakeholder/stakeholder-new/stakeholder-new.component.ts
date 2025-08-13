@@ -109,7 +109,7 @@ export class StakeholderNewComponent implements OnInit {
       country:   [''],
 
       applicantName:    ['', Validators.required],
-      applicantContact: ['', Validators.required],
+      applicantContact: ['', Validators.pattern(/^[0-9]{10}$/)],
       vehicleNumber:   ['', Validators.required],
       vehicleSegment:  ['']
     });
@@ -230,6 +230,17 @@ export class StakeholderNewComponent implements OnInit {
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
           )
+        ),
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            {
+              workflow: 'Stakeholder',
+              workflowStepOrder: 1
+            }
+          )
         )
       )
       .subscribe({
@@ -256,17 +267,9 @@ export class StakeholderNewComponent implements OnInit {
       .updateStakeholder(this.valuationId, vn, ac, payload)
       .pipe(
         switchMap(() =>
-          this.workflowSvc.completeWorkflow(
-            this.valuationId,
-            1,
-            vn,
-            encodeURIComponent(ac)
-          )
-        ),
-        switchMap(() =>
           this.workflowSvc.startWorkflow(
             this.valuationId,
-            2,
+            1,
             vn,
             encodeURIComponent(ac)
           )
@@ -278,6 +281,18 @@ export class StakeholderNewComponent implements OnInit {
             ac
           )
         )
+        ,
+      switchMap(() =>
+        this.workflowSvc.updateWorkflowTable(
+          this.valuationId,
+          vn,
+          ac,
+          {
+              workflow: 'Stakeholder',
+              workflowStepOrder: 1
+          }
+        )
+      )
       )
       .subscribe({
         next: () => {

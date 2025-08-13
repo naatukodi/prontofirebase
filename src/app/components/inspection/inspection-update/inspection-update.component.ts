@@ -13,6 +13,8 @@ import { QualityControlService } from '../../../services/quality-control.service
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
+import { Auth, User, authState } from '@angular/fire/auth';
+import { take } from 'rxjs/operators';
 
 type ValuationType =
   | 'four-wheeler'
@@ -50,6 +52,13 @@ export class InspectionUpdateComponent implements OnInit {
 
   // photo uploads
   photoFiles: File[] = [];
+
+  // + add these fields inside the class
+  private assignedTo = '';
+  private assignedToPhoneNumber = '';
+  private assignedToEmail = '';
+  private assignedToWhatsapp = '';
+
 
   // visibility map same as view
  private visibilityMap: Record<ValuationType, string[]> = {
@@ -112,7 +121,8 @@ export class InspectionUpdateComponent implements OnInit {
     private inspectionSvc: InspectionService,
     private workflowSvc: WorkflowService,
     private qualityControlSvc: QualityControlService,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
+    private auth: Auth     
   ) {}
 
   ngOnInit(): void {
@@ -125,6 +135,8 @@ export class InspectionUpdateComponent implements OnInit {
     this.maxDate = `${yyyy}-${mm}-${dd}`;
 
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
+
+    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
     
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
@@ -147,6 +159,20 @@ export class InspectionUpdateComponent implements OnInit {
       this.valuationType &&
       this.visibilityMap[this.valuationType]?.includes(key)
     );
+  }
+
+  // + add this helper method inside the class
+  private applyAssignedFromUser(u: User | null): void {
+    const name =
+      (u?.displayName?.trim() || '') ||
+      (u?.email ? u.email.split('@')[0] : '') ||
+      (u?.phoneNumber || '') ||
+      'User';
+
+    this.assignedTo = name;
+    this.assignedToPhoneNumber = u?.phoneNumber || '';
+    this.assignedToEmail = u?.email || '';
+    this.assignedToWhatsapp = u?.phoneNumber || '';
   }
 
   private initForm() {
@@ -320,6 +346,11 @@ export class InspectionUpdateComponent implements OnInit {
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
     fd.append('applicantContact', this.applicantContact);
+    // ~ buildFormData(): append these lines before returning fd
+    fd.append('AssignedTo', this.assignedTo);
+    fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
+    fd.append('AssignedToEmail', this.assignedToEmail);
+    fd.append('AssignedToWhatsapp', this.assignedToWhatsapp);
     return fd;
   }
 
@@ -372,8 +403,18 @@ export class InspectionUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'AVO',
-            3
+            {
+              workflow: 'AVO',
+              workflowStepOrder: 3,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              avoAssignedTo: this.assignedTo,
+              avoAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              avoAssignedToEmail: this.assignedToEmail,
+              avoAssignedToWhatsapp: this.assignedToWhatsapp
+            }
           )
         )
       )
@@ -420,8 +461,18 @@ export class InspectionUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'QC',
-            4
+            {
+              workflow: 'QC',
+              workflowStepOrder: 4,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              avoAssignedTo: this.assignedTo,
+              avoAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              avoAssignedToEmail: this.assignedToEmail,
+              avoAssignedToWhatsapp: this.assignedToWhatsapp
+            }
           )
         )
       )

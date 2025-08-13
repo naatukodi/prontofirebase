@@ -11,6 +11,8 @@ import { switchMap } from 'rxjs/operators';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
+import { Auth, User, authState } from '@angular/fire/auth';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-valuation-update',
@@ -38,13 +40,19 @@ export class ValuationUpdateComponent implements OnInit {
   insuranceFile?: File;
   otherFiles: File[] = [];
 
+  private assignedTo = '';
+  private assignedToPhoneNumber = '';
+  private assignedToEmail = '';
+  private assignedToWhatsapp = '';
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private valuationSvc: ValuationService,
     private workflowSvc: WorkflowService, // Use the service for workflow operations
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
@@ -66,6 +74,8 @@ export class ValuationUpdateComponent implements OnInit {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
+
+    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
   }
 
   private initForm() {
@@ -132,6 +142,19 @@ export class ValuationUpdateComponent implements OnInit {
       stencilTraceUrl: [''],
       chassisNoPhotoUrl: ['']
     });
+  }
+
+  private applyAssignedFromUser(u: User | null): void {
+    const name =
+      (u?.displayName?.trim() || '') ||
+      (u?.email ? u.email.split('@')[0] : '') ||
+      (u?.phoneNumber || '') ||
+      'User';
+
+    this.assignedTo = name;
+    this.assignedToPhoneNumber = u?.phoneNumber || '';
+    this.assignedToEmail = u?.email || '';
+    this.assignedToWhatsapp = u?.phoneNumber || '';
   }
 
   private loadVehicleDetails() {
@@ -273,6 +296,10 @@ export class ValuationUpdateComponent implements OnInit {
     fd.append('manufacturedDate', v.manufacturedDate || '');
     fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
     fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
+    fd.append('AssignedTo', this.assignedTo);
+    fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
+    fd.append('AssignedToEmail', this.assignedToEmail);
+    fd.append('AssignedToWhatsapp', this.assignedToWhatsapp);
 
     // File fields
     if (this.rcFile) {
@@ -313,8 +340,18 @@ export class ValuationUpdateComponent implements OnInit {
           this.valuationId,
           this.vehicleNumber,
           this.applicantContact,
-          'BackEnd',
-          2
+          {
+              workflow: 'Backend',
+              workflowStepOrder: 2,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              backEndAssignedTo: this.assignedTo,
+              backEndAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              backEndAssignedToEmail: this.assignedToEmail,
+              backEndAssignedToWhatsapp: this.assignedToWhatsapp
+          }
         )
       )
       )
@@ -359,9 +396,19 @@ export class ValuationUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'AVO',
-            3
-          )
+            {
+              workflow: 'AVO',
+              workflowStepOrder: 3,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              backEndAssignedTo: this.assignedTo,
+              backEndAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              backEndAssignedToEmail: this.assignedToEmail,
+              backEndAssignedToWhatsapp: this.assignedToWhatsapp
+            }
+          ),
         )
       )
       .subscribe({

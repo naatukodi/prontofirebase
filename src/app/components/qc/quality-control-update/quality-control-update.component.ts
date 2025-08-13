@@ -10,7 +10,8 @@ import { switchMap } from 'rxjs/operators';
 import { WorkflowService } from '../../../services/workflow.service';               // Adjust path as needed
 import { SharedModule } from '../../shared/shared.module/shared.module'; // Adjust path as needed
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-
+import { Auth, User, authState } from '@angular/fire/auth';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-valuation-quality-control-update',
@@ -24,6 +25,11 @@ export class QualityControlUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
+
+  private assignedTo = '';
+  private assignedToPhoneNumber = '';
+  private assignedToEmail = '';
+  private assignedToWhatsapp = '';
 
   form!: FormGroup;
   loading = true;
@@ -39,7 +45,8 @@ export class QualityControlUpdateComponent implements OnInit {
     private router: Router,
     private qcService: QualityControlService,
     private workflowSvc: WorkflowService,
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
+    private auth: Auth   
   ) {}
 
   ngOnInit(): void {
@@ -61,6 +68,8 @@ export class QualityControlUpdateComponent implements OnInit {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
+
+    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
   }
 
   private initForm() {
@@ -90,6 +99,19 @@ export class QualityControlUpdateComponent implements OnInit {
       });
   }
 
+  private applyAssignedFromUser(u: User | null): void {
+    const name =
+      (u?.displayName?.trim() || '') ||
+      (u?.email ? u.email.split('@')[0] : '') ||
+      (u?.phoneNumber || '') ||
+      'User';
+
+    this.assignedTo = name;
+    this.assignedToPhoneNumber = u?.phoneNumber || '';
+    this.assignedToEmail = u?.email || '';
+    this.assignedToWhatsapp = u?.phoneNumber || '';
+  }
+
   private patchForm(data: QualityControl) {
     this.form.patchValue({
       overallRating: data.overallRating,
@@ -101,12 +123,17 @@ export class QualityControlUpdateComponent implements OnInit {
 
   private buildPayload(): Partial<QualityControl> {
     const v = this.form.getRawValue();
-    return {
+    const payload: Partial<QualityControl> = {
       overallRating: v.overallRating,
       valuationAmount: v.valuationAmount,
       chassisPunch: v.chassisPunch,
-      remarks: v.remarks || null
+      remarks: v.remarks || null,
+      assignedTo: this.assignedTo,
+      assignedToPhoneNumber: this.assignedToPhoneNumber,
+      assignedToEmail: this.assignedToEmail,
+      assignedToWhatsapp: this.assignedToWhatsapp
     };
+    return payload;
   }
 
   onSave() {
@@ -141,8 +168,18 @@ export class QualityControlUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'QC',
-            4
+            {
+              workflow: 'QC',
+              workflowStepOrder: 4,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              qualityControlAssignedTo: this.assignedTo,
+              qualityControlAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              qualityControlAssignedToEmail: this.assignedToEmail,
+              qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
+            }
           )
         )
           )
@@ -206,8 +243,18 @@ export class QualityControlUpdateComponent implements OnInit {
             this.valuationId,
             this.vehicleNumber,
             this.applicantContact,
-            'FinalReport',
-            5
+            {
+              workflow: 'FinalReport',
+              workflowStepOrder: 5,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              qualityControlAssignedTo: this.assignedTo,
+              qualityControlAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              qualityControlAssignedToEmail: this.assignedToEmail,
+              qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
+            }
           )
         )
       )

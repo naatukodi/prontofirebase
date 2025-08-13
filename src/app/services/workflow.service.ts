@@ -32,17 +32,57 @@ export class WorkflowService {
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string,
-    workflow: string,
-    workflowStepOrder: number
+    fields: Partial<{
+      applicantName: string;
+      workflow: string;
+      workflowStepOrder: number;
+      status: string;
+      createdAt: string;
+      completedAt: string;
+      updatedAt: string;
+      assignedTo: string;
+      location: string;
+      state: string;
+      district: string;
+      assignedToPhoneNumber: string;
+      assignedToEmail: string;
+      assignedToWhatsapp: string;
+      stakeholderAssignedTo: string;
+      stakeholderAssignedToPhoneNumber: string;
+      stakeholderAssignedToEmail: string;
+      stakeholderAssignedToWhatsapp: string;
+      backEndAssignedTo: string;
+      backEndAssignedToPhoneNumber: string;
+      backEndAssignedToEmail: string;
+      backEndAssignedToWhatsapp: string;
+      avoAssignedTo: string;
+      avoAssignedToPhoneNumber: string;
+      avoAssignedToEmail: string;
+      avoAssignedToWhatsapp: string;
+      qualityControlAssignedTo: string;
+      qualityControlAssignedToPhoneNumber: string;
+      qualityControlAssignedToEmail: string;
+      qualityControlAssignedToWhatsapp: string;
+      finalReportAssignedTo: string;
+      finalReportAssignedToPhoneNumber: string;
+      finalReportAssignedToEmail: string;
+      finalReportAssignedToWhatsapp: string;
+      redFlag: string;
+      remarks: string;
+      name: string;
+      valuationType: string;
+    }>
   ): Observable<void> {
     const url = `${environment.apiBaseUrl}valuations/${valuationId}/workflow/Table`;
-    const body = {
+
+    // Always include these identifiers
+    const body: any = {
       valuationId,
       vehicleNumber,
       applicantContact,
-      workflow,
-      workflowStepOrder
+      ...fields
     };
+
     return this.http.put<void>(url, body, {
       headers: { 'Content-Type': 'application/json' }
     });

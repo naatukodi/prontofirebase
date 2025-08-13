@@ -1,8 +1,10 @@
 // stakeholder-update.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+import { of, Observable } from 'rxjs';
+import { switchMap, map, take } from 'rxjs/operators';
+
 
 import {
   PincodeService,
@@ -14,6 +16,9 @@ import { ValuationService } from '../../../services/valuation.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
+import { Auth, User, authState } from '@angular/fire/auth';
+import { UsersService } from '../../../services/users.service';
+import { BreakpointObserver } from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-stakeholder-update',
@@ -29,6 +34,8 @@ export class StakeholderUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
+
+  private usersSvc = inject(UsersService);
 
   stakeholderOptions: string[] = [
       'State Bank of India (SBI)',
@@ -66,6 +73,12 @@ export class StakeholderUpdateComponent implements OnInit {
   insuranceFile?: File;
   otherFiles: File[] = [];
 
+    // 🔽 NEW: hold assigned fields derived from logged-in user
+  private assignedTo: string = '';
+  private assignedToPhoneNumber: string = '';
+  private assignedToEmail: string = '';
+  private assignedToWhatsapp: string = '';
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -73,7 +86,8 @@ export class StakeholderUpdateComponent implements OnInit {
     private pincodeSvc: PincodeService,
     private svc: StakeholderService,
     private workflowSvc: WorkflowService,
-    private valuationSvc: ValuationService
+    private valuationSvc: ValuationService,
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
@@ -84,6 +98,7 @@ export class StakeholderUpdateComponent implements OnInit {
       this.valuationType = params.get('valuationType')!;
       this.initForm();
       this.loadStakeholder();
+      authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
     });
   }
 
@@ -106,6 +121,43 @@ export class StakeholderUpdateComponent implements OnInit {
       applicantContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       vehicleNumber: ['', Validators.required],
       vehicleSegment: ['', Validators.required]
+    });
+  }
+
+  // Helper: reuse the same name-resolution logic used in userName$
+  private resolveDisplayName(u: User | null): Observable<string> {
+    return of(u).pipe(
+      switchMap(user => {
+        if (!user) return of('');
+        const id = this.resolveId(user);
+        if (!id) return of(this.fallbackName(user));
+        return this.usersSvc.getById(id).pipe(
+          map(m => (m?.name?.trim() || this.fallbackName(user)))
+        );
+      })
+    );
+  }
+
+    private resolveId(u: User): string | null {
+    return u.phoneNumber ?? u.uid ?? u.email ?? null;
+  }
+
+  private fallbackName(u: User): string {
+    return u.displayName || u.email || u.phoneNumber || '';
+  }
+
+  private applyAssignedFromUser(u: User | null): void {
+    this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+      const safeName =
+        (name?.trim() || '') ||
+        (u?.email ? u.email.split('@')[0] : '') ||
+        (u?.phoneNumber || '') ||
+        'User';
+
+      this.assignedTo = safeName;
+      this.assignedToPhoneNumber = u?.phoneNumber || '';
+      this.assignedToEmail = u?.email || '';
+      this.assignedToWhatsapp = u?.phoneNumber || '';
     });
   }
 
@@ -171,6 +223,10 @@ export class StakeholderUpdateComponent implements OnInit {
     fd.append('vehicleNumber', v.vehicleNumber);
     fd.append('vehicleSegment', v.vehicleSegment);
     fd.append('valuationId', this.valuationId);
+    fd.append('AssignedTo', this.assignedTo);
+    fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
+    fd.append('AssignedToEmail', this.assignedToEmail);
+    fd.append('AssignedToWhatsapp', this.assignedToWhatsapp);
 
     if (this.rcFile) fd.append('RcFile', this.rcFile, this.rcFile.name);
     if (this.insuranceFile) fd.append('InsuranceFile', this.insuranceFile, this.insuranceFile.name);
@@ -240,8 +296,18 @@ export class StakeholderUpdateComponent implements OnInit {
           this.valuationId,
           this.vehicleNumber,
           this.applicantContact,
-          'Stakeholder',
-          1
+          {
+              workflow: 'Stakeholder',
+              workflowStepOrder: 1,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              stakeholderAssignedTo: this.assignedTo,
+              stakeholderAssignedToEmail: this.assignedToEmail,
+              stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
+          }
         )
       )
     ).subscribe({
@@ -286,8 +352,18 @@ export class StakeholderUpdateComponent implements OnInit {
           this.valuationId,
           this.vehicleNumber,
           this.applicantContact,
-          'BackEnd',
-          2
+          {
+              workflow: 'Backend',
+              workflowStepOrder: 2,
+              assignedTo: this.assignedTo,
+              assignedToPhoneNumber: this.assignedToPhoneNumber,
+              assignedToEmail: this.assignedToEmail,
+              assignedToWhatsapp: this.assignedToWhatsapp,
+              stakeholderAssignedTo: this.assignedTo,
+              stakeholderAssignedToEmail: this.assignedToEmail,
+              stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
+          }
         )
       )
     ).subscribe({
