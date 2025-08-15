@@ -2,8 +2,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UserModel } from '../models/user.model';
+import { map, shareReplay } from 'rxjs/operators';
+import { UserModel, AssignableUser } from '../models/user.model';
 import { environment } from '../../environments/environment';
 
 interface ApiResponse<T> {
@@ -84,7 +84,7 @@ getUserStates(userId: string): Observable<string[]> {
 
 addState(userId: string, state: string): Observable<void> {
   return this.http.post<void>(
-    `${environment.apiBaseUrl}/users/${userId}/States`,
+    `${environment.apiBaseUrl}/us/ers/${userId}/States`,
     JSON.stringify(state),
     { headers: { 'Content-Type': 'application/json' } }
   );
@@ -128,10 +128,49 @@ getAssignedUser(
         .set('vehicleNumber', vehicleNumber)
         .set('applicantContact', applicantContact);
 
-    const url = `${environment.apiBaseUrl}/valuations/workflows/open/assignedto`;
+    const url = `${environment.apiBaseUrl}valuations/workflows/open/assignedto`;
     return this.http.get<UserModel>(url, { params });
 }
 
+assignInspection(params: {
+  valuationId: string;
+  vehicleNumber: string;
+  applicantContact: string;
+  assignedTo: string;
+  assignedToPhoneNumber: string;
+  assignedToEmail: string;
+  assignedToWhatsapp: string;
+  }): Observable<void> {
+  const httpParams = new HttpParams()
+    .set('id', params.valuationId)
+    .set('vehicleNumber', params.vehicleNumber)
+    .set('applicantContact', params.applicantContact)
+    .set('assignedTo', params.assignedTo)
+    .set('assignedToPhoneNumber', params.assignedToPhoneNumber)
+    .set('assignedToEmail', params.assignedToEmail)
+    .set('assignedToWhatsapp', params.assignedToWhatsapp);
+
+  return this.http.post<void>(
+    `${environment.apiBaseUrl}/valuations/${encodeURIComponent(params.valuationId)}/inspection/assignment`,
+    '',
+    { params: httpParams }
+  );
+  }
+
+  getUsersWithCanEditInspection(): Observable<AssignableUser[]> {
+    return this.http
+      .get<AssignableUser[]>(`${this.base}/roles/CanEditInspection`)
+      .pipe(
+        map(list => (list || []).map(u => ({
+          userId: u?.userId ?? null,
+          name: u?.name ?? (u?.email ? u.email.split('@')[0] : null),
+          email: u?.email ?? null,
+          phoneNumber: u?.phoneNumber ?? (u?.whatsapp ?? null),
+          whatsapp: u?.whatsapp ?? (u?.phoneNumber ?? null),
+        }))),
+        shareReplay(1)
+      );
+  }
 
 update(user: UserModel): Observable<UserModel> {
     const payload = {

@@ -1,7 +1,7 @@
 // src/app/valuation‐update/valuation‐update.component.ts
 
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
 import {WorkflowService} from '../../../services/workflow.service'; // Adjust the import path as needed
@@ -13,6 +13,11 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { take } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
+import { UsersService } from '../../../services/users.service';
+import { AssignableUser, UserModel } from '../../../models/user.model';
 
 @Component({
   selector: 'app-valuation-update',
@@ -44,6 +49,16 @@ export class ValuationUpdateComponent implements OnInit {
   private assignedToPhoneNumber = '';
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
+  loadingAssigned = false;
+
+  // KEEP these properties, but now using imported AssignableUser
+  usersWithEdit$: Observable<AssignableUser[]> = of([]);
+  selectedUserId: string | null = null;
+  private selectedUser: AssignableUser | null = null;
+  assignFrozen = false;
+  assignBusy = false;
+
+  assignedUser: AssignableUser | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -52,6 +67,7 @@ export class ValuationUpdateComponent implements OnInit {
     private valuationSvc: ValuationService,
     private workflowSvc: WorkflowService, // Use the service for workflow operations
     private _snackBar: MatSnackBar,
+    private userSvc: UsersService,
     private auth: Auth
   ) {}
 
@@ -76,6 +92,9 @@ export class ValuationUpdateComponent implements OnInit {
     });
 
     authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
+
+    this.loadAssignableUsers(); 
+    this.loadAssignedUser();
   }
 
   private initForm() {
@@ -155,6 +174,62 @@ export class ValuationUpdateComponent implements OnInit {
     this.assignedToPhoneNumber = u?.phoneNumber || '';
     this.assignedToEmail = u?.email || '';
     this.assignedToWhatsapp = u?.phoneNumber || '';
+  }
+
+   private loadAssignedUser(): void {
+   this.loadingAssigned = true;
+    this.userSvc.getAssignedUser(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .pipe(take(1))
+      .subscribe({
+        next: (u) => { this.assignedUser = u; this.loadingAssigned = false; },
+        error: () => { this.assignedUser = null; this.loadingAssigned = false; }
+      });
+ }
+
+  private loadAssignableUsers(): void {
+    this.usersWithEdit$ = this.userSvc.getUsersWithCanEditInspection();
+  }
+
+  onSelectAssignable(userId: string): void {
+    this.selectedUserId = userId;
+    this.assignFrozen = false; // re-enable after changing selection
+    this.usersWithEdit$.pipe(take(1)).subscribe(list => {
+      this.selectedUser = list.find(u => (u.userId || u.email) === userId) ?? null;
+    });
+  }
+
+  assignSelectedUser(): void {
+    if (!this.selectedUser) { return; }
+    const name  = this.selectedUser.name ?? '';
+    const phone = this.selectedUser.phoneNumber ?? '';
+    const email = this.selectedUser.email ?? '';
+    const wa    = this.selectedUser.whatsapp ?? phone;
+
+    this.assignBusy = true;
+    this.userSvc.assignInspection({
+      valuationId: this.valuationId,
+      vehicleNumber: this.vehicleNumber,
+      applicantContact: this.applicantContact,
+      assignedTo: name,
+      assignedToPhoneNumber: phone,
+      assignedToEmail: email,
+      assignedToWhatsapp: wa
+    }).subscribe({
+        next: () => {
+          this.assignBusy = false;
+          this.assignFrozen = true;
+          this._snackBar.open('Inspector assigned successfully', 'Close', {
+            duration: 2500, horizontalPosition: 'center', verticalPosition: 'top'
+          });
+          this.loadAssignedUser();
+        },
+        error: (err) => {
+          this.assignBusy = false;
+          this._snackBar.open(err?.message || 'Assignment failed', 'Close', {
+            duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'
+          });
+        }
+      });
   }
 
   private loadVehicleDetails() {

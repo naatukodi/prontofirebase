@@ -453,6 +453,38 @@
       </div>
     </fieldset>
 
+    <fieldset class="nested‐group">
+    <div *ngIf="assignedUser" style="grid-column: 1 / -1; margin-bottom: 0.5rem;">
+      <strong>Currently Assigned:</strong>
+      {{ assignedUser.name }} — {{ assignedUser.phoneNumber }}
+    </div>
+    </fieldset>
+
+    <!-- ASSIGN INSPECTION -->
+    <fieldset class="nested‐group">
+      <legend>Assign Inspection</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill" style="grid-column: 1 / -1;">
+          <mat-label>Assign to</mat-label>
+          <mat-select [value]="selectedUserId" (selectionChange)="onSelectAssignable($event.value)">
+            <mat-option *ngFor="let u of (usersWithEdit$ | async)" [value]="u.userId || u.email">
+              {{ u.name || (u.email || u.phoneNumber) }}
+              <span *ngIf="u.phoneNumber">&nbsp;— {{ u.phoneNumber }}</span>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="assignSelectedUser()"
+          [disabled]="!selectedUserId || assignFrozen || assignBusy">
+          {{ assignBusy ? 'Assigning…' : assignFrozen ? 'Assigned' : 'Assign' }}
+        </button>
+      </div>
+    </fieldset>
+
     <!-- ACTION BUTTONS -->
      <fieldset>
     <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">

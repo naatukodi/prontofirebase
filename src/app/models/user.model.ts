@@ -20,3 +20,11 @@ export interface UserModel {
   assignedDistricts: string | null;
   assignedStates: string | null;
 }
+
+export interface AssignableUser {
+  userId: string;        // e.g. "+919885855567" (preferred for phone with +)
+  name: string;
+  email: string | null;
+  phoneNumber: string | null;   // e.g. "9885855567"
+  whatsapp: string | null;
+}
