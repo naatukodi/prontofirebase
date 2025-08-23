@@ -309,6 +309,28 @@ export class StakeholderUpdateComponent implements OnInit {
               stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
           }
         )
+      ),
+      switchMap(() =>
+        this.svc.assignStakeholder(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
+        )
+      ),
+      switchMap(() =>
+        this.valuationSvc.assignValuation(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
+        )
       )
     ).subscribe({
       next: (): void => {
@@ -364,6 +386,28 @@ export class StakeholderUpdateComponent implements OnInit {
               stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
               stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
           }
+        )
+      ),
+      switchMap(() =>
+        this.valuationSvc.assignValuation(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
+        )
+      ),
+      switchMap(() =>
+        this.svc.assignStakeholder(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
         )
       )
     ).subscribe({

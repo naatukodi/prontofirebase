@@ -86,4 +86,24 @@ export class QualityControlService {
       .put(url, body, { params })
       .pipe(catchError((err: HttpErrorResponse) => throwError(() => err)));
   }
+
+  assignQualityControl(
+      valuationId: string,
+      vehicleNumber: string,
+      applicantContact: string,
+      name: string,
+      phone: string,
+      email: string,
+      whatsapp: string
+        ): Observable<void> {
+        const url = `${this.baseUrl}/${valuationId}/qualitycontrol/assignment`
+            + `?valuationId=${encodeURIComponent(valuationId)}`
+            + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
+            + `&applicantContact=${encodeURIComponent(applicantContact)}`
+            + `&assignedTo=${encodeURIComponent(name)}`
+            + `&assignedToPhoneNumber=${encodeURIComponent(phone)}`
+            + `&assignedToEmail=${encodeURIComponent(email)}`
+            + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
+        return this.http.post<void>(url, '');
+    }
 }

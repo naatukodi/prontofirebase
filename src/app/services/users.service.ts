@@ -84,7 +84,7 @@ getUserStates(userId: string): Observable<string[]> {
 
 addState(userId: string, state: string): Observable<void> {
   return this.http.post<void>(
-    `${environment.apiBaseUrl}/us/ers/${userId}/States`,
+    `${environment.apiBaseUrl}/users/${userId}/States`,
     JSON.stringify(state),
     { headers: { 'Content-Type': 'application/json' } }
   );

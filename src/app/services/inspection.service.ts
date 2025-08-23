@@ -73,4 +73,26 @@ export class InspectionService {
                 })
             );
         }       
+
+    assignInspection(
+      valuationId: string,
+      vehicleNumber: string,
+      applicantContact: string,
+      name: string,
+      phone: string,
+      email: string,
+      whatsapp: string
+        ): Observable<void> {
+        const url = `${this.baseUrl}/${valuationId}/inspection/assignment`
+            + `?valuationId=${encodeURIComponent(valuationId)}`
+            + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
+            + `&applicantContact=${encodeURIComponent(applicantContact)}`
+            + `&assignedTo=${encodeURIComponent(name)}`
+            + `&assignedToPhoneNumber=${encodeURIComponent(phone)}`
+            + `&assignedToEmail=${encodeURIComponent(email)}`
+            + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
+        return this.http.post<void>(url, '');
     }
+}
+
+    

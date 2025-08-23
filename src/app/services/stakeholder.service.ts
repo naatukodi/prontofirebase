@@ -53,7 +53,7 @@ private base = `${environment.apiBaseUrl}/Valuations`;
     );
   }
 
-  assignBackend(
+  assignStakeholder(
       valuationId: string,
       vehicleNumber: string,
       applicantContact: string,
@@ -62,7 +62,7 @@ private base = `${environment.apiBaseUrl}/Valuations`;
       email: string,
       whatsapp: string
     ): Observable<void> {
-      const url = `${this.base}/${valuationId}/vehicledetails/assignment`
+      const url = `${this.base}/${valuationId}/stakeholder/assignment`
         + `?valuationId=${encodeURIComponent(valuationId)}`
         + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
         + `&applicantContact=${encodeURIComponent(applicantContact)}`
@@ -72,6 +72,26 @@ private base = `${environment.apiBaseUrl}/Valuations`;
         + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
       return this.http.post<void>(url, '');
 }
+
+    assignBackend(
+        valuationId: string,
+        vehicleNumber: string,
+        applicantContact: string,
+        name: string,
+        phone: string,
+        email: string,
+        whatsapp: string
+      ): Observable<void> {
+        const url = `${this.base}/${valuationId}/vehicledetails/assignment`
+          + `?valuationId=${encodeURIComponent(valuationId)}`
+          + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
+          + `&applicantContact=${encodeURIComponent(applicantContact)}`
+          + `&assignedTo=${encodeURIComponent(name)}`
+          + `&assignedToPhoneNumber=${encodeURIComponent(phone)}`
+          + `&assignedToEmail=${encodeURIComponent(email)}`
+          + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
+        return this.http.post<void>(url, '');
+  }
 
   newStakeholder(
   valuationId: string,
