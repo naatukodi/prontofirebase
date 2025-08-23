@@ -51,6 +51,14 @@ export class ClaimService {
     );
   }
 
+  getValuationsByAdjusterPhone(phoneNumber: string): Observable<WFValuation[]> {
+    const params = new HttpParams().set('assignedToPhoneNumber', phoneNumber);
+    return this.http.get<WFValuation[]>(
+      `${this.apiUrl}/workflows/open/assignedto/phone`,
+      { params }
+    );
+  }
+
   /**
    * Fetch open valuations filtered by one or more district keys
    */
