@@ -1,10 +1,10 @@
 // src/app/valuation‐update/valuation‐update.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
-import {WorkflowService} from '../../../services/workflow.service'; // Adjust the import path as needed
+import { WorkflowService } from '../../../services/workflow.service'; // Adjust the import path as needed
 import { VehicleDetails } from '../../../models/VehicleDetails';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap } from 'rxjs/operators';
@@ -18,6 +18,7 @@ import { Observable, of } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { UsersService } from '../../../services/users.service';
 import { AssignableUser, UserModel } from '../../../models/user.model';
+import { ClaimService } from '../../../services/claim.service';
 
 @Component({
   selector: 'app-valuation-update',
@@ -31,6 +32,8 @@ export class ValuationUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
+
+  private usersSvc = inject(UsersService);
 
   form!: FormGroup;
   loading = true;
@@ -51,6 +54,12 @@ export class ValuationUpdateComponent implements OnInit {
   private assignedToWhatsapp = '';
   loadingAssigned = false;
 
+    // 🔽 NEW: hold assigned fields derived from logged-in user
+  private backendAssignedTo: string = '';
+  private backendAssignedToPhoneNumber: string = '';
+  private backendAssignedToEmail: string = '';
+  private backendAssignedToWhatsapp: string = '';
+
   // KEEP these properties, but now using imported AssignableUser
   usersWithEdit$: Observable<AssignableUser[]> = of([]);
   selectedUserId: string | null = null;
@@ -68,6 +77,7 @@ export class ValuationUpdateComponent implements OnInit {
     private workflowSvc: WorkflowService, // Use the service for workflow operations
     private _snackBar: MatSnackBar,
     private userSvc: UsersService,
+    private claimSvc: ClaimService,
     private auth: Auth
   ) {}
 
@@ -163,17 +173,17 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
-  private applyAssignedFromUser(u: User | null): void {
+  private applyBackendAssignedFromUser(u: User | null): void {
     const name =
       (u?.displayName?.trim() || '') ||
       (u?.email ? u.email.split('@')[0] : '') ||
       (u?.phoneNumber || '') ||
       'User';
 
-    this.assignedTo = name;
-    this.assignedToPhoneNumber = u?.phoneNumber || '';
-    this.assignedToEmail = u?.email || '';
-    this.assignedToWhatsapp = u?.phoneNumber || '';
+    this.backendAssignedTo = name;
+    this.backendAssignedToPhoneNumber = u?.phoneNumber || '';
+    this.backendAssignedToEmail = u?.email || '';
+    this.backendAssignedToWhatsapp = u?.phoneNumber || '';
   }
 
    private loadAssignedUser(): void {
@@ -185,6 +195,43 @@ export class ValuationUpdateComponent implements OnInit {
         error: () => { this.assignedUser = null; this.loadingAssigned = false; }
       });
  }
+
+ // Helper: reuse the same name-resolution logic used in userName$
+  private resolveDisplayName(u: User | null): Observable<string> {
+    return of(u).pipe(
+      switchMap(user => {
+        if (!user) return of('');
+        const id = this.resolveId(user);
+        if (!id) return of(this.fallbackName(user));
+        return this.usersSvc.getById(id).pipe(
+          map(m => (m?.name?.trim() || this.fallbackName(user)))
+        );
+      })
+    );
+  }
+
+    private resolveId(u: User): string | null {
+    return u.phoneNumber ?? u.uid ?? u.email ?? null;
+  }
+
+  private fallbackName(u: User): string {
+    return u.displayName || u.email || u.phoneNumber || '';
+  }
+
+  private applyAssignedFromUser(u: User | null): void {
+    this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+      const safeName =
+        (name?.trim() || '') ||
+        (u?.email ? u.email.split('@')[0] : '') ||
+        (u?.phoneNumber || '') ||
+        'User';
+
+      this.backendAssignedTo = safeName;
+      this.backendAssignedToPhoneNumber = u?.phoneNumber || '';
+      this.backendAssignedToEmail = u?.email || '';
+      this.backendAssignedToWhatsapp = u?.phoneNumber || '';
+    });
+  }
 
   private loadAssignableUsers(): void {
     this.usersWithEdit$ = this.userSvc.getUsersWithCanEditInspection();
@@ -214,22 +261,34 @@ export class ValuationUpdateComponent implements OnInit {
       assignedToPhoneNumber: phone,
       assignedToEmail: email,
       assignedToWhatsapp: wa
-    }).subscribe({
-        next: () => {
-          this.assignBusy = false;
-          this.assignFrozen = true;
-          this._snackBar.open('Inspector assigned successfully', 'Close', {
-            duration: 2500, horizontalPosition: 'center', verticalPosition: 'top'
-          });
-          this.loadAssignedUser();
-        },
-        error: (err) => {
-          this.assignBusy = false;
-          this._snackBar.open(err?.message || 'Assignment failed', 'Close', {
-            duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'
-          });
-        }
-      });
+    }).pipe(
+      switchMap(() =>
+        this.valuationSvc.assignValuation(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          name,
+          phone,
+          email,
+          wa
+        )
+      )
+    ).subscribe({
+      next: () => {
+        this.assignBusy = false;
+        this.assignFrozen = true;
+        this._snackBar.open('Inspector assigned successfully', 'Close', {
+          duration: 2500, horizontalPosition: 'center', verticalPosition: 'top'
+        });
+        this.loadAssignedUser();
+      },
+      error: (err) => {
+        this.assignBusy = false;
+        this._snackBar.open(err?.message || 'Assignment failed', 'Close', {
+          duration: 3000, horizontalPosition: 'center', verticalPosition: 'top'
+        });
+      }
+    });
   }
 
   private loadVehicleDetails() {
@@ -404,29 +463,35 @@ export class ValuationUpdateComponent implements OnInit {
     this.saveInProgress = true;
 
     const payload = this.buildFormData();
+
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-      // After successful update, start workflow
-      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact)))
-      ,
+      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
       switchMap(() =>
         this.workflowSvc.updateWorkflowTable(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          {
-              workflow: 'Backend',
-              workflowStepOrder: 2,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
-              backEndAssignedTo: this.assignedTo,
-              backEndAssignedToPhoneNumber: this.assignedToPhoneNumber,
-              backEndAssignedToEmail: this.assignedToEmail,
-              backEndAssignedToWhatsapp: this.assignedToWhatsapp
-          }
+        this.valuationId,
+        this.vehicleNumber,
+        this.applicantContact,
+        {
+          workflow: 'Backend',
+          workflowStepOrder: 2,
+          backEndAssignedTo: this.backendAssignedTo,
+          backEndAssignedToPhoneNumber: this.backendAssignedToPhoneNumber,
+          backEndAssignedToEmail: this.backendAssignedToEmail,
+          backEndAssignedToWhatsapp: this.backendAssignedToWhatsapp
+        }
+        )
+      ),
+      switchMap(() =>
+        this.claimSvc.assignBackend(
+        this.valuationId,
+        this.vehicleNumber,
+        this.applicantContact,
+        this.backendAssignedTo,
+        this.backendAssignedToPhoneNumber,
+        this.backendAssignedToEmail,
+        this.backendAssignedToWhatsapp
         )
       )
       )
@@ -442,10 +507,10 @@ export class ValuationUpdateComponent implements OnInit {
         });
       },
       error: (err) => {
-          this.error = err.message || 'Save failed.';
-          this.saveInProgress = false;
-          this.saving = false;
-        }
+        this.error = err.message || 'Save failed.';
+        this.saveInProgress = false;
+        this.saving = false;
+      }
       });
   }
 
@@ -456,6 +521,10 @@ export class ValuationUpdateComponent implements OnInit {
     }
     this.saving = true;
     this.submitInProgress = true;
+    const assignedTo = this.assignedUser?.name ?? '';
+    const assignedToPhoneNumber = this.assignedUser?.phoneNumber ?? '';
+    const assignedToEmail = this.assignedUser?.email ?? '';
+    const assignedToWhatsapp = this.assignedUser?.whatsapp ?? assignedToPhoneNumber;
 
     const payload = this.buildFormData();
     this.valuationSvc
@@ -474,16 +543,23 @@ export class ValuationUpdateComponent implements OnInit {
             {
               workflow: 'AVO',
               workflowStepOrder: 3,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
-              backEndAssignedTo: this.assignedTo,
-              backEndAssignedToPhoneNumber: this.assignedToPhoneNumber,
-              backEndAssignedToEmail: this.assignedToEmail,
-              backEndAssignedToWhatsapp: this.assignedToWhatsapp
+              backEndAssignedTo: this.backendAssignedTo,
+              backEndAssignedToPhoneNumber: this.backendAssignedToPhoneNumber,
+              backEndAssignedToEmail: this.backendAssignedToEmail,
+              backEndAssignedToWhatsapp: this.backendAssignedToWhatsapp
             }
           ),
+        ),
+        switchMap(() =>
+          this.claimSvc.assignBackend(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.backendAssignedTo,
+            this.backendAssignedToPhoneNumber,
+            this.backendAssignedToEmail,
+            this.backendAssignedToWhatsapp
+          )
         )
       )
       .subscribe({

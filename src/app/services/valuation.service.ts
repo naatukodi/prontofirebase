@@ -84,7 +84,7 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
       email: string,
       whatsapp: string
     ): Observable<void> {
-      const url = `${this.baseUrl}/valuations/${valuationId}/valuationresponse/assignment`
+      const url = `${this.baseUrl}/${valuationId}/valuationresponse/assignment`
         + `?valuationId=${encodeURIComponent(valuationId)}`
         + `&vehicleNumber=${encodeURIComponent(vehicleNumber)}`
         + `&applicantContact=${encodeURIComponent(applicantContact)}`
