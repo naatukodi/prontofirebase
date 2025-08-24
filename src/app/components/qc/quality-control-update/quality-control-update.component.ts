@@ -1,17 +1,19 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QualityControlService } from '../../../services/quality-control.service'; // Adjust path as needed
 import { QualityControl } from '../../../models/QualityControl';                   // Adjust path as needed
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap } from 'rxjs/operators';
 import { WorkflowService } from '../../../services/workflow.service';               // Adjust path as needed
 import { SharedModule } from '../../shared/shared.module/shared.module'; // Adjust path as needed
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { take } from 'rxjs/operators';
+import { switchMap, map, take } from 'rxjs/operators';
+import { of, Observable } from 'rxjs';
+import { UsersService } from '../../../services/users.service';
+import { ValuationService } from '../../../services/valuation.service';
 
 @Component({
   selector: 'app-valuation-quality-control-update',
@@ -46,7 +48,9 @@ export class QualityControlUpdateComponent implements OnInit {
     private qcService: QualityControlService,
     private workflowSvc: WorkflowService,
     private _snackBar: MatSnackBar,
-    private auth: Auth   
+    private usersSvc: UsersService,
+    private valuationSvc: ValuationService,
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
@@ -99,17 +103,41 @@ export class QualityControlUpdateComponent implements OnInit {
       });
   }
 
-  private applyAssignedFromUser(u: User | null): void {
-    const name =
-      (u?.displayName?.trim() || '') ||
-      (u?.email ? u.email.split('@')[0] : '') ||
-      (u?.phoneNumber || '') ||
-      'User';
+// Helper: reuse the same name-resolution logic used in userName$
+  private resolveDisplayName(u: User | null): Observable<string> {
+    return of(u).pipe(
+      switchMap(user => {
+        if (!user) return of('');
+        const id = this.resolveId(user);
+        if (!id) return of(this.fallbackName(user));
+        return this.usersSvc.getById(id).pipe(
+          map(m => (m?.name?.trim() || this.fallbackName(user)))
+        );
+      })
+    );
+  }
 
-    this.assignedTo = name;
-    this.assignedToPhoneNumber = u?.phoneNumber || '';
-    this.assignedToEmail = u?.email || '';
-    this.assignedToWhatsapp = u?.phoneNumber || '';
+    private resolveId(u: User): string | null {
+    return u.phoneNumber ?? u.uid ?? u.email ?? null;
+  }
+
+  private fallbackName(u: User): string {
+    return u.displayName || u.email || u.phoneNumber || '';
+  }
+
+  private applyAssignedFromUser(u: User | null): void {
+    this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+      const safeName =
+        (name?.trim() || '') ||
+        (u?.email ? u.email.split('@')[0] : '') ||
+        (u?.phoneNumber || '') ||
+        'User';
+
+      this.assignedTo = safeName;
+      this.assignedToPhoneNumber = u?.phoneNumber || '';
+      this.assignedToEmail = u?.email || '';
+      this.assignedToWhatsapp = u?.phoneNumber || '';
+    });
   }
 
   private patchForm(data: QualityControl) {
@@ -181,7 +209,29 @@ export class QualityControlUpdateComponent implements OnInit {
               qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
             }
           )
+        ),
+      switchMap(() =>
+        this.qcService.assignQualityControl(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
         )
+      ),
+      switchMap(() =>
+        this.valuationSvc.assignValuation(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
+        )
+      )
           )
           .subscribe({
           next: () => {
@@ -256,7 +306,29 @@ export class QualityControlUpdateComponent implements OnInit {
               qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
             }
           )
+        ),
+      switchMap(() =>
+        this.valuationSvc.assignValuation(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
         )
+      ),
+      switchMap(() =>
+        this.qcService.assignQualityControl(
+          this.valuationId,
+          this.vehicleNumber,
+          this.applicantContact,
+          this.assignedTo,
+          this.assignedToPhoneNumber,
+          this.assignedToEmail,
+          this.assignedToWhatsapp
+        )
+      )
       )
       .subscribe({
         next: () => {

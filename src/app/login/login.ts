@@ -30,7 +30,26 @@ export class LoginComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private zone = inject(NgZone);
 
-  phone = '';
+  phone = '+91';
+
+  // Ensure phone is always 13 characters including '+91'
+  setPhone(value: string) {
+    // Remove any non-digit characters except '+'
+    let cleaned = value.replace(/[^\d+]/g, '');
+
+    // Ensure it starts with '+91'
+    if (!cleaned.startsWith('+91')) {
+      cleaned = '+91' + cleaned.replace(/^\+?91?/, '');
+    }
+
+    // Limit to 13 characters
+    this.phone = cleaned.slice(0, 13);
+  }
+
+  get formattedPhone(): string {
+    // If phone starts with '+', return as is; else prepend '+91'
+    return this.phone.startsWith('+') ? this.phone : `+91${this.phone}`;
+  }
   otp = '';
   confirmation!: ConfirmationResult;
   private recaptchaVerifier!: RecaptchaVerifier;

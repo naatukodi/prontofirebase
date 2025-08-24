@@ -43,31 +43,42 @@ private router: Router
 
 ngOnInit() {
 this.form = this.fb.group({
-    userId: [''],
-    name: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    roleId: ['', Validators.required],
-    whatsapp: [''],
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-    description: [''],
-    branchType: [''],
-    serviceStatus: ['Servicable', Validators.required],
-    pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
-    assignedDistricts: [{ value: '', disabled: true }],
-    assignedStates: [{ value: '', disabled: true }],
-    location: [null, Validators.required],
-    circle: [{ value: '', disabled: true }],
-    district: [{ value: '', disabled: true }],
-    division: [{ value: '', disabled: true }],
-    region: [{ value: '', disabled: true }],
-    block: [{ value: '', disabled: true }],
-    state: [{ value: '', disabled: true }],
-    country: [{ value: '', disabled: true }]
+  userId: [''],
+  name: ['', Validators.required],
+  email: ['', [Validators.required, Validators.email]],
+  roleId: ['', Validators.required],
+  whatsapp: [''],
+  phoneNumber: ['', [Validators.required, Validators.pattern(/^\+91\d{10}$/)]],
+  description: [''],
+  branchType: [''],
+  serviceStatus: ['Servicable', Validators.required],
+  pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+  assignedDistricts: [{ value: '', disabled: true }],
+  assignedStates: [{ value: '', disabled: true }],
+  location: [null, Validators.required],
+  circle: [{ value: '', disabled: true }],
+  district: [{ value: '', disabled: true }],
+  division: [{ value: '', disabled: true }],
+  region: [{ value: '', disabled: true }],
+  block: [{ value: '', disabled: true }],
+  state: [{ value: '', disabled: true }],
+  country: [{ value: '', disabled: true }]
 });
 
-// Set userId to always mirror phoneNumber
+// Always prefix phoneNumber with +91 if not present
 this.form.get('phoneNumber')!.valueChanges.subscribe(val => {
-    this.form.get('userId')!.setValue(val, { emitEvent: false });
+  let phone = val || '';
+  if (phone && !phone.startsWith('+91')) {
+    phone = '+91' + phone.replace(/^\+91/, '');
+  }
+  this.form.get('phoneNumber')!.setValue(phone, { emitEvent: false });
+
+  // Ensure userId also always has +91 prefix and mirrors phoneNumber
+  let userId = phone;
+  if (userId && !userId.startsWith('+91')) {
+    userId = '+91' + userId.replace(/^\+91/, '');
+  }
+  this.form.get('userId')!.setValue(userId, { emitEvent: false });
 });
 
 this.form.get('pincode')!.valueChanges.pipe(
