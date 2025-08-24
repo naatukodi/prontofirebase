@@ -6,6 +6,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { QualityControlViewModel } from '../../../models/QualityControlViewModel';
 import { QualityControlService } from '../../../services/quality-control.service';
 import { forkJoin } from 'rxjs';
+import { ValuationService } from '../../../services/valuation.service';
+import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
+import { environment } from '../../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
@@ -35,10 +39,14 @@ export class QualityControlViewComponent implements OnInit {
   applicantContact!: string;
   valuationType!: string;
 
+  report!: FinalReport;
+  photoKeys: (keyof PhotoUrls)[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private qcService: QualityControlService
+    private qcService: QualityControlService,
+    private valuationService: ValuationService
   ) {}
 
   ngOnInit(): void {
@@ -55,7 +63,41 @@ export class QualityControlViewComponent implements OnInit {
         this.error = 'Valuation ID is missing in the route.';
       }
     });
+
+    this.loadFinalReport();
   }
+
+  private loadFinalReport(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.valuationService
+      .getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: (data: FinalReport) => {
+          this.report = data;
+
+          // Cast Object.keys(...) to (keyof PhotoUrls)[]
+          this.photoKeys = Object.keys(this.report.photoUrls) as (keyof PhotoUrls)[];
+
+          this.loading = false;
+        },
+        error: (err) => {
+          this.error = err.message || 'Failed to load final report';
+          this.loading = false;
+        },
+      });
+  }
+
+  downloadPdf(): void {
+  const url = `${environment.apiBaseUrl}/Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
+  const params = new HttpParams()
+    .set('vehicleNumber', this.vehicleNumber)
+    .set('applicantContact', this.applicantContact);
+
+  // Open in a new tab or trigger download
+  window.open(`${url}?${params.toString()}`, '_blank');
+}
 
   private loadQueryParamsAndFetch() {
     // 2) Fetch vehicleNumber & applicantContact from queryParams

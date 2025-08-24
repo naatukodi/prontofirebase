@@ -25,6 +25,243 @@
   </div>
   </fieldset>
 
+  <!-- Actions at Bottom -->
+  <div class="actions">
+  <button
+    mat-raised-button
+    color="primary"
+    class="back-button"
+    (click)="onBack()">
+    Back
+  </button>
+
+  <button
+    mat-raised-button
+    color="accent"
+    (click)="downloadPdf()">
+    Download PDF
+  </button>
+</div>
+
+  <!-- Stakeholder Section -->
+  <fieldset class="nested-group">
+    <legend>Stakeholder</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Stakeholder Name</mat-label>
+        <input matInput [value]="report.stakeholder.name" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Executive Name</mat-label>
+        <input matInput [value]="report.stakeholder.executiveName" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Contact Number</mat-label>
+        <input matInput [value]="report.stakeholder.executiveContact" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>WhatsApp Number</mat-label>
+        <input matInput [value]="report.stakeholder.executiveWhatsapp" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Email ID</mat-label>
+        <input matInput [value]="report.stakeholder.executiveEmail" readonly />
+      </mat-form-field>
+    </div>
+
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Name</mat-label>
+        <input matInput [value]="report.stakeholder.applicant.name" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Applicant Contact</mat-label>
+        <input matInput [value]="report.stakeholder.applicant.contact" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Vehicle Details Section -->
+  <fieldset class="nested-group">
+    <legend>Vehicle Details</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Registration Number</mat-label>
+        <input matInput [value]="report.vehicleDetails.registrationNumber" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Make</mat-label>
+        <input matInput [value]="report.vehicleDetails.make" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Model</mat-label>
+        <input matInput [value]="report.vehicleDetails.model" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Year of Mfg</mat-label>
+        <input matInput [value]="report.vehicleDetails.yearOfMfg" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Body Type</mat-label>
+        <input matInput [value]="report.vehicleDetails.bodyType" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Chassis Number</mat-label>
+        <input matInput [value]="report.vehicleDetails.chassisNumber" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Engine Number</mat-label>
+        <input matInput [value]="report.vehicleDetails.engineNumber" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Color</mat-label>
+        <input matInput [value]="report.vehicleDetails.colour" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Fuel Type</mat-label>
+        <input matInput [value]="report.vehicleDetails.fuel" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Owner Name</mat-label>
+        <input matInput [value]="report.vehicleDetails.ownerName" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>RTO</mat-label>
+        <input matInput [value]="report.vehicleDetails.rto" readonly />
+      </mat-form-field>
+      <!-- Add additional fields (e.g., insuranceValidUpTo, seatingCapacity) as needed -->
+    </div>
+  </fieldset>
+
+  <!-- Inspection Details Section -->
+  <fieldset class="nested-group">
+    <legend>Inspection Details</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Inspected By</mat-label>
+        <input matInput [value]="report.inspectionDetails.vehicleInspectedBy" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Date of Inspection</mat-label>
+        <input matInput [value]="report.inspectionDetails.dateOfInspection | date:'mediumDate'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Location</mat-label>
+        <input matInput [value]="report.inspectionDetails.inspectionLocation" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Odometer Reading</mat-label>
+        <input matInput [value]="report.inspectionDetails.odometer" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Engine Started</mat-label>
+        <input matInput [value]="report.inspectionDetails.engineStarted ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Road Worthy Condition</mat-label>
+        <input matInput [value]="report.inspectionDetails.roadWorthyCondition ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Overall Tyre Condition</mat-label>
+        <input matInput [value]="report.inspectionDetails.overallTyreCondition" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Engine Condition</mat-label>
+        <input matInput [value]="report.inspectionDetails.engineCondition" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Brake System Condition</mat-label>
+        <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
+      </mat-form-field>
+      <!-- Add other inspection fields (e.g. suspensionSystem, chassisCondition, etc.) similarly -->
+    </div>
+  </fieldset>
+
+  <!-- Quality Control Section -->
+  <fieldset class="nested-group">
+    <legend>Quality Control</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Overall Rating</mat-label>
+        <input matInput [value]="report.qualityControl.overallRating" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Valuation Amount (₹)</mat-label>
+        <input matInput [value]="report.qualityControl.valuationAmount" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Chassis Punch</mat-label>
+        <input matInput [value]="report.qualityControl.chassisPunch" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea matInput [value]="report.qualityControl.remarks" readonly></textarea>
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Valuation Response Section -->
+  <fieldset class="nested-group">
+    <legend>Valuation Response</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill" style="grid-column: span 2;">
+        <mat-label>Raw Response</mat-label>
+        <textarea matInput [value]="report.valuationResponse.rawResponse" rows="5" readonly></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Low Range (Lacs)</mat-label>
+        <input matInput [value]="report.valuationResponse.lowRange" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Mid Range (Lacs)</mat-label>
+        <input matInput [value]="report.valuationResponse.midRange" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>High Range (Lacs)</mat-label>
+        <input matInput [value]="report.valuationResponse.highRange" readonly />
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- Photos Section -->
+  <fieldset class="nested-group">
+    <legend>Photos</legend>
+    <div class="photo-grid">
+      <div class="photo-item" *ngFor="let key of photoKeys">
+        <div>{{ key }}</div>
+        <a [href]="report.photoUrls[key]" target="_blank">
+          <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
+        </a>
+      </div>
+    </div>  
+  </fieldset>
+
+  <!-- Actions at Bottom -->
+  <div class="actions">
+  <button
+    mat-raised-button
+    color="primary"
+    class="back-button"
+    (click)="onBack()">
+    Back
+  </button>
+
+  <button
+    mat-raised-button
+    color="accent"
+    (click)="downloadPdf()">
+    Download PDF
+  </button>
+</div> <!-- Close the .actions div opened above -->
+
   <!-- Quality Control + Price Estimate Info -->
   <fieldset class="nested-group">
     <legend>Quality Control & Valuation Estimate</legend>
@@ -60,38 +297,38 @@
         ></textarea>
       </mat-form-field>
 
-      </div>
-      </fieldset>
+    </div>
+  </fieldset>
 
-      <!-- Valuation Ranges -->
-      <fieldset class="nested-group">
-      <legend>Valuation Ranges</legend>
-      <div class="grid">
-        <!-- 5. Low Range -->
-        <mat-form-field appearance="fill">
+  <!-- Valuation Ranges -->
+  <fieldset class="nested-group">
+    <legend>Valuation Ranges</legend>
+    <div class="grid">
+      <!-- 5. Low Range -->
+      <mat-form-field appearance="fill">
         <mat-label>Low Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.lowRange" readonly />
-        </mat-form-field>
+      </mat-form-field>
 
-        <!-- 6. Mid Range -->
-        <mat-form-field appearance="fill">
+      <!-- 6. Mid Range -->
+      <mat-form-field appearance="fill">
         <mat-label>Mid Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.midRange" readonly />
-        </mat-form-field>
+      </mat-form-field>
 
-        <!-- 7. High Range -->
-        <mat-form-field appearance="fill">
+      <!-- 7. High Range -->
+      <mat-form-field appearance="fill">
         <mat-label>High Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.highRange" readonly />
-        </mat-form-field>
-      </div>
-      </fieldset>
+      </mat-form-field>
+    </div>
+  </fieldset>
 
-      <!-- Raw Response -->
-      <fieldset class="nested-group">
-        <legend>AI Analysis</legend>
-        <div style="width: 100%;">
-          <mat-form-field appearance="fill" class="full-width" style="width: 100%;">
+  <!-- Raw Response -->
+  <fieldset class="nested-group">
+    <legend>AI Analysis</legend>
+    <div style="width: 100%;">
+      <mat-form-field appearance="fill" class="full-width" style="width: 100%;">
         <mat-label>Raw Response</mat-label>
         <textarea
           matInput
@@ -100,23 +337,23 @@
           readonly
           style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"
         ></textarea>
-          </mat-form-field>
-        </div>
-      </fieldset>
+      </mat-form-field>
+    </div>
+  </fieldset>
 
   <!-- Actions -->
-   <fieldset>
-  <div class="actions">
-    <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
-      Edit
-    </button>
-    <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
-      Delete
-    </button>
-    <button mat-raised-button color="accent" (click)="onBack()">
-      Back
-    </button>
-  </div>
+  <fieldset>
+    <div class="actions">
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
+        Edit
+      </button>
+      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
+        Delete
+      </button>
+      <button mat-raised-button color="accent" (click)="onBack()">
+        Back
+      </button>
+    </div>
   </fieldset>
 </ng-container>
 
