@@ -21,6 +21,7 @@ import { AuthGuard } from './auth/auth';
 import { RoleGuard }      from './auth/role.guard';
 import { AddUserComponent } from './components/users/add-user/add-user.component';
 import { EditUserComponent } from './components/users/edit-user/edit-user.component';
+import { ReportCompletionUpdateComponent } from './components/Report/final-report-completion/report-completion-update.component';
 
 export const routes: Routes = [
   {
@@ -50,7 +51,8 @@ export const routes: Routes = [
   { path: 'valuation/:valuationId/quality-control/update', component: QualityControlUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditQualityControl' } },
   // 6) Final Report route
   { path: 'valuation/:valuationId/final-report', component: FinalReportComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewFinalReport' } },
-  
+  { path: 'valuation/:valuationId/final-report/update', component: ReportCompletionUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditFinalReport' } },
+
   // 7) User roles
   { path: 'users/:phone/roles', component: UserRolesComponent },
   { path: 'users', component: UsersComponent },

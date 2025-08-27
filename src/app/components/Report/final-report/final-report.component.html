@@ -231,22 +231,25 @@
       </div>
     </div>  
   </fieldset>
-
-  <!-- Actions at Bottom -->
-  <div class="actions">
-  <button
-    mat-raised-button
-    color="primary"
-    class="back-button"
-    (click)="onBack()">
-    Back
-  </button>
-
-  <button
+  
+  <!-- Actions -->
+  <fieldset>
+    <div class="actions">
+      <button
     mat-raised-button
     color="accent"
     (click)="downloadPdf()">
     Download PDF
   </button>
-</div>
+      <button *ngIf="canEditFinalReport()" mat-raised-button color="primary" (click)="onEdit()">
+        Edit
+      </button>
+      <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn" (click)="onDelete()">
+        Delete
+      </button>
+      <button mat-raised-button color="accent" (click)="onBack()">
+        Back
+      </button>
+    </div>
+  </fieldset>
 </ng-container>

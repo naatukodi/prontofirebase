@@ -1,0 +1,125 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Report Completion</h2>
+
+  <app-workflow-buttons
+    [id]="valuationId"
+    [vehicleNumber]="vehicleNumber"
+    [applicantContact]="applicantContact"
+    [valuationType]="valuationType">
+  </app-workflow-buttons>
+
+  <!-- Loading & Error -->
+  <div *ngIf="loading">Loading…</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && !error">
+    <fieldset class="nested-group">
+      <legend>Completion Details</legend>
+
+      <div class="grid">
+
+        <mat-form-field appearance="fill">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status" required>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Pending">Pending</mat-option>
+            <mat-option value="Rejected">Rejected</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('status')?.hasError('required')">Status is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Completed At</mat-label>
+          <input matInput type="datetime-local" formControlName="completedAt" />
+          <mat-error *ngIf="form.get('completedAt')?.hasError('required')">Completed At is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Completed By</mat-label>
+          <input matInput formControlName="completedBy" />
+          <mat-error *ngIf="form.get('completedBy')?.hasError('required')">Completed By is required</mat-error>
+        </mat-form-field>
+
+      </div>
+    </fieldset>
+
+    <fieldset class="nested-group">
+      <legend>Payment</legend>
+      <div class="grid">
+
+        <mat-form-field appearance="fill">
+          <mat-label>Payment Status</mat-label>
+          <mat-select formControlName="paymentStatus" required>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Pending">Pending</mat-option>
+            <mat-option value="Failed">Failed</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Payment Status is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Payment Reference</mat-label>
+          <input matInput formControlName="paymentReference" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Payment Date</mat-label>
+          <input matInput type="datetime-local" formControlName="paymentDate" />
+          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">Payment Date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Payment Method</mat-label>
+          <mat-select formControlName="paymentMethod" required>
+            <mat-option value="Online">Online</mat-option>
+            <mat-option value="Cash">Cash</mat-option>
+            <mat-option value="UPI">UPI</mat-option>
+            <mat-option value="Card">Card</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Payment Method is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Payment Amount</mat-label>
+          <input matInput type="number" formControlName="paymentAmount" />
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">Amount is required</mat-error>
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">Amount must be ≥ 0</mat-error>
+        </mat-form-field>
+
+      </div>
+    </fieldset>
+
+    <!-- ACTION BUTTONS -->
+    <fieldset>
+      <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
+        <button
+          mat-raised-button
+          color="accent"
+          type="button"
+          [disabled]="saving"
+          (click)="onSaveDraft()">
+          {{ saving && saveInProgress ? 'Saving…' : 'Save Draft' }}
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="saving">
+          {{ saving && submitInProgress ? 'Submitting…' : 'Submit as Complete' }}
+        </button>
+
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          [disabled]="saving"
+          (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+    </fieldset>
+  </ng-container>
+</form>
+
+<router-outlet></router-outlet>

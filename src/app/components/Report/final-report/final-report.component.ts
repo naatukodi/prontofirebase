@@ -3,11 +3,14 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
+import { ValuationResponseService } from '../../../services/valuation-response.service';
 import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 import { environment } from '../../../../environments/environment';
 import { HttpParams } from '@angular/common/http';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
+import { AuthorizationService } from '../../../services/authorization.service';
+
 
 @Component({
   selector: 'app-final-report-view',
@@ -32,7 +35,9 @@ export class FinalReportComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private valuationService: ValuationService
+    private valuationService: ValuationService,
+    private valuationResponseService: ValuationResponseService,
+    private authz: AuthorizationService
   ) {}
 
   ngOnInit(): void {
@@ -86,5 +91,41 @@ export class FinalReportComponent implements OnInit {
         valuationType: this.valuationType
       },
     });
+  }
+
+    /** Navigate to an edit screen */
+  onEdit(): void {
+    this.router.navigate(
+      ['/valuation', this.valuationId, 'final-report', 'update'],
+      {
+        queryParams: {
+          vehicleNumber: this.vehicleNumber,
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
+        }
+      }
+    );
+  }
+
+  /** Delete this final report */
+  onDelete(): void {
+    if (!confirm('Delete this final report?')) return;
+    this.valuationResponseService
+      .deleteValuationResponse(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: () => this.router.navigate(['/']),
+        error: (err) => (this.error = err.message || 'Delete failed')
+      });
+  }
+
+  /** Check if the user has permission to edit this QC record */
+  canEditFinalReport() {
+    return this.authz.hasAnyPermission([
+      'CanCreateFinalReport',
+      'CanEditFinalReport'
+    ]);
+  }
+  canDeleteFinalReport() {
+    return this.authz.hasAnyPermission(['CanDeleteFinalReport']);
   }
 }
