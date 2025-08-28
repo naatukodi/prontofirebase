@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { from, of, EMPTY, Observable } from 'rxjs';
-import { catchError, finalize, switchMap, take, timeout, map } from 'rxjs/operators';
+import { catchError, finalize, switchMap, take, timeout } from 'rxjs/operators';
 
 import { ClaimService } from '../../services/claim.service';
 import { UsersService } from '../../services/users.service';
@@ -19,6 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  // Ensure MatTableModule is present in imports for matRowDefTrackBy to work
   imports: [SharedModule, RouterModule, MatTableModule, MatButtonModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

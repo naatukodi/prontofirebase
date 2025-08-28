@@ -9,6 +9,7 @@ import { take, switchMap, of, map } from 'rxjs';
 import { ValuationResponseService } from '../../../services/valuation-response.service';
 import { UsersService } from '../../../services/users.service';
 import { RouterModule } from '@angular/router';
+import { WorkflowService } from '../../../services/workflow.service';
 
 @Component({
   selector: 'app-report-completion-update',
@@ -22,6 +23,11 @@ export class ReportCompletionUpdateComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
+
+  private assignedTo = '';
+  private assignedToPhoneNumber = '';
+  private assignedToEmail = '';
+  private assignedToWhatsapp = '';
 
   form!: FormGroup;
   loading = true;
@@ -39,7 +45,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
     private _snackBar: MatSnackBar,
     private auth: Auth,
     private vrSvc: ValuationResponseService,
-    private usersSvc: UsersService
+    private usersSvc: UsersService,
+    private workflowSvc: WorkflowService
   ) {}
 
   ngOnInit(): void {
@@ -58,6 +65,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
+
+    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
   }
 
   private initForm(): void {
@@ -98,6 +107,21 @@ export class ReportCompletionUpdateComponent implements OnInit {
     return (u?.displayName || u?.email || u?.phoneNumber || '') ?? '';
   }
 
+  private applyAssignedFromUser(u: User | null): void {
+    this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+      const safeName =
+        (name?.trim() || '') ||
+        (u?.email ? u.email.split('@')[0] : '') ||
+        (u?.phoneNumber || '') ||
+        'User';
+
+      this.assignedTo = safeName;
+      this.assignedToPhoneNumber = u?.phoneNumber || '';
+      this.assignedToEmail = u?.email || '';
+      this.assignedToWhatsapp = u?.phoneNumber || '';
+    });
+  }
+
   // Convert a Date to the yyyy-MM-ddTHH:mm format needed by <input type="datetime-local">
   private toLocalDateTimeInput(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -116,13 +140,16 @@ export class ReportCompletionUpdateComponent implements OnInit {
     return {
       status: v.status,                                 // "Completed"
       completedAt: this.toIsoUtc(v.completedAt),        // ISO with Z
-      completedBy: v.completedBy,
+      completedBy: this.assignedTo,
 
       paymentStatus: v.paymentStatus,                   // "Completed"
       paymentReference: v.paymentReference || null,
       paymentDate: this.toIsoUtc(v.paymentDate),        // ISO with Z
       paymentMethod: v.paymentMethod,                   // "Online"
-      paymentAmount: String(v.paymentAmount ?? '')      // as string to match cURL
+      paymentAmount: String(v.paymentAmount ?? ''),     // as string to match cURL
+      completedByPhoneNumber: this.assignedToPhoneNumber,
+      completedByEmail: this.assignedToEmail,
+      completedByWhatsapp: this.assignedToWhatsapp
     };
   }
 
@@ -157,6 +184,16 @@ export class ReportCompletionUpdateComponent implements OnInit {
       this.vehicleNumber,
       this.applicantContact,
       payload
+    ).pipe(
+      // Complete current workflow step
+      switchMap(() =>
+        this.workflowSvc.completeWorkflow(
+          this.valuationId,
+          5, // same step id as above
+          this.vehicleNumber,
+          encodeURIComponent(this.applicantContact)
+        )
+      )
     ).subscribe({
       next: () => {
         this.saving = false;
