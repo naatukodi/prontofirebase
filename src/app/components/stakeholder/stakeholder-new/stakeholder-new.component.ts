@@ -90,8 +90,8 @@ export class StakeholderNewComponent implements OnInit {
 
     this.form = this.fb.group({
       pincode: [
-        '',
-        [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
+      '',
+      [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
       ],
       stakeholderName:            ['', Validators.required],
       stakeholderExecutiveName:   ['', Validators.required],
@@ -110,7 +110,13 @@ export class StakeholderNewComponent implements OnInit {
 
       applicantName:    ['', Validators.required],
       applicantContact: ['', Validators.pattern(/^[0-9]{10}$/)],
-      vehicleNumber:   ['', Validators.required],
+      vehicleNumber:   [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(/^[a-zA-Z0-9]+$/) // Alphanumeric, no spaces
+      ]
+      ],
       vehicleSegment:  ['']
     });
   }
