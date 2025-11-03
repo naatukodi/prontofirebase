@@ -16,11 +16,18 @@ import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 
+// Angular Material and Forms imports
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatNativeDateModule } from '@angular/material/core';
+import { FormsModule } from '@angular/forms';
+
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   // Ensure MatTableModule is present in imports for matRowDefTrackBy to work
-  imports: [SharedModule, RouterModule, MatTableModule, MatButtonModule],
+  imports: [SharedModule, RouterModule, MatTableModule, MatButtonModule, MatDatepickerModule, MatInputModule, MatNativeDateModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -29,6 +36,8 @@ export class DashboardComponent implements OnInit {
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
+  filterDate: Date | null = null;
+  currentUser: UserModel | null = null;
 
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
   displayedColumns = [
@@ -72,8 +81,9 @@ export class DashboardComponent implements OnInit {
         );
       }),
       // With a domain user, fetch valuations based on role/assignment
-      switchMap((user: UserModel) => this.fetchValuationsForUser(user)),
-      finalize(() => { this.loading = false; })
+      switchMap((user: UserModel) => {
+        this.currentUser = user;  // Assign logged-in user details
+        return this.fetchValuationsForUser(user); })
     )
     .subscribe({
       next: (data: WFValuation[]) => {
@@ -88,6 +98,25 @@ export class DashboardComponent implements OnInit {
         this.applyFilter();
       },
       error: () => { this.error = 'Failed to load valuations'; }
+    });
+  }
+  /**
+ * Handles filtering claims when the date picker value changes.
+ * Filters the `claims` array to include only those with a createdAt date matching the selected filterDate.
+ * Resets the filter if no date is selected.
+ */
+  onDateFilterChange(): void {
+    // If no date is selected, reset filter to show all claims matching other filters.
+    if (!this.filterDate) {
+      this.applyFilter();
+      return;
+    }
+    // Normalize the filter date to midnight for date-only comparison
+    const filterTime = this.filterDate.setHours(0, 0, 0, 0);
+    // Filter claims where the createdAt date matches the selected date (ignoring time)
+    this.filteredClaims = this.claims.filter(v => {
+      const createdTime = new Date(v.createdAt).setHours(0, 0, 0, 0);
+      return createdTime === filterTime;
     });
   }
 
@@ -133,7 +162,7 @@ export class DashboardComponent implements OnInit {
   applyFilter(): void {
     this.filteredClaims = this.claims.filter(v => {
       const step = this.steps[this.getStepIndex(v)];
-      return !this.selectedStep || step === this.selectedStep;
+      return !this.selectedStep || step === this.selectedStep && (!this.filterDate || new Date(v.createdAt).setHours(0, 0, 0, 0) === this.filterDate.setHours(0, 0, 0, 0));
     });
   }
 

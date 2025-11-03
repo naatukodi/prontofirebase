@@ -1,3 +1,22 @@
+<div class="header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+  
+  <nav class="navigation-links">
+    <!-- Your nav links here: Dashboard, Stakeholder, Users, Logout -->
+  </nav>
+  <div class="user-info" *ngIf="currentUser">
+    Welcome, {{ currentUser.name }}
+  </div>
+</div>
+
+
+<!-- Date filter with calendar -->
+<mat-form-field appearance="fill" style="margin-bottom: 12px;">
+  <mat-label>Filter by Created Date</mat-label>
+  <input matInput [matDatepicker]="picker" [(ngModel)]="filterDate" placeholder="Choose a date" (dateChange)="onDateFilterChange()">
+  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+</mat-form-field>
+
 <div class="step-filter">
   <button
     mat-button
