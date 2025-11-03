@@ -80,6 +80,10 @@ export class DashboardComponent implements OnInit {
         this.claims = (data ?? []).filter(v =>
           this.canViewStep(this.steps[this.getStepIndex(v)])
         );
+        // Sort claims by createdAt descending (latest first)
+        this.claims.sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         this.computeStepCounts();
         this.applyFilter();
       },
