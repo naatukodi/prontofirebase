@@ -37,6 +37,7 @@ export class DashboardComponent implements OnInit {
   loading = true;
   error: string | null = null;
   filterDate: Date | null = null;
+  currentUser: UserModel | null = null;
 
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
   displayedColumns = [
@@ -80,8 +81,9 @@ export class DashboardComponent implements OnInit {
         );
       }),
       // With a domain user, fetch valuations based on role/assignment
-      switchMap((user: UserModel) => this.fetchValuationsForUser(user)),
-      finalize(() => { this.loading = false; })
+      switchMap((user: UserModel) => {
+        this.currentUser = user;  // Assign logged-in user details
+        return this.fetchValuationsForUser(user); })
     )
     .subscribe({
       next: (data: WFValuation[]) => {

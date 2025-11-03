@@ -1,3 +1,14 @@
+<div class="header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+  
+  <nav class="navigation-links">
+    <!-- Your nav links here: Dashboard, Stakeholder, Users, Logout -->
+  </nav>
+  <div class="user-info" *ngIf="currentUser">
+    Welcome, {{ currentUser.name }}
+  </div>
+</div>
+
+
 <!-- Date filter with calendar -->
 <mat-form-field appearance="fill" style="margin-bottom: 12px;">
   <mat-label>Filter by Created Date</mat-label>
