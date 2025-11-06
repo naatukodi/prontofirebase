@@ -257,7 +257,8 @@ export class InspectionViewComponent implements OnInit {
             electricAssembly: data.electricAssembly,
             radiator: data.radiator,
             intercooler: (data as any).intercooler,
-            allHosePipes: data.allHosePipes
+            allHosePipes: data.allHosePipes,
+            remarks: data.remarks
           });
           this.loading = false;
         },

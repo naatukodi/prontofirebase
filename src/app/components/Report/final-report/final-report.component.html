@@ -166,6 +166,10 @@
         <mat-label>Brake System Condition</mat-label>
         <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
       </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea matInput [value]="report.inspectionDetails.remarks" readonly rows="3"></textarea>
+      </mat-form-field>
       <!-- Add other inspection fields (e.g. suspensionSystem, chassisCondition, etc.) similarly -->
     </div>
   </fieldset>

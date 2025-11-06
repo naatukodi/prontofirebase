@@ -3,12 +3,12 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <h2>Valuation Update</h2>
 
-    <app-workflow-buttons
-        [id]="valuationId"
-        [vehicleNumber]="vehicleNumber"
-        [applicantContact]="applicantContact"
-        [valuationType]="valuationType">
-    </app-workflow-buttons>
+  <app-workflow-buttons
+      [id]="valuationId"
+      [vehicleNumber]="vehicleNumber"
+      [applicantContact]="applicantContact"
+      [valuationType]="valuationType">
+  </app-workflow-buttons>
 
   <!-- Loading & Error -->
   <div *ngIf="loading">Loading vehicle details …</div>
@@ -409,6 +409,23 @@
             matInput
             formControlName="chassisNoPhotoUrl"
           />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── REMARKS SECTION (NEWLY ADDED) ────────────────────────────────── -->
+    <!-- Edit and save remarks in this field -->
+    <fieldset class="nested‐group">
+      <legend>Remarks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Remarks</mat-label>
+          <textarea 
+            matInput 
+            formControlName="remarks" 
+            rows="4"
+            placeholder="Add remarks here">
+          </textarea>
         </mat-form-field>
       </div>
     </fieldset>

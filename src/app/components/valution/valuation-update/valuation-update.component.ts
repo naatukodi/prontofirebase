@@ -169,7 +169,8 @@ export class ValuationUpdateComponent implements OnInit {
 
       // Any URLs (read‐only or editable if you allow)
       stencilTraceUrl: [''],
-      chassisNoPhotoUrl: ['']
+      chassisNoPhotoUrl: [''],
+      remarks: ['']
     });
   }
 
@@ -353,7 +354,8 @@ export class ValuationUpdateComponent implements OnInit {
       rcStatus: data.rcStatus,
       manufacturedDate: data.manufacturedDate?.slice(0, 10) || '',
       stencilTraceUrl: data.stencilTraceUrl,
-      chassisNoPhotoUrl: data.chassisNoPhotoUrl
+      chassisNoPhotoUrl: data.chassisNoPhotoUrl,
+      remarks: data.remarks || ''
     });
 
     // If you want to show existing documents somewhere, you can store them here,
@@ -430,6 +432,7 @@ export class ValuationUpdateComponent implements OnInit {
     fd.append('manufacturedDate', v.manufacturedDate || '');
     fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
     fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
+    fd.append('remarks', v.remarks || '');
     fd.append('AssignedTo', this.assignedTo);
     fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
     fd.append('AssignedToEmail', this.assignedToEmail);

@@ -120,7 +120,8 @@ export class StakeholderUpdateComponent implements OnInit {
       applicantName: ['', Validators.required],
       applicantContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       vehicleNumber: ['', Validators.required],
-      vehicleSegment: ['', Validators.required]
+      vehicleSegment: ['', Validators.required],
+      remarks: ['']
     });
   }
 
@@ -227,6 +228,7 @@ export class StakeholderUpdateComponent implements OnInit {
     fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
     fd.append('AssignedToEmail', this.assignedToEmail);
     fd.append('AssignedToWhatsapp', this.assignedToWhatsapp);
+    fd.append('remarks', v.remarks || '');
 
     if (this.rcFile) fd.append('RcFile', this.rcFile, this.rcFile.name);
     if (this.insuranceFile) fd.append('InsuranceFile', this.insuranceFile, this.insuranceFile.name);
@@ -259,7 +261,8 @@ export class StakeholderUpdateComponent implements OnInit {
             applicantContact: data.applicant.contact,
 
             vehicleNumber: this.vehicleNumber,
-            vehicleSegment: data.vehicleSegment
+            vehicleSegment: data.vehicleSegment,
+            remarks: data.remarks ?? ''
           });
           this.saving = this.loading = false;
         },
