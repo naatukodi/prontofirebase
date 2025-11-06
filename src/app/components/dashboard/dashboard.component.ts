@@ -83,7 +83,8 @@ export class DashboardComponent implements OnInit {
       // With a domain user, fetch valuations based on role/assignment
       switchMap((user: UserModel) => {
         this.currentUser = user;  // Assign logged-in user details
-        return this.fetchValuationsForUser(user); })
+        return this.fetchValuationsForUser(user); }),
+        finalize(() => { this.loading = false; })
     )
     .subscribe({
       next: (data: WFValuation[]) => {
