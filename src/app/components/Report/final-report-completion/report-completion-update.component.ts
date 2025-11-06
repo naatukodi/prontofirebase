@@ -80,7 +80,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
       paymentReference: ['Paytm'],
       paymentDate: [nowLocal, Validators.required],           // datetime-local
       paymentMethod: ['Online', Validators.required],
-      paymentAmount: [800, [Validators.required, Validators.min(0)]]
+      paymentAmount: [800, [Validators.required, Validators.min(0)]],
+      remarks: ['']
     });
   }
 
@@ -149,7 +150,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
       paymentAmount: String(v.paymentAmount ?? ''),     // as string to match cURL
       completedByPhoneNumber: this.assignedToPhoneNumber,
       completedByEmail: this.assignedToEmail,
-      completedByWhatsapp: this.assignedToWhatsapp
+      completedByWhatsapp: this.assignedToWhatsapp,
+      remarks: v.remarks
     };
   }
 
