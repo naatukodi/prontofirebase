@@ -26,11 +26,6 @@
 
   <!-- Stakeholder Group -->
   <fieldset class="nested-group">
-    <!-- Remarks Field -->
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Remarks</mat-label>
-      <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
-    </mat-form-field>
     <legend>Stakeholder</legend>
     <div class="grid">
       <mat-form-field appearance="fill">
@@ -132,6 +127,18 @@
       </mat-form-field>
     </div>
   </fieldset>
+
+  <!-- Remarks Field -->
+  <fieldset class="nested-group">
+  <legend>Remarks</legend>
+  <div class="grid">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Remarks</mat-label>
+      <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
+    </mat-form-field>
+  </div>
+</fieldset>
+
 
   <!-- Vehicle Details Group -->
   <fieldset class="nested-group">

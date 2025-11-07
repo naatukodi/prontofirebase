@@ -151,7 +151,6 @@ export class ReportCompletionUpdateComponent implements OnInit {
       completedByPhoneNumber: this.assignedToPhoneNumber,
       completedByEmail: this.assignedToEmail,
       completedByWhatsapp: this.assignedToWhatsapp,
-      remarks: v.remarks
     };
   }
 
