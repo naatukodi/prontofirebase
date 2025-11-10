@@ -61,4 +61,5 @@ export interface Inspection {
   airConditioner: string;
   audio: string;
   photos: string[];             // array of URLs
+  remarks?: string;
 }

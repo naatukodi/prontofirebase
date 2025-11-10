@@ -215,6 +215,7 @@ export class InspectionUpdateComponent implements OnInit {
       radiator: ['', false],
       intercooler: ['', false],
       allHosePipes: ['', false],
+      remarks: ['', false],
        // --- new controls to match your template ---
     fuelSystem: ['', false],
     exteriorCondition: ['', false],
@@ -294,6 +295,7 @@ export class InspectionUpdateComponent implements OnInit {
       radiator: data.radiator,
       intercooler: data.intercooler,
       allHosePipes: data.allHosePipes,
+      remarks: data.remarks,
       // new fields:
     fuelSystem: data.fuelSystem,
     exteriorCondition: data.exteriorCondition,

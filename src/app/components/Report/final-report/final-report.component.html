@@ -122,6 +122,10 @@
         <mat-label>RTO</mat-label>
         <input matInput [value]="report.vehicleDetails.rto" readonly />
       </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea matInput [value]="report.vehicleDetails.remarks" readonly rows="3"></textarea>
+      </mat-form-field>
       <!-- Add additional fields (e.g., insuranceValidUpTo, seatingCapacity) as needed -->
     </div>
   </fieldset>
@@ -166,6 +170,10 @@
         <mat-label>Brake System Condition</mat-label>
         <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
       </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea matInput [value]="report.inspectionDetails.remarks" readonly rows="3"></textarea>
+      </mat-form-field>
       <!-- Add other inspection fields (e.g. suspensionSystem, chassisCondition, etc.) similarly -->
     </div>
   </fieldset>
@@ -193,6 +201,18 @@
     </div>
   </fieldset>
 
+  <!-- FINAL REPORT REMARKS SECTION -->
+  <fieldset class="nested-group">
+    <legend>Remarks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill" style="width: 100%;">
+        <textarea matInput [value]="report.remarks" readonly rows="3"></textarea>
+      </mat-form-field>
+    </div>
+  </fieldset>
+
+
+
   <!-- Valuation Response Section -->
   <fieldset class="nested-group">
     <legend>Valuation Response</legend>
@@ -218,6 +238,7 @@
       </mat-form-field>
     </div>
   </fieldset>
+
 
   <!-- Photos Section -->
   <fieldset class="nested-group">

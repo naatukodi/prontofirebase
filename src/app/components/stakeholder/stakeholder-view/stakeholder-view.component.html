@@ -29,6 +29,8 @@
 
   <!-- Stakeholder -->
   <fieldset class="nested-group">
+    
+
     <legend>Stakeholder</legend>
     <div class="grid">
       <mat-form-field appearance="fill">
@@ -122,6 +124,18 @@
       </mat-form-field>
     </div>
   </fieldset>
+
+  <!-- Remarks -->
+  <fieldset class="nested-group">
+    <legend>Remarks</legend>
+    <div class="grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Remarks</mat-label>
+        <textarea matInput [value]="stakeholder.remarks" readonly rows="3"></textarea>
+      </mat-form-field>
+    </div>
+  </fieldset>
+
 
   <!-- Documents -->
   <fieldset class="nested-group">

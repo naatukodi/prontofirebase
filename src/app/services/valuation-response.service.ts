@@ -11,7 +11,8 @@ export interface CompleteValuationResponsePayload {
   paymentReference?: string | null;
   paymentDate: string;         // ISO string with Z
   paymentMethod: 'Online' | 'Cash' | 'UPI' | 'Card' | string;
-  paymentAmount: string;       // per cURL
+  paymentAmount: string;      // per cURL
+  remarks?: string;         // Add remarks field
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +37,9 @@ export class ValuationResponseService {
     });
   }
 
+  
+
+
   deleteValuationResponse(
     valuationId: string,
     vehicleNumber: string,
@@ -47,5 +51,7 @@ export class ValuationResponseService {
       .set('applicantContact', applicantContact);
 
     return this.http.delete<void>(url, { params });
+
+  
 }
 }

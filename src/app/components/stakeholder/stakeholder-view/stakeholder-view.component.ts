@@ -46,6 +46,7 @@ export class StakeholderViewComponent implements OnInit {
     };
     applicant: { name: string; contact: string };
     documents: Array<{ type: string; filePath: string; uploadedAt: string }>;
+    remarks?: string | null;
   };
 
   constructor(
@@ -73,6 +74,7 @@ export class StakeholderViewComponent implements OnInit {
       this.applicantContact
     ).subscribe({
       next: data => {
+        console.log('Stakeholder data loaded:', data);
         this.stakeholder = data;
         this.setOtherDocuments();
         this.loading     = false;

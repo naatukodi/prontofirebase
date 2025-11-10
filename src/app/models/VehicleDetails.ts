@@ -55,4 +55,5 @@ export interface VehicleDetails {
   taxUpto: string; // ISO
   taxPaidUpto: string;
   manufacturedDate: string; // ISO
+  remarks?: string | null;
 }

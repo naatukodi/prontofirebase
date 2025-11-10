@@ -12,360 +12,381 @@
         [valuationType]="valuationType">
     </app-workflow-buttons>
 
+    <!-- ── Top Action Buttons ──────────────────────────────────────────────── -->
     <fieldset>
-  <div class="actions">
-    <button 
-    *ngIf="canEditVehicleDetails()"
-    mat-raised-button color="primary" (click)="onEdit()">
-      Edit
-    </button>
-    <button 
-    *ngIf="canDeleteVehicleDetails()"
-    mat-raised-button color="warn" (click)="onDelete()">
-      Delete
-    </button>
-    <button mat-raised-button color="warn" (click)="onBack()">
-      Back
-    </button>
-  </div>
-  </fieldset>
-
-  <!-- Vehicle Basic Info -->
-  <fieldset class="nested-group">
-    <legend>Vehicle Information</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Registration Number</mat-label>
-        <input matInput [value]="vehicleDetails.registrationNumber" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Make</mat-label>
-        <input matInput [value]="vehicleDetails.make" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Model</mat-label>
-        <input matInput [value]="vehicleDetails.model" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Body Type</mat-label>
-        <input matInput [value]="vehicleDetails.bodyType" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Colour</mat-label>
-        <input matInput [value]="vehicleDetails.colour" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Fuel</mat-label>
-        <input matInput [value]="vehicleDetails.fuel" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Manufacturing & Engine -->
-  <fieldset class="nested-group">
-    <legend>Manufacturing & Engine Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Year of Mfg</mat-label>
-        <input matInput [value]="vehicleDetails.yearOfMfg" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Month of Mfg</mat-label>
-        <input matInput [value]="vehicleDetails.monthOfMfg" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Engine Number</mat-label>
-        <input matInput [value]="vehicleDetails.engineNumber" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Chassis Number</mat-label>
-        <input matInput [value]="vehicleDetails.chassisNumber" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Engine CC</mat-label>
-        <input matInput [value]="vehicleDetails.engineCC" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Gross Vehicle Weight</mat-label>
-        <input matInput [value]="vehicleDetails.grossVehicleWeight" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Seating Capacity</mat-label>
-        <input matInput [value]="vehicleDetails.seatingCapacity" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Registration & RTO -->
-  <fieldset class="nested-group">
-    <legend>Registration & RTO</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Date of Registration</mat-label>
-        <input matInput [value]="vehicleDetails.dateOfRegistration | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>RTO</mat-label>
-        <input matInput [value]="vehicleDetails.rto" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Class of Vehicle</mat-label>
-        <input matInput [value]="vehicleDetails.classOfVehicle" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Category Code</mat-label>
-        <input matInput [value]="vehicleDetails.categoryCode" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Norms Type</mat-label>
-        <input matInput [value]="vehicleDetails.normsType" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Maker Variant</mat-label>
-        <input matInput [value]="vehicleDetails.makerVariant" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Owner & Hypothecation -->
-  <fieldset class="nested-group">
-    <legend>Owner & Hypothecation</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Owner Name</mat-label>
-        <input matInput [value]="vehicleDetails.ownerName" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Owner Serial No</mat-label>
-        <input matInput [value]="vehicleDetails.ownerSerialNo" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Present Address</mat-label>
-        <input matInput [value]="vehicleDetails.presentAddress" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Permanent Address</mat-label>
-        <input matInput [value]="vehicleDetails.permanentAddress" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Hypothecation</mat-label>
-        <input matInput [value]="vehicleDetails.hypothecation ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Lender</mat-label>
-        <input matInput [value]="vehicleDetails.lender" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Insurance -->
-  <fieldset class="nested-group">
-    <legend>Insurance Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Insurer</mat-label>
-        <input matInput [value]="vehicleDetails.insurer" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Insurance Policy No</mat-label>
-        <input matInput [value]="vehicleDetails.insurancePolicyNo" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Insurance Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.insuranceValidUpTo | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Permit & Fitness -->
-  <fieldset class="nested-group">
-    <legend>Permit & Fitness</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Permit No</mat-label>
-        <input matInput [value]="vehicleDetails.permitNo" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Permit Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.permitValidUpTo | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Permit Type</mat-label>
-        <input matInput [value]="vehicleDetails.permitType" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Permit Issued On</mat-label>
-        <input matInput [value]="vehicleDetails.permitIssued | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Permit From</mat-label>
-        <input matInput [value]="vehicleDetails.permitFrom | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Fitness No</mat-label>
-        <input matInput [value]="vehicleDetails.fitnessNo" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Fitness Valid To</mat-label>
-        <input matInput [value]="vehicleDetails.fitnessValidTo | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Pollution Certificate & Tax -->
-  <fieldset class="nested-group">
-    <legend>Pollution Certificate & Tax</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Pollution Certificate No</mat-label>
-        <input matInput [value]="vehicleDetails.pollutionCertificateNumber" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Pollution Certificate Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.pollutionCertificateUpto | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Tax Up To</mat-label>
-        <input matInput [value]="vehicleDetails.taxUpto | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Tax Paid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.taxPaidUpto" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Additional Info -->
-  <fieldset class="nested-group">
-    <legend>Additional Info</legend>
-    <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>IDV</mat-label>
-        <input matInput [value]="vehicleDetails.idv" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Ex Ex-Showroom Price</mat-label>
-        <input matInput [value]="vehicleDetails.exShowroomPrice" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Backlist Status</mat-label>
-        <input matInput [value]="vehicleDetails.backlistStatus ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>RC Status</mat-label>
-        <input matInput [value]="vehicleDetails.rcStatus ? 'Valid' : 'Invalid'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Manufactured Date</mat-label>
-        <input matInput [value]="vehicleDetails.manufacturedDate | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Stencil Trace URL</mat-label>
-        <input matInput [value]="vehicleDetails.stencilTraceUrl" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Chassis No Photo URL</mat-label>
-        <input matInput [value]="vehicleDetails.chassisNoPhotoUrl" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Documents -->
-  <fieldset class="nested-group">
-    <legend>Documents</legend>
-    <div class="grid">
-      <div class="file-upload">
-        <label>RC Document</label>
-        <ng-container *ngIf="getDocumentFilePath('RC')">
-          <a [href]="getDocumentFilePath('RC')" target="_blank">Download RC</a>
-        </ng-container>
-        <ng-container *ngIf="!getDocumentFilePath('RC')">
-          <span>No RC uploaded</span>
-        </ng-container>
+      <div class="actions">
+        <button 
+        *ngIf="canEditVehicleDetails()"
+        mat-raised-button color="primary" (click)="onEdit()">
+          Edit
+        </button>
+        <button 
+        *ngIf="canDeleteVehicleDetails()"
+        mat-raised-button color="warn" (click)="onDelete()">
+          Delete
+        </button>
+        <button mat-raised-button color="warn" (click)="onBack()">
+          Back
+        </button>
       </div>
+    </fieldset>
 
-      <div class="file-upload">
-        <label>Insurance Document</label>
-        <ng-container *ngIf="getDocumentFilePath('Insurance')">
-          <a [href]="getDocumentFilePath('Insurance')" target="_blank">Download Insurance</a>
-        </ng-container>
-        <ng-container *ngIf="!getDocumentFilePath('Insurance')">
-          <span>No Insurance uploaded</span>
-        </ng-container>
+    <!-- ── Vehicle Basic Information ─────────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Vehicle Information</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Registration Number</mat-label>
+          <input matInput [value]="vehicleDetails.registrationNumber" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Make</mat-label>
+          <input matInput [value]="vehicleDetails.make" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Model</mat-label>
+          <input matInput [value]="vehicleDetails.model" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Body Type</mat-label>
+          <input matInput [value]="vehicleDetails.bodyType" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Colour</mat-label>
+          <input matInput [value]="vehicleDetails.colour" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fuel</mat-label>
+          <input matInput [value]="vehicleDetails.fuel" readonly />
+        </mat-form-field>
       </div>
+    </fieldset>
 
-      <!-- Any other custom document types -->
-      <div class="file-upload" style="grid-column: span 2;">
-        <label>Other Documents</label>
-        <ng-container *ngFor="let doc of vehicleDetails.documents">
-          <ng-container *ngIf="doc.type !== 'RC' && doc.type !== 'Insurance'">
-            <div>
-              <span>{{ doc.type }}</span>:
-              <a [href]="doc.filePath" target="_blank">Download</a>
-            </div>
+    <!-- ── Manufacturing & Engine Details ─────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Manufacturing & Engine Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Year of Mfg</mat-label>
+          <input matInput [value]="vehicleDetails.yearOfMfg" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Month of Mfg</mat-label>
+          <input matInput [value]="vehicleDetails.monthOfMfg" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Engine Number</mat-label>
+          <input matInput [value]="vehicleDetails.engineNumber" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis Number</mat-label>
+          <input matInput [value]="vehicleDetails.chassisNumber" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Engine CC</mat-label>
+          <input matInput [value]="vehicleDetails.engineCC" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Gross Vehicle Weight</mat-label>
+          <input matInput [value]="vehicleDetails.grossVehicleWeight" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Seating Capacity</mat-label>
+          <input matInput [value]="vehicleDetails.seatingCapacity" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Registration & RTO Information ────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Registration & RTO</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Date of Registration</mat-label>
+          <input matInput [value]="vehicleDetails.dateOfRegistration | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>RTO</mat-label>
+          <input matInput [value]="vehicleDetails.rto" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Class of Vehicle</mat-label>
+          <input matInput [value]="vehicleDetails.classOfVehicle" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Category Code</mat-label>
+          <input matInput [value]="vehicleDetails.categoryCode" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Norms Type</mat-label>
+          <input matInput [value]="vehicleDetails.normsType" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Maker Variant</mat-label>
+          <input matInput [value]="vehicleDetails.makerVariant" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Owner & Hypothecation Information ──────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Owner & Hypothecation</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Owner Name</mat-label>
+          <input matInput [value]="vehicleDetails.ownerName" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Owner Serial No</mat-label>
+          <input matInput [value]="vehicleDetails.ownerSerialNo" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Present Address</mat-label>
+          <input matInput [value]="vehicleDetails.presentAddress" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permanent Address</mat-label>
+          <input matInput [value]="vehicleDetails.permanentAddress" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Hypothecation</mat-label>
+          <input matInput [value]="vehicleDetails.hypothecation ? 'Yes' : 'No'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Lender</mat-label>
+          <input matInput [value]="vehicleDetails.lender" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Insurance Details ─────────────────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Insurance Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Insurer</mat-label>
+          <input matInput [value]="vehicleDetails.insurer" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Insurance Policy No</mat-label>
+          <input matInput [value]="vehicleDetails.insurancePolicyNo" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Insurance Valid Up To</mat-label>
+          <input matInput [value]="vehicleDetails.insuranceValidUpTo | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Permit & Fitness Information ──────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Permit & Fitness</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Permit No</mat-label>
+          <input matInput [value]="vehicleDetails.permitNo" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Valid Up To</mat-label>
+          <input matInput [value]="vehicleDetails.permitValidUpTo | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Type</mat-label>
+          <input matInput [value]="vehicleDetails.permitType" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit Issued On</mat-label>
+          <input matInput [value]="vehicleDetails.permitIssued | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Permit From</mat-label>
+          <input matInput [value]="vehicleDetails.permitFrom | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fitness No</mat-label>
+          <input matInput [value]="vehicleDetails.fitnessNo" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Fitness Valid To</mat-label>
+          <input matInput [value]="vehicleDetails.fitnessValidTo | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Pollution Certificate & Tax Information ────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Pollution Certificate & Tax</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>Pollution Certificate No</mat-label>
+          <input matInput [value]="vehicleDetails.pollutionCertificateNumber" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Pollution Certificate Valid Up To</mat-label>
+          <input matInput [value]="vehicleDetails.pollutionCertificateUpto | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Tax Up To</mat-label>
+          <input matInput [value]="vehicleDetails.taxUpto | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Tax Paid Up To</mat-label>
+          <input matInput [value]="vehicleDetails.taxPaidUpto" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Additional Vehicle Information ────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Additional Info</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill">
+          <mat-label>IDV</mat-label>
+          <input matInput [value]="vehicleDetails.idv" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Ex Showroom Price</mat-label>
+          <input matInput [value]="vehicleDetails.exShowroomPrice" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Backlist Status</mat-label>
+          <input matInput [value]="vehicleDetails.backlistStatus ? 'Yes' : 'No'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>RC Status</mat-label>
+          <input matInput [value]="vehicleDetails.rcStatus ? 'Valid' : 'Invalid'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Manufactured Date</mat-label>
+          <input matInput [value]="vehicleDetails.manufacturedDate | date:'yyyy-MM-dd'" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Stencil Trace URL</mat-label>
+          <input matInput [value]="vehicleDetails.stencilTraceUrl" readonly />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Chassis No Photo URL</mat-label>
+          <input matInput [value]="vehicleDetails.chassisNoPhotoUrl" readonly />
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── REMARKS SECTION (NEWLY ADDED) ─────────────────────────────────── -->
+    <!-- Display backend remarks in a read-only textarea -->
+    <fieldset class="nested-group">
+      <legend>Remarks</legend>
+      <div class="grid">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Remarks</mat-label>
+          <textarea 
+            matInput 
+            [value]="vehicleDetails.remarks" 
+            readonly 
+            rows="3"
+            placeholder="No remarks available">
+          </textarea>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ── Document Upload Section ──────────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Documents</legend>
+      <div class="grid">
+        <!-- RC Document Link -->
+        <div class="file-upload">
+          <label>RC Document</label>
+          <ng-container *ngIf="getDocumentFilePath('RC')">
+            <a [href]="getDocumentFilePath('RC')" target="_blank">Download RC</a>
           </ng-container>
-        </ng-container>
-        <ng-container *ngIf="!vehicleDetails.documents?.length">
-          <span>No documents available</span>
-        </ng-container>
-      </div>
-    </div>
-  </fieldset>
+          <ng-container *ngIf="!getDocumentFilePath('RC')">
+            <span>No RC uploaded</span>
+          </ng-container>
+        </div>
 
-  <!-- Actions -->
-   <fieldset>
-  <div class="actions">
-    <button 
-    *ngIf="canEditVehicleDetails()"
-    mat-raised-button color="primary" (click)="onEdit()">
-      Edit
-    </button>
-    <button 
-    *ngIf="canDeleteVehicleDetails()"
-    mat-raised-button color="warn" (click)="onDelete()">
-      Delete
-    </button>
-    <button mat-raised-button color="warn" (click)="onBack()">
-      Back
-    </button>
-  </div>
-  </fieldset>
+        <!-- Insurance Document Link -->
+        <div class="file-upload">
+          <label>Insurance Document</label>
+          <ng-container *ngIf="getDocumentFilePath('Insurance')">
+            <a [href]="getDocumentFilePath('Insurance')" target="_blank">Download Insurance</a>
+          </ng-container>
+          <ng-container *ngIf="!getDocumentFilePath('Insurance')">
+            <span>No Insurance uploaded</span>
+          </ng-container>
+        </div>
+
+        <!-- Any other custom document types -->
+        <div class="file-upload" style="grid-column: span 2;">
+          <label>Other Documents</label>
+          <ng-container *ngFor="let doc of vehicleDetails.documents">
+            <ng-container *ngIf="doc.type !== 'RC' && doc.type !== 'Insurance'">
+              <div>
+                <span>{{ doc.type }}</span>:
+                <a [href]="doc.filePath" target="_blank">Download</a>
+              </div>
+            </ng-container>
+          </ng-container>
+          <ng-container *ngIf="!vehicleDetails.documents.length">
+            <span>No documents available</span>
+          </ng-container>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ── Bottom Action Buttons ────────────────────────────────────────── -->
+    <fieldset>
+      <div class="actions">
+        <button 
+        *ngIf="canEditVehicleDetails()"
+        mat-raised-button color="primary" (click)="onEdit()">
+          Edit
+        </button>
+        <button 
+        *ngIf="canDeleteVehicleDetails()"
+        mat-raised-button color="warn" (click)="onDelete()">
+          Delete
+        </button>
+        <button mat-raised-button color="warn" (click)="onBack()">
+          Back
+        </button>
+      </div>
+    </fieldset>
 </ng-container>

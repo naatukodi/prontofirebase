@@ -61,4 +61,5 @@ export interface FinalReport {
   completedBy: string | null;
   assignedTo: string | null;
   assignedToRole: string | null;
+  remarks?: string;
 }

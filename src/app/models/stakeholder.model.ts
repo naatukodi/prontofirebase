@@ -28,4 +28,5 @@ export interface Stakeholder {
     filePath: string;
     uploadedAt: string;
   }>;
+  remarks?: string | null;
 }

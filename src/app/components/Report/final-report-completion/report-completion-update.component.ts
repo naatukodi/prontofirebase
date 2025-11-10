@@ -80,7 +80,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
       paymentReference: ['Paytm'],
       paymentDate: [nowLocal, Validators.required],           // datetime-local
       paymentMethod: ['Online', Validators.required],
-      paymentAmount: [800, [Validators.required, Validators.min(0)]]
+      paymentAmount: [800, [Validators.required, Validators.min(0)]],
+      remarks: ['']
     });
   }
 
@@ -149,7 +150,8 @@ export class ReportCompletionUpdateComponent implements OnInit {
       paymentAmount: String(v.paymentAmount ?? ''),     // as string to match cURL
       completedByPhoneNumber: this.assignedToPhoneNumber,
       completedByEmail: this.assignedToEmail,
-      completedByWhatsapp: this.assignedToWhatsapp
+      completedByWhatsapp: this.assignedToWhatsapp,
+      remarks: v.remarks || ''                          // Include remarks in payload
     };
   }
 
@@ -169,6 +171,62 @@ export class ReportCompletionUpdateComponent implements OnInit {
       this._snackBar.open('Draft saved locally', 'Close', { duration: 2000, horizontalPosition: 'center', verticalPosition: 'top' });
     }, 300);
   }
+
+  onSubmitForReview(): void {
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+    return;
+  }
+
+  this.saving = true;
+  this.submitInProgress = true;
+
+  // 👇 Extend the allowed status type right here
+  type ExtendedStatus = 'Completed' | 'Pending' | 'Rejected';
+
+  const payload = {
+    ...this.buildPayload(),
+    status: 'In Review' as ExtendedStatus   // ✅ no TS error now
+  };
+
+  // Save to backend without closing the workflow
+  this.vrSvc.completeValuationResponse(
+    this.valuationId,
+    this.vehicleNumber,
+    this.applicantContact,
+    payload
+  ).subscribe({
+    next: () => {
+      this.saving = false;
+      this.submitInProgress = false;
+      this._snackBar.open('Report submitted for review', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
+
+      // Redirect to view page so you can check remarks
+      this.router.navigate([
+        '/valuation',
+        this.valuationId,
+        'final-report'
+      ], {
+        queryParams: {
+          vehicleNumber: this.vehicleNumber,
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
+        }
+      });
+    },
+    error: (err) => {
+      this.error = err?.message || 'Submit for review failed.';
+      this.saving = false;
+      this.submitInProgress = false;
+    }
+  });
+}
+
+
 
   onSubmit(): void {
     if (this.form.invalid) {

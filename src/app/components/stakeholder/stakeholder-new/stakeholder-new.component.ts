@@ -117,7 +117,8 @@ export class StakeholderNewComponent implements OnInit {
         Validators.pattern(/^[a-zA-Z0-9]+$/) // Alphanumeric, no spaces
       ]
       ],
-      vehicleSegment:  ['']
+      vehicleSegment:  [''],
+      remarks: ['']
     });
   }
 
@@ -196,7 +197,8 @@ export class StakeholderNewComponent implements OnInit {
       applicantContact: v.applicantContact,
       vehicleNumber: v.vehicleNumber,
       vehicleSegment: v.vehicleSegment,
-      valuationId: this.valuationId
+      valuationId: this.valuationId,
+      Remarks: v.remarks || ''
     }).forEach(([k, val]) => {
       fd.append(k, val as string);
     });
