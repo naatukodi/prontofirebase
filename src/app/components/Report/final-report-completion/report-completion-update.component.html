@@ -111,7 +111,17 @@
           (click)="onSaveDraft()">
           {{ saving && saveInProgress ? 'Saving…' : 'Save Draft' }}
         </button>
-
+      
+        <!-- NEW: SUBMIT FOR REVIEW -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          [disabled]="saving"
+          (click)="onSubmitForReview()">
+          {{ saving && submitInProgress ? 'Submitting…' : 'Submit for Review' }}
+        </button>
+      
         <button
           mat-raised-button
           color="primary"
