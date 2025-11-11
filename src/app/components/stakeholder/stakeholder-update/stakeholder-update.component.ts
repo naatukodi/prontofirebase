@@ -1,10 +1,9 @@
-// stakeholder-update.component.ts
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+// PASTE THIS ENTIRE FILE
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of, Observable } from 'rxjs';
+import { of, Observable, Subscription } from 'rxjs';
 import { switchMap, map, take } from 'rxjs/operators';
-
 
 import {
   PincodeService,
@@ -19,21 +18,24 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { Auth, User, authState } from '@angular/fire/auth';
 import { UsersService } from '../../../services/users.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-stakeholder-update',
   standalone: true,
-  imports: [SharedModule, RouterModule, WorkflowButtonsComponent],
+  imports: [SharedModule, RouterModule, WorkflowButtonsComponent, ReactiveFormsModule, MatCheckboxModule],
   templateUrl: './stakeholder-update.component.html',
   styleUrls: ['./stakeholder-update.component.scss']
 })
-export class StakeholderUpdateComponent implements OnInit {
+export class StakeholderUpdateComponent implements OnInit, OnDestroy {
   loading = false;
   form!: FormGroup;
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
+
+  private valueSubscriptions = new Subscription();
 
   private usersSvc = inject(UsersService);
 
@@ -73,7 +75,6 @@ export class StakeholderUpdateComponent implements OnInit {
   insuranceFile?: File;
   otherFiles: File[] = [];
 
-    // 🔽 NEW: hold assigned fields derived from logged-in user
   private assignedTo: string = '';
   private assignedToPhoneNumber: string = '';
   private assignedToEmail: string = '';
@@ -98,8 +99,13 @@ export class StakeholderUpdateComponent implements OnInit {
       this.valuationType = params.get('valuationType')!;
       this.initForm();
       this.loadStakeholder();
+      this.setupWhatsappAutofill(); 
       authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
     });
+  }
+
+  ngOnDestroy(): void {
+    this.valueSubscriptions.unsubscribe();
   }
 
   private initForm() {
@@ -108,7 +114,11 @@ export class StakeholderUpdateComponent implements OnInit {
       stakeholderName: ['', Validators.required],
       stakeholderExecutiveName: ['', Validators.required],
       stakeholderExecutiveContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
-      stakeholderExecutiveWhatsapp: [''],
+      
+      // --- THIS LINE IS MODIFIED ---
+      stakeholderExecutiveWhatsapp: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+
+      sameAsContact: [false],
       stakeholderExecutiveEmail: ['', [Validators.email]],
       valuationType: [''],
       location: ['', Validators.required],
@@ -125,7 +135,34 @@ export class StakeholderUpdateComponent implements OnInit {
     });
   }
 
-  // Helper: reuse the same name-resolution logic used in userName$
+  setupWhatsappAutofill(): void {
+    const contactControl = this.form.get('stakeholderExecutiveContact');
+    const whatsappControl = this.form.get('stakeholderExecutiveWhatsapp');
+    const checkboxControl = this.form.get('sameAsContact');
+
+    if (!contactControl || !whatsappControl || !checkboxControl) {
+      return;
+    }
+
+    const checkboxSub = checkboxControl.valueChanges.subscribe(isChecked => {
+      if (isChecked) {
+        whatsappControl.setValue(contactControl.value);
+        whatsappControl.disable();
+      } else {
+        whatsappControl.enable();
+      }
+    });
+
+    const contactSub = contactControl.valueChanges.subscribe(newContactValue => {
+      if (checkboxControl.value) {
+        whatsappControl.setValue(newContactValue);
+      }
+    });
+
+    this.valueSubscriptions.add(checkboxSub);
+    this.valueSubscriptions.add(contactSub);
+  }
+
   private resolveDisplayName(u: User | null): Observable<string> {
     return of(u).pipe(
       switchMap(user => {
@@ -265,6 +302,9 @@ export class StakeholderUpdateComponent implements OnInit {
             remarks: data.remarks ?? ''
           });
           this.saving = this.loading = false;
+        if (data.executiveContact && data.executiveContact === data.executiveWhatsapp) {
+            this.form.get('sameAsContact')?.setValue(true);
+        }
         },
         error: err => {
           this.error = err.message || 'Failed to load';
@@ -284,14 +324,12 @@ export class StakeholderUpdateComponent implements OnInit {
 
     const payload = this.buildFormData();
     
-    // First update stakeholder
     this.svc.updateStakeholder(
       this.valuationId,
       this.vehicleNumber, 
       this.applicantContact,
       payload
     ).pipe(
-      // After successful update, start workflow
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1,this.vehicleNumber, encodeURIComponent(this.applicantContact)))
       ,
       switchMap(() =>
@@ -339,7 +377,6 @@ export class StakeholderUpdateComponent implements OnInit {
       next: (): void => {
         this.saving = this.saveInProgress = false;
         this.saved = true;
-        // Optionally show a snack/toast here
       },
       error: (err: { message?: string }): void => {
         this.error = err.message || 'Save failed';
@@ -365,11 +402,8 @@ export class StakeholderUpdateComponent implements OnInit {
       this.applicantContact,
       payload
     ).pipe(
-      // Complete workflow with step 1
       switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 1,this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-      // Start workflow with step 2
       switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2,this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-      // Finally, update vehicle valuation details
       switchMap(() => this.valuationSvc.getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact))
       ,
       switchMap(() =>
@@ -415,7 +449,6 @@ export class StakeholderUpdateComponent implements OnInit {
       )
     ).subscribe({
       next: () => {
-      // after submit, navigate back to View
       this.router.navigate(
       ['/valuation', this.valuationId, 'stakeholder'],
       {
@@ -428,9 +461,9 @@ export class StakeholderUpdateComponent implements OnInit {
     );
       },
       error: err => {
-      this.error = err.message || 'Submit failed';
-      this.submitInProgress = false;
-      this.saving = false;
+        this.error = err.message || 'Submit failed';
+        this.submitInProgress = false;
+        this.saving = false;
       }
     });
     }

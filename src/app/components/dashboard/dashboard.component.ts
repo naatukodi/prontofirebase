@@ -43,8 +43,15 @@ export class DashboardComponent implements OnInit {
   displayedColumns = [
     'vehicleNumber','assignedTo','phone','location',
     'createdAt','age','redFlag','applicant','info',
-    'currentStep','status'
+    'currentStep','status', 'action'
+
   ];
+  
+  // ✅ NEW FUNCTION
+  openCase(v: WFValuation) {
+    this.navigateToCurrent(v);
+  }
+
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
   selectedStep = '';

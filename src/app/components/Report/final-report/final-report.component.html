@@ -252,6 +252,19 @@
       </div>
     </div>  
   </fieldset>
+
+  <!-- ✅ Final Report Notes Section -->
+  <fieldset class="nested-group">
+    <legend>Final Report Notes</legend>
+    <div class="notes-container">
+      <app-common-notes
+        [entityType]="'FinalReport'"
+        [entityId]="valuationId"
+        [currentUser]="getCurrentUser()"
+        [collapsible]="true">
+      </app-common-notes>
+    </div>
+  </fieldset>
   
   <!-- Actions -->
   <fieldset>

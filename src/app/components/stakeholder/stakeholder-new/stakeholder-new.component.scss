@@ -50,5 +50,29 @@ form {
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+
+    /* --- ADDED/MODIFIED THIS SECTION --- */
+  .whatsapp-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    flex-wrap: wrap;
+
+    .whatsapp-field {
+      flex: 1; /* Allows field to grow */
+    }
+
+    mat-checkbox {
+      white-space: nowrap;
+      margin-top: 8px; /* Helps align with form field */
+    }
+  }
+
+  /* --- ADDED --- */
+  .grid-item.full-width {
+    /* This ensures the wrapper div doesn't add extra padding */
+    padding: 0; 
+  }
   }
   

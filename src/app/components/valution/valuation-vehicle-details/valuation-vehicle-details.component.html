@@ -370,6 +370,19 @@
         </div>
       </div>
     </fieldset>
+    
+    <!-- ✅ Backend Notes Section (Common Notes) -->
+    <fieldset class="nested-group">
+      <legend>Backend Notes</legend>
+      <div class="notes-container">
+        <app-common-notes
+        [entityType]="'Backend'"
+        [entityId]="valuationId"
+        [currentUser]="getCurrentUser()"
+        [collapsible]="true">
+      </app-common-notes>
+      </div>
+    </fieldset>
 
     <!-- ── Bottom Action Buttons ────────────────────────────────────────── -->
     <fieldset>

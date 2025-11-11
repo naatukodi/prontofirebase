@@ -1,13 +1,15 @@
-// src/app/valuation-stakeholder-new/stakeholder-new.component.ts
-import { Component, OnInit } from '@angular/core';
+// PASTE THIS ENTIRE FILE
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
-  Validators
+  Validators,
+  ReactiveFormsModule
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
+import { Subscription } from 'rxjs';
 
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService }    from '../../../services/workflow.service';
@@ -18,18 +20,22 @@ import {
 } from '../../../services/pincode.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-stakeholder-new',
-  imports: [SharedModule, RouterModule],
+  standalone: true,
+  imports: [SharedModule, RouterModule, MatCheckboxModule, ReactiveFormsModule],
   templateUrl: './stakeholder-new.component.html',
   styleUrls: ['./stakeholder-new.component.scss']
 })
-export class StakeholderNewComponent implements OnInit {
+export class StakeholderNewComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
+
+  private valueSubscriptions = new Subscription();
 
   stakeholderOptions: string[] = [
     'State Bank of India (SBI)',
@@ -96,31 +102,67 @@ export class StakeholderNewComponent implements OnInit {
       stakeholderName:            ['', Validators.required],
       stakeholderExecutiveName:   ['', Validators.required],
       stakeholderExecutiveContact:['', Validators.pattern(/^[0-9]{10}$/)],
+      
+      // --- THIS LINE IS MODIFIED ---
       stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
+      
+      sameAsContact: [false],
       stakeholderExecutiveEmail:  ['', Validators.email],
       valuationType: ['', Validators.required],
-
-      // now binding the full object
       location:  [null as PincodeModel|null, Validators.required],
       block:     [''],
       district:  [''],
       division:  [''],
       state:     [''],
       country:   [''],
-
       applicantName:    ['', Validators.required],
       applicantContact: ['', Validators.pattern(/^[0-9]{10}$/)],
       vehicleNumber:   [
       '',
       [
         Validators.required,
-        Validators.pattern(/^[a-zA-Z0-9]+$/) // Alphanumeric, no spaces
+        Validators.pattern(/^[a-zA-Z0-9]+$/)
       ]
       ],
       vehicleSegment:  [''],
       remarks: ['']
     });
+
+    this.setupWhatsappAutofill();
   }
+
+  ngOnDestroy(): void {
+    this.valueSubscriptions.unsubscribe();
+  }
+
+  setupWhatsappAutofill(): void {
+    const contactControl = this.form.get('stakeholderExecutiveContact');
+    const whatsappControl = this.form.get('stakeholderExecutiveWhatsapp');
+    const checkboxControl = this.form.get('sameAsContact');
+
+    if (!contactControl || !whatsappControl || !checkboxControl) {
+      return;
+    }
+
+    const checkboxSub = checkboxControl.valueChanges.subscribe(isChecked => {
+      if (isChecked) {
+        whatsappControl.setValue(contactControl.value);
+        whatsappControl.disable();
+      } else {
+        whatsappControl.enable();
+      }
+    });
+
+    const contactSub = contactControl.valueChanges.subscribe(newContactValue => {
+      if (checkboxControl.value) {
+        whatsappControl.setValue(newContactValue);
+      }
+    });
+
+    this.valueSubscriptions.add(checkboxSub);
+    this.valueSubscriptions.add(contactSub);
+  }
+
 
   onPincodeLookup() {
     const pin = this.form.get('pincode')!.value;
@@ -145,7 +187,6 @@ export class StakeholderNewComponent implements OnInit {
     });
   }
 
-  /** SelectionChange now passes the full PincodeModel */
   onLocationChange(selected: PincodeModel) {
     this.form.patchValue({
       location: selected,
@@ -157,7 +198,6 @@ export class StakeholderNewComponent implements OnInit {
     });
   }
 
-  /** Tell Angular how to match two PincodeModels in the UI */
   compareByName(a: PincodeModel, b: PincodeModel) {
     return a && b ? a.name === b.name : a === b;
   }
@@ -178,7 +218,6 @@ export class StakeholderNewComponent implements OnInit {
     const fd = new FormData();
     const v = this.form.getRawValue();
 
-    // simple key/value fields
     Object.entries({
       pincode: v.pincode,
       locationName: v.location!.name,
@@ -203,7 +242,6 @@ export class StakeholderNewComponent implements OnInit {
       fd.append(k, val as string);
     });
 
-    // files
     if (this.rcFile) {
       fd.append('RcFile', this.rcFile, this.rcFile.name);
     }
@@ -256,7 +294,7 @@ export class StakeholderNewComponent implements OnInit {
         error: e => {
           this.error = e.message;
           this.saving = this.saveInProgress = false;
-          this.saved = true;  // Indicate that save was attempted
+          this.saved = true;
         }
       });
   }

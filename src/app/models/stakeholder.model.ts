@@ -10,6 +10,7 @@ export interface VehicleLocation {
 
 // src/app/models/stakeholder.model.ts
 export interface Stakeholder {
+  id: string;
   name: string;
   executiveName: string;
   executiveContact: string;

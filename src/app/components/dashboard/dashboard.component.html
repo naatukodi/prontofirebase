@@ -1,14 +1,11 @@
 <div class="header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
-  <nav class="navigation-links">
-    <!-- Your nav links here: Dashboard, Stakeholder, Users, Logout -->
-  </nav>
+  <nav class="navigation-links"></nav>
   <div class="user-info" *ngIf="currentUser">
     Welcome, {{ currentUser.name }}
   </div>
 </div>
 
-
-<!-- Date filter with calendar -->
+<!-- Date filter -->
 <mat-form-field appearance="fill" style="margin-bottom: 12px;">
   <mat-label>Filter by Created Date</mat-label>
   <input matInput [matDatepicker]="picker" [(ngModel)]="filterDate" placeholder="Choose a date" (dateChange)="onDateFilterChange()">
@@ -39,9 +36,7 @@
 <div *ngIf="!loading && error" class="error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error">
-  <div *ngIf="filteredClaims.length === 0" class="empty">
-    No valuations to display.
-  </div>
+  <div *ngIf="filteredClaims.length === 0" class="empty">No valuations to display.</div>
 
   <table *ngIf="filteredClaims.length > 0"
          mat-table
@@ -127,11 +122,19 @@
       <td mat-cell *matCellDef="let v">{{ v.status }}</td>
     </ng-container>
 
+    <!-- ✅ ACTION BUTTON COLUMN -->
+    <ng-container matColumnDef="action">
+      <th mat-header-cell *matHeaderCellDef>ACTION</th>
+      <td mat-cell *matCellDef="let v">
+        <button mat-raised-button color="primary" (click)="openCase(v); $event.stopPropagation()">
+          ENTER
+        </button>
+      </td>
+    </ng-container>
+
+    <!-- ✅ REQUIRED ROW DEFINITIONS -->
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row
-        *matRowDef="let v; columns: displayedColumns; trackBy: trackByValuation"
-        class="clickable-row"
-        (click)="navigateToCurrent(v)">
-    </tr>
+    <tr mat-row *matRowDef="let v; columns: displayedColumns;"></tr>
+
   </table>
 </ng-container>
