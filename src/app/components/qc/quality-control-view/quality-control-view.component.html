@@ -341,6 +341,21 @@
     </div>
   </fieldset>
 
+
+  <!-- ✅ Quality Control Notes Section -->
+  <fieldset class="nested-group">
+    <legend>Quality Control Notes</legend>
+    <div class="notes-container">
+      <app-common-notes
+        [entityType]="'QC'"
+        [entityId]="valuationId"
+        [currentUser]="getCurrentUser()"
+        [collapsible]="true">
+      </app-common-notes>
+    </div>
+  </fieldset>
+
+
   <!-- Actions -->
   <fieldset>
     <div class="actions">

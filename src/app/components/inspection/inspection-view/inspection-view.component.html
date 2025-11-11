@@ -294,6 +294,21 @@
     </div>
   </fieldset>
 
+
+  <!-- ✅ Common Notes Section (Inspection Notes) -->
+  <fieldset class="nested-group">
+    <legend>Inspection Notes</legend>
+    <div class="notes-container">
+      <app-common-notes
+      [entityType]="'AVO'"
+      [entityId]="valuationId"
+      [currentUser]="getCurrentUser()"
+      [collapsible]="true">
+    </app-common-notes>
+    </div>
+    </fieldset>
+
+
   <!-- Actions -->
   <fieldset class="nested-group">
     <div class="actions">

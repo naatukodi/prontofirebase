@@ -10,6 +10,7 @@ import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
+import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 type ValuationType =
   | 'four-wheeler'
@@ -26,7 +27,8 @@ type ValuationType =
     SharedModule,
     WorkflowButtonsComponent,
     RouterModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CommonNotesComponent
   ],
   templateUrl: './inspection-view.component.html',
   styleUrls: ['./inspection-view.component.scss']
@@ -324,4 +326,18 @@ export class InspectionViewComponent implements OnInit {
   canDeleteInspection() {
     return this.authz.hasAnyPermission(['CanDeleteInspection']);
   }
+
+  getCurrentUser(): string {
+  try {
+    const userJson =
+      localStorage.getItem('currentUser') ||
+      localStorage.getItem('user') ||
+      '{}';
+    const user = JSON.parse(userJson);
+    return user.name || user.username || user.email || 'User';
+  } catch {
+    return 'User';
+  }
+}
+
 }

@@ -8,11 +8,15 @@ import { ValuationService } from '../../../services/valuation.service'; // Adjus
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { CommonNotesComponent } from '../../common-notes/common-notes.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-valuation-vehicle-details',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent],
+  imports: [SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule, CommonNotesComponent,],
   templateUrl: './valuation-vehicle-details.component.html',
   styleUrls: ['./valuation-vehicle-details.component.scss']
 })
@@ -162,5 +166,20 @@ export class ValuationVehicleDetailsComponent implements OnInit {
   
   canDeleteVehicleDetails() {
     return this.authz.hasAnyPermission(['CanDeleteVehicleDetails']);
+  }
+
+  // ✅ Added for Common Notes
+  getCurrentUser(): string {
+    try {
+      const userJson =
+        localStorage.getItem('currentUser') ||
+        localStorage.getItem('user') ||
+        '{}';
+      const user = JSON.parse(userJson);
+      return user.name || user.username || user.email || 'User';
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return 'User';
+    }
   }
 }

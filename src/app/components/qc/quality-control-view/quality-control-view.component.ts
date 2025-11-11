@@ -14,12 +14,14 @@ import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { CommonNotesComponent } from '../../common-notes/common-notes.component';
+
 
 
 @Component({
   selector: 'app-valuation-quality-control',
   standalone: true,
-  imports: [RouterModule, SharedModule, WorkflowButtonsComponent],
+  imports: [RouterModule, SharedModule, WorkflowButtonsComponent, CommonNotesComponent],
   templateUrl: './quality-control-view.component.html',
   styleUrls: ['./quality-control-view.component.scss']
 })
@@ -214,4 +216,18 @@ export class QualityControlViewComponent implements OnInit {
   canDeleteQualityControl() {
     return this.authz.hasAnyPermission(['CanDeleteQualityControl']);
   }
+
+  getCurrentUser(): string {
+  try {
+    const userJson =
+      localStorage.getItem('currentUser') ||
+      localStorage.getItem('user') ||
+      '{}';
+    const user = JSON.parse(userJson);
+    return user.name || user.username || user.email || 'User';
+  } catch {
+    return 'User';
+  }
+}
+
 }

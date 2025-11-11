@@ -1,0 +1,95 @@
+<div class="common-notes-container">
+  <!-- Header -->
+  <div *ngIf="showHeader" class="notes-header">
+    <div class="header-title">
+      <h3>Notes 
+        <span class="notes-count" *ngIf="!isLoading">({{ getNotesCount() }})</span>
+      </h3>
+      <button 
+        *ngIf="collapsible" 
+        class="btn-collapse" 
+        (click)="toggleCollapse()"
+        [title]="isCollapsed ? 'Expand' : 'Collapse'"
+      >
+        {{ isCollapsed ? '▶' : '▼' }}
+      </button>
+    </div>
+    <button class="btn-add" (click)="toggleForm()">
+      {{ showForm ? '✕ Close' : '+ Add Note' }}
+    </button>
+  </div>
+
+  <!-- Collapsed View -->
+  <div *ngIf="isCollapsed && showHeader && collapsible" class="collapsed-view">
+    <p class="collapsed-text">{{ getNotesCount() }} note(s) available</p>
+  </div>
+
+  <!-- Main Content (Hidden if Collapsed) -->
+  <div *ngIf="!isCollapsed || !collapsible" class="notes-content">
+    <!-- Error Message -->
+    <div *ngIf="error" class="alert alert-error">
+      {{ error }}
+      <button class="close-btn" (click)="error = null">×</button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading">
+      <span>Loading notes...</span>
+    </div>
+
+    <!-- Add Note Form -->
+    <div *ngIf="showForm && !isLoading" class="add-note-form">
+      <textarea
+        [(ngModel)]="newNoteText"
+        placeholder="Enter your note here..."
+        class="note-textarea"
+      ></textarea>
+      <div class="form-buttons">
+        <button class="btn-primary" (click)="createNote()">Save Note</button>
+        <button class="btn-secondary" (click)="toggleForm()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Notes List -->
+    <div *ngIf="!isLoading && notes.length === 0 && !showForm" class="empty-state">
+      <p>No notes yet. Click "Add Note" to create one.</p>
+    </div>
+
+    <div *ngIf="!isLoading" class="notes-list">
+      <div *ngFor="let note of notes" class="note-item">
+        <!-- View Mode -->
+        <div *ngIf="editingNoteId !== note.id" class="note-view">
+          <div class="note-content">
+            {{ note.note }}
+          </div>
+          <div class="note-meta">
+            <span class="entity-tag" [ngClass]="note.entityType.toLowerCase()">
+                {{ note.entityType }}
+            </span>
+            <span class="creator">👤 {{ note.createdBy || 'Unknown User'}}</span>
+            <span class="date">📅 {{ formatDate(note.createdDate) }}</span>
+            <span *ngIf="note.modifiedDate" class="modified">
+              ✏️ {{ formatDate(note.modifiedDate) }}
+            </span>
+          </div>
+          <div class="note-actions">
+            <button class="btn-edit" (click)="startEditing(note)">Edit</button>
+            <button class="btn-delete" (click)="deleteNote(note.id)">Delete</button>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div *ngIf="editingNoteId === note.id" class="note-edit">
+          <textarea
+            [(ngModel)]="editNoteText"
+            class="note-textarea"
+          ></textarea>
+          <div class="form-buttons">
+            <button class="btn-primary" (click)="updateNote(note.id)">Save</button>
+            <button class="btn-secondary" (click)="cancelEditing()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

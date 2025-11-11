@@ -6,12 +6,15 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { FormsModule } from '@angular/forms';
+import { CommonNotesComponent } from '../../common-notes/common-notes.component';
+
 
 @Component({
   selector: 'app-stakeholder-view',
   templateUrl: './stakeholder-view.component.html',
   styleUrls: ['./stakeholder-view.component.scss'],
-  imports: [CommonModule, WorkflowButtonsComponent, SharedModule, RouterModule],
+  imports: [CommonModule, WorkflowButtonsComponent, SharedModule, RouterModule,FormsModule, CommonNotesComponent],
   standalone: true
 })
 export class StakeholderViewComponent implements OnInit {
@@ -28,6 +31,8 @@ export class StakeholderViewComponent implements OnInit {
   otherDocuments: Array<{ type: string; filePath: string; uploadedAt: string }> = [];
 
   stakeholder!: {
+    id: string;
+    Id: string;
     name: string;
     executiveName: string;
     executiveContact: string;
@@ -75,7 +80,11 @@ export class StakeholderViewComponent implements OnInit {
     ).subscribe({
       next: data => {
         console.log('Stakeholder data loaded:', data);
-        this.stakeholder = data;
+        const normalizedData: any = data;
+        this.stakeholder = {
+          ...(data as any),
+          id: (data as any).id || (data as any).Id || this.valuationId 
+        };
         this.setOtherDocuments();
         this.loading     = false;
       },
@@ -142,4 +151,16 @@ export class StakeholderViewComponent implements OnInit {
   canDeleteStakeholder() {
     return this.authz.hasAnyPermission(['CanDeleteStakeholder']);
   }
+
+  getCurrentUser(): string {
+  try {
+    // Get from localStorage
+    const userJson = localStorage.getItem('currentUser') || localStorage.getItem('user') || '{}';
+    const user = JSON.parse(userJson);
+    return user.name || user.username || user.email || 'User';
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return 'User';
+  }
+}
 }

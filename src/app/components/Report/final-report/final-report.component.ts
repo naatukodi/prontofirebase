@@ -10,12 +10,13 @@ import { HttpParams } from '@angular/common/http';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 
 @Component({
   selector: 'app-final-report-view',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent],
+  imports: [SharedModule, WorkflowButtonsComponent, CommonNotesComponent],
   templateUrl: './final-report.component.html',
   styleUrls: ['./final-report.component.scss'],
 })
@@ -128,4 +129,18 @@ export class FinalReportComponent implements OnInit {
   canDeleteFinalReport() {
     return this.authz.hasAnyPermission(['CanDeleteFinalReport']);
   }
+
+  getCurrentUser(): string {
+  try {
+    const userJson =
+      localStorage.getItem('currentUser') ||
+      localStorage.getItem('user') ||
+      '{}';
+    const user = JSON.parse(userJson);
+    return user.name || user.username || user.email || 'User';
+  } catch {
+    return 'User';
+  }
+}
+
 }

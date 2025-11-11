@@ -161,6 +161,19 @@
       </div>
     </div>
   </fieldset>
+  
+  <!-- Common Notes-->
+  <fieldset class="nested-group">
+    <legend>StakeHolder Notes</legend>
+    <div class="notes-container">
+      <app-common-notes
+        [entityType]="'Stakeholder'"
+        [entityId]="valuationId"
+        [currentUser]="getCurrentUser()"
+        [collapsible]="true">
+      </app-common-notes>
+    </div>
+  </fieldset>
 
   <!-- Actions -->
   <div class="actions">
