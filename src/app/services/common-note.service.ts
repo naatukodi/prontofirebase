@@ -2,15 +2,19 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { CommonNote, CreateCommonNoteDto, UpdateCommonNoteDto } from '../models/common-note.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommonNoteService {
-  private apiUrl = 'http://localhost:5221/api/commonnote';
+
+  
+  private apiUrl = `${environment.apiBaseUrl}CommonNote`;
+
   private notesCache = new Map<string, BehaviorSubject<CommonNote[]>>();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   private getCacheKey(entityType: string, entityId: string): string {
     return `${entityType}_${entityId}`;
@@ -21,20 +25,19 @@ export class CommonNoteService {
     return this.http.get<CommonNote[]>(this.apiUrl);
   }
 
-  // Get notes by entity type and ID with caching
+  // Get notes by entity type and ID (with caching)
   getNotesByEntity(entityType: string, entityId: string): Observable<CommonNote[]> {
     const cacheKey = this.getCacheKey(entityType, entityId);
-    
+
     if (!this.notesCache.has(cacheKey)) {
       const subject = new BehaviorSubject<CommonNote[]>([]);
       this.notesCache.set(cacheKey, subject);
 
-      // ✅ FIXED: Use ONLY the object syntax
       this.http.get<CommonNote[]>(
         `${this.apiUrl}/entity/${entityType}/${entityId}`
       ).subscribe({
         next: (notes: CommonNote[]) => {
-          console.log('Notes loaded:', notes);
+          console.log('Notes loaded from API:', notes);
           subject.next(notes);
         },
         error: (error: HttpErrorResponse) => {
@@ -47,18 +50,18 @@ export class CommonNoteService {
     return this.notesCache.get(cacheKey)!.asObservable();
   }
 
-  // Get single note by ID
+  // Get a single note
   getNoteById(id: string): Observable<CommonNote> {
     return this.http.get<CommonNote>(`${this.apiUrl}/${id}`);
   }
 
-  // Create new note
+  // Create a new note
   createNote(createDto: CreateCommonNoteDto): Observable<CommonNote> {
     console.log('Creating note:', createDto);
     return this.http.post<CommonNote>(this.apiUrl, createDto);
   }
 
-  // Update note
+  // Update existing note
   updateNote(id: string, updateDto: UpdateCommonNoteDto): Observable<CommonNote> {
     return this.http.put<CommonNote>(`${this.apiUrl}/${id}`, updateDto);
   }
@@ -68,13 +71,13 @@ export class CommonNoteService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // Clear cache for specific entity
+  // Clear specific cache
   clearCache(entityType: string, entityId: string): void {
     const cacheKey = this.getCacheKey(entityType, entityId);
     this.notesCache.delete(cacheKey);
   }
 
-  // Clear all cache
+  // Clear all caches
   clearAllCache(): void {
     this.notesCache.clear();
   }
