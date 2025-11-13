@@ -99,6 +99,28 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
     ).pipe(catchError(this.handleError));
   }
 
+  /**
+ * ✅ NEW METHOD: Check if all mandatory photos are uploaded
+ * Returns: { isComplete: boolean, missingPhotos: string[] }
+ */
+
+  checkMandatoryPhotos(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<{ isComplete: boolean; missingPhotos: string[] }> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.get<{ isComplete: boolean; missingPhotos: string[] }>(
+      `${this.baseUrl}/${valuationId}/photos/validate`,
+      { params }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   deleteVehicleImage(
     valuationId: string,
     imageName: string

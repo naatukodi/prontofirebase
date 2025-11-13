@@ -39,6 +39,7 @@ export class StakeholderViewComponent implements OnInit {
     executiveWhatsapp: string;
     executiveEmail: string;
     valuationType: string | null;
+    vehicleNumber: string | null;
     vehicleSegment: string | null;
     vehicleLocation: {
       pincode: string | null;
@@ -83,7 +84,8 @@ export class StakeholderViewComponent implements OnInit {
         const normalizedData: any = data;
         this.stakeholder = {
           ...(data as any),
-          id: (data as any).id || (data as any).Id || this.valuationId 
+          id: (data as any).id || (data as any).Id || this.valuationId,
+          vehicleNumber: (data as any).vehicleNumber || this.vehicleNumber 
         };
         this.setOtherDocuments();
         this.loading     = false;
