@@ -6,19 +6,50 @@
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
     [applicantContact]="applicantContact"
-    [valuationType]="valuationType ?? ''">
+    [valuationType]="valuationType ?? ''"
+  >
   </app-workflow-buttons>
 
   <!-- Loading & Error -->
   <div *ngIf="loading">Loading inspection details …</div>
   <div *ngIf="error" class="error">{{ error }}</div>
 
-  <!-- Default Values & Action Buttons -->
-    <div class="actions">
-      <button mat-stroked-button type="button" (click)="updateDefaultValues()">
-        Set Default Values
+  <!-- ✅ FIXED: MANDATORY PHOTOS VALIDATION ALERT - Only show when photos are actually missing -->
+  <div class="error-alert" *ngIf="mandatoryPhotosError && missingPhotos && missingPhotos.length > 0">
+    <div class="alert-header">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-title">Cannot Save - Missing Mandatory Images</span>
+    </div>
+    <div class="alert-content">
+      <p class="error-message">
+        {{ missingPhotos.length }} mandatory images are missing.
+      </p>
+      <div class="missing-photos-list">
+        <strong>Missing Photos:</strong>
+        <ul>
+          <li *ngFor="let photo of missingPhotos">
+            <span class="icon">✗</span>
+            {{ photo }}
+          </li>
+        </ul>
+      </div>
+      <button
+        mat-raised-button
+        color="warn"
+        (click)="goBackToPhotoUpload()"
+        class="go-back-btn"
+      >
+        ← Go Back to Upload Photos
       </button>
     </div>
+  </div>
+
+  <!-- Default Values & Action Buttons -->
+  <div class="actions">
+    <button mat-stroked-button type="button" (click)="updateDefaultValues()">
+      Set Default Values
+    </button>
+  </div>
 
   <ng-container *ngIf="!loading && !error">
     <!-- Inspection Info -->
@@ -36,12 +67,14 @@
             matInput
             type="date"
             formControlName="dateOfInspection"
-            [max]="maxDate"      
+            [max]="maxDate"
           />
           <mat-error *ngIf="form.get('dateOfInspection')?.hasError('required')">
             Date is required.
           </mat-error>
-          <mat-error *ngIf="form.get('dateOfInspection')?.hasError('futureDate')">
+          <mat-error
+            *ngIf="form.get('dateOfInspection')?.hasError('futureDate')"
+          >
             Cannot select a future date.
           </mat-error>
         </mat-form-field>
@@ -175,16 +208,16 @@
       <legend>Structural & Body Checks</legend>
       <div class="grid">
         <mat-form-field *ngIf="showField('chassisCondition')" appearance="fill">
-          <mat-label>Chassis Condition</mat-label>  
+          <mat-label>Chassis Condition</mat-label>
           <input matInput formControlName="chassisCondition" />
         </mat-form-field>
 
-         <mat-form-field *ngIf="showField('exteriorCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('exteriorCondition')" appearance="fill">
           <mat-label>Exterior Condition</mat-label>
           <input matInput formControlName="exteriorCondition" />
         </mat-form-field>
 
-         <mat-form-field *ngIf="showField('interiorCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('interiorCondition')" appearance="fill">
           <mat-label>Interior Condition</mat-label>
           <input matInput formControlName="interiorCondition" />
         </mat-form-field>
@@ -355,7 +388,7 @@
       </mat-form-field>
     </fieldset>
 
-    <!-- …inside your template… -->
+    <!-- View / Upload Images -->
     <fieldset class="nested-group">
       <div class="actions">
         <button
@@ -369,24 +402,52 @@
       </div>
     </fieldset>
 
-<!-- Default Values & Action Buttons -->
+    <!-- Default Values & Action Buttons -->
     <div class="actions">
       <button mat-stroked-button type="button" (click)="updateDefaultValues()">
         Set Default Values
       </button>
     </div>
 
+    <!-- ✅ UPDATED: Save, Submit, Cancel Buttons with Mandatory Photo Validation -->
     <fieldset>
       <div class="button-group">
-        <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">
+        <button
+          mat-raised-button
+          color="accent"
+          type="button"
+          [disabled]="saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)"
+          [title]="
+            mandatoryPhotosError && missingPhotos.length > 0
+              ? 'Upload all mandatory photos first'
+              : 'Save inspection'
+          "
+          (click)="onSave()"
+        >
           {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
         </button>
 
-        <button mat-raised-button color="primary" type="submit" [disabled]="!saved || saving">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!saved || saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)"
+          [title]="
+            mandatoryPhotosError && missingPhotos.length > 0
+              ? 'Upload all mandatory photos first'
+              : 'Submit inspection'
+          "
+        >
           {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
         </button>
 
-        <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          [disabled]="saving"
+          (click)="onCancel()"
+        >
           Cancel
         </button>
       </div>

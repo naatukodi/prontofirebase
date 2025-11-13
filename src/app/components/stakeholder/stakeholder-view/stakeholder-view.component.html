@@ -80,10 +80,12 @@
         />
       </mat-form-field>
 
+      <!--
       <mat-form-field appearance="fill">
         <mat-label>Vehicle Segment</mat-label>
         <input matInput [value]="stakeholder.vehicleSegment || '-'" readonly />
       </mat-form-field>
+      -->
 
       <!-- Location composite: you can pick whichever sub-fields you want -->
       <mat-form-field appearance="fill">
@@ -122,6 +124,24 @@
         <mat-label>Applicant Contact</mat-label>
         <input matInput [value]="stakeholder.applicant.contact" readonly />
       </mat-form-field>
+    </div>
+  </fieldset>
+
+  <!-- ✅ Vehicle Details Section (Simplified) -->
+  <fieldset class="nested-group">
+    <legend>Vehicle Details</legend>
+    <div class="grid">
+
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Number</mat-label>
+        <input matInput [value]="stakeholder.vehicleNumber || '-'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Vehicle Segment</mat-label>
+        <input matInput [value]="stakeholder.vehicleSegment || '-'" readonly />
+      </mat-form-field>
+
     </div>
   </fieldset>
 
