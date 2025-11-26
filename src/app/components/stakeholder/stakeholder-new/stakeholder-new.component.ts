@@ -1,4 +1,5 @@
-// PASTE THIS ENTIRE FILE
+// src/app/components/stakeholder/stakeholder-new/stakeholder-new.component.ts
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   FormBuilder,
@@ -9,7 +10,8 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
-import { Subscription } from 'rxjs';
+import { Subscription, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService }    from '../../../services/workflow.service';
@@ -21,6 +23,9 @@ import {
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+
+// ✅ ADD THIS IMPORT
+import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
 
 @Component({
   selector: 'app-stakeholder-new',
@@ -36,6 +41,20 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
   applicantContact!: string;
 
   private valueSubscriptions = new Subscription();
+
+  // ✅ ADD THESE PROPERTIES FOR DUPLICATE TRACKING
+  duplicateInfo: VehicleDuplicateCheckResponse = {
+    isDuplicate: false,
+    isVehicleNumberExists: false,
+    isEngineNumberExists: false,
+    isChassisNumberExists: false,
+    totalDuplicatesFound: 0,
+    existingRecords: [],
+    messages: []
+  };
+  
+  isCheckingDuplicate = false;
+  showDuplicateWarning = false;
 
   stakeholderOptions: string[] = [
     'State Bank of India (SBI)',
@@ -96,16 +115,13 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
 
     this.form = this.fb.group({
       pincode: [
-      '',
-      [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
+        '',
+        [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
       ],
       stakeholderName:            ['', Validators.required],
       stakeholderExecutiveName:   ['', Validators.required],
       stakeholderExecutiveContact:['', Validators.pattern(/^[0-9]{10}$/)],
-      
-      // --- THIS LINE IS MODIFIED ---
       stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
-      
       sameAsContact: [false],
       stakeholderExecutiveEmail:  ['', Validators.email],
       valuationType: ['', Validators.required],
@@ -118,17 +134,20 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       applicantName:    ['', Validators.required],
       applicantContact: ['', Validators.pattern(/^[0-9]{10}$/)],
       vehicleNumber:   [
-      '',
-      [
-        Validators.required,
-        Validators.pattern(/^[a-zA-Z0-9]+$/)
-      ]
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^[a-zA-Z0-9]+$/)
+        ]
       ],
       vehicleSegment:  [''],
       remarks: ['']
     });
 
     this.setupWhatsappAutofill();
+    
+    // ✅ ADD THIS: Setup duplicate checking
+    this.setupDuplicateCheck();
   }
 
   ngOnDestroy(): void {
@@ -163,6 +182,79 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.valueSubscriptions.add(contactSub);
   }
 
+  // ✅ ADD THIS NEW METHOD
+  setupDuplicateCheck(): void {
+    // Monitor vehicle number changes for duplicate check
+    const vehicleNumberControl = this.form.get('vehicleNumber');
+    
+    if (!vehicleNumberControl) return;
+
+    const duplicateCheckSub = vehicleNumberControl.valueChanges
+      .pipe(
+        debounceTime(1000), // Wait 1 second after user stops typing
+        distinctUntilChanged()
+      )
+      .subscribe(vehicleNumber => {
+        // Only check if vehicle number has value and is valid format
+        if (vehicleNumber && vehicleNumber.length >= 4) {
+          this.checkForDuplicates(vehicleNumber);
+        } else {
+          this.resetDuplicateInfo();
+        }
+      });
+
+    this.valueSubscriptions.add(duplicateCheckSub);
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  checkForDuplicates(vehicleNumber: string): void {
+    this.isCheckingDuplicate = true;
+    
+    // Only checking vehicle number (undefined for engine and chassis)
+    this.valuationSvc.checkDuplicateVehicle(vehicleNumber, undefined, undefined)
+      .subscribe({
+        next: (response) => {
+          this.isCheckingDuplicate = false;
+          this.handleDuplicateResponse(response);
+        },
+        error: (error) => {
+          this.isCheckingDuplicate = false;
+          console.error('Error checking duplicates:', error);
+          // Don't show error to user, just log it
+        }
+      });
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  handleDuplicateResponse(response: VehicleDuplicateCheckResponse): void {
+    this.duplicateInfo = response;
+    this.showDuplicateWarning = response.isDuplicate;
+
+    if (response.isDuplicate) {
+      console.log('⚠️ Duplicate vehicle detected!');
+      console.log('Messages:', response.messages);
+      console.log('Existing records:', response.existingRecords);
+    }
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  resetDuplicateInfo(): void {
+    this.duplicateInfo = {
+      isDuplicate: false,
+      isVehicleNumberExists: false,
+      isEngineNumberExists: false,
+      isChassisNumberExists: false,
+      totalDuplicatesFound: 0,
+      existingRecords: [],
+      messages: []
+    };
+    this.showDuplicateWarning = false;
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  dismissWarning(): void {
+    this.showDuplicateWarning = false;
+  }
 
   onPincodeLookup() {
     const pin = this.form.get('pincode')!.value;
@@ -299,11 +391,26 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ✅ UPDATED THIS METHOD TO SHOW DUPLICATE WARNING
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
+    // ✅ ADD DUPLICATE CHECK CONFIRMATION
+    if (this.duplicateInfo.isDuplicate) {
+      const confirmMessage = 
+        '⚠️ DUPLICATE VEHICLE DETECTED!\n\n' +
+        this.duplicateInfo.messages.join('\n') +
+        '\n\nFound ' + this.duplicateInfo.totalDuplicatesFound + ' existing record(s).\n\n' +
+        'Do you want to proceed anyway?';
+
+      if (!confirm(confirmMessage)) {
+        return; // User cancelled
+      }
+    }
+
     this.saving = this.submitInProgress = true;
     const payload = this.buildFormData();
     const vn = this.form.get('vehicleNumber')!.value;
@@ -326,19 +433,18 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
             vn,
             ac
           )
-        )
-        ,
-      switchMap(() =>
-        this.workflowSvc.updateWorkflowTable(
-          this.valuationId,
-          vn,
-          ac,
-          {
+        ),
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            vn,
+            ac,
+            {
               workflow: 'Stakeholder',
               workflowStepOrder: 1
-          }
+            }
+          )
         )
-      )
       )
       .subscribe({
         next: () => {

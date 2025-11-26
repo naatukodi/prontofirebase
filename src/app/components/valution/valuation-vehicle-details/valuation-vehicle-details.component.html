@@ -5,6 +5,15 @@
 
 <ng-container *ngIf="!loading && !error && vehicleDetails">
 
+  <!-- 🚩 Duplicate summary bar -->
+<div *ngIf="duplicateInfo?.isDuplicate" class="duplicate-summary-bar">
+  <span class="warning-icon">⚠️</span>
+  <span>
+    This record matches {{ totalDuplicatesFound }} existing valuation{{ totalDuplicatesFound > 1 ? 's' : '' }} for one or more key vehicle fields.
+
+  </span>
+</div>
+
     <app-workflow-buttons
         [id]="valuationId"
         [vehicleNumber]="vehicleNumber"
@@ -38,6 +47,7 @@
         <mat-form-field appearance="fill">
           <mat-label>Registration Number</mat-label>
           <input matInput [value]="vehicleDetails.registrationNumber" readonly />
+          <span *ngIf="duplicateInfo?.isVehicleNumberExists" class="duplicate-indicator" title="Duplicate vehicle number">🚩</span>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
@@ -84,11 +94,13 @@
         <mat-form-field appearance="fill">
           <mat-label>Engine Number</mat-label>
           <input matInput [value]="vehicleDetails.engineNumber" readonly />
+          <span *ngIf="duplicateInfo?.isEngineNumberExists" class="duplicate-indicator" title="Duplicate engine number">🚩</span>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Chassis Number</mat-label>
           <input matInput [value]="vehicleDetails.chassisNumber" readonly />
+          <span *ngIf="duplicateInfo?.isChassisNumberExists" class="duplicate-indicator" title="Duplicate chassis number">🚩</span>
         </mat-form-field>
 
         <mat-form-field appearance="fill">

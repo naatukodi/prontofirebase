@@ -1,6 +1,58 @@
-<!-- src/app/valuation-stakeholder-new/stakeholder-new.component.html -->
+<!-- src/app/components/stakeholder/stakeholder-new/stakeholder-new.component.html -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <h2>Stakeholder New Request</h2>
+
+  <!-- ✅ DUPLICATE WARNING ALERT -->
+  <div *ngIf="showDuplicateWarning" class="duplicate-warning-card">
+    <div class="warning-header">
+      <span class="warning-icon">⚠️</span>
+      <h3>Duplicate Vehicle Number Detected</h3>
+      <button type="button" class="close-btn" (click)="dismissWarning()">×</button>
+    </div>
+    
+    <div class="warning-body">
+      <div class="warning-messages">
+        <p *ngFor="let message of duplicateInfo.messages" class="warning-message">
+          • {{ message }}
+        </p>
+      </div>
+
+      <!-- Existing Records Table -->
+      <div class="existing-records" *ngIf="duplicateInfo.existingRecords.length > 0">
+        <h4>Existing Records:</h4>
+        <div class="table-responsive">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Valuation ID</th>
+                <th>Vehicle Number</th>
+                <th>Status</th>
+                <th>Created Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let record of duplicateInfo.existingRecords">
+                <td>{{ record.valuationId }}</td>
+                <td>
+                  <span class="highlight">{{ record.vehicleNumber }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + record.status.toLowerCase()">
+                    {{ record.status }}
+                  </span>
+                </td>
+                <td>{{ record.createdDate | date: 'dd-MMM-yyyy hh:mm a' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="warning-note">
+        <strong>Note:</strong> You can still proceed with registration. This vehicle may need review.
+      </p>
+    </div>
+  </div>
 
   <!-- PIN-Code lookup -->
   <mat-form-field appearance="fill" class="full-width">
@@ -40,12 +92,11 @@
         <input matInput formControlName="stakeholderExecutiveContact" maxlength="10" />
       </mat-form-field>
       
-      <!-- To make what'sup number same as contact number-->
+      <!-- To make WhatsApp number same as contact number -->
       <div class="grid-item full-width">
         <div class="whatsapp-section">
           <mat-form-field appearance="fill" class="whatsapp-field">
             <mat-label>WhatsApp Number</mat-label>
-            <!-- --- THIS LINE IS MODIFIED --- -->
             <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
           </mat-form-field>
 
@@ -134,12 +185,12 @@
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Applicant Contact</mat-label>
-        <input matInput formControlName="applicantContact"maxlength="10" />
+        <input matInput formControlName="applicantContact" maxlength="10" />
       </mat-form-field>
     </div>
   </fieldset>
 
-  <!--Remarks-->
+  <!-- Remarks -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <mat-form-field appearance="fill" class="full-width">
@@ -148,14 +199,25 @@
     </mat-form-field>
   </fieldset>
 
-
-  <!-- Vehicle Details Group -->
-  <fieldset class="nested-group">
+  <!-- Vehicle Details Group - WITH DUPLICATE INDICATOR -->
+  <fieldset class="nested-group" [class.field-has-duplicate]="duplicateInfo.isVehicleNumberExists">
     <legend>Vehicle Details</legend>
     <div class="grid">
       <mat-form-field appearance="fill">
-        <mat-label>Vehicle Number</mat-label>
-        <input matInput formControlName="vehicleNumber" />
+        <mat-label>
+          Vehicle Number
+          <span *ngIf="duplicateInfo.isVehicleNumberExists" class="duplicate-badge" title="Duplicate detected">
+            🚩 Duplicate
+          </span>
+          <span *ngIf="isCheckingDuplicate" class="checking-badge">
+            Checking...
+          </span>
+        </mat-label>
+        <input 
+          matInput 
+          formControlName="vehicleNumber"
+          [class.has-warning]="duplicateInfo.isVehicleNumberExists"
+          autocomplete="off" />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Vehicle Segment</mat-label>
@@ -199,7 +261,7 @@
     </div>
   </fieldset>
 
-  <!-- Action Buttons -->
+  <!-- Action Buttons - UPDATED WITH DUPLICATE WARNING -->
   <div class="button-group" style="margin-top:1rem; display:flex; gap:1rem;">
     <button
       mat-raised-button
@@ -213,11 +275,13 @@
 
     <button
       mat-raised-button
-      color="primary"
+      [color]="duplicateInfo.isDuplicate ? 'warn' : 'primary'"
       type="submit"
       [disabled]="!saved || saving"
     >
-      {{ submitInProgress ? 'Submitting…' : 'Submit' }}
+      <span *ngIf="!submitInProgress && !duplicateInfo.isDuplicate">Submit</span>
+      <span *ngIf="!submitInProgress && duplicateInfo.isDuplicate">⚠️ Submit Anyway</span>
+      <span *ngIf="submitInProgress">Submitting…</span>
     </button>
 
     <button
