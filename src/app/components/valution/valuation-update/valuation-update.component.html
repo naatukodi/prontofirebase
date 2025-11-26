@@ -1,8 +1,98 @@
-<!-- src/app/valuation‐update/valuation‐update.component.html -->
+<!-- src/app/components/valution/valuation-update/valuation-update.component.html -->
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <h2>Valuation Update</h2>
 
+  <!-- 🔥 COLLAPSIBLE DUPLICATE WARNING (REPLACES OLD WARNING CARD) -->
+
+  <!-- Compact Summary Bar -->
+  <div *ngIf="duplicateInfo.isDuplicate && !showDuplicateExpanded" class="duplicate-summary-bar">
+    <span class="warning-icon">⚠️</span>
+
+    <span>Warning: {{ duplicateInfo.messages[0] }}</span>
+
+    <button 
+      type="button" 
+      class="view-details-link" 
+      (click)="showDuplicateExpanded = true">
+      View Details
+    </button>
+  </div>
+
+  <!-- Expanded Detailed Warning Card -->
+  <div *ngIf="duplicateInfo.isDuplicate && showDuplicateExpanded" class="duplicate-warning-card">
+    <div class="warning-header">
+      <span class="warning-icon">⚠️</span>
+      <h3>Duplicate Vehicle Details Detected</h3>
+      <button 
+        type="button" 
+        class="close-btn" 
+        (click)="showDuplicateExpanded = false">
+        ×
+      </button>
+    </div>
+    
+    <div class="warning-body">
+      <div class="warning-messages">
+        <p *ngFor="let message of duplicateInfo.messages" class="warning-message">
+          • {{ message }}
+        </p>
+      </div>
+
+      <!-- Existing Records Table -->
+      <div class="existing-records" *ngIf="duplicateInfo.existingRecords.length > 0">
+        <h4>Existing Records:</h4>
+        <div class="table-responsive">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Valuation ID</th>
+                <th>Vehicle Number</th>
+                <th>Engine Number</th>
+                <th>Chassis Number</th>
+                <th>Status</th>
+                <th>Matched Fields</th>
+                <th>Created Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let record of duplicateInfo.existingRecords">
+                <td>{{ record.valuationId }}</td>
+                
+                <td [class.highlight]="duplicateInfo.isVehicleNumberExists">
+                  {{ record.vehicleNumber }}
+                </td>
+
+                <td [class.highlight]="duplicateInfo.isEngineNumberExists">
+                  {{ record.engineNumber || '-' }}
+                </td>
+
+                <td [class.highlight]="duplicateInfo.isChassisNumberExists">
+                  {{ record.chassisNumber || '-' }}
+                </td>
+
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + record.status.toLowerCase()">
+                    {{ record.status }}
+                  </span>
+                </td>
+
+                <td>{{ record.matchedField }}</td>
+
+                <td>{{ record.createdDate | date: 'dd-MMM-yyyy HH:mm' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="warning-note">
+        <strong>Note:</strong> You can proceed, but this case will be marked for review.
+      </p>
+    </div>
+  </div>
+
+  <!-- WORKFLOW BUTTONS -->
   <app-workflow-buttons
       [id]="valuationId"
       [vehicleNumber]="vehicleNumber"
@@ -16,406 +106,290 @@
 
   <ng-container *ngIf="!loading && !error">
     <!-- VEHICLE IDENTIFICATION GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Vehicle Identification</legend>
       <div class="grid">
         <mat-form-field appearance="fill">
-          <mat-label>Registration Number</mat-label>
-          <input
-            matInput
-            formControlName="registrationNumber"
-            readonly
-          />
+          <mat-label>
+            Registration Number
+            <span *ngIf="duplicateInfo.isVehicleNumberExists" class="duplicate-badge" title="Duplicate detected">
+              🚩 Duplicate
+            </span>
+            <span *ngIf="isCheckingDuplicate" class="checking-badge">
+              Checking...
+            </span>
+          </mat-label>
+          <input matInput formControlName="registrationNumber" readonly />
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Make</mat-label>
-          <input
-            matInput
-            formControlName="make"
-          />
+          <input matInput formControlName="make"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Model</mat-label>
-          <input
-            matInput
-            formControlName="model"
-          />
+          <input matInput formControlName="model"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Body Type</mat-label>
-          <input
-            matInput
-            formControlName="bodyType"
-          />
+          <input matInput formControlName="bodyType"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Year of Mfg</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="yearOfMfg"
-          />
+          <input matInput type="number" formControlName="yearOfMfg"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Month of Mfg</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="monthOfMfg"
-          />
+          <input matInput type="number" formControlName="monthOfMfg"/>
         </mat-form-field>
       </div>
     </fieldset>
 
     <!-- ENGINE & SPECS GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Manufacturing & Engine Details</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
-          <mat-label>Engine Number</mat-label>
-          <input
-            matInput
-            formControlName="engineNumber"
-          />
+          <mat-label>
+            Engine Number
+            <span *ngIf="duplicateInfo.isEngineNumberExists" class="duplicate-badge" title="Duplicate detected">🚩 Duplicate</span>
+            <span *ngIf="isCheckingDuplicate" class="checking-badge">Checking...</span>
+          </mat-label>
+          <input matInput formControlName="engineNumber"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Chassis Number</mat-label>
-          <input
-            matInput
-            formControlName="chassisNumber"
-          />
+          <mat-label>
+            Chassis Number
+            <span *ngIf="duplicateInfo.isChassisNumberExists" class="duplicate-badge" title="Duplicate detected">🚩 Duplicate</span>
+            <span *ngIf="isCheckingDuplicate" class="checking-badge">Checking...</span>
+          </mat-label>
+          <input matInput formControlName="chassisNumber"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Engine CC</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="engineCC"
-          />
+          <input matInput type="number" formControlName="engineCC"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Gross Vehicle Weight</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="grossVehicleWeight"
-          />
+          <input matInput type="number" formControlName="grossVehicleWeight"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Seating Capacity</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="seatingCapacity"
-          />
+          <input matInput type="number" formControlName="seatingCapacity"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- REGISTRATION & RTO GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Registration & RTO</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>Date of Registration</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="dateOfRegistration"
-          />
+          <input matInput type="date" formControlName="dateOfRegistration"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>RTO</mat-label>
-          <input
-            matInput
-            formControlName="rto"
-          />
+          <input matInput formControlName="rto"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Class of Vehicle</mat-label>
-          <input
-            matInput
-            formControlName="classOfVehicle"
-          />
+          <input matInput formControlName="classOfVehicle"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Category Code</mat-label>
-          <input
-            matInput
-            formControlName="categoryCode"
-          />
+          <input matInput formControlName="categoryCode"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Norms Type</mat-label>
-          <input
-            matInput
-            formControlName="normsType"
-          />
+          <input matInput formControlName="normsType"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Maker Variant</mat-label>
-          <input
-            matInput
-            formControlName="makerVariant"
-          />
+          <input matInput formControlName="makerVariant"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- OWNER & ADDRESS GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Owner & Address</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>Owner Name</mat-label>
-          <input
-            matInput
-            formControlName="ownerName"
-          />
+          <input matInput formControlName="ownerName"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Present Address</mat-label>
-          <input
-            matInput
-            formControlName="presentAddress"
-          />
+          <input matInput formControlName="presentAddress"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Permanent Address</mat-label>
-          <input
-            matInput
-            formControlName="permanentAddress"
-          />
+          <input matInput formControlName="permanentAddress"/>
         </mat-form-field>
 
-        <mat-checkbox formControlName="hypothecation">
-          Hypothecation
-        </mat-checkbox>
+        <mat-checkbox formControlName="hypothecation">Hypothecation</mat-checkbox>
 
         <mat-form-field appearance="fill">
           <mat-label>Lender</mat-label>
-          <input
-            matInput
-            formControlName="lender"
-          />
+          <input matInput formControlName="lender"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- INSURANCE GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Insurance Details</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>Insurer</mat-label>
-          <input
-            matInput
-            formControlName="insurer"
-          />
+          <input matInput formControlName="insurer"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Insurance Policy No</mat-label>
-          <input
-            matInput
-            formControlName="insurancePolicyNo"
-          />
+          <input matInput formControlName="insurancePolicyNo"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Insurance Valid Up To</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="insuranceValidUpTo"
-          />
+          <input matInput type="date" formControlName="insuranceValidUpTo"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- PERMIT & FITNESS GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Permit & Fitness</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>Permit No</mat-label>
-          <input
-            matInput
-            formControlName="permitNo"
-          />
+          <input matInput formControlName="permitNo"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Permit Valid Up To</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="permitValidUpTo"
-            [value]="form.get('permitValidUpTo')?.value || ''"
-          />
+          <input matInput type="date" formControlName="permitValidUpTo"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Permit Type</mat-label>
-          <input
-            matInput
-            formControlName="permitType"
-          />
+          <input matInput formControlName="permitType"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Permit Issued On</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="permitIssued"
-          />
+          <input matInput type="date" formControlName="permitIssued"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Permit From</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="permitFrom"
-          />
+          <input matInput type="date" formControlName="permitFrom"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Fitness No</mat-label>
-          <input
-            matInput
-            formControlName="fitnessNo"
-          />
+          <input matInput formControlName="fitnessNo"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Fitness Valid To</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="fitnessValidTo"
-          />
+          <input matInput type="date" formControlName="fitnessValidTo"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- POLLUTION & TAX GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Pollution Certificate & Tax</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>Pollution Certificate No</mat-label>
-          <input
-            matInput
-            formControlName="pollutionCertificateNumber"
-          />
+          <input matInput formControlName="pollutionCertificateNumber"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Pollution Valid Up To</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="pollutionCertificateUpto"
-          />
+          <input matInput type="date" formControlName="pollutionCertificateUpto"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Tax Upto</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="taxUpto"
-          />
+          <input matInput type="date" formControlName="taxUpto"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Tax Paid Up To</mat-label>
-          <input
-            matInput
-            formControlName="taxPaidUpTo"
-          />
+          <input matInput formControlName="taxPaidUpTo"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
     <!-- ADDITIONAL INFO GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Additional Info</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill">
           <mat-label>IDV</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="idv"
-          />
+          <input matInput type="number" formControlName="idv"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
-          <mat-label>Ex‐Showroom Price</mat-label>
-          <input
-            matInput
-            type="number"
-            formControlName="exShowroomPrice"
-          />
+          <mat-label>Ex-Showroom Price</mat-label>
+          <input matInput type="number" formControlName="exShowroomPrice"/>
         </mat-form-field>
 
-        <mat-checkbox formControlName="backlistStatus">
-          Backlist Status
-        </mat-checkbox>
-
-        <mat-checkbox formControlName="rcStatus">
-          RC Status
-        </mat-checkbox>
+        <mat-checkbox formControlName="backlistStatus">Backlist Status</mat-checkbox>
+        <mat-checkbox formControlName="rcStatus">RC Status</mat-checkbox>
 
         <mat-form-field appearance="fill">
           <mat-label>Manufactured Date</mat-label>
-          <input
-            matInput
-            type="date"
-            formControlName="manufacturedDate"
-          />
+          <input matInput type="date" formControlName="manufacturedDate"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Stencil Trace URL</mat-label>
-          <input
-            matInput
-            formControlName="stencilTraceUrl"
-          />
+          <input matInput formControlName="stencilTraceUrl"/>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Chassis No Photo URL</mat-label>
-          <input
-            matInput
-            formControlName="chassisNoPhotoUrl"
-          />
+          <input matInput formControlName="chassisNoPhotoUrl"/>
         </mat-form-field>
+
       </div>
     </fieldset>
 
-    <!-- ── REMARKS SECTION (NEWLY ADDED) ────────────────────────────────── -->
-    <!-- Edit and save remarks in this field -->
-    <fieldset class="nested‐group">
+    <!-- REMARKS SECTION -->
+    <fieldset class="nested-group">
       <legend>Remarks</legend>
       <div class="grid">
         <mat-form-field appearance="fill" class="full-width">
@@ -431,62 +405,47 @@
     </fieldset>
 
     <!-- DOCUMENT UPLOAD GROUP -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Documents</legend>
       <div class="grid">
-        <!-- RC File -->
+
         <div class="file-upload">
           <label for="rcFile">Upload RC</label>
-          <input
-            id="rcFile"
-            type="file"
-            (change)="onFileChange($event, 'rcFile')"
-            accept=".pdf,.jpg,.png"
-          />
+          <input id="rcFile" type="file" (change)="onFileChange($event, 'rcFile')" accept=".pdf,.jpg,.png"/>
         </div>
 
-        <!-- Insurance File -->
         <div class="file-upload">
           <label for="insuranceFile">Upload Insurance</label>
-          <input
-            id="insuranceFile"
-            type="file"
-            (change)="onFileChange($event, 'insuranceFile')"
-            accept=".pdf,.jpg,.png"
-          />
+          <input id="insuranceFile" type="file" (change)="onFileChange($event, 'insuranceFile')" accept=".pdf,.jpg,.png"/>
         </div>
 
-        <!-- Other Documents -->
         <div class="file-upload" style="grid-column: span 2;">
           <label for="otherFiles">Upload Other Documents</label>
-          <input
-            id="otherFiles"
-            type="file"
-            multiple
-            (change)="onMultiFileChange($event)"
-            accept=".pdf,.jpg,.png"
-          />
+          <input id="otherFiles" type="file" multiple (change)="onMultiFileChange($event)" accept=".pdf,.jpg,.png"/>
         </div>
+
       </div>
     </fieldset>
 
-    <fieldset class="nested‐group">
-    <div *ngIf="assignedUser" style="grid-column: 1 / -1; margin-bottom: 0.5rem;">
-      <strong>Currently Assigned:</strong>
-      {{ assignedUser.name }} — {{ assignedUser.phoneNumber }}
-    </div>
+    <!-- ASSIGNED USER -->
+    <fieldset class="nested-group">
+      <div *ngIf="assignedUser" style="grid-column: 1 / -1; margin-bottom: 0.5rem;">
+        <strong>Currently Assigned:</strong>
+        {{ assignedUser.name }} — {{ assignedUser.phoneNumber }}
+      </div>
     </fieldset>
 
     <!-- ASSIGN INSPECTION -->
-    <fieldset class="nested‐group">
+    <fieldset class="nested-group">
       <legend>Assign Inspection</legend>
       <div class="grid">
+
         <mat-form-field appearance="fill" style="grid-column: 1 / -1;">
           <mat-label>Assign to</mat-label>
           <mat-select [value]="selectedUserId" (selectionChange)="onSelectAssignable($event.value)">
             <mat-option *ngFor="let u of (usersWithEdit$ | async)" [value]="u.userId || u.email">
               {{ u.name || (u.email || u.phoneNumber) }}
-              <span *ngIf="u.phoneNumber">&nbsp;— {{ u.phoneNumber }}</span>
+              <span *ngIf="u.phoneNumber"> — {{ u.phoneNumber }}</span>
             </mat-option>
           </mat-select>
         </mat-form-field>
@@ -499,42 +458,45 @@
           [disabled]="!selectedUserId || assignFrozen || assignBusy">
           {{ assignBusy ? 'Assigning…' : assignFrozen ? 'Assigned' : 'Assign' }}
         </button>
+
       </div>
     </fieldset>
 
     <!-- ACTION BUTTONS -->
-     <fieldset>
-    <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
-      <button
-        mat-raised-button
-        color="accent"
-        type="button"
-        [disabled]="saving"
-        (click)="onSave()"
-      >
-        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
-      </button>
+    <fieldset>
+      <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
 
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        [disabled]="!saved || saving"
-      >
-        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
-      </button>
+        <button
+          mat-raised-button
+          color="accent"
+          type="button"
+          [disabled]="saving"
+          (click)="onSave()">
+          {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+        </button>
 
-      <button
-        mat-raised-button
-        color="warn"
-        type="button"
-        [disabled]="saving"
-        (click)="onCancel()"
-      >
-        Cancel
-      </button>
-    </div>
+        <button
+          mat-raised-button
+          [color]="duplicateInfo.isDuplicate ? 'warn' : 'primary'"
+          type="submit"
+          [disabled]="!saved || saving">
+          <span *ngIf="!submitInProgress && !duplicateInfo.isDuplicate">Submit</span>
+          <span *ngIf="!submitInProgress && duplicateInfo.isDuplicate">⚠️ Submit Anyway</span>
+          <span *ngIf="submitInProgress">Submitting…</span>
+        </button>
+
+        <button
+          mat-raised-button
+          color="warn"
+          type="button"
+          [disabled]="saving"
+          (click)="onCancel()">
+          Cancel
+        </button>
+
+      </div>
     </fieldset>
+
   </ng-container>
 </form>
 

@@ -1,24 +1,26 @@
-// src/app/valuation‐update/valuation‐update.component.ts
+// src/app/components/valution/valuation-update/valuation-update.component.ts
 
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
-import { WorkflowService } from '../../../services/workflow.service'; // Adjust the import path as needed
+import { WorkflowService } from '../../../services/workflow.service';
 import { VehicleDetails } from '../../../models/VehicleDetails';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { take } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription, combineLatest } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { UsersService } from '../../../services/users.service';
 import { AssignableUser, UserModel } from '../../../models/user.model';
 import { ClaimService } from '../../../services/claim.service';
+
+// ✅ ADD THIS IMPORT
+import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
 
 @Component({
   selector: 'app-valuation-update',
@@ -54,13 +56,11 @@ export class ValuationUpdateComponent implements OnInit {
   private assignedToWhatsapp = '';
   loadingAssigned = false;
 
-    // 🔽 NEW: hold assigned fields derived from logged-in user
   private backendAssignedTo: string = '';
   private backendAssignedToPhoneNumber: string = '';
   private backendAssignedToEmail: string = '';
   private backendAssignedToWhatsapp: string = '';
 
-  // KEEP these properties, but now using imported AssignableUser
   usersWithEdit$: Observable<AssignableUser[]> = of([]);
   selectedUserId: string | null = null;
   private selectedUser: AssignableUser | null = null;
@@ -69,12 +69,28 @@ export class ValuationUpdateComponent implements OnInit {
 
   assignedUser: AssignableUser | null = null;
 
+  // ✅ ADD THESE PROPERTIES FOR DUPLICATE TRACKING
+  duplicateInfo: VehicleDuplicateCheckResponse = {
+    isDuplicate: false,
+    isVehicleNumberExists: false,
+    isEngineNumberExists: false,
+    isChassisNumberExists: false,
+    totalDuplicatesFound: 0,
+    existingRecords: [],
+    messages: []
+  };
+  
+  isCheckingDuplicate = false;
+  showDuplicateWarning = false;
+  showDuplicateExpanded = false;
+  private valueSubscriptions = new Subscription();
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private valuationSvc: ValuationService,
-    private workflowSvc: WorkflowService, // Use the service for workflow operations
+    private workflowSvc: WorkflowService,
     private _snackBar: MatSnackBar,
     private userSvc: UsersService,
     private claimSvc: ClaimService,
@@ -82,10 +98,8 @@ export class ValuationUpdateComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 1) Read route param: valuationId
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
 
-    // 2) Read query params: vehicleNumber, applicantContact
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
@@ -95,6 +109,9 @@ export class ValuationUpdateComponent implements OnInit {
         this.applicantContact = ac;
         this.initForm();
         this.loadVehicleDetails();
+        
+        // ✅ ADD THIS: Setup duplicate checking after form is initialized
+        this.setupDuplicateCheck();
       } else {
         this.loading = false;
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
@@ -107,11 +124,15 @@ export class ValuationUpdateComponent implements OnInit {
     this.loadAssignedUser();
   }
 
+  // ✅ ADD ngOnDestroy TO CLEAN UP SUBSCRIPTIONS
+  ngOnDestroy(): void {
+    this.valueSubscriptions.unsubscribe();
+  }
+
   private initForm() {
-    // Build a FormGroup with all editable fields
     this.form = this.fb.group({
       // Vehicle Identification
-      registrationNumber: [{ value: '', disabled: true }], // typically read‐only
+      registrationNumber: [{ value: '', disabled: true }],
       make: ['', Validators.required],
       model: ['', Validators.required],
       bodyType: ['', Validators.required],
@@ -126,7 +147,7 @@ export class ValuationUpdateComponent implements OnInit {
       seatingCapacity: [null],
 
       // Registration & RTO
-      dateOfRegistration: ['', Validators.required], // ISO date string (YYYY‐MM‐DD)
+      dateOfRegistration: ['', Validators.required],
       rto: ['', Validators.required],
       classOfVehicle: ['', Validators.required],
       categoryCode: [''],
@@ -143,21 +164,21 @@ export class ValuationUpdateComponent implements OnInit {
       // Insurance
       insurer: [''],
       insurancePolicyNo: [''],
-      insuranceValidUpTo: [''], // ISO date (YYYY‐MM‐DD)
+      insuranceValidUpTo: [''],
 
       // Permit & Fitness
       permitNo: [''],
-      permitValidUpTo: [''],  // ISO date
+      permitValidUpTo: [''],
       permitType: [''],
-      permitIssued: [''],     // ISO date
-      permitFrom: [''],       // ISO date
+      permitIssued: [''],
+      permitFrom: [''],
       fitnessNo: [''],
-      fitnessValidTo: [''],   // ISO date
+      fitnessValidTo: [''],
 
       // Pollution & Tax
       pollutionCertificateNumber: [''],
-      pollutionCertificateUpto: [''], // ISO date
-      taxUpto: [''],                   // ISO date
+      pollutionCertificateUpto: [''],
+      taxUpto: [''],
       taxPaidUpTo: [''],
 
       // Additional
@@ -165,14 +186,116 @@ export class ValuationUpdateComponent implements OnInit {
       exShowroomPrice: [null],
       backlistStatus: [false],
       rcStatus: [false],
-      manufacturedDate: [''], // ISO date
+      manufacturedDate: [''],
 
-      // Any URLs (read‐only or editable if you allow)
+      // URLs
       stencilTraceUrl: [''],
       chassisNoPhotoUrl: [''],
       remarks: ['']
     });
   }
+
+  // ✅ ADD THIS NEW METHOD FOR DUPLICATE CHECKING
+  private setupDuplicateCheck(): void {
+    // Monitor all three fields for changes
+    const vehicleNumberControl = this.form.get('registrationNumber');
+    const engineNumberControl = this.form.get('engineNumber');
+    const chassisNumberControl = this.form.get('chassisNumber');
+
+    if (!vehicleNumberControl || !engineNumberControl || !chassisNumberControl) {
+      return;
+    }
+
+    // Combine all three field changes into one stream
+    const duplicateCheckSub = combineLatest([
+      vehicleNumberControl.valueChanges,
+      engineNumberControl.valueChanges,
+      chassisNumberControl.valueChanges
+    ]).pipe(
+      debounceTime(1000), // Wait 1 second after user stops typing
+      distinctUntilChanged((prev, curr) => 
+        JSON.stringify(prev) === JSON.stringify(curr)
+      )
+    ).subscribe(([vehicleNo, engineNo, chassisNo]) => {
+      // Only check if at least one field has a value
+      if (vehicleNo || engineNo || chassisNo) {
+        this.checkForDuplicates(vehicleNo, engineNo, chassisNo);
+      } else {
+        this.resetDuplicateInfo();
+      }
+    });
+
+    this.valueSubscriptions.add(duplicateCheckSub);
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  private checkForDuplicates(
+    vehicleNumber: string, 
+    engineNumber: string, 
+    chassisNumber: string
+  ): void {
+    this.isCheckingDuplicate = true;
+    
+    this.valuationSvc.checkDuplicateVehicle(
+      vehicleNumber, 
+      engineNumber, 
+      chassisNumber
+    ).subscribe({
+      next: (response) => {
+        this.isCheckingDuplicate = false;
+        this.handleDuplicateResponse(response);
+      },
+      error: (error) => {
+        this.isCheckingDuplicate = false;
+        console.error('Error checking duplicates:', error);
+      }
+    });
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  private handleDuplicateResponse(response: VehicleDuplicateCheckResponse): void {
+    this.duplicateInfo = response;
+    this.showDuplicateWarning = response.isDuplicate;
+
+    if (response.isDuplicate) {
+      console.log('⚠️ Duplicate vehicle details detected!');
+      console.log('Messages:', response.messages);
+      console.log('Existing records:', response.existingRecords);
+      
+      // Show snackbar notification
+      this._snackBar.open(
+        `⚠️ Warning: ${response.messages[0]}`,
+        'View Details',
+        {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          panelClass: ['warning-snackbar']
+        }
+      );
+    }
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  private resetDuplicateInfo(): void {
+    this.duplicateInfo = {
+      isDuplicate: false,
+      isVehicleNumberExists: false,
+      isEngineNumberExists: false,
+      isChassisNumberExists: false,
+      totalDuplicatesFound: 0,
+      existingRecords: [],
+      messages: []
+    };
+    this.showDuplicateWarning = false;
+  }
+
+  // ✅ ADD THIS NEW METHOD
+  dismissWarning(): void {
+    this.showDuplicateWarning = false;
+  }
+
+  // ... (keep all your existing methods) ...
 
   private applyBackendAssignedFromUser(u: User | null): void {
     const name =
@@ -187,17 +310,16 @@ export class ValuationUpdateComponent implements OnInit {
     this.backendAssignedToWhatsapp = u?.phoneNumber || '';
   }
 
-   private loadAssignedUser(): void {
-   this.loadingAssigned = true;
+  private loadAssignedUser(): void {
+    this.loadingAssigned = true;
     this.userSvc.getAssignedUser(this.valuationId, this.vehicleNumber, this.applicantContact)
       .pipe(take(1))
       .subscribe({
         next: (u) => { this.assignedUser = u; this.loadingAssigned = false; },
         error: () => { this.assignedUser = null; this.loadingAssigned = false; }
       });
- }
+  }
 
- // Helper: reuse the same name-resolution logic used in userName$
   private resolveDisplayName(u: User | null): Observable<string> {
     return of(u).pipe(
       switchMap(user => {
@@ -211,7 +333,7 @@ export class ValuationUpdateComponent implements OnInit {
     );
   }
 
-    private resolveId(u: User): string | null {
+  private resolveId(u: User): string | null {
     return u.phoneNumber ?? u.uid ?? u.email ?? null;
   }
 
@@ -240,7 +362,7 @@ export class ValuationUpdateComponent implements OnInit {
 
   onSelectAssignable(userId: string): void {
     this.selectedUserId = userId;
-    this.assignFrozen = false; // re-enable after changing selection
+    this.assignFrozen = false;
     this.usersWithEdit$.pipe(take(1)).subscribe(list => {
       this.selectedUser = list.find(u => (u.userId || u.email) === userId) ?? null;
     });
@@ -311,7 +433,6 @@ export class ValuationUpdateComponent implements OnInit {
   }
 
   private patchForm(data: VehicleDetails) {
-    // Patch all form controls with the API response
     this.form.patchValue({
       registrationNumber: data.registrationNumber,
       make: data.make,
@@ -324,7 +445,7 @@ export class ValuationUpdateComponent implements OnInit {
       engineCC: data.engineCC,
       grossVehicleWeight: data.grossVehicleWeight,
       seatingCapacity: data.seatingCapacity,
-      dateOfRegistration: data.dateOfRegistration?.slice(0, 10) || '', // "YYYY-MM-DD"
+      dateOfRegistration: data.dateOfRegistration?.slice(0, 10) || '',
       rto: data.rto,
       classOfVehicle: data.classOfVehicle,
       categoryCode: data.categoryCode,
@@ -357,12 +478,8 @@ export class ValuationUpdateComponent implements OnInit {
       chassisNoPhotoUrl: data.chassisNoPhotoUrl,
       remarks: data.remarks || ''
     });
-
-    // If you want to show existing documents somewhere, you can store them here,
-    // but for simplicity this example only uploads new files.
   }
 
-  // Single‐file input for RC or Insurance
   onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
     const inputEl = event.target as HTMLInputElement;
     if (inputEl.files && inputEl.files.length > 0) {
@@ -370,7 +487,6 @@ export class ValuationUpdateComponent implements OnInit {
     }
   }
 
-  // Multi‐file input for “other” documents
   onMultiFileChange(event: Event) {
     const inputEl = event.target as HTMLInputElement;
     this.otherFiles = inputEl.files ? Array.from(inputEl.files) : [];
@@ -380,7 +496,7 @@ export class ValuationUpdateComponent implements OnInit {
     const fd = new FormData();
     const v = this.form.getRawValue();
 
-    // Text/number/bool fields
+    // ... (keep all your existing buildFormData logic) ...
     fd.append('registrationNumber', v.registrationNumber);
     fd.append('make', v.make);
     fd.append('model', v.model);
@@ -438,7 +554,6 @@ export class ValuationUpdateComponent implements OnInit {
     fd.append('AssignedToEmail', this.assignedToEmail);
     fd.append('AssignedToWhatsapp', this.assignedToWhatsapp);
 
-    // File fields
     if (this.rcFile) {
       fd.append('rcFile', this.rcFile, this.rcFile.name);
     }
@@ -449,7 +564,6 @@ export class ValuationUpdateComponent implements OnInit {
       fd.append('otherFiles', file, file.name);
     });
 
-    // Always include the route identifiers
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
     fd.append('applicantContact', this.applicantContact);
@@ -470,58 +584,73 @@ export class ValuationUpdateComponent implements OnInit {
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-      switchMap(() =>
-        this.workflowSvc.updateWorkflowTable(
-        this.valuationId,
-        this.vehicleNumber,
-        this.applicantContact,
-        {
-          workflow: 'Backend',
-          workflowStepOrder: 2,
-          backEndAssignedTo: this.backendAssignedTo,
-          backEndAssignedToPhoneNumber: this.backendAssignedToPhoneNumber,
-          backEndAssignedToEmail: this.backendAssignedToEmail,
-          backEndAssignedToWhatsapp: this.backendAssignedToWhatsapp
-        }
+        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+        switchMap(() =>
+          this.workflowSvc.updateWorkflowTable(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            {
+              workflow: 'Backend',
+              workflowStepOrder: 2,
+              backEndAssignedTo: this.backendAssignedTo,
+              backEndAssignedToPhoneNumber: this.backendAssignedToPhoneNumber,
+              backEndAssignedToEmail: this.backendAssignedToEmail,
+              backEndAssignedToWhatsapp: this.backendAssignedToWhatsapp
+            }
+          )
+        ),
+        switchMap(() =>
+          this.claimSvc.assignBackend(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.backendAssignedTo,
+            this.backendAssignedToPhoneNumber,
+            this.backendAssignedToEmail,
+            this.backendAssignedToWhatsapp
+          )
         )
-      ),
-      switchMap(() =>
-        this.claimSvc.assignBackend(
-        this.valuationId,
-        this.vehicleNumber,
-        this.applicantContact,
-        this.backendAssignedTo,
-        this.backendAssignedToPhoneNumber,
-        this.backendAssignedToEmail,
-        this.backendAssignedToWhatsapp
-        )
-      )
       )
       .subscribe({
-      next: () => {
-        this.saveInProgress = false;
-        this.saving = false;
-        this.saved = true; // Indicate that save was successful
-        this._snackBar.open('Saved successfully', 'Close', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'top'
-        });
-      },
-      error: (err) => {
-        this.error = err.message || 'Save failed.';
-        this.saveInProgress = false;
-        this.saving = false;
-      }
+        next: () => {
+          this.saveInProgress = false;
+          this.saving = false;
+          this.saved = true;
+          this._snackBar.open('Saved successfully', 'Close', {
+            duration: 3000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        },
+        error: (err) => {
+          this.error = err.message || 'Save failed.';
+          this.saveInProgress = false;
+          this.saving = false;
+        }
       });
   }
 
+  // ✅ UPDATED THIS METHOD TO SHOW DUPLICATE WARNING
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
+    // ✅ ADD DUPLICATE CHECK CONFIRMATION
+    if (this.duplicateInfo.isDuplicate) {
+      const confirmMessage = 
+        '⚠️ DUPLICATE VEHICLE DETAILS DETECTED!\n\n' +
+        this.duplicateInfo.messages.join('\n') +
+        '\n\nFound ' + this.duplicateInfo.totalDuplicatesFound + ' existing record(s).\n\n' +
+        'Do you want to proceed anyway?';
+
+      if (!confirm(confirmMessage)) {
+        return; // User cancelled
+      }
+    }
+
     this.saving = true;
     this.submitInProgress = true;
     const assignedTo = this.assignedUser?.name ?? '';
@@ -533,11 +662,8 @@ export class ValuationUpdateComponent implements OnInit {
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-        // Complete workflow with step 1
         switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-        // Start workflow with step 2  
-        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)))
-        ,
+        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -567,7 +693,6 @@ export class ValuationUpdateComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // After successful submit, navigate back to "view" screen
           this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,
@@ -594,4 +719,3 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 }
-
