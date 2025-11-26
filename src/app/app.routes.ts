@@ -22,6 +22,7 @@ import { RoleGuard }      from './auth/role.guard';
 import { AddUserComponent } from './components/users/add-user/add-user.component';
 import { EditUserComponent } from './components/users/edit-user/edit-user.component';
 import { ReportCompletionUpdateComponent } from './components/Report/final-report-completion/report-completion-update.component';
+import { MarketValueComponent } from './components/market-value/market-value.component';
 
 export const routes: Routes = [
   {
@@ -35,6 +36,13 @@ export const routes: Routes = [
     children: [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanViewDashboard' } },
+  // --- 2. ADD THE NEW ROUTE FOR THE AI TOOL ---
+      {
+        path: 'market-value',
+        component: MarketValueComponent,
+        canActivate: [AuthGuard, RoleGuard],
+        data: { permission: 'CanViewDashboard' } // Reused the dashboard permission
+      },
   // 2) Stakeholder routes
   { path: 'stakeholder', component: StakeholderNewComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanCreateStakeholder' } },
   { path: 'valuation/:valuationId/stakeholder/update', component: StakeholderUpdateComponent, canActivate: [AuthGuard, RoleGuard], data: { permission: 'CanEditStakeholder' } },
