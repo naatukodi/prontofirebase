@@ -1,25 +1,20 @@
 // src/app/vehicle-image-upload/vehicle-image-upload.component.ts
 
-import {
-  Component,
-  OnInit,
-  ChangeDetectorRef
-} from '@angular/core';
-import {
-  ActivatedRoute,
-  Router
-} from '@angular/router';
-import {
-  HttpEvent,
-  HttpEventType,
-  HttpErrorResponse
-} from '@angular/common/http';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
 import { VehicleInspectionService } from '../../../services/vehicle-inspection.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { RouterModule } from '@angular/router';
+import { Auth, User, authState } from '@angular/fire/auth';
+import { take } from 'rxjs/operators';
+
+// ✅ IMPORT HISTORY LOGGER SERVICE
+import { HistoryLoggerService } from '../../../services/history-logger.service';
+
 
 type ImageKey =
   | 'frontLeftSide'
@@ -42,11 +37,13 @@ type ImageKey =
   | 'underbody'
   | 'tiresAndRims';
 
+
 interface ImageField {
   key: ImageKey;
   label: string;
   optional: boolean;
 }
+
 
 @Component({
   selector: 'app-vehicle-image-upload',
@@ -64,6 +61,12 @@ export class VehicleImageUploadComponent implements OnInit {
 
   private authz = new AuthorizationService();
 
+  // ✅ ADD THESE FOR TRACKING
+  private currentUser: User | null = null;
+  private currentUserId: string = 'unknown';
+  private currentUserName: string = 'Unknown User';
+  private uploadedImagesTracker: ImageKey[] = [];
+
   imageFields: ImageField[] = [
     { key: 'frontLeftSide',       label: 'Front Left Side',           optional: false },
     { key: 'frontRightSide',      label: 'Front Right Side',          optional: false },
@@ -71,7 +74,7 @@ export class VehicleImageUploadComponent implements OnInit {
     { key: 'rearRightSide',       label: 'Rear Right Side',           optional: false },
     { key: 'frontViewGrille',     label: 'Front View (grille)',       optional: false },
     { key: 'rearViewTailgate',    label: 'Rear View (tailgate)',      optional: false },
-    { key: 'driverSideProfile',   label: 'Driver’s Side Profile',     optional: false },
+    { key: 'driverSideProfile',   label: 'Driver\'s Side Profile',     optional: false },
     { key: 'passengerSideProfile',label: 'Passenger Side Profile',    optional: false },
     { key: 'dashboard',           label: 'Dashboard',                 optional: false },
     { key: 'instrumentCluster',   label: 'Instrument Cluster / Odometer', optional: false },
@@ -86,7 +89,6 @@ export class VehicleImageUploadComponent implements OnInit {
     { key: 'tiresAndRims',        label: 'Tires and Rims',            optional: false }
   ];
 
-  // Holds the File object once a user selects one
   selectedFiles: Record<ImageKey, File | null> = {
     frontLeftSide:      null,
     frontRightSide:     null,
@@ -109,7 +111,6 @@ export class VehicleImageUploadComponent implements OnInit {
     tiresAndRims:       null,
   };
 
-  // Holds the current (possibly timestamp‐busted) URLs for all keys
   uploadedUrls: Record<ImageKey, string | null> = {
     frontLeftSide:      null,
     frontRightSide:     null,
@@ -140,18 +141,27 @@ export class VehicleImageUploadComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private vehicleInspectionService: VehicleInspectionService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private auth: Auth,
+    private historyLogger: HistoryLoggerService  // ✅ INJECT
   ) {}
 
   ngOnInit(): void {
-    // 1) Grab route param “valuationId”
     this.valuationId = this.route.snapshot.paramMap.get('valuationId') || '';
     if (!this.valuationId) {
       this.error = 'Missing valuationId in route.';
       return;
     }
 
-    // 2) Grab query params vehicleNumber + applicantContact, then load existing images
+    // ✅ GET CURRENT USER INFO
+    authState(this.auth).pipe(take(1)).subscribe(u => {
+      this.currentUser = u;
+      if (u) {
+        this.currentUserId = u.uid || u.phoneNumber || 'unknown';
+        this.currentUserName = u.displayName || u.email?.split('@')[0] || 'Unknown User';
+      }
+    });
+
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
@@ -171,7 +181,6 @@ export class VehicleImageUploadComponent implements OnInit {
       .getVehicleImages(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
         next: (map: Record<string,string>) => {
-          // Normalize keys (“FrontLeftSide” → “frontLeftSide”) and assign
           Object.keys(map).forEach((key) => {
             const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
             if ((this.uploadedUrls as any)[normalizedKey] !== undefined) {
@@ -186,10 +195,7 @@ export class VehicleImageUploadComponent implements OnInit {
       });
   }
 
-  onFileSelected(
-    event: Event,
-    fieldKey: ImageKey
-  ) {
+  onFileSelected(event: Event, fieldKey: ImageKey) {
     const inputEl = event.target as HTMLInputElement;
     if (!inputEl.files || inputEl.files.length === 0) {
       this.selectedFiles[fieldKey] = null;
@@ -212,17 +218,14 @@ export class VehicleImageUploadComponent implements OnInit {
   async uploadImage(fieldKey: ImageKey) {
     const isOptional = this.imageFields.find(f => f.key === fieldKey)!.optional;
 
-    // 1) If no file chosen & not optional → show error
     if (!this.selectedFiles[fieldKey] && !isOptional) {
       this.uploadError[fieldKey] = `Please select "${this.getLabel(fieldKey)}" image.`;
       return;
     }
-    // 2) If no new file but URL already exists → do nothing
     if (!this.selectedFiles[fieldKey] && this.uploadedUrls[fieldKey]) {
       return;
     }
 
-    // Reset progress & state for this key
     this.uploadProgress[fieldKey] = 0;
     this.isUploading[fieldKey] = true;
     this.uploadError[fieldKey] = undefined;
@@ -230,7 +233,6 @@ export class VehicleImageUploadComponent implements OnInit {
     const payload = this.buildSingleFormData(fieldKey);
 
     try {
-      // Call the PUT /photos endpoint, expecting a full Record<string,string> response
       const observable = await this.vehicleInspectionService.uploadPhotos(
         this.valuationId,
         this.vehicleNumber,
@@ -245,38 +247,39 @@ export class VehicleImageUploadComponent implements OnInit {
         })
       ).subscribe({
         next: (event: HttpEvent<any>) => {
-          // a) Show progress bar if we get UploadProgress
           if (event.type === HttpEventType.UploadProgress && event.total) {
             this.uploadProgress[fieldKey] = Math.round((100 * event.loaded) / event.total);
           }
-          // b) On final response, event.body is the full map of all URLs
           else if (event.type === HttpEventType.Response) {
             const bodyMap = event.body as Record<string,string>;
             console.log('Full upload response map:', bodyMap);
 
-            // 1) Normalize and merge each returned URL into uploadedUrls
             Object.keys(bodyMap).forEach((returnedKey) => {
               const normalizedKey = returnedKey.charAt(0).toLowerCase() + returnedKey.slice(1);
               if ((this.uploadedUrls as any)[normalizedKey] !== undefined) {
-                // Cache‐bust by appending timestamp
                 const rawUrl = bodyMap[returnedKey];
                 const busted = `${rawUrl}?t=${new Date().getTime()}`;
 
-                // 1a) Clear out old URL first
                 (this.uploadedUrls as any)[normalizedKey] = null;
                 this.cdr.detectChanges();
 
-                // 1b) Wait one tick, then assign the busted URL
                 setTimeout(() => {
                   (this.uploadedUrls as any)[normalizedKey] = busted;
                   this.cdr.detectChanges();
                 }, 0);
+
+                // ✅ TRACK UPLOADED IMAGE (NO INDIVIDUAL LOGGING)
+                if (!this.uploadedImagesTracker.includes(fieldKey)) {
+                  this.uploadedImagesTracker.push(fieldKey);
+                  console.log(`📸 Tracked: ${this.getLabel(fieldKey)}`);
+                }
               }
             });
 
-            // 2) Reset file selection and progress for this field
             this.uploadProgress[fieldKey] = 100;
             this.selectedFiles[fieldKey] = null;
+
+            // ❌ REMOVED: this.logImageUpload(fieldKey); - Don't log individual uploads
           }
         },
         error: (err: HttpErrorResponse) => {
@@ -290,6 +293,9 @@ export class VehicleImageUploadComponent implements OnInit {
     }
   }
 
+  // ❌ REMOVED: this method is no longer needed
+  // private logImageUpload(fieldKey: ImageKey): void { ... }
+
   getLabel(fieldKey: ImageKey): string {
     return this.imageFields.find(f => f.key === fieldKey)!.label;
   }
@@ -299,6 +305,31 @@ export class VehicleImageUploadComponent implements OnInit {
   }
 
   onBack(): void {
+    // ✅ LOG ONLY BATCH UPLOAD COMPLETION (ONE ENTRY)
+    if (this.uploadedImagesTracker.length > 0) {
+      const imageNames = this.uploadedImagesTracker.map(k => this.getLabel(k)).join(', ');
+      
+      this.historyLogger.logAction(
+        this.valuationId,
+        'Vehicle Images Upload Session Completed',
+        `${this.uploadedImagesTracker.length} image(s) uploaded: ${imageNames}`,
+        this.currentUserId,
+        this.currentUserName,
+        null,
+        'AVO'
+      ).then(() => {
+        console.log('✅ Batch upload logged');
+        this.navigateBack();
+      }).catch(err => {
+        console.error('❌ Error logging batch upload:', err);
+        this.navigateBack();
+      });
+    } else {
+      this.navigateBack();
+    }
+  }
+
+  private navigateBack(): void {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'update'], {
       queryParams: {
         vehicleNumber: this.vehicleNumber,

@@ -1,19 +1,23 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { QualityControlService } from '../../../services/quality-control.service'; // Adjust path as needed
-import { QualityControl } from '../../../models/QualityControl';                   // Adjust path as needed
+import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControl } from '../../../models/QualityControl';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkflowService } from '../../../services/workflow.service';               // Adjust path as needed
-import { SharedModule } from '../../shared/shared.module/shared.module'; // Adjust path as needed
+import { WorkflowService } from '../../../services/workflow.service';
+import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { switchMap, map, take } from 'rxjs/operators';
-import { of, Observable } from 'rxjs';
+import { of, Observable, Subscription } from 'rxjs';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
+
+// ✅ IMPORT HISTORY LOGGER SERVICE
+import { HistoryLoggerService } from '../../../services/history-logger.service';
+
 
 @Component({
   selector: 'app-valuation-quality-control-update',
@@ -22,7 +26,7 @@ import { ValuationService } from '../../../services/valuation.service';
   templateUrl: './quality-control-update.component.html',
   styleUrls: ['./quality-control-update.component.scss']
 })
-export class QualityControlUpdateComponent implements OnInit {
+export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -33,6 +37,12 @@ export class QualityControlUpdateComponent implements OnInit {
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
 
+  // ✅ ADD THESE FOR TRACKING
+  private currentUser: User | null = null;
+  private currentUserId: string = 'unknown';
+  private currentUserName: string = 'Unknown User';
+  private originalFormData: any = {};
+
   form!: FormGroup;
   loading = true;
   error: string | null = null;
@@ -40,6 +50,8 @@ export class QualityControlUpdateComponent implements OnInit {
   saveInProgress = false;
   submitInProgress = false;
   saved = false;
+
+  private subscriptions = new Subscription();
 
   constructor(
     private fb: FormBuilder,
@@ -50,14 +62,27 @@ export class QualityControlUpdateComponent implements OnInit {
     private _snackBar: MatSnackBar,
     private usersSvc: UsersService,
     private valuationSvc: ValuationService,
-    private auth: Auth
+    private auth: Auth,
+    private historyLogger: HistoryLoggerService  // ✅ INJECT
   ) {}
 
   ngOnInit(): void {
-    // 1) Read route param: valuationId
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     
-    // 2) Read query params: vehicleNumber & applicantContact
+    // ✅ GET CURRENT USER INFO
+    authState(this.auth).pipe(take(1)).subscribe(u => {
+      this.currentUser = u;
+      if (u) {
+        this.currentUserId = u.uid || u.phoneNumber || 'unknown';
+        this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+          this.currentUserName = name || u.email?.split('@')[0] || 'Unknown User';
+          this.applyAssignedFromUser(u);
+        });
+      } else {
+        this.applyAssignedFromUser(u);
+      }
+    });
+
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
@@ -72,8 +97,10 @@ export class QualityControlUpdateComponent implements OnInit {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
+  }
 
-    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   private initForm() {
@@ -94,6 +121,8 @@ export class QualityControlUpdateComponent implements OnInit {
       .subscribe({
         next: (data: QualityControl) => {
           this.patchForm(data);
+          // ✅ STORE ORIGINAL DATA
+          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
           this.loading = false;
         },
         error: (err) => {
@@ -103,7 +132,6 @@ export class QualityControlUpdateComponent implements OnInit {
       });
   }
 
-// Helper: reuse the same name-resolution logic used in userName$
   private resolveDisplayName(u: User | null): Observable<string> {
     return of(u).pipe(
       switchMap(user => {
@@ -117,7 +145,7 @@ export class QualityControlUpdateComponent implements OnInit {
     );
   }
 
-    private resolveId(u: User): string | null {
+  private resolveId(u: User): string | null {
     return u.phoneNumber ?? u.uid ?? u.email ?? null;
   }
 
@@ -149,6 +177,24 @@ export class QualityControlUpdateComponent implements OnInit {
     });
   }
 
+  // ✅ NEW METHOD: TRACK CHANGED FIELDS
+  private getChangedFields(): any[] {
+    const currentData = this.form.getRawValue();
+    const changedFields: any[] = [];
+
+    Object.keys(currentData).forEach(key => {
+      if (this.originalFormData[key] !== currentData[key]) {
+        changedFields.push({
+          fieldName: key,
+          oldValue: this.originalFormData[key],
+          newValue: currentData[key]
+        });
+      }
+    });
+
+    return changedFields;
+  }
+
   private buildPayload(): Partial<QualityControl> {
     const v = this.form.getRawValue();
     const payload: Partial<QualityControl> = {
@@ -164,6 +210,34 @@ export class QualityControlUpdateComponent implements OnInit {
     return payload;
   }
 
+  // ✅ NEW METHOD: LOG HISTORY
+  private logHistoryAction(
+    action: string,
+    remarks: string,
+    statusFrom: string | null,
+    statusTo: string | null
+  ): Observable<any> {
+    return new Observable(observer => {
+      this.historyLogger.logAction(
+        this.valuationId,
+        action,
+        remarks,
+        this.currentUserId,
+        this.currentUserName,
+        statusFrom,
+        statusTo
+      ).then(() => {
+        console.log('✅ History logged:', action);
+        observer.next(true);
+        observer.complete();
+      }).catch((err: any) => {
+        console.error('❌ Error logging history:', err);
+        observer.next(true); // Don't fail if logging fails
+        observer.complete();
+      });
+    });
+  }
+
   onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -173,6 +247,9 @@ export class QualityControlUpdateComponent implements OnInit {
     this.saveInProgress = true;
 
     const payload = this.buildPayload();
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
     this.qcService
       .updateQualityControlDetails(
         this.valuationId,
@@ -181,16 +258,14 @@ export class QualityControlUpdateComponent implements OnInit {
         payload
       )
       .pipe(
-        // After successful update, start the next workflow step if needed
         switchMap(() =>
           this.workflowSvc.startWorkflow(
             this.valuationId,
-            4, // example workflow step id
+            4,
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
-            )
           )
-          ,
+        ),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -210,39 +285,50 @@ export class QualityControlUpdateComponent implements OnInit {
             }
           )
         ),
-      switchMap(() =>
-        this.qcService.assignQualityControl(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          this.assignedTo,
-          this.assignedToPhoneNumber,
-          this.assignedToEmail,
-          this.assignedToWhatsapp
-        )
-      ),
-      switchMap(() =>
-        this.valuationSvc.assignValuation(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          this.assignedTo,
-          this.assignedToPhoneNumber,
-          this.assignedToEmail,
-          this.assignedToWhatsapp
+        switchMap(() =>
+          this.qcService.assignQualityControl(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.assignedTo,
+            this.assignedToPhoneNumber,
+            this.assignedToEmail,
+            this.assignedToWhatsapp
+          )
+        ),
+        switchMap(() =>
+          this.valuationSvc.assignValuation(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.assignedTo,
+            this.assignedToPhoneNumber,
+            this.assignedToEmail,
+            this.assignedToWhatsapp
+          )
+        ),
+        // ✅ LOG HISTORY
+        switchMap(() =>
+          this.logHistoryAction(
+            'Quality Control Details Saved',
+            `${changedFields.length} field(s) updated: ${changedFieldsStr}`,
+            null,
+            'QC'
+          )
         )
       )
-          )
-          .subscribe({
-          next: () => {
+      .subscribe({
+        next: () => {
           this.saveInProgress = false;
           this.saving = false;
-          this.saved = true;  
-          this._snackBar.open('Quality control saved successfully', 'Close', {
+          this.saved = true;
+          this._snackBar.open('✅ Quality control saved successfully and history logged', 'Close', {
             duration: 3000,
             horizontalPosition: 'center',
             verticalPosition: 'top'
           });
+          // ✅ UPDATE ORIGINAL DATA AFTER SAVE
+          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         },
         error: (err) => {
           this.error = err.message || 'Save failed.';
@@ -261,6 +347,9 @@ export class QualityControlUpdateComponent implements OnInit {
     this.submitInProgress = true;
 
     const payload = this.buildPayload();
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
     this.qcService
       .updateQualityControlDetails(
         this.valuationId,
@@ -269,25 +358,22 @@ export class QualityControlUpdateComponent implements OnInit {
         payload
       )
       .pipe(
-        // Complete current workflow step
         switchMap(() =>
           this.workflowSvc.completeWorkflow(
             this.valuationId,
-            4, // same step id as above
+            4,
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
           )
         ),
-        // Optionally start next step
         switchMap(() =>
           this.workflowSvc.startWorkflow(
             this.valuationId,
-            5, // next workflow step
+            5,
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
           )
-        )
-        ,
+        ),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -307,32 +393,40 @@ export class QualityControlUpdateComponent implements OnInit {
             }
           )
         ),
-      switchMap(() =>
-        this.valuationSvc.assignValuation(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          this.assignedTo,
-          this.assignedToPhoneNumber,
-          this.assignedToEmail,
-          this.assignedToWhatsapp
+        switchMap(() =>
+          this.valuationSvc.assignValuation(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.assignedTo,
+            this.assignedToPhoneNumber,
+            this.assignedToEmail,
+            this.assignedToWhatsapp
+          )
+        ),
+        switchMap(() =>
+          this.qcService.assignQualityControl(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.assignedTo,
+            this.assignedToPhoneNumber,
+            this.assignedToEmail,
+            this.assignedToWhatsapp
+          )
+        ),
+        // ✅ LOG HISTORY
+        switchMap(() =>
+          this.logHistoryAction(
+            'Quality Control Submitted - Moving to Final Report',
+            `Quality control completed. ${changedFields.length} field(s) updated: ${changedFieldsStr}. Overall Rating: ${this.form.get('overallRating')?.value}, Valuation Amount: ₹${this.form.get('valuationAmount')?.value}. Status: QC Complete → Final Report In Progress`,
+            'QC',
+            'FinalReport'
+          )
         )
-      ),
-      switchMap(() =>
-        this.qcService.assignQualityControl(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          this.assignedTo,
-          this.assignedToPhoneNumber,
-          this.assignedToEmail,
-          this.assignedToWhatsapp
-        )
-      )
       )
       .subscribe({
         next: () => {
-          // After submit, navigate back to QC view
           this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,

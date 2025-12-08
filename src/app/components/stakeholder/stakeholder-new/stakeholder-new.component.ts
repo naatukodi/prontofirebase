@@ -16,6 +16,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService }    from '../../../services/workflow.service';
 import { ValuationService }   from '../../../services/valuation.service';
+import { HistoryLoggerService } from '../../../services/history-logger.service';
 import {
   PincodeService,
   PincodeModel
@@ -24,7 +25,6 @@ import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
-// ✅ ADD THIS IMPORT
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
 
 @Component({
@@ -42,7 +42,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
 
   private valueSubscriptions = new Subscription();
 
-  // ✅ ADD THESE PROPERTIES FOR DUPLICATE TRACKING
   duplicateInfo: VehicleDuplicateCheckResponse = {
     isDuplicate: false,
     isVehicleNumberExists: false,
@@ -101,7 +100,8 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     private svc: StakeholderService,
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
-    private pincodeSvc: PincodeService
+    private pincodeSvc: PincodeService,
+    private historyLogger: HistoryLoggerService
   ) {}
 
   ngOnInit(): void {
@@ -145,8 +145,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     });
 
     this.setupWhatsappAutofill();
-    
-    // ✅ ADD THIS: Setup duplicate checking
     this.setupDuplicateCheck();
   }
 
@@ -182,20 +180,17 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.valueSubscriptions.add(contactSub);
   }
 
-  // ✅ ADD THIS NEW METHOD
   setupDuplicateCheck(): void {
-    // Monitor vehicle number changes for duplicate check
     const vehicleNumberControl = this.form.get('vehicleNumber');
     
     if (!vehicleNumberControl) return;
 
     const duplicateCheckSub = vehicleNumberControl.valueChanges
       .pipe(
-        debounceTime(1000), // Wait 1 second after user stops typing
+        debounceTime(1000),
         distinctUntilChanged()
       )
       .subscribe(vehicleNumber => {
-        // Only check if vehicle number has value and is valid format
         if (vehicleNumber && vehicleNumber.length >= 4) {
           this.checkForDuplicates(vehicleNumber);
         } else {
@@ -206,11 +201,9 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.valueSubscriptions.add(duplicateCheckSub);
   }
 
-  // ✅ ADD THIS NEW METHOD
   checkForDuplicates(vehicleNumber: string): void {
     this.isCheckingDuplicate = true;
     
-    // Only checking vehicle number (undefined for engine and chassis)
     this.valuationSvc.checkDuplicateVehicle(vehicleNumber, undefined, undefined)
       .subscribe({
         next: (response) => {
@@ -220,12 +213,10 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.isCheckingDuplicate = false;
           console.error('Error checking duplicates:', error);
-          // Don't show error to user, just log it
         }
       });
   }
 
-  // ✅ ADD THIS NEW METHOD
   handleDuplicateResponse(response: VehicleDuplicateCheckResponse): void {
     this.duplicateInfo = response;
     this.showDuplicateWarning = response.isDuplicate;
@@ -237,7 +228,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ ADD THIS NEW METHOD
   resetDuplicateInfo(): void {
     this.duplicateInfo = {
       isDuplicate: false,
@@ -251,7 +241,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.showDuplicateWarning = false;
   }
 
-  // ✅ ADD THIS NEW METHOD
   dismissWarning(): void {
     this.showDuplicateWarning = false;
   }
@@ -266,9 +255,11 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       next: offices => {
         this.locationOptions = offices;
         this.form.patchValue({
-          location: null,
-          block: '', district: '',
-          division: '', state: '',
+          location: null as unknown as PincodeModel | null,
+          block: '',
+          district: '',
+          division: '',
+          state: '',
           country: ''
         });
       },
@@ -294,16 +285,22 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     return a && b ? a.name === b.name : a === b;
   }
 
-  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
+  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile'): void {
     const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this[field] = input.files[0];
+    if (input.files && input.files.length > 0) {
+      if (field === 'rcFile') {
+        this.rcFile = input.files[0];
+      } else if (field === 'insuranceFile') {
+        this.insuranceFile = input.files[0];
+      }
     }
   }
 
-  onMultiFileChange(event: Event) {
+  onMultiFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.otherFiles = input.files ? Array.from(input.files) : [];
+    if (input.files) {
+      this.otherFiles = Array.from(input.files);
+    }
   }
 
   private buildFormData(): FormData {
@@ -379,7 +376,15 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
               workflowStepOrder: 1
             }
           )
-        )
+        ),
+        switchMap(async () => {
+          await this.historyLogger.logAction(
+            this.valuationId,
+            'Stakeholder Saved',
+            'New stakeholder details have been saved'
+          );
+          return of(null);
+        })
       )
       .subscribe({
         next: () => (this.saving = this.saveInProgress = false),
@@ -391,14 +396,12 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ✅ UPDATED THIS METHOD TO SHOW DUPLICATE WARNING
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    // ✅ ADD DUPLICATE CHECK CONFIRMATION
     if (this.duplicateInfo.isDuplicate) {
       const confirmMessage = 
         '⚠️ DUPLICATE VEHICLE DETECTED!\n\n' +
@@ -407,7 +410,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
         'Do you want to proceed anyway?';
 
       if (!confirm(confirmMessage)) {
-        return; // User cancelled
+        return;
       }
     }
 
@@ -444,7 +447,19 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
               workflowStepOrder: 1
             }
           )
-        )
+        ),
+        switchMap(async () => {
+          await this.historyLogger.logAction(
+            this.valuationId,
+            'Stakeholder Submitted',
+            'Stakeholder details submitted for next step',
+            'unknown',
+            'Unknown User',
+            'In Progress',
+            'Stakeholder Complete'
+          );
+          return of(null);
+        })
       )
       .subscribe({
         next: () => {
