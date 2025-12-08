@@ -1,4 +1,5 @@
-// PASTE THIS ENTIRE FILE
+// src/app/components/stakeholder/stakeholder-update/stakeholder-update.component.ts
+
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +13,7 @@ import {
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { ValuationService } from '../../../services/valuation.service';
+import { HistoryLoggerService } from '../../../services/history-logger.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
@@ -36,33 +38,32 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
   valuationType!: string;
 
   private valueSubscriptions = new Subscription();
-
   private usersSvc = inject(UsersService);
 
   stakeholderOptions: string[] = [
-      'State Bank of India (SBI)',
-      'HDFC Bank',
-      'ICICI Bank',
-      'Axis Bank',
-      'IndusInd Bank',
-      'Punjab National Bank (PNB)',
-      'Federal Bank',
-      'Union Bank of India',
-      'Bank of Baroda',
-      'IDFC FIRST Bank',
-      'Karur Vysya Bank',
-      'Kotak Mahindra Bank',
-      'Mahindra Finance',
-      'Bajaj Finserv',
-      'Hero FinCorp',
-      'TVS Credit Services',
-      'Shriram Finance',
-      'Muthoot Capital Services',
-      'Cholamandalam Investment and Finance Company',
-      'Sundaram Finance',
-      'Manappuram Finance',
-      'L&T Finance'
-    ]; 
+    'State Bank of India (SBI)',
+    'HDFC Bank',
+    'ICICI Bank',
+    'Axis Bank',
+    'IndusInd Bank',
+    'Punjab National Bank (PNB)',
+    'Federal Bank',
+    'Union Bank of India',
+    'Bank of Baroda',
+    'IDFC FIRST Bank',
+    'Karur Vysya Bank',
+    'Kotak Mahindra Bank',
+    'Mahindra Finance',
+    'Bajaj Finserv',
+    'Hero FinCorp',
+    'TVS Credit Services',
+    'Shriram Finance',
+    'Muthoot Capital Services',
+    'Cholamandalam Investment and Finance Company',
+    'Sundaram Finance',
+    'Manappuram Finance',
+    'L&T Finance'
+  ];
   locationOptions: PincodeModel[] = [];
 
   saving = false;
@@ -88,6 +89,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     private svc: StakeholderService,
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
+    private historyLogger: HistoryLoggerService,
     private auth: Auth
   ) {}
 
@@ -99,7 +101,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       this.valuationType = params.get('valuationType')!;
       this.initForm();
       this.loadStakeholder();
-      this.setupWhatsappAutofill(); 
+      this.setupWhatsappAutofill();
       authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
     });
   }
@@ -114,10 +116,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       stakeholderName: ['', Validators.required],
       stakeholderExecutiveName: ['', Validators.required],
       stakeholderExecutiveContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
-      
-      // --- THIS LINE IS MODIFIED ---
       stakeholderExecutiveWhatsapp: ['', [Validators.pattern(/^[0-9]{10}$/)]],
-
       sameAsContact: [false],
       stakeholderExecutiveEmail: ['', [Validators.email]],
       valuationType: [''],
@@ -176,7 +175,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     );
   }
 
-    private resolveId(u: User): string | null {
+  private resolveId(u: User): string | null {
     return u.phoneNumber ?? u.uid ?? u.email ?? null;
   }
 
@@ -227,10 +226,17 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) this[field] = input.files[0];
+  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile'): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    if (field === 'rcFile') {
+      this.rcFile = input.files[0];  
+    } else if (field === 'insuranceFile') {
+      this.insuranceFile = input.files[0];  
+    }
   }
+}
+
 
   onMultiFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -302,9 +308,9 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
             remarks: data.remarks ?? ''
           });
           this.saving = this.loading = false;
-        if (data.executiveContact && data.executiveContact === data.executiveWhatsapp) {
+          if (data.executiveContact && data.executiveContact === data.executiveWhatsapp) {
             this.form.get('sameAsContact')?.setValue(true);
-        }
+          }
         },
         error: err => {
           this.error = err.message || 'Failed to load';
@@ -313,7 +319,6 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       });
   }
 
-  // "Save" (draft) flow
   onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -330,24 +335,23 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       this.applicantContact,
       payload
     ).pipe(
-      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1,this.vehicleNumber, encodeURIComponent(this.applicantContact)))
-      ,
+      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
       switchMap(() =>
         this.workflowSvc.updateWorkflowTable(
           this.valuationId,
           this.vehicleNumber,
           this.applicantContact,
           {
-              workflow: 'Stakeholder',
-              workflowStepOrder: 1,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
-              stakeholderAssignedTo: this.assignedTo,
-              stakeholderAssignedToEmail: this.assignedToEmail,
-              stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
-              stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
+            workflow: 'Stakeholder',
+            workflowStepOrder: 1,
+            assignedTo: this.assignedTo,
+            assignedToPhoneNumber: this.assignedToPhoneNumber,
+            assignedToEmail: this.assignedToEmail,
+            assignedToWhatsapp: this.assignedToWhatsapp,
+            stakeholderAssignedTo: this.assignedTo,
+            stakeholderAssignedToEmail: this.assignedToEmail,
+            stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
+            stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
           }
         )
       ),
@@ -372,7 +376,17 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
           this.assignedToEmail,
           this.assignedToWhatsapp
         )
-      )
+      ),
+      switchMap(async () => {
+        await this.historyLogger.logAction(
+          this.valuationId,
+          'Stakeholder Updated',
+          'Stakeholder details have been updated and saved',
+          this.assignedTo,
+          this.assignedTo
+        );
+        return of(null);
+      })
     ).subscribe({
       next: (): void => {
         this.saving = this.saveInProgress = false;
@@ -386,7 +400,6 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-  // "Submit" flow
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -402,26 +415,25 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       this.applicantContact,
       payload
     ).pipe(
-      switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 1,this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2,this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-      switchMap(() => this.valuationSvc.getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact))
-      ,
+      switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 1, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+      switchMap(() => this.valuationSvc.getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact)),
       switchMap(() =>
         this.workflowSvc.updateWorkflowTable(
           this.valuationId,
           this.vehicleNumber,
           this.applicantContact,
           {
-              workflow: 'Backend',
-              workflowStepOrder: 2,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
-              stakeholderAssignedTo: this.assignedTo,
-              stakeholderAssignedToEmail: this.assignedToEmail,
-              stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
-              stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
+            workflow: 'Backend',
+            workflowStepOrder: 2,
+            assignedTo: this.assignedTo,
+            assignedToPhoneNumber: this.assignedToPhoneNumber,
+            assignedToEmail: this.assignedToEmail,
+            assignedToWhatsapp: this.assignedToWhatsapp,
+            stakeholderAssignedTo: this.assignedTo,
+            stakeholderAssignedToEmail: this.assignedToEmail,
+            stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
+            stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
           }
         )
       ),
@@ -446,19 +458,31 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
           this.assignedToEmail,
           this.assignedToWhatsapp
         )
-      )
+      ),
+      switchMap(async () => {
+        await this.historyLogger.logAction(
+          this.valuationId,
+          'Stakeholder Submitted',
+          'Stakeholder details submitted to Backend team',
+          this.assignedTo,
+          this.assignedTo,
+          'Stakeholder In Progress',
+          'Backend In Progress'
+        );
+        return of(null);
+      })
     ).subscribe({
       next: () => {
-      this.router.navigate(
-      ['/valuation', this.valuationId, 'stakeholder'],
-      {
-        queryParams: {
-          vehicleNumber: this.vehicleNumber,
-          applicantContact: this.applicantContact,
-          valuationType: this.valuationType
-        }
-      }
-    );
+        this.router.navigate(
+          ['/valuation', this.valuationId, 'stakeholder'],
+          {
+            queryParams: {
+              vehicleNumber: this.vehicleNumber,
+              applicantContact: this.applicantContact,
+              valuationType: this.valuationType
+            }
+          }
+        );
       },
       error: err => {
         this.error = err.message || 'Submit failed';
@@ -466,7 +490,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
         this.saving = false;
       }
     });
-    }
+  }
 
   onCancel() {
     this.router.navigate(

@@ -1,6 +1,6 @@
-// src/app/components/valution/valuation-update/valuation-update.component.ts
+// src/app/components/valuation/valuation-update/valuation-update.component.ts
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
@@ -18,9 +18,11 @@ import { map, shareReplay } from 'rxjs/operators';
 import { UsersService } from '../../../services/users.service';
 import { AssignableUser, UserModel } from '../../../models/user.model';
 import { ClaimService } from '../../../services/claim.service';
-
-// ✅ ADD THIS IMPORT
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
+
+// ✅ USE EXISTING SERVICE
+import { HistoryLoggerService } from '../../../services/history-logger.service';
+
 
 @Component({
   selector: 'app-valuation-update',
@@ -29,13 +31,14 @@ import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate
   templateUrl: './valuation-update.component.html',
   styleUrls: ['./valuation-update.component.scss']
 })
-export class ValuationUpdateComponent implements OnInit {
+export class ValuationUpdateComponent implements OnInit, OnDestroy {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType!: string;
 
   private usersSvc = inject(UsersService);
+  private historyLogger = inject(HistoryLoggerService);  // ✅ INJECT EXISTING SERVICE
 
   form!: FormGroup;
   loading = true;
@@ -69,7 +72,6 @@ export class ValuationUpdateComponent implements OnInit {
 
   assignedUser: AssignableUser | null = null;
 
-  // ✅ ADD THESE PROPERTIES FOR DUPLICATE TRACKING
   duplicateInfo: VehicleDuplicateCheckResponse = {
     isDuplicate: false,
     isVehicleNumberExists: false,
@@ -85,6 +87,13 @@ export class ValuationUpdateComponent implements OnInit {
   showDuplicateExpanded = false;
   private valueSubscriptions = new Subscription();
 
+  // ✅ ADD THESE FOR TRACKING ORIGINAL DATA
+  private originalFormData: any = {};
+  private currentUser: User | null = null;
+  private currentUserId: string = 'unknown';
+  private currentUserName: string = 'Unknown User';
+
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -96,6 +105,7 @@ export class ValuationUpdateComponent implements OnInit {
     private claimSvc: ClaimService,
     private auth: Auth
   ) {}
+
 
   ngOnInit(): void {
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
@@ -109,8 +119,6 @@ export class ValuationUpdateComponent implements OnInit {
         this.applicantContact = ac;
         this.initForm();
         this.loadVehicleDetails();
-        
-        // ✅ ADD THIS: Setup duplicate checking after form is initialized
         this.setupDuplicateCheck();
       } else {
         this.loading = false;
@@ -118,16 +126,27 @@ export class ValuationUpdateComponent implements OnInit {
       }
     });
 
-    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
+    // ✅ GET CURRENT USER INFO
+    authState(this.auth).pipe(take(1)).subscribe(u => {
+      this.currentUser = u;
+      if (u) {
+        this.currentUserId = u.uid || u.phoneNumber || 'unknown';
+        this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+          this.currentUserName = name || u.email || 'Unknown User';
+          this.applyAssignedFromUser(u);
+        });
+      }
+    });
 
     this.loadAssignableUsers(); 
     this.loadAssignedUser();
   }
 
-  // ✅ ADD ngOnDestroy TO CLEAN UP SUBSCRIPTIONS
+
   ngOnDestroy(): void {
     this.valueSubscriptions.unsubscribe();
   }
+
 
   private initForm() {
     this.form = this.fb.group({
@@ -195,9 +214,8 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
-  // ✅ ADD THIS NEW METHOD FOR DUPLICATE CHECKING
+
   private setupDuplicateCheck(): void {
-    // Monitor all three fields for changes
     const vehicleNumberControl = this.form.get('registrationNumber');
     const engineNumberControl = this.form.get('engineNumber');
     const chassisNumberControl = this.form.get('chassisNumber');
@@ -206,18 +224,16 @@ export class ValuationUpdateComponent implements OnInit {
       return;
     }
 
-    // Combine all three field changes into one stream
     const duplicateCheckSub = combineLatest([
       vehicleNumberControl.valueChanges,
       engineNumberControl.valueChanges,
       chassisNumberControl.valueChanges
     ]).pipe(
-      debounceTime(1000), // Wait 1 second after user stops typing
+      debounceTime(1000),
       distinctUntilChanged((prev, curr) => 
         JSON.stringify(prev) === JSON.stringify(curr)
       )
     ).subscribe(([vehicleNo, engineNo, chassisNo]) => {
-      // Only check if at least one field has a value
       if (vehicleNo || engineNo || chassisNo) {
         this.checkForDuplicates(vehicleNo, engineNo, chassisNo);
       } else {
@@ -228,7 +244,7 @@ export class ValuationUpdateComponent implements OnInit {
     this.valueSubscriptions.add(duplicateCheckSub);
   }
 
-  // ✅ ADD THIS NEW METHOD
+
   private checkForDuplicates(
     vehicleNumber: string, 
     engineNumber: string, 
@@ -252,7 +268,7 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
-  // ✅ ADD THIS NEW METHOD
+
   private handleDuplicateResponse(response: VehicleDuplicateCheckResponse): void {
     this.duplicateInfo = response;
     this.showDuplicateWarning = response.isDuplicate;
@@ -262,9 +278,8 @@ export class ValuationUpdateComponent implements OnInit {
       console.log('Messages:', response.messages);
       console.log('Existing records:', response.existingRecords);
       
-      // Show snackbar notification
       this._snackBar.open(
-        `⚠️ Warning: ${response.messages[0]}`,
+        `⚠️ Warning: ${response.messages}`,
         'View Details',
         {
           duration: 5000,
@@ -276,7 +291,7 @@ export class ValuationUpdateComponent implements OnInit {
     }
   }
 
-  // ✅ ADD THIS NEW METHOD
+
   private resetDuplicateInfo(): void {
     this.duplicateInfo = {
       isDuplicate: false,
@@ -290,12 +305,11 @@ export class ValuationUpdateComponent implements OnInit {
     this.showDuplicateWarning = false;
   }
 
-  // ✅ ADD THIS NEW METHOD
+
   dismissWarning(): void {
     this.showDuplicateWarning = false;
   }
 
-  // ... (keep all your existing methods) ...
 
   private applyBackendAssignedFromUser(u: User | null): void {
     const name =
@@ -310,6 +324,7 @@ export class ValuationUpdateComponent implements OnInit {
     this.backendAssignedToWhatsapp = u?.phoneNumber || '';
   }
 
+
   private loadAssignedUser(): void {
     this.loadingAssigned = true;
     this.userSvc.getAssignedUser(this.valuationId, this.vehicleNumber, this.applicantContact)
@@ -319,6 +334,7 @@ export class ValuationUpdateComponent implements OnInit {
         error: () => { this.assignedUser = null; this.loadingAssigned = false; }
       });
   }
+
 
   private resolveDisplayName(u: User | null): Observable<string> {
     return of(u).pipe(
@@ -333,13 +349,16 @@ export class ValuationUpdateComponent implements OnInit {
     );
   }
 
+
   private resolveId(u: User): string | null {
     return u.phoneNumber ?? u.uid ?? u.email ?? null;
   }
 
+
   private fallbackName(u: User): string {
     return u.displayName || u.email || u.phoneNumber || '';
   }
+
 
   private applyAssignedFromUser(u: User | null): void {
     this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
@@ -356,9 +375,11 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
+
   private loadAssignableUsers(): void {
     this.usersWithEdit$ = this.userSvc.getUsersWithCanEditInspection();
   }
+
 
   onSelectAssignable(userId: string): void {
     this.selectedUserId = userId;
@@ -367,6 +388,7 @@ export class ValuationUpdateComponent implements OnInit {
       this.selectedUser = list.find(u => (u.userId || u.email) === userId) ?? null;
     });
   }
+
 
   assignSelectedUser(): void {
     if (!this.selectedUser) { return; }
@@ -414,6 +436,7 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
+
   private loadVehicleDetails() {
     this.loading = true;
     this.error = null;
@@ -423,6 +446,8 @@ export class ValuationUpdateComponent implements OnInit {
       .subscribe({
         next: (data: VehicleDetails) => {
           this.patchForm(data);
+          // ✅ STORE ORIGINAL DATA FOR COMPARISON
+          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
           this.loading = false;
         },
         error: (err) => {
@@ -431,6 +456,7 @@ export class ValuationUpdateComponent implements OnInit {
         }
       });
   }
+
 
   private patchForm(data: VehicleDetails) {
     this.form.patchValue({
@@ -480,23 +506,50 @@ export class ValuationUpdateComponent implements OnInit {
     });
   }
 
-  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile') {
+
+  onFileChange(event: Event, field: 'rcFile' | 'insuranceFile'): void {
     const inputEl = event.target as HTMLInputElement;
     if (inputEl.files && inputEl.files.length > 0) {
-      this[field] = inputEl.files[0];
+      if (field === 'rcFile') {
+        this.rcFile = inputEl.files[0];
+      } else if (field === 'insuranceFile') {
+        this.insuranceFile = inputEl.files[0];
+      }
     }
   }
 
-  onMultiFileChange(event: Event) {
+
+  onMultiFileChange(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
-    this.otherFiles = inputEl.files ? Array.from(inputEl.files) : [];
+    if (inputEl.files) {
+      this.otherFiles = Array.from(inputEl.files);
+    }
   }
+
+
+  // ✅ NEW METHOD: COMPARE AND TRACK CHANGES
+  private getChangedFields(): any[] {
+    const currentData = this.form.getRawValue();
+    const changedFields: any[] = [];
+
+    Object.keys(currentData).forEach(key => {
+      if (this.originalFormData[key] !== currentData[key]) {
+        changedFields.push({
+          fieldName: key,
+          oldValue: this.originalFormData[key],
+          newValue: currentData[key]
+        });
+      }
+    });
+
+    return changedFields;
+  }
+
 
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
 
-    // ... (keep all your existing buildFormData logic) ...
     fd.append('registrationNumber', v.registrationNumber);
     fd.append('make', v.make);
     fd.append('model', v.model);
@@ -571,6 +624,7 @@ export class ValuationUpdateComponent implements OnInit {
     return fd;
   }
 
+
   onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -580,6 +634,8 @@ export class ValuationUpdateComponent implements OnInit {
     this.saveInProgress = true;
 
     const payload = this.buildFormData();
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
 
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
@@ -610,6 +666,15 @@ export class ValuationUpdateComponent implements OnInit {
             this.backendAssignedToEmail,
             this.backendAssignedToWhatsapp
           )
+        ),
+        // ✅ LOG TO HISTORY (using existing HistoryLoggerService)
+        switchMap(() =>
+          this.logHistoryAction(
+            'Vehicle Details Updated - Saved',
+            `${changedFields.length} field(s) updated: ${changedFieldsStr}`,
+            null,
+            'Backend'
+          )
         )
       )
       .subscribe({
@@ -617,11 +682,13 @@ export class ValuationUpdateComponent implements OnInit {
           this.saveInProgress = false;
           this.saving = false;
           this.saved = true;
-          this._snackBar.open('Saved successfully', 'Close', {
+          this._snackBar.open('✅ Saved successfully and history logged', 'Close', {
             duration: 3000,
             horizontalPosition: 'center',
             verticalPosition: 'top'
           });
+          // Update original data after successful save
+          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         },
         error: (err) => {
           this.error = err.message || 'Save failed.';
@@ -631,14 +698,13 @@ export class ValuationUpdateComponent implements OnInit {
       });
   }
 
-  // ✅ UPDATED THIS METHOD TO SHOW DUPLICATE WARNING
+
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    // ✅ ADD DUPLICATE CHECK CONFIRMATION
     if (this.duplicateInfo.isDuplicate) {
       const confirmMessage = 
         '⚠️ DUPLICATE VEHICLE DETAILS DETECTED!\n\n' +
@@ -647,7 +713,7 @@ export class ValuationUpdateComponent implements OnInit {
         'Do you want to proceed anyway?';
 
       if (!confirm(confirmMessage)) {
-        return; // User cancelled
+        return;
       }
     }
 
@@ -657,6 +723,8 @@ export class ValuationUpdateComponent implements OnInit {
     const assignedToPhoneNumber = this.assignedUser?.phoneNumber ?? '';
     const assignedToEmail = this.assignedUser?.email ?? '';
     const assignedToWhatsapp = this.assignedUser?.whatsapp ?? assignedToPhoneNumber;
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
 
     const payload = this.buildFormData();
     this.valuationSvc
@@ -689,6 +757,15 @@ export class ValuationUpdateComponent implements OnInit {
             this.backendAssignedToEmail,
             this.backendAssignedToWhatsapp
           )
+        ),
+        // ✅ LOG TO HISTORY (using existing HistoryLoggerService)
+        switchMap(() =>
+          this.logHistoryAction(
+            'Vehicle Details Submitted - Moving to AVO',
+            `Vehicle details submitted. ${changedFields.length} field(s) updated: ${changedFieldsStr}. Status: Backend Complete → AVO In Progress`,
+            'Backend',
+            'AVO'
+          )
         )
       )
       .subscribe({
@@ -708,6 +785,36 @@ export class ValuationUpdateComponent implements OnInit {
         }
       });
   }
+
+
+  // ✅ NEW METHOD: LOG HISTORY USING EXISTING SERVICE
+  private logHistoryAction(
+    action: string,
+    remarks: string,
+    statusFrom: string | null,
+    statusTo: string | null
+  ): Observable<any> {
+    return new Observable(observer => {
+      this.historyLogger.logAction(
+        this.valuationId,
+        action,
+        remarks,
+        this.currentUserId,
+        this.currentUserName,
+        statusFrom,
+        statusTo
+      ).then(() => {
+        console.log('✅ History logged:', action);
+        observer.next(true);
+        observer.complete();
+      }).catch((err: any) => {
+        console.error('❌ Error logging history:', err);
+        observer.next(true); // Don't fail the save if logging fails
+        observer.complete();
+      });
+    });
+  }
+
 
   onCancel() {
     this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {

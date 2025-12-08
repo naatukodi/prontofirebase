@@ -1,6 +1,6 @@
 // src/app/valuation-inspection-update/inspection-update.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InspectionService } from '../../../services/inspection.service';
@@ -14,9 +14,14 @@ import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { take } from 'rxjs/operators';
+import { take, Observable } from 'rxjs';
+
+// ✅ IMPORT HISTORY LOGGER SERVICE
+import { HistoryLoggerService } from '../../../services/history-logger.service';
+
 
 type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce';
+
 
 @Component({
   selector: 'app-valuation-inspection-update',
@@ -25,7 +30,7 @@ type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | '
   templateUrl: './inspection-update.component.html',
   styleUrls: ['./inspection-update.component.scss']
 })
-export class InspectionUpdateComponent implements OnInit {
+export class InspectionUpdateComponent implements OnInit, OnDestroy {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -46,6 +51,12 @@ export class InspectionUpdateComponent implements OnInit {
   private assignedToPhoneNumber = '';
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
+
+  // ✅ ADD THESE FOR TRACKING
+  private currentUser: User | null = null;
+  private currentUserId: string = 'unknown';
+  private currentUserName: string = 'Unknown User';
+  private originalFormData: any = {};
 
   // Mandatory photo validation state
   isSaving: boolean = false;
@@ -114,7 +125,8 @@ export class InspectionUpdateComponent implements OnInit {
     private workflowSvc: WorkflowService,
     private qualityControlSvc: QualityControlService,
     private _snackBar: MatSnackBar,
-    private auth: Auth     
+    private auth: Auth,
+    private historyLogger: HistoryLoggerService  // ✅ INJECT
   ) {}
 
   ngOnInit(): void {
@@ -125,7 +137,16 @@ export class InspectionUpdateComponent implements OnInit {
     this.maxDate = `${yyyy}-${mm}-${dd}`;
 
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
-    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
+    
+    // ✅ GET CURRENT USER INFO
+    authState(this.auth).pipe(take(1)).subscribe(u => {
+      this.currentUser = u;
+      if (u) {
+        this.currentUserId = u.uid || u.phoneNumber || 'unknown';
+        this.currentUserName = u.displayName || u.email?.split('@')[0] || 'Unknown User';
+      }
+      this.applyAssignedFromUser(u);
+    });
 
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
@@ -143,6 +164,10 @@ export class InspectionUpdateComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    // Cleanup if needed
+  }
+
   showField(key: string): boolean {
     return !!(this.valuationType && this.visibilityMap[this.valuationType]?.includes(key));
   }
@@ -155,7 +180,6 @@ export class InspectionUpdateComponent implements OnInit {
     this.assignedToWhatsapp = u?.phoneNumber || '';
   }
 
-  // ✅ FIXED: Complete initForm with all controls
   private initForm() {
     this.form = this.fb.group({
       vehicleInspectedBy: ['', Validators.required],
@@ -223,15 +247,16 @@ export class InspectionUpdateComponent implements OnInit {
       next: data => {
         console.log('✅ Inspection Data Loaded:', data);
         this.patchForm(data);
+        // ✅ STORE ORIGINAL DATA
+        this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
-        // DEBUG: Check photo validation on load
         this.checkMandatoryPhotosBeforeSave().then(isComplete => {
-        console.log('📸 Photo Validation Result:', {
-          isComplete: isComplete,
-          missingPhotos: this.missingPhotos,
-          errorMessage: this.mandatoryPhotosError
+          console.log('📸 Photo Validation Result:', {
+            isComplete: isComplete,
+            missingPhotos: this.missingPhotos,
+            errorMessage: this.mandatoryPhotosError
+          });
         });
-      });
       },
       error: err => {
         console.error('❌ Error Loading Inspection:', err);
@@ -241,7 +266,6 @@ export class InspectionUpdateComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED: Complete patchForm with all fields
   private patchForm(data: Inspection) {
     const v = this.form;
     v.patchValue({
@@ -319,6 +343,24 @@ export class InspectionUpdateComponent implements OnInit {
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
+  // ✅ NEW METHOD: TRACK CHANGED FIELDS
+  private getChangedFields(): any[] {
+    const currentData = this.form.getRawValue();
+    const changedFields: any[] = [];
+
+    Object.keys(currentData).forEach(key => {
+      if (this.originalFormData[key] !== currentData[key]) {
+        changedFields.push({
+          fieldName: key,
+          oldValue: this.originalFormData[key],
+          newValue: currentData[key]
+        });
+      }
+    });
+
+    return changedFields;
+  }
+
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
@@ -357,7 +399,6 @@ export class InspectionUpdateComponent implements OnInit {
     this.form.patchValue(defaults);
   }
 
-  // Mandatory photo validation
   checkMandatoryPhotosBeforeSave(): Promise<boolean> {
     return new Promise((resolve) => {
       this.vehicleInspectionService.checkMandatoryPhotos(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
@@ -393,6 +434,34 @@ export class InspectionUpdateComponent implements OnInit {
     });
   }
 
+  // ✅ NEW METHOD: LOG HISTORY
+  private logHistoryAction(
+    action: string,
+    remarks: string,
+    statusFrom: string | null,
+    statusTo: string | null
+  ): Observable<any> {
+    return new Observable(observer => {
+      this.historyLogger.logAction(
+        this.valuationId,
+        action,
+        remarks,
+        this.currentUserId,
+        this.currentUserName,
+        statusFrom,
+        statusTo
+      ).then(() => {
+        console.log('✅ History logged:', action);
+        observer.next(true);
+        observer.complete();
+      }).catch((err: any) => {
+        console.error('❌ Error logging history:', err);
+        observer.next(true); // Don't fail if logging fails
+        observer.complete();
+      });
+    });
+  }
+
   async onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -408,6 +477,9 @@ export class InspectionUpdateComponent implements OnInit {
     this.saving = true;
     this.saveInProgress = true;
     const payload = this.buildFormData();
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
@@ -422,14 +494,24 @@ export class InspectionUpdateComponent implements OnInit {
           avoAssignedToPhoneNumber: this.assignedToPhoneNumber,
           avoAssignedToEmail: this.assignedToEmail,
           avoAssignedToWhatsapp: this.assignedToWhatsapp
-        }))
+        })),
+        // ✅ LOG HISTORY
+        switchMap(() =>
+          this.logHistoryAction(
+            'Inspection Details Saved - AVO',
+            `${changedFields.length} field(s) updated: ${changedFieldsStr}`,
+            null,
+            'AVO'
+          )
+        )
       )
       .subscribe({
         next: () => {
           this.saveInProgress = false;
           this.saving = false;
           this.saved = true;
-          this._snackBar.open('Inspection saved successfully', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top' });
+          this._snackBar.open('✅ Inspection saved successfully and history logged', 'Close', { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top' });
+          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         },
         error: (err) => {
           this.error = err.message || 'Save failed.';
@@ -454,6 +536,9 @@ export class InspectionUpdateComponent implements OnInit {
     this.saving = true;
     this.submitInProgress = true;
     const payload = this.buildFormData();
+    const changedFields = this.getChangedFields();
+    const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
         switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
@@ -470,7 +555,16 @@ export class InspectionUpdateComponent implements OnInit {
           avoAssignedToPhoneNumber: this.assignedToPhoneNumber,
           avoAssignedToEmail: this.assignedToEmail,
           avoAssignedToWhatsapp: this.assignedToWhatsapp
-        }))
+        })),
+        // ✅ LOG HISTORY
+        switchMap(() =>
+          this.logHistoryAction(
+            'Inspection Submitted - Moving to QC',
+            `Inspection completed. ${changedFields.length} field(s) updated: ${changedFieldsStr}. Status: AVO Complete → QC In Progress`,
+            'AVO',
+            'QC'
+          )
+        )
       )
       .subscribe({
         next: () => {
