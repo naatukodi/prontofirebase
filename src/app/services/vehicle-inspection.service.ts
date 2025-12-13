@@ -10,11 +10,11 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class VehicleInspectionService {
-private readonly baseUrl = environment.apiBaseUrl + 'valuations';
+  private readonly baseUrl = environment.apiBaseUrl + 'valuations';
 
   constructor(private http: HttpClient, private workflowService: WorkflowService) {}
 
-  // Add methods for vehicle image upload
+  // ✅ FIXED: uploadPhotos now handles VIDEOS correctly
   async uploadPhotos(
     valuationId: string,
     vehicleNumber: string,
@@ -22,23 +22,33 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
     formData: FormData,
     options: any = {}
   ): Promise<Observable<HttpEvent<any>>> {
-    // Compress images before appending to FormData
+    
+    // Create a new container for the data we will actually send
     const compressedFormData = new FormData();
+    
+    // 1. Append Text Data
     compressedFormData.append('valuationId', valuationId);
     compressedFormData.append('vehicleNumber', vehicleNumber);
     compressedFormData.append('applicantContact', applicantContact);
 
-    // Iterate through formData and compress images
+    // 2. Iterate through formData to filter & compress
     for (const [key, value] of (formData as any).entries()) {
-      if (value instanceof File && value.type.startsWith('image/')) {
-      if (value.size > 500 * 1024) { // Only compress if size > 500KB
-        const compressedFile = await this.compressImage(value, 0.5); // 0.5 quality
-        compressedFormData.append(key, compressedFile, compressedFile.name);
-      } else {
-        compressedFormData.append(key, value, value.name);
-      }
-      } else if (typeof value === 'string') {
-      compressedFormData.append(key, value);
+      
+      if (value instanceof File) {
+        // CASE A: It is a Large Image -> Compress it
+        if (value.type.startsWith('image/') && value.size > 500 * 1024) {
+             const compressedFile = await this.compressImage(value, 0.5); // 0.5 quality
+             compressedFormData.append(key, compressedFile, compressedFile.name);
+        } 
+        // CASE B: It is a VIDEO or small Image -> Add it directly!
+        // (This was missing before, causing videos to be skipped)
+        else {
+             compressedFormData.append(key, value, value.name);
+        }
+      } 
+      // CASE C: It is a String (metadata)
+      else if (typeof value === 'string') {
+        compressedFormData.append(key, value);
       }
     }
 
@@ -46,6 +56,7 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
       .set('vehicleNumber', vehicleNumber)
       .set('applicantContact', applicantContact);
 
+    // ✅ Using PUT as requested
     return this.http.put<HttpEvent<any>>(
       `${this.baseUrl}/${valuationId}/photos`,
       compressedFormData,
@@ -100,10 +111,9 @@ private readonly baseUrl = environment.apiBaseUrl + 'valuations';
   }
 
   /**
- * ✅ NEW METHOD: Check if all mandatory photos are uploaded
- * Returns: { isComplete: boolean, missingPhotos: string[] }
- */
-
+   * ✅ Check if all mandatory photos are uploaded
+   * Returns: { isComplete: boolean, missingPhotos: string[] }
+   */
   checkMandatoryPhotos(
     valuationId: string,
     vehicleNumber: string,
