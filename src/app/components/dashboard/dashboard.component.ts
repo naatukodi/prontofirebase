@@ -36,7 +36,11 @@ export class DashboardComponent implements OnInit {
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
-  filterDate: Date | null = null;
+  
+  // ✅ UPDATED: Changed from single 'filterDate' to Range variables
+  fromDate: Date | null = null;
+  toDate: Date | null = null;
+  
   currentUser: UserModel | null = null;
 
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
@@ -44,14 +48,11 @@ export class DashboardComponent implements OnInit {
     'vehicleNumber','assignedTo','phone','location',
     'createdAt','age','redFlag','applicant','info',
     'currentStep','status', 'action'
-
   ];
   
-  // ✅ NEW FUNCTION
   openCase(v: WFValuation) {
     this.navigateToCurrent(v);
   }
-
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
   selectedStep = '';
@@ -108,25 +109,6 @@ export class DashboardComponent implements OnInit {
       error: () => { this.error = 'Failed to load valuations'; }
     });
   }
-  /**
- * Handles filtering claims when the date picker value changes.
- * Filters the `claims` array to include only those with a createdAt date matching the selected filterDate.
- * Resets the filter if no date is selected.
- */
-  onDateFilterChange(): void {
-    // If no date is selected, reset filter to show all claims matching other filters.
-    if (!this.filterDate) {
-      this.applyFilter();
-      return;
-    }
-    // Normalize the filter date to midnight for date-only comparison
-    const filterTime = this.filterDate.setHours(0, 0, 0, 0);
-    // Filter claims where the createdAt date matches the selected date (ignoring time)
-    this.filteredClaims = this.claims.filter(v => {
-      const createdTime = new Date(v.createdAt).setHours(0, 0, 0, 0);
-      return createdTime === filterTime;
-    });
-  }
 
   /** Returns an observable that emits WFValuation[] once and completes */
   private fetchValuationsForUser(user: UserModel): Observable<WFValuation[]> {
@@ -167,10 +149,30 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  // ✅ UPDATED: New Filter Logic handling Date Ranges
   applyFilter(): void {
     this.filteredClaims = this.claims.filter(v => {
+      // 1. Step Filter
       const step = this.steps[this.getStepIndex(v)];
-      return !this.selectedStep || step === this.selectedStep && (!this.filterDate || new Date(v.createdAt).setHours(0, 0, 0, 0) === this.filterDate.setHours(0, 0, 0, 0));
+      const matchesStep = !this.selectedStep || step === this.selectedStep;
+
+      // 2. Date Range Filter
+      let matchesDate = true;
+      if (this.fromDate && this.toDate) {
+        const itemDate = new Date(v.createdAt);
+        
+        // Normalize Start Date (00:00:00)
+        const start = new Date(this.fromDate);
+        start.setHours(0, 0, 0, 0);
+
+        // Normalize End Date (23:59:59)
+        const end = new Date(this.toDate);
+        end.setHours(23, 59, 59, 999);
+
+        matchesDate = itemDate >= start && itemDate <= end;
+      }
+
+      return matchesStep && matchesDate;
     });
   }
 

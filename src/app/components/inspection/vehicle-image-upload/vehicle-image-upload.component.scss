@@ -23,7 +23,7 @@
   font-weight: 500;
 }
 
-/* The grid holding each image‐card */
+/* The grid holding each media-card */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -60,20 +60,18 @@
   .progress-wrapper,
   .field-error {
     position: relative;
-    z-index: 5;          /* under the input but above the basic .image-card layer */
+    z-index: 5;           /* under the input but above the basic .image-card layer */
     pointer-events: none; /* so taps fall through to the input when needed */
   }
 
-  /* 3) Upload & Open‐Image buttons must be on top of everything */
+  /* 3) Upload & Open buttons must be on top of everything */
   button,
   .open-image-btn {
     position: relative;
-    z-index: 20;         /* highest layer so you can still tap Upload/OpenImage */
+    z-index: 20;          /* highest layer so you can still tap Upload/Open */
     pointer-events: all;
   }
 }
-
-/* …rest of your CSS stays exactly as before… */
 
 /* Preview area */
 .preview {
@@ -86,7 +84,9 @@
   background: white;
 }
 
-.thumbnail {
+/* Image & video preview */
+.thumbnail,
+.video-preview {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -132,7 +132,7 @@ button[mat-raised-button] {
   width: 100%;
 }
 
-/* “Open Image” button styling */
+/* “Open Image / Play Video” button styling */
 .open-image-btn {
   margin-top: 8px;
   background: transparent;
@@ -142,6 +142,7 @@ button[mat-raised-button] {
   border-radius: 4px;
   font-size: 0.85rem;
   pointer-events: all;
+  cursor: pointer;
 }
 
 /* Progress bar container */
@@ -185,9 +186,9 @@ button[mat-raised-button] {
 
 /* Back button area */
 .actions {
-    display: flex;
-    justify-content: flex-start;
-    gap: 16px;
-    margin-top: 8px;
-    margin-left: 8px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-top: 8px;
+  margin-left: 8px;
 }
