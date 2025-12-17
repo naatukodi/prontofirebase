@@ -6,6 +6,11 @@ import { catchError } from 'rxjs/operators';
 import { WorkflowService } from './workflow.service';
 import { environment } from '../../environments/environment';
 
+export interface PhotoMetadata {
+  capturedDate?: string; // ISO string
+  locationText?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,7 +19,7 @@ export class VehicleInspectionService {
 
   constructor(private http: HttpClient, private workflowService: WorkflowService) {}
 
-  // ✅ FIXED: uploadPhotos now handles VIDEOS correctly
+  // ... (Existing uploadPhotos method - NO CHANGES) ...
   async uploadPhotos(
     valuationId: string,
     vehicleNumber: string,
@@ -22,32 +27,20 @@ export class VehicleInspectionService {
     formData: FormData,
     options: any = {}
   ): Promise<Observable<HttpEvent<any>>> {
-    
-    // Create a new container for the data we will actually send
     const compressedFormData = new FormData();
-    
-    // 1. Append Text Data
     compressedFormData.append('valuationId', valuationId);
     compressedFormData.append('vehicleNumber', vehicleNumber);
     compressedFormData.append('applicantContact', applicantContact);
 
-    // 2. Iterate through formData to filter & compress
     for (const [key, value] of (formData as any).entries()) {
-      
       if (value instanceof File) {
-        // CASE A: It is a Large Image -> Compress it
         if (value.type.startsWith('image/') && value.size > 500 * 1024) {
-             const compressedFile = await this.compressImage(value, 0.5); // 0.5 quality
+             const compressedFile = await this.compressImage(value, 0.5);
              compressedFormData.append(key, compressedFile, compressedFile.name);
-        } 
-        // CASE B: It is a VIDEO or small Image -> Add it directly!
-        // (This was missing before, causing videos to be skipped)
-        else {
+        } else {
              compressedFormData.append(key, value, value.name);
         }
-      } 
-      // CASE C: It is a String (metadata)
-      else if (typeof value === 'string') {
+      } else if (typeof value === 'string') {
         compressedFormData.append(key, value);
       }
     }
@@ -56,7 +49,6 @@ export class VehicleInspectionService {
       .set('vehicleNumber', vehicleNumber)
       .set('applicantContact', applicantContact);
 
-    // ✅ Using PUT as requested
     return this.http.put<HttpEvent<any>>(
       `${this.baseUrl}/${valuationId}/photos`,
       compressedFormData,
@@ -64,7 +56,7 @@ export class VehicleInspectionService {
     ).pipe(catchError(this.handleError));
   }
 
-  // Helper function to compress an image file
+  // ... (Existing compressImage method - NO CHANGES) ...
   private compressImage(file: File, quality: number): Promise<File> {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -95,6 +87,7 @@ export class VehicleInspectionService {
     });
   }
 
+  // ... (Existing getVehicleImages method - NO CHANGES) ...
   getVehicleImages(
     valuationId: string,
     vehicleNumber: string,
@@ -110,10 +103,7 @@ export class VehicleInspectionService {
     ).pipe(catchError(this.handleError));
   }
 
-  /**
-   * ✅ Check if all mandatory photos are uploaded
-   * Returns: { isComplete: boolean, missingPhotos: string[] }
-   */
+  // ... (Existing checkMandatoryPhotos method - NO CHANGES) ...
   checkMandatoryPhotos(
     valuationId: string,
     vehicleNumber: string,
@@ -137,6 +127,27 @@ export class VehicleInspectionService {
   ): Observable<any> {
     return this.http.delete<any>(
       `${this.baseUrl}/${valuationId}/photos/${imageName}`
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ===========================================================================
+  // ✅ NEW METHODS FOR METADATA (Date & Location)
+  // ===========================================================================
+
+  updatePhotoMetadata(
+    valuationId: string,
+    photoType: string,
+    metadata: PhotoMetadata
+  ): Observable<any> {
+    return this.http.put<any>(
+      `${this.baseUrl}/${valuationId}/photos/${photoType}/metadata`,
+      metadata
+    ).pipe(catchError(this.handleError));
+  }
+
+  getPhotoMetadata(valuationId: string): Observable<Record<string, PhotoMetadata>> {
+    return this.http.get<Record<string, PhotoMetadata>>(
+      `${this.baseUrl}/${valuationId}/photos/metadata`
     ).pipe(catchError(this.handleError));
   }
 
