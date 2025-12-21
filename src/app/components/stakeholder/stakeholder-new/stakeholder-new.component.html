@@ -55,7 +55,7 @@
   </div>
 
   <!-- PIN-Code lookup -->
-  <mat-form-field appearance="fill" class="full-width">
+  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Pincode</mat-label>
     <input
       matInput
@@ -73,7 +73,7 @@
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Name of Stakeholder</mat-label>
         <mat-select formControlName="stakeholderName">
           <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">
@@ -82,12 +82,12 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Executive Name</mat-label>
         <input matInput formControlName="stakeholderExecutiveName" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Contact Number</mat-label>
         <input matInput formControlName="stakeholderExecutiveContact" maxlength="10" />
       </mat-form-field>
@@ -95,7 +95,7 @@
       <!-- To make WhatsApp number same as contact number -->
       <div class="grid-item full-width">
         <div class="whatsapp-section">
-          <mat-form-field appearance="fill" class="whatsapp-field">
+          <mat-form-field appearance="outline" class="whatsapp-field">
             <mat-label>WhatsApp Number</mat-label>
             <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
           </mat-form-field>
@@ -109,12 +109,12 @@
         </div>
       </div>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Email ID</mat-label>
         <input matInput formControlName="stakeholderExecutiveEmail" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Valuation Type</mat-label>
         <mat-select formControlName="valuationType">
           <mat-option value="four-wheeler">Four Wheeler</mat-option>
@@ -127,7 +127,7 @@
       </mat-form-field>
 
       <!-- Location dropdown -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Location</mat-label>
         <mat-select
           formControlName="location"
@@ -144,31 +144,31 @@
       </mat-form-field>
 
       <!-- Auto-filled / manual: Block / City -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Block / City</mat-label>
         <input matInput formControlName="block" />
       </mat-form-field>
 
       <!-- Auto-filled / manual: District -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>District</mat-label>
         <input matInput formControlName="district" />
       </mat-form-field>
 
       <!-- Auto-filled / manual: Division -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Division</mat-label>
         <input matInput formControlName="division" />
       </mat-form-field>
 
       <!-- Auto-filled / manual: State -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>State</mat-label>
         <input matInput formControlName="state" />
       </mat-form-field>
 
       <!-- Auto-filled / manual: Country -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Country</mat-label>
         <input matInput formControlName="country" />
       </mat-form-field>
@@ -179,11 +179,11 @@
   <fieldset class="nested-group">
     <legend>Applicant</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Applicant Name</mat-label>
         <input matInput formControlName="applicantName" />
       </mat-form-field>
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Applicant Contact</mat-label>
         <input matInput formControlName="applicantContact" maxlength="10" />
       </mat-form-field>
@@ -193,7 +193,7 @@
   <!-- Remarks -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Remarks</mat-label>
       <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
     </mat-form-field>
@@ -203,7 +203,7 @@
   <fieldset class="nested-group" [class.field-has-duplicate]="duplicateInfo.isVehicleNumberExists">
     <legend>Vehicle Details</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>
           Vehicle Number
           <span *ngIf="duplicateInfo.isVehicleNumberExists" class="duplicate-badge" title="Duplicate detected">
@@ -219,7 +219,7 @@
           [class.has-warning]="duplicateInfo.isVehicleNumberExists"
           autocomplete="off" />
       </mat-form-field>
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Vehicle Segment</mat-label>
         <input matInput formControlName="vehicleSegment" />
       </mat-form-field>

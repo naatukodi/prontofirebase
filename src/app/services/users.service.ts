@@ -128,7 +128,7 @@ getAssignedUser(
         .set('vehicleNumber', vehicleNumber)
         .set('applicantContact', applicantContact);
 
-    const url = `${environment.apiBaseUrl}valuations/workflows/open/assignedto`;
+    const url = `${environment.apiBaseUrl}/valuations/workflows/open/assignedto`;
     return this.http.get<UserModel>(url, { params });
 }
 
