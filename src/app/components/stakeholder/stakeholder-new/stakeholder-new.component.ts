@@ -120,7 +120,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       ],
       stakeholderName:            ['', Validators.required],
       stakeholderExecutiveName:   ['', Validators.required],
-      stakeholderExecutiveContact:['', Validators.pattern(/^[0-9]{10}$/)],
+      stakeholderExecutiveContact:['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
       stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
       sameAsContact: [false],
       stakeholderExecutiveEmail:  ['', Validators.email],
@@ -132,7 +132,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       state:     [''],
       country:   [''],
       applicantName:    ['', Validators.required],
-      applicantContact: ['', Validators.pattern(/^[0-9]{10}$/)],
+      applicantContact: ['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
       vehicleNumber:   [
         '',
         [

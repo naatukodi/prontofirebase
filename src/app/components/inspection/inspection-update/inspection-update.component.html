@@ -1,20 +1,17 @@
 <!-- src/app/valuation-inspection-update/inspection-update.component.html -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <h2>Inspection Update</h2>
-
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
     [applicantContact]="applicantContact"
-    [valuationType]="valuationType ?? ''"
-  >
+    [valuationType]="valuationType ?? ''">
   </app-workflow-buttons>
 
-  <!-- Loading & Error -->
+  <!-- ── Loading & Error ────────────────────────────────────────────────── -->
   <div *ngIf="loading">Loading inspection details …</div>
   <div *ngIf="error" class="error">{{ error }}</div>
 
-  <!-- ✅ FIXED: MANDATORY PHOTOS VALIDATION ALERT - Only show when photos are actually missing -->
+  <!-- ── Mandatory Photos Validation Alert ──────────────────────────────── -->
   <div class="error-alert" *ngIf="mandatoryPhotosError && missingPhotos && missingPhotos.length > 0">
     <div class="alert-header">
       <span class="alert-icon">⚠️</span>
@@ -37,60 +34,59 @@
         mat-raised-button
         color="warn"
         (click)="goBackToPhotoUpload()"
-        class="go-back-btn"
-      >
+        class="go-back-btn">
         ← Go Back to Upload Photos
       </button>
     </div>
   </div>
 
-  <!-- Default Values & Action Buttons -->
-  <div class="actions">
-    <button mat-stroked-button type="button" (click)="updateDefaultValues()">
-      Set Default Values
-    </button>
-  </div>
+  <!-- ── Default Values Button ────────────────────────────────────────────── -->
+  <fieldset>
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="updateDefaultValues()">
+        Set Default Values
+      </button>
+    </div>
+  </fieldset>
 
   <ng-container *ngIf="!loading && !error">
-    <!-- Inspection Info -->
+
+    <!-- ── Inspection Info ────────────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Inspection Info</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('vehicleInspectedBy')" appearance="fill">
+        <mat-form-field *ngIf="showField('vehicleInspectedBy')" appearance="outline">
           <mat-label>Vehicle Inspected By</mat-label>
           <input matInput formControlName="vehicleInspectedBy" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('inspectionDate')" appearance="fill">
+        <mat-form-field *ngIf="showField('inspectionDate')" appearance="outline">
           <mat-label>Date of Inspection</mat-label>
           <input
             matInput
             type="date"
             formControlName="dateOfInspection"
-            [max]="maxDate"
-          />
+            [max]="maxDate" />
           <mat-error *ngIf="form.get('dateOfInspection')?.hasError('required')">
             Date is required.
           </mat-error>
-          <mat-error
-            *ngIf="form.get('dateOfInspection')?.hasError('futureDate')"
-          >
+          <mat-error *ngIf="form.get('dateOfInspection')?.hasError('futureDate')">
             Cannot select a future date.
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('inspectionLocation')" appearance="fill">
+        <mat-form-field *ngIf="showField('inspectionLocation')" appearance="outline">
           <mat-label>Inspection Location</mat-label>
           <input matInput formControlName="inspectionLocation" />
         </mat-form-field>
       </div>
     </fieldset>
 
-    <!-- Basic Vehicle Checks -->
+    <!-- ── Basic Vehicle Checks ──────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Basic Vehicle Checks</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('vehicleMoved')" appearance="fill">
+        <mat-form-field *ngIf="showField('vehicleMoved')" appearance="outline">
           <mat-label>Vehicle Moved</mat-label>
           <mat-select formControlName="vehicleMoved">
             <mat-option [value]="true">Yes</mat-option>
@@ -98,7 +94,7 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('engineStarted')" appearance="fill">
+        <mat-form-field *ngIf="showField('engineStarted')" appearance="outline">
           <mat-label>Engine Started</mat-label>
           <mat-select formControlName="engineStarted">
             <mat-option [value]="true">Yes</mat-option>
@@ -106,12 +102,12 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('odometer')" appearance="fill">
+        <mat-form-field *ngIf="showField('odometer')" appearance="outline">
           <mat-label>Odometer (km)</mat-label>
           <input matInput type="number" formControlName="odometer" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('vinPlate')" appearance="fill">
+        <mat-form-field *ngIf="showField('vinPlate')" appearance="outline">
           <mat-label>VIN Plate Present</mat-label>
           <mat-select formControlName="vinPlate">
             <mat-option [value]="true">Yes</mat-option>
@@ -119,17 +115,20 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('bodyType')" appearance="fill">
+        <mat-form-field *ngIf="showField('bodyType')" appearance="outline">
           <mat-label>Body Type</mat-label>
           <input matInput formControlName="bodyType" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('tyreCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('tyreCondition')" appearance="outline">
           <mat-label>Overall Tyre Condition</mat-label>
-          <input matInput formControlName="overallTyreCondition" />
+          <mat-select formControlName="tyreCondition">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="fill">
+        <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="outline">
           <mat-label>Other Accessories Fitted</mat-label>
           <mat-select formControlName="otherAccessoryFitment">
             <mat-option [value]="true">Yes</mat-option>
@@ -139,16 +138,16 @@
       </div>
     </fieldset>
 
-    <!-- External Visual Checks -->
+    <!-- ── External Visual Checks ────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>External Visual Checks</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('windshieldGlass')" appearance="fill">
+        <mat-form-field *ngIf="showField('windshieldGlass')" appearance="outline">
           <mat-label>Windshield / Glass</mat-label>
           <input matInput formControlName="windshieldGlass" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('roadWorthyCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('roadWorthyCondition')" appearance="outline">
           <mat-label>Road Worthy Condition</mat-label>
           <mat-select formControlName="roadWorthyCondition">
             <mat-option [value]="true">OK</mat-option>
@@ -156,260 +155,284 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('engineCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('engineCondition')" appearance="outline">
           <mat-label>Engine Condition</mat-label>
-          <input matInput formControlName="engineCondition" />
+          <mat-select formControlName="engineCondition">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('suspensionSystem')" appearance="fill">
+        <mat-form-field *ngIf="showField('suspensionSystem')" appearance="outline">
           <mat-label>Suspension System</mat-label>
-          <input matInput formControlName="suspensionSystem" />
+          <mat-select formControlName="suspensionSystem">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('steeringSystem')" appearance="fill">
+        <mat-form-field *ngIf="showField('steeringSystem')" appearance="outline">
           <mat-label>Steering Assembly</mat-label>
-          <input matInput formControlName="steeringAssy" />
+          <mat-select formControlName="steeringSystem">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('steeringWheel')" appearance="fill">
+        <mat-form-field *ngIf="showField('steeringWheel')" appearance="outline">
           <mat-label>Steering Wheel</mat-label>
           <input matInput formControlName="steeringWheel" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('steeringColumn')" appearance="fill">
+        <mat-form-field *ngIf="showField('steeringColumn')" appearance="outline">
           <mat-label>Steering Column</mat-label>
           <input matInput formControlName="steeringColumn" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('steeringBox')" appearance="fill">
+        <mat-form-field *ngIf="showField('steeringBox')" appearance="outline">
           <mat-label>Steering Box</mat-label>
           <input matInput formControlName="steeringBox" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('steeringLinkages')" appearance="fill">
+        <mat-form-field *ngIf="showField('steeringLinkages')" appearance="outline">
           <mat-label>Steering Linkages</mat-label>
           <input matInput formControlName="steeringLinkages" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('fuelSystem')" appearance="fill">
+        <mat-form-field *ngIf="showField('fuelSystem')" appearance="outline">
           <mat-label>Fuel System</mat-label>
           <input matInput formControlName="fuelSystem" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('brakeSystem')" appearance="fill">
+        <mat-form-field *ngIf="showField('brakeSystem')" appearance="outline">
           <mat-label>Brake System</mat-label>
-          <input matInput formControlName="brakeSystem" />
+          <mat-select formControlName="brakeSystem">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
     </fieldset>
 
-    <!-- Structural & Body Checks -->
+    <!-- ── Structural & Body Checks ──────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Structural & Body Checks</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('chassisCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('chassisCondition')" appearance="outline">
           <mat-label>Chassis Condition</mat-label>
-          <input matInput formControlName="chassisCondition" />
+          <mat-select formControlName="chassisCondition">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('exteriorCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('exteriorCondition')" appearance="outline">
           <mat-label>Exterior Condition</mat-label>
           <input matInput formControlName="exteriorCondition" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('interiorCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('interiorCondition')" appearance="outline">
           <mat-label>Interior Condition</mat-label>
           <input matInput formControlName="interiorCondition" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('bonnet')" appearance="fill">
+        <mat-form-field *ngIf="showField('bonnet')" appearance="outline">
           <mat-label>Bonnet</mat-label>
           <input matInput formControlName="bonnet" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('bodyCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('bodyCondition')" appearance="outline">
           <mat-label>Body Condition</mat-label>
           <input matInput formControlName="bodyCondition" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('batteryCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('batteryCondition')" appearance="outline">
           <mat-label>Battery Condition</mat-label>
           <input matInput formControlName="batteryCondition" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('paintWork')" appearance="fill">
+        <mat-form-field *ngIf="showField('paintWork')" appearance="outline">
           <mat-label>Paint Work</mat-label>
-          <input matInput formControlName="paintWork" />
+          <mat-select formControlName="paintWork">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('audio')" appearance="fill">
+        <mat-form-field *ngIf="showField('audio')" appearance="outline">
           <mat-label>Audio</mat-label>
           <input matInput formControlName="audio" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('clutchSystem')" appearance="fill">
+        <mat-form-field *ngIf="showField('clutchSystem')" appearance="outline">
           <mat-label>Clutch System</mat-label>
-          <input matInput formControlName="clutchSystem" />
+          <mat-select formControlName="clutchSystem">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('gearboxAssembly')" appearance="fill">
+        <mat-form-field *ngIf="showField('gearboxAssembly')" appearance="outline">
           <mat-label>Gearbox Assembly</mat-label>
-          <input matInput formControlName="gearBoxAssy" />
+          <mat-select formControlName="gearboxAssembly">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('propellerShaft')" appearance="fill">
+        <mat-form-field *ngIf="showField('propellerShaft')" appearance="outline">
           <mat-label>Propeller Shaft</mat-label>
-          <input matInput formControlName="propellerShaft" />
+          <mat-select formControlName="propellerShaft">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('mudguards')" appearance="fill">
+        <mat-form-field *ngIf="showField('mudguards')" appearance="outline">
           <mat-label>Mudguards</mat-label>
           <input matInput formControlName="mudguards" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('allGlasses')" appearance="fill">
+        <mat-form-field *ngIf="showField('allGlasses')" appearance="outline">
           <mat-label>All Glasses</mat-label>
           <input matInput formControlName="allGlasses" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('boom')" appearance="fill">
-          <mat-label>boom</mat-label>
+        <mat-form-field *ngIf="showField('boom')" appearance="outline">
+          <mat-label>Boom</mat-label>
           <input matInput formControlName="boom" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('bucket')" appearance="fill">
-          <mat-label>bucket</mat-label>
+        <mat-form-field *ngIf="showField('bucket')" appearance="outline">
+          <mat-label>Bucket</mat-label>
           <input matInput formControlName="bucket" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('chainTrack')" appearance="fill">
+        <mat-form-field *ngIf="showField('chainTrack')" appearance="outline">
           <mat-label>Chain Track</mat-label>
           <input matInput formControlName="chainTrack" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('hydraulicCylinders')" appearance="fill">
+        <mat-form-field *ngIf="showField('hydraulicCylinders')" appearance="outline">
           <mat-label>Hydraulic Cylinders</mat-label>
           <input matInput formControlName="hydraulicCylinders" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('swingUnit')" appearance="fill">
+        <mat-form-field *ngIf="showField('swingUnit')" appearance="outline">
           <mat-label>Swing Unit</mat-label>
           <input matInput formControlName="swingUnit" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('differentialAssy')" appearance="fill">
+        <mat-form-field *ngIf="showField('differentialAssy')" appearance="outline">
           <mat-label>Differential Assembly</mat-label>
-          <input matInput formControlName="differentialAssy" />
+          <mat-select formControlName="differentialAssy">
+            <mat-option [value]="true">Good</mat-option>
+            <mat-option [value]="false">Not Good</mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
     </fieldset>
 
-    <!-- Interior & Electrical Checks -->
+    <!-- ── Interior & Electrical Checks ──────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Interior & Electrical Checks</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('cabinCondition')" appearance="fill">
+        <mat-form-field *ngIf="showField('cabinCondition')" appearance="outline">
           <mat-label>Cabin Condition</mat-label>
           <input matInput formControlName="cabin" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('dashboard')" appearance="fill">
+        <mat-form-field *ngIf="showField('dashboard')" appearance="outline">
           <mat-label>Dashboard Condition</mat-label>
           <input matInput formControlName="dashboard" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('seats')" appearance="fill">
+        <mat-form-field *ngIf="showField('seats')" appearance="outline">
           <mat-label>Seats Condition</mat-label>
           <input matInput formControlName="seats" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('upholestry')" appearance="fill">
+        <mat-form-field *ngIf="showField('upholestry')" appearance="outline">
           <mat-label>Upholestry</mat-label>
           <input matInput formControlName="upholestry" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('interiorTrims')" appearance="fill">
+        <mat-form-field *ngIf="showField('interiorTrims')" appearance="outline">
           <mat-label>Interior Trims</mat-label>
           <input matInput formControlName="interiorTrims" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('headLamps')" appearance="fill">
+        <mat-form-field *ngIf="showField('headLamps')" appearance="outline">
           <mat-label>Head Lamps</mat-label>
           <input matInput formControlName="headLamps" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('front')" appearance="fill">
-          <mat-label>front</mat-label>
+        <mat-form-field *ngIf="showField('front')" appearance="outline">
+          <mat-label>Front View</mat-label>
           <input matInput formControlName="front" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('rear')" appearance="fill">
-          <mat-label>rear</mat-label>
+        <mat-form-field *ngIf="showField('rear')" appearance="outline">
+          <mat-label>Rear View</mat-label>
           <input matInput formControlName="rear" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('axles')" appearance="fill">
-          <mat-label>axles</mat-label>
+        <mat-form-field *ngIf="showField('axles')" appearance="outline">
+          <mat-label>Axles</mat-label>
           <input matInput formControlName="axles" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('airConditioner')" appearance="fill">
+        <mat-form-field *ngIf="showField('airConditioner')" appearance="outline">
           <mat-label>Air Conditioner</mat-label>
           <input matInput formControlName="airConditioner" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('electricAssembly')" appearance="fill">
+        <mat-form-field *ngIf="showField('electricAssembly')" appearance="outline">
           <mat-label>Electric Assembly</mat-label>
           <input matInput formControlName="electricAssembly" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('radiator')" appearance="fill">
+        <mat-form-field *ngIf="showField('radiator')" appearance="outline">
           <mat-label>Radiator</mat-label>
           <input matInput formControlName="radiator" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('intercooler')" appearance="fill">
+        <mat-form-field *ngIf="showField('intercooler')" appearance="outline">
           <mat-label>Intercooler</mat-label>
           <input matInput formControlName="intercooler" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('allHosePipes')" appearance="fill">
+        <mat-form-field *ngIf="showField('allHosePipes')" appearance="outline">
           <mat-label>All Hose & Pipes</mat-label>
           <input matInput formControlName="allHosePipes" />
         </mat-form-field>
       </div>
     </fieldset>
 
-    <!-- Remarks -->
+    <!-- ── Remarks Section ────────────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Remarks</legend>
-      <mat-form-field appearance="fill" class="remarks-field">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Remarks</mat-label>
         <textarea matInput rows="3" formControlName="remarks"></textarea>
       </mat-form-field>
     </fieldset>
 
-    <!-- View / Upload Images -->
+    <!-- ── View / Upload Images Section ─────────────────────────────────── -->
     <fieldset class="nested-group">
+      <legend>Photos & Images</legend>
       <div class="actions">
         <button
           mat-raised-button
           color="primary"
           (click)="onClick()"
-          [disabled]="!saved || saving"
-        >
+          [disabled]="!saved || saving">
           View / Upload Images
         </button>
       </div>
     </fieldset>
 
-    <!-- Default Values & Action Buttons -->
-    <div class="actions">
-      <button mat-stroked-button type="button" (click)="updateDefaultValues()">
-        Set Default Values
-      </button>
-    </div>
-
-    <!-- ✅ UPDATED: Save, Submit, Cancel Buttons with Mandatory Photo Validation -->
+    <!-- ── Save, Submit, Cancel Buttons ──────────────────────────────────── -->
     <fieldset>
       <div class="button-group">
         <button
@@ -422,8 +445,7 @@
               ? 'Upload all mandatory photos first'
               : 'Save inspection'
           "
-          (click)="onSave()"
-        >
+          (click)="onSave()">
           {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
         </button>
 
@@ -436,8 +458,7 @@
             mandatoryPhotosError && missingPhotos.length > 0
               ? 'Upload all mandatory photos first'
               : 'Submit inspection'
-          "
-        >
+          ">
           {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
         </button>
 
@@ -446,12 +467,12 @@
           color="warn"
           type="button"
           [disabled]="saving"
-          (click)="onCancel()"
-        >
+          (click)="onCancel()">
           Cancel
         </button>
       </div>
     </fieldset>
+
   </ng-container>
 </form>
 

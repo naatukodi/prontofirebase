@@ -1,5 +1,3 @@
-<!-- src/app/vehicle-image-upload/vehicle-image-upload.component.html -->
-
 <app-workflow-buttons
   [id]="valuationId"
   [vehicleNumber]="vehicleNumber"
@@ -10,84 +8,69 @@
 <div class="upload-container">
   <h2>Vehicle Media Upload (Photos + Video)</h2>
 
-  <!-- Show a global error if route/query params are missing -->
   <div *ngIf="error" class="error">{{ error }}</div>
 
-  <!-- Wait until we have valuationId, vehicleNumber, applicantContact -->
   <ng-container *ngIf="!error">
     <div class="grid">
       <ng-container *ngFor="let field of mediaFields">
-        <label class="image-card">
-          <!-- 1) File input at the top -->
+        
+        <div class="image-card">
+          
           <input
+            #fileInput
             type="file"
             [id]="'input-' + field.key"
             [accept]="field.type === 'image' ? 'image/*' : 'video/*'"
+            style="display: none;" 
             (change)="onFileSelected($event, field.key)"
           />
 
-          <!-- 2) Preview / placeholder -->
           <div class="preview">
             <ng-container *ngIf="uploadedUrls[field.key]; else placeholder">
-              <!-- Image preview -->
-              <img
-                *ngIf="field.type === 'image'"
-                [src]="uploadedUrls[field.key]"
-                [alt]="field.label"
-                class="thumbnail"
-              />
-
-              <!-- Video preview -->
-              <video
-                *ngIf="field.type === 'video'"
-                [src]="uploadedUrls[field.key]"
-                controls
-                class="video-preview">
-              </video>
+              <img *ngIf="field.type === 'image'" [src]="uploadedUrls[field.key]" [alt]="field.label" class="thumbnail"/>
+              <video *ngIf="field.type === 'video'" [src]="uploadedUrls[field.key]" controls class="video-preview"></video>
             </ng-container>
-
             <ng-template #placeholder>
               <div class="placeholder">
-                <span>
-                  {{ field.type === 'image' ? 'No Image' : 'No Video' }}
-                </span>
+                <span>{{ field.type === 'image' ? 'No Image' : 'No Video' }}</span>
               </div>
             </ng-template>
           </div>
 
-          <!-- 3) Label text -->
           <div class="label">
             {{ field.label }}
             <span *ngIf="field.optional" class="optional">(optional)</span>
           </div>
 
-          <!-- 4) Upload button -->
-          <button
-            mat-raised-button
-            [color]="field.type === 'image' ? 'primary' : 'accent'"
-            type="button"
-            [disabled]="
-              isUploading[field.key] ||
-              !selectedFiles[field.key]
-            "
-            (click)="uploadMedia(field.key); $event.stopPropagation()"
-          >
-            {{ isUploading[field.key] ? 'Uploading…' : 'Upload' }}
-          </button>
+          <div class="button-group" style="margin-top: 5px; display: flex; gap: 5px; justify-content: center;">
+              <button 
+                mat-stroked-button 
+                type="button" 
+                (click)="fileInput.click()"
+                [disabled]="isUploading[field.key]">
+                Browse
+              </button>
 
-          <!-- 5) Progress bar -->
-          <div
-            class="progress-wrapper"
-            *ngIf="isUploading[field.key]"
-          >
-            <div
-              class="progress-bar"
-              [style.width.%]="uploadProgress[field.key] || 0"
-            ></div>
+              <button 
+                mat-raised-button 
+                color="primary"
+                type="button" 
+                *ngIf="selectedFiles[field.key]"
+                (click)="uploadMedia(field.key)"
+                [disabled]="isUploading[field.key]">
+                Upload Now
+              </button>
+          </div>
+          
+          <div class="selected-file-name" *ngIf="selectedFiles[field.key]" style="font-size: 10px; color: blue;">
+             Selected: {{ selectedFiles[field.key]?.name }}
+          </div>
+
+          <div class="progress-wrapper" *ngIf="isUploading[field.key]">
+            <div class="progress-bar" [style.width.%]="uploadProgress[field.key] || 0"></div>
             <span>{{ uploadProgress[field.key] || 0 }}%</span>
           </div>
 
-          <!-- 6) “Open” button (image or video) -->
           <ng-container *ngIf="uploadedUrls[field.key]">
             <button
               type="button"
@@ -96,21 +79,30 @@
             >
               {{ field.type === 'image' ? 'Open Image' : 'Play Video' }}
             </button>
+
+            <div class="metadata-form" *ngIf="field.type === 'image' || field.type === 'video'">
+                <div class="meta-row">
+                    <label>Date:</label>
+                    <input type="datetime-local" [(ngModel)]="mediaMetadata[field.key].capturedDate">
+                </div>
+                <div class="meta-row">
+                    <label>Location:</label>
+                    <input type="text" placeholder="Fetching location..." [(ngModel)]="mediaMetadata[field.key].locationText">
+                </div>
+                <button class="save-meta-btn" (click)="saveMetadata(field.key)">Save Details</button>
+            </div>
           </ng-container>
 
-          <!-- 7) Field‐level error -->
           <div class="field-error" *ngIf="uploadError[field.key]">
             {{ uploadError[field.key] }}
           </div>
-        </label>
+        </div> 
       </ng-container>
     </div>
   </ng-container>
 
   <div class="actions">
-    <button mat-raised-button color="primary" (click)="onBack()">
-      Back
-    </button>
+    <button mat-raised-button color="primary" (click)="onBack()">Back</button>
   </div>
 </div>
 

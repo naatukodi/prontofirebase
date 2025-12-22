@@ -109,7 +109,7 @@
     <fieldset class="nested-group">
       <legend>Vehicle Identification</legend>
       <div class="grid">
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>
             Registration Number
             <span *ngIf="duplicateInfo.isVehicleNumberExists" class="duplicate-badge" title="Duplicate detected">
@@ -122,27 +122,27 @@
           <input matInput formControlName="registrationNumber" readonly />
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Make</mat-label>
           <input matInput formControlName="make"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Model</mat-label>
           <input matInput formControlName="model"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Body Type</mat-label>
           <input matInput formControlName="bodyType"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Year of Mfg</mat-label>
           <input matInput type="number" formControlName="yearOfMfg"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Month of Mfg</mat-label>
           <input matInput type="number" formControlName="monthOfMfg"/>
         </mat-form-field>
@@ -154,7 +154,7 @@
       <legend>Manufacturing & Engine Details</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>
             Engine Number
             <span *ngIf="duplicateInfo.isEngineNumberExists" class="duplicate-badge" title="Duplicate detected">🚩 Duplicate</span>
@@ -163,7 +163,7 @@
           <input matInput formControlName="engineNumber"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>
             Chassis Number
             <span *ngIf="duplicateInfo.isChassisNumberExists" class="duplicate-badge" title="Duplicate detected">🚩 Duplicate</span>
@@ -172,17 +172,17 @@
           <input matInput formControlName="chassisNumber"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Engine CC</mat-label>
           <input matInput type="number" formControlName="engineCC"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Gross Vehicle Weight</mat-label>
           <input matInput type="number" formControlName="grossVehicleWeight"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Seating Capacity</mat-label>
           <input matInput type="number" formControlName="seatingCapacity"/>
         </mat-form-field>
@@ -195,32 +195,32 @@
       <legend>Registration & RTO</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Date of Registration</mat-label>
           <input matInput type="date" formControlName="dateOfRegistration"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>RTO</mat-label>
           <input matInput formControlName="rto"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Class of Vehicle</mat-label>
           <input matInput formControlName="classOfVehicle"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Category Code</mat-label>
           <input matInput formControlName="categoryCode"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Norms Type</mat-label>
           <input matInput formControlName="normsType"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Maker Variant</mat-label>
           <input matInput formControlName="makerVariant"/>
         </mat-form-field>
@@ -233,24 +233,24 @@
       <legend>Owner & Address</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Owner Name</mat-label>
           <input matInput formControlName="ownerName"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Present Address</mat-label>
           <input matInput formControlName="presentAddress"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permanent Address</mat-label>
           <input matInput formControlName="permanentAddress"/>
         </mat-form-field>
 
         <mat-checkbox formControlName="hypothecation">Hypothecation</mat-checkbox>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Lender</mat-label>
           <input matInput formControlName="lender"/>
         </mat-form-field>
@@ -263,17 +263,17 @@
       <legend>Insurance Details</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Insurer</mat-label>
           <input matInput formControlName="insurer"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Insurance Policy No</mat-label>
           <input matInput formControlName="insurancePolicyNo"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Insurance Valid Up To</mat-label>
           <input matInput type="date" formControlName="insuranceValidUpTo"/>
         </mat-form-field>
@@ -286,37 +286,37 @@
       <legend>Permit & Fitness</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permit No</mat-label>
           <input matInput formControlName="permitNo"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permit Valid Up To</mat-label>
           <input matInput type="date" formControlName="permitValidUpTo"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permit Type</mat-label>
           <input matInput formControlName="permitType"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permit Issued On</mat-label>
           <input matInput type="date" formControlName="permitIssued"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Permit From</mat-label>
           <input matInput type="date" formControlName="permitFrom"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Fitness No</mat-label>
           <input matInput formControlName="fitnessNo"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Fitness Valid To</mat-label>
           <input matInput type="date" formControlName="fitnessValidTo"/>
         </mat-form-field>
@@ -329,22 +329,22 @@
       <legend>Pollution Certificate & Tax</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Pollution Certificate No</mat-label>
           <input matInput formControlName="pollutionCertificateNumber"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Pollution Valid Up To</mat-label>
           <input matInput type="date" formControlName="pollutionCertificateUpto"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Tax Upto</mat-label>
           <input matInput type="date" formControlName="taxUpto"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Tax Paid Up To</mat-label>
           <input matInput formControlName="taxPaidUpTo"/>
         </mat-form-field>
@@ -357,12 +357,12 @@
       <legend>Additional Info</legend>
       <div class="grid">
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>IDV</mat-label>
           <input matInput type="number" formControlName="idv"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Ex-Showroom Price</mat-label>
           <input matInput type="number" formControlName="exShowroomPrice"/>
         </mat-form-field>
@@ -370,17 +370,17 @@
         <mat-checkbox formControlName="backlistStatus">Backlist Status</mat-checkbox>
         <mat-checkbox formControlName="rcStatus">RC Status</mat-checkbox>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Manufactured Date</mat-label>
           <input matInput type="date" formControlName="manufacturedDate"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Stencil Trace URL</mat-label>
           <input matInput formControlName="stencilTraceUrl"/>
         </mat-form-field>
 
-        <mat-form-field appearance="fill">
+        <mat-form-field appearance="outline">
           <mat-label>Chassis No Photo URL</mat-label>
           <input matInput formControlName="chassisNoPhotoUrl"/>
         </mat-form-field>
@@ -392,7 +392,7 @@
     <fieldset class="nested-group">
       <legend>Remarks</legend>
       <div class="grid">
-        <mat-form-field appearance="fill" class="full-width">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Remarks</mat-label>
           <textarea 
             matInput 

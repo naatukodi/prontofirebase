@@ -28,7 +28,7 @@
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Name of Stakeholder</mat-label>
         <mat-select formControlName="stakeholderName">
           <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">
@@ -37,19 +37,19 @@
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Executive Name</mat-label>
         <input matInput formControlName="stakeholderExecutiveName" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Contact Number</mat-label>
         <input matInput formControlName="stakeholderExecutiveContact" maxlength="10" />
       </mat-form-field>
 
       <div class="grid-item full-width">
         <div class="whatsapp-section">
-          <mat-form-field appearance="fill" class="whatsapp-field">
+          <mat-form-field appearance="outline" class="whatsapp-field">
             <mat-label>WhatsApp Number</mat-label>
             <!-- --- THIS LINE IS MODIFIED --- -->
             <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
@@ -64,12 +64,12 @@
         </div>
       </div>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Email ID</mat-label>
         <input matInput formControlName="stakeholderExecutiveEmail" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Valuation Type</mat-label>
         <mat-select formControlName="valuationType">
           <mat-option value="four-wheeler">Four Wheeler</mat-option>
@@ -82,7 +82,7 @@
       </mat-form-field>
 
       <!-- Location dropdown -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Location</mat-label>
         <mat-select
           formControlName="location"
@@ -98,27 +98,27 @@
       </mat-form-field>
 
       <!-- Auto-filled fields -->
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Block / City</mat-label>
         <input matInput formControlName="block" [disabled]="true" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>District</mat-label>
         <input matInput formControlName="district" [disabled]="true" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Division</mat-label>
         <input matInput formControlName="division" [disabled]="true" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>State</mat-label>
         <input matInput formControlName="state" [disabled]="true" />
       </mat-form-field>
 
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Country</mat-label>
         <input matInput formControlName="country" [disabled]="true" />
       </mat-form-field>
@@ -129,11 +129,11 @@
   <fieldset class="nested-group">
     <legend>Applicant</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Applicant Name</mat-label>
         <input matInput formControlName="applicantName" />
       </mat-form-field>
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Applicant Contact</mat-label>
         <input matInput formControlName="applicantContact" maxlength="10"/>
       </mat-form-field>
@@ -144,7 +144,7 @@
   <fieldset class="nested-group">
   <legend>Remarks</legend>
   <div class="grid">
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Remarks</mat-label>
       <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
     </mat-form-field>
@@ -155,11 +155,11 @@
   <fieldset class="nested-group">
     <legend>Vehicle Details</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Vehicle Number</mat-label>
         <input matInput formControlName="vehicleNumber" />
       </mat-form-field>
-      <mat-form-field appearance="fill">
+      <mat-form-field appearance="outline">
         <mat-label>Vehicle Segment</mat-label>
         <input matInput formControlName="vehicleSegment" />
       </mat-form-field>

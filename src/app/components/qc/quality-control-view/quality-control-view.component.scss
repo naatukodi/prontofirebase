@@ -72,3 +72,33 @@ mat-form-field {
     color: rgba(0,0,0,0.12);
   }
 }
+
+/* Photo grid styling (MATCH FINAL REPORT) */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+.photo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  div {
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: rgba(0,0,0,0.6);
+    font-weight: 500;
+  }
+
+  .thumb {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 4px;
+  }
+}
+

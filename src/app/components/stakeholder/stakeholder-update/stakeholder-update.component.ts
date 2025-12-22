@@ -115,7 +115,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       pincode: ['', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]],
       stakeholderName: ['', Validators.required],
       stakeholderExecutiveName: ['', Validators.required],
-      stakeholderExecutiveContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      stakeholderExecutiveContact: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       stakeholderExecutiveWhatsapp: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       sameAsContact: [false],
       stakeholderExecutiveEmail: ['', [Validators.email]],
@@ -127,7 +127,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       state: [{ value: '', disabled: true }],
       country: [{ value: '', disabled: true }],
       applicantName: ['', Validators.required],
-      applicantContact: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      applicantContact: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       vehicleNumber: ['', Validators.required],
       vehicleSegment: ['', Validators.required],
       remarks: ['']

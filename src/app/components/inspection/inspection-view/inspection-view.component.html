@@ -8,7 +8,8 @@
     [valuationType]="valuationType ?? ''">
   </app-workflow-buttons>
 
-  <fieldset class="nested-group">
+  <!-- ── Top Action Buttons ──────────────────────────────────────────────── -->
+  <fieldset>
     <div class="actions">
       <button *ngIf="canEditInspection()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
@@ -22,271 +23,326 @@
     </div>
   </fieldset>
 
-  <h2>Inspection Details</h2>
-
-  <!-- Inspection Info -->
+  <!-- ── Inspection Info ─────────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Inspection Info</legend>
     <div class="grid">
-      <div *ngIf="showField('vehicleInspectedBy')">
-        <label>Vehicle Inspected By:</label>
-        <span>{{ inspection.vehicleInspectedBy }}</span>
-      </div>
-      <div *ngIf="showField('inspectionDate')">
-        <label>Date of Inspection:</label>
-        <span>{{ inspection.dateOfInspection | date:'mediumDate' }}</span>
-      </div>
-      <div *ngIf="showField('inspectionLocation')">
-        <label>Inspection Location:</label>
-        <span>{{ inspection.inspectionLocation }}</span>
-      </div>
+      <mat-form-field appearance="outline" *ngIf="showField('vehicleInspectedBy')">
+        <mat-label>Vehicle Inspected By</mat-label>
+        <input matInput [value]="inspection.vehicleInspectedBy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('inspectionDate')">
+        <mat-label>Date of Inspection</mat-label>
+        <input matInput [value]="inspection.dateOfInspection | date:'mediumDate'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('inspectionLocation')">
+        <mat-label>Inspection Location</mat-label>
+        <input matInput [value]="inspection.inspectionLocation" readonly />
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- Basic Vehicle Checks -->
+  <!-- ── Basic Vehicle Checks ────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Basic Vehicle Checks</legend>
     <div class="grid">
-      <div *ngIf="showField('vehicleMoved')">
-        <label>Vehicle Moved:</label>
-        <span>{{ inspection.vehicleMoved ? 'Yes' : 'No' }}</span>
-      </div>
-      <div *ngIf="showField('engineStarted')">
-        <label>Engine Started:</label>
-        <span>{{ inspection.engineStarted ? 'Yes' : 'No' }}</span>
-      </div>
-      <div *ngIf="showField('odometer')">
-        <label>Odometer (km):</label>
-        <span>{{ inspection.odometer }}</span>
-      </div>
-      <div *ngIf="showField('vinPlate')">
-        <label>VIN Plate Present:</label>
-        <span>{{ inspection.vinPlate ? 'Yes' : 'No' }}</span>
-      </div>
-      <div *ngIf="showField('bodyType')">
-        <label>Body Type:</label>
-        <span>{{ inspection.bodyType }}</span>
-      </div>
-      <div *ngIf="showField('overallTyreCondition')">
-        <label>Overall Tyre Condition:</label>
-        <span>{{ inspection.overallTyreCondition }}</span>
-      </div>
-      <div *ngIf="showField('otherAccessoryFitment')">
-        <label>Other Accessories Fitted:</label>
-        <span>{{ inspection.otherAccessoryFitment ? 'Yes' : 'No' }}</span>
-      </div>
+      <mat-form-field appearance="outline" *ngIf="showField('vehicleMoved')">
+        <mat-label>Vehicle Moved</mat-label>
+        <input matInput [value]="inspection.vehicleMoved ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('engineStarted')">
+        <mat-label>Engine Started</mat-label>
+        <input matInput [value]="inspection.engineStarted ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('odometer')">
+        <mat-label>Odometer (km)</mat-label>
+        <input matInput [value]="inspection.odometer" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('vinPlate')">
+        <mat-label>VIN Plate Present</mat-label>
+        <input matInput [value]="inspection.vinPlate ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('bodyType')">
+        <mat-label>Body Type</mat-label>
+        <input matInput [value]="inspection.bodyType" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('overallTyreCondition')">
+        <mat-label>Overall Tyre Condition</mat-label>
+        <input matInput [value]="inspection.overallTyreCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('otherAccessoryFitment')">
+        <mat-label>Other Accessories Fitted</mat-label>
+        <input matInput [value]="inspection.otherAccessoryFitment ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- External Visual Checks -->
+  <!-- ── External Visual Checks ──────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>External Visual Checks</legend>
     <div class="grid">
-      <div *ngIf="showField('windshieldGlass')">
-        <label>Windshield / Glass:</label>
-        <span>{{ inspection.windshieldGlass }}</span>
-      </div>
-      <div *ngIf="showField('roadWorthyCondition')">
-        <label>Road Worthy Condition:</label>
-        <span>{{ inspection.roadWorthyCondition ? 'OK' : 'Not OK' }}</span>
-      </div>
-      <div *ngIf="showField('engineCondition')">
-        <label>Engine Condition:</label>
-        <span>{{ inspection.engineCondition }}</span>
-      </div>
-      <div *ngIf="showField('suspensionSystem')">
-        <label>Suspension System:</label>
-        <span>{{ inspection.suspensionSystem }}</span>
-      </div>
-      <div *ngIf="showField('steeringAssy')">
-        <label>Steering Assembly:</label>
-        <span>{{ inspection.steeringAssy }}</span>
-      </div>
-      <div *ngIf="showField('steeringWheel')">
-        <label>Steering Wheel:</label>
-        <span>{{ inspection.steeringWheel }}</span>
-      </div>
-      <div *ngIf="showField('steeringColumn')">
-        <label>Steering Column:</label>
-        <span>{{ inspection.steeringColumn }}</span>
-      </div>
-      <div *ngIf="showField('steeringBox')">
-        <label>Steering Box:</label>
-        <span>{{ inspection.steeringBox }}</span>
-      </div>
-      <div *ngIf="showField('steeringLinkages')">
-        <label>Steering Linkages:</label>
-        <span>{{ inspection.steeringLinkages }}</span>
-      </div>
-      <div *ngIf="showField('fuelSystem')">
-        <label>Fuel System:</label>
-        <span>{{ inspection.fuelSystem }}</span>
-      </div>
-      <div *ngIf="showField('brakeSystem')">
-        <label>Brake System:</label>
-        <span>{{ inspection.brakeSystem }}</span>
-      </div>
+      <mat-form-field appearance="outline" *ngIf="showField('windshieldGlass')">
+        <mat-label>Windshield / Glass</mat-label>
+        <input matInput [value]="inspection.windshieldGlass" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('roadWorthyCondition')">
+        <mat-label>Road Worthy Condition</mat-label>
+        <input matInput [value]="inspection.roadWorthyCondition ? 'OK' : 'Not OK'" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('engineCondition')">
+        <mat-label>Engine Condition</mat-label>
+        <input matInput [value]="inspection.engineCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('suspensionSystem')">
+        <mat-label>Suspension System</mat-label>
+        <input matInput [value]="inspection.suspensionSystem" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('steeringAssy')">
+        <mat-label>Steering Assembly</mat-label>
+        <input matInput [value]="inspection.steeringAssy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('steeringWheel')">
+        <mat-label>Steering Wheel</mat-label>
+        <input matInput [value]="inspection.steeringWheel" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('steeringColumn')">
+        <mat-label>Steering Column</mat-label>
+        <input matInput [value]="inspection.steeringColumn" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('steeringBox')">
+        <mat-label>Steering Box</mat-label>
+        <input matInput [value]="inspection.steeringBox" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('steeringLinkages')">
+        <mat-label>Steering Linkages</mat-label>
+        <input matInput [value]="inspection.steeringLinkages" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('fuelSystem')">
+        <mat-label>Fuel System</mat-label>
+        <input matInput [value]="inspection.fuelSystem" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('brakeSystem')">
+        <mat-label>Brake System</mat-label>
+        <input matInput [value]="inspection.brakeSystem" readonly />
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- Structural & Body Checks -->
+  <!-- ── Structural & Body Checks ────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Structural & Body Checks</legend>
     <div class="grid">
-      <div *ngIf="showField('chassisCondition')">
-        <label>Chassis Condition:</label>
-        <span>{{ inspection.chassisCondition }}</span>
-      </div>
-      <div *ngIf="showField('exteriorCondition')">
-        <label>Exterior Condition:</label>
-        <span>{{ inspection.exteriorCondition }}</span>
-      </div>
-      <div *ngIf="showField('interiorCondition')">
-        <label>Interior Condition:</label>
-        <span>{{ inspection.interiorCondition }}</span>
-      </div>
-      <div *ngIf="showField('bonnet')">
-        <label>Bonnet:</label>
-        <span>{{ inspection.bonnet }}</span>
-      </div>
-      <div *ngIf="showField('bodyCondition')">
-        <label>Body Condition:</label>
-        <span>{{ inspection.bodyCondition }}</span>
-      </div>
-      <div *ngIf="showField('batteryCondition')">
-        <label>Battery Condition:</label>
-        <span>{{ inspection.batteryCondition }}</span>
-      </div>
-      <div *ngIf="showField('paintWork')">
-        <label>Paint Work:</label>
-        <span>{{ inspection.paintWork }}</span>
-      </div>
-      <div *ngIf="showField('audio')">
-        <label>Audio:</label>
-        <span>{{ inspection.audio }}</span>
-      </div>
-      <div *ngIf="showField('clutchSystem')">
-        <label>Clutch System:</label>
-        <span>{{ inspection.clutchSystem }}</span>
-      </div>
-      <div *ngIf="showField('gearboxAssembly')">
-        <label>Gearbox Assembly:</label>
-        <span>{{ inspection.gearBoxAssy }}</span>
-      </div>
-      <div *ngIf="showField('propellerShaft')">
-        <label>Propeller Shaft:</label>
-        <span>{{ inspection.propellerShaft }}</span>
-      </div>
-      <div *ngIf="showField('mudguards')">
-        <label>Mudguards:</label>
-        <span>{{ inspection.mudguards }}</span>
-      </div>
-      <div *ngIf="showField('allGlasses')">
-        <label>All Glasses:</label>
-        <span>{{ inspection.allGlasses }}</span>
-      </div>
-      <div *ngIf="showField('boom')">
-        <label>Boom:</label>
-        <span>{{ inspection.boom }}</span>
-      </div>
-      <div *ngIf="showField('bucket')">
-        <label>Bucket:</label>
-        <span>{{ inspection.bucket }}</span>
-      </div>
-      <div *ngIf="showField('chainTrack')">
-        <label>Chain Track:</label>
-        <span>{{ inspection.chainTrack }}</span>
-      </div>
-      <div *ngIf="showField('hydraulicCylinders')">
-        <label>Hydraulic Cylinders:</label>
-        <span>{{ inspection.hydraulicCylinders }}</span>
-      </div>
-      <div *ngIf="showField('swingUnit')">
-        <label>Swing Unit:</label>
-        <span>{{ inspection.swingUnit }}</span>
-      </div>
-      <div *ngIf="showField('differentialAssy')">
-        <label>Differential Assembly:</label>
-        <span>{{ inspection.differentialAssy }}</span>
-      </div>
+      <mat-form-field appearance="outline" *ngIf="showField('chassisCondition')">
+        <mat-label>Chassis Condition</mat-label>
+        <input matInput [value]="inspection.chassisCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('exteriorCondition')">
+        <mat-label>Exterior Condition</mat-label>
+        <input matInput [value]="inspection.exteriorCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('interiorCondition')">
+        <mat-label>Interior Condition</mat-label>
+        <input matInput [value]="inspection.interiorCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('bonnet')">
+        <mat-label>Bonnet</mat-label>
+        <input matInput [value]="inspection.bonnet" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('bodyCondition')">
+        <mat-label>Body Condition</mat-label>
+        <input matInput [value]="inspection.bodyCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('batteryCondition')">
+        <mat-label>Battery Condition</mat-label>
+        <input matInput [value]="inspection.batteryCondition" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('paintWork')">
+        <mat-label>Paint Work</mat-label>
+        <input matInput [value]="inspection.paintWork" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('audio')">
+        <mat-label>Audio</mat-label>
+        <input matInput [value]="inspection.audio" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('clutchSystem')">
+        <mat-label>Clutch System</mat-label>
+        <input matInput [value]="inspection.clutchSystem" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('gearboxAssembly')">
+        <mat-label>Gearbox Assembly</mat-label>
+        <input matInput [value]="inspection.gearBoxAssy" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('propellerShaft')">
+        <mat-label>Propeller Shaft</mat-label>
+        <input matInput [value]="inspection.propellerShaft" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('mudguards')">
+        <mat-label>Mudguards</mat-label>
+        <input matInput [value]="inspection.mudguards" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('allGlasses')">
+        <mat-label>All Glasses</mat-label>
+        <input matInput [value]="inspection.allGlasses" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('boom')">
+        <mat-label>Boom</mat-label>
+        <input matInput [value]="inspection.boom" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('bucket')">
+        <mat-label>Bucket</mat-label>
+        <input matInput [value]="inspection.bucket" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('chainTrack')">
+        <mat-label>Chain Track</mat-label>
+        <input matInput [value]="inspection.chainTrack" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('hydraulicCylinders')">
+        <mat-label>Hydraulic Cylinders</mat-label>
+        <input matInput [value]="inspection.hydraulicCylinders" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('swingUnit')">
+        <mat-label>Swing Unit</mat-label>
+        <input matInput [value]="inspection.swingUnit" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('differentialAssy')">
+        <mat-label>Differential Assembly</mat-label>
+        <input matInput [value]="inspection.differentialAssy" readonly />
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- Interior & Electrical Checks -->
+  <!-- ── Interior & Electrical Checks ────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Interior & Electrical Checks</legend>
     <div class="grid">
-      <div *ngIf="showField('cabin')">
-        <label>Cabin Condition:</label>
-        <span>{{ inspection.cabin }}</span>
-      </div>
-      <div *ngIf="showField('dashboard')">
-        <label>Dashboard Condition:</label>
-        <span>{{ inspection.dashboard }}</span>
-      </div>
-      <div *ngIf="showField('seats')">
-        <label>Seats Condition:</label>
-        <span>{{ inspection.seats }}</span>
-      </div>
-      <div *ngIf="showField('upholestry')">
-        <label>Upholestry:</label>
-        <span>{{ inspection.upholestry }}</span>
-      </div>
-      <div *ngIf="showField('interiorTrims')">
-        <label>Interior Trims:</label>
-        <span>{{ inspection.interiorTrims }}</span>
-      </div>
-      <div *ngIf="showField('headLamps')">
-        <label>Head Lamps:</label>
-        <span>{{ inspection.headLamps }}</span>
-      </div>
-      <div *ngIf="showField('front')">
-        <label>Front View:</label>
-        <span>{{ inspection.front }}</span>
-      </div>
-      <div *ngIf="showField('rear')">
-        <label>Rear View:</label>
-        <span>{{ inspection.rear }}</span>
-      </div>
-      <div *ngIf="showField('axles')">
-        <label>Axles:</label>
-        <span>{{ inspection.axles }}</span>
-      </div>
-      <div *ngIf="showField('airConditioner')">
-        <label>Air Conditioner:</label>
-        <span>{{ inspection.airConditioner }}</span>
-      </div>
-      <div *ngIf="showField('electricAssembly')">
-        <label>Electric Assembly:</label>
-        <span>{{ inspection.electricAssembly }}</span>
-      </div>
-      <div *ngIf="showField('radiator')">
-        <label>Radiator:</label>
-        <span>{{ inspection.radiator }}</span>
-      </div>
-      <div *ngIf="showField('intercooler')">
-        <label>Intercooler:</label>
-        <span>{{ inspection.intercooler }}</span>
-      </div>
-      <div *ngIf="showField('allHosePipes')">
-        <label>All Hose & Pipes:</label>
-        <span>{{ inspection.allHosePipes }}</span>
-      </div>
+      <mat-form-field appearance="outline" *ngIf="showField('cabin')">
+        <mat-label>Cabin Condition</mat-label>
+        <input matInput [value]="inspection.cabin" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('dashboard')">
+        <mat-label>Dashboard Condition</mat-label>
+        <input matInput [value]="inspection.dashboard" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('seats')">
+        <mat-label>Seats Condition</mat-label>
+        <input matInput [value]="inspection.seats" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('upholestry')">
+        <mat-label>Upholestry</mat-label>
+        <input matInput [value]="inspection.upholestry" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('interiorTrims')">
+        <mat-label>Interior Trims</mat-label>
+        <input matInput [value]="inspection.interiorTrims" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('headLamps')">
+        <mat-label>Head Lamps</mat-label>
+        <input matInput [value]="inspection.headLamps" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('front')">
+        <mat-label>Front View</mat-label>
+        <input matInput [value]="inspection.front" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('rear')">
+        <mat-label>Rear View</mat-label>
+        <input matInput [value]="inspection.rear" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('axles')">
+        <mat-label>Axles</mat-label>
+        <input matInput [value]="inspection.axles" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('airConditioner')">
+        <mat-label>Air Conditioner</mat-label>
+        <input matInput [value]="inspection.airConditioner" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('electricAssembly')">
+        <mat-label>Electric Assembly</mat-label>
+        <input matInput [value]="inspection.electricAssembly" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('radiator')">
+        <mat-label>Radiator</mat-label>
+        <input matInput [value]="inspection.radiator" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('intercooler')">
+        <mat-label>Intercooler</mat-label>
+        <input matInput [value]="inspection.intercooler" readonly />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" *ngIf="showField('allHosePipes')">
+        <mat-label>All Hose & Pipes</mat-label>
+        <input matInput [value]="inspection.allHosePipes" readonly />
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- Remarks -->
+  <!-- ── Remarks Section ─────────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <div class="grid">
-      <div>
-        <pre>{{ inspection.remarks || 'No remarks' }}</pre>
-      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Remarks</mat-label>
+        <textarea
+          matInput
+          [value]="inspection.remarks"
+          readonly
+          rows="3"
+          placeholder="No remarks available">
+        </textarea>
+      </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- Photos -->
+  <!-- ── Photos & Images Section ─────────────────────────────────────────── -->
   <fieldset class="nested-group">
+    <legend>Photos & Images</legend>
     <div class="actions">
       <button mat-raised-button color="primary" (click)="onClick()">
         View / Upload Images
@@ -294,23 +350,21 @@
     </div>
   </fieldset>
 
-
   <!-- ✅ Common Notes Section (Inspection Notes) -->
   <fieldset class="nested-group">
     <legend>Inspection Notes</legend>
     <div class="notes-container">
       <app-common-notes
-      [entityType]="'AVO'"
-      [entityId]="valuationId"
-      [currentUser]="getCurrentUser()"
-      [collapsible]="true">
-    </app-common-notes>
+        [entityType]="'AVO'"
+        [entityId]="valuationId"
+        [currentUser]="getCurrentUser()"
+        [collapsible]="true">
+      </app-common-notes>
     </div>
-    </fieldset>
+  </fieldset>
 
-
-  <!-- Actions -->
-  <fieldset class="nested-group">
+  <!-- ── Bottom Action Buttons ────────────────────────────────────────────── -->
+  <fieldset>
     <div class="actions">
       <button *ngIf="canEditInspection()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
