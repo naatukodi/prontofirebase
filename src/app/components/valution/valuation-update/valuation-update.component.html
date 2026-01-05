@@ -275,7 +275,9 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Insurance Valid Up To</mat-label>
-          <input matInput type="date" formControlName="insuranceValidUpTo"/>
+          <input matInput [matDatepicker]="insurancePicker" formControlName="insuranceValidUpTo" />
+          <mat-datepicker-toggle matSuffix [for]="insurancePicker"></mat-datepicker-toggle>
+          <mat-datepicker #insurancePicker></mat-datepicker>
         </mat-form-field>
 
       </div>
@@ -293,7 +295,9 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Permit Valid Up To</mat-label>
-          <input matInput type="date" formControlName="permitValidUpTo"/>
+          <input matInput [matDatepicker]="permitValidPicker" formControlName="permitValidUpTo"/>
+          <mat-datepicker-toggle matSuffix [for]="permitValidPicker"></mat-datepicker-toggle>
+          <mat-datepicker #permitValidPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -303,12 +307,16 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Permit Issued On</mat-label>
-          <input matInput type="date" formControlName="permitIssued"/>
+          <input matInput [matDatepicker]="permitIssuedPicker" formControlName="permitIssued"/>
+          <mat-datepicker-toggle matSuffix [for]="permitIssuedPicker"></mat-datepicker-toggle>
+          <mat-datepicker #permitIssuedPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Permit From</mat-label>
-          <input matInput type="date" formControlName="permitFrom"/>
+          <input matInput [matDatepicker]="permitFromPicker" formControlName="permitFrom"/>
+          <mat-datepicker-toggle matSuffix [for]="permitFromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #permitFromPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -318,7 +326,9 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Fitness Valid To</mat-label>
-          <input matInput type="date" formControlName="fitnessValidTo"/>
+          <input matInput [matDatepicker]="fitnessValidPicker" formControlName="fitnessValidTo"/>
+          <mat-datepicker-toggle matSuffix [for]="fitnessValidPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fitnessValidPicker></mat-datepicker>
         </mat-form-field>
 
       </div>
@@ -336,17 +346,23 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Pollution Valid Up To</mat-label>
-          <input matInput type="date" formControlName="pollutionCertificateUpto"/>
+          <input matInput [matDatepicker]="pollutionPicker" formControlName="pollutionCertificateUpto"/>
+          <mat-datepicker-toggle matSuffix [for]="pollutionPicker"></mat-datepicker-toggle>
+          <mat-datepicker #pollutionPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Tax Upto</mat-label>
-          <input matInput type="date" formControlName="taxUpto"/>
+          <input matInput [matDatepicker]="taxPicker" formControlName="taxUpto"/>
+          <mat-datepicker-toggle matSuffix [for]="taxPicker"></mat-datepicker-toggle>
+          <mat-datepicker #taxPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Tax Paid Up To</mat-label>
-          <input matInput formControlName="taxPaidUpTo"/>
+          <input matInput [matDatepicker]="taxPaidPicker" formControlName="taxPaidUpTo"/>
+          <mat-datepicker-toggle matSuffix [for]="taxPaidPicker"></mat-datepicker-toggle>
+          <mat-datepicker #taxPaidPicker></mat-datepicker>
         </mat-form-field>
 
       </div>
@@ -372,7 +388,9 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Manufactured Date</mat-label>
-          <input matInput type="date" formControlName="manufacturedDate"/>
+          <input matInput [matDatepicker]="mfgPicker" formControlName="manufacturedDate"/>
+          <mat-datepicker-toggle matSuffix [for]="mfgPicker"></mat-datepicker-toggle>
+          <mat-datepicker #mfgPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">

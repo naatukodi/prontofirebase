@@ -64,9 +64,12 @@
           <mat-label>Date of Inspection</mat-label>
           <input
             matInput
-            type="date"
+            [matDatepicker]="inspectionPicker"
             formControlName="dateOfInspection"
             [max]="maxDate" />
+          <mat-datepicker-toggle matSuffix [for]="inspectionPicker"></mat-datepicker-toggle>
+          <mat-datepicker #inspectionPicker></mat-datepicker>
+
           <mat-error *ngIf="form.get('dateOfInspection')?.hasError('required')">
             Date is required.
           </mat-error>
