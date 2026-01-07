@@ -1,5 +1,6 @@
 // src/app/valuation-inspection-update/inspection-update.component.ts
 
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,11 +17,14 @@ import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { take, Observable } from 'rxjs';
 
+
 // ✅ IMPORT HISTORY LOGGER SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
 
 
+
 type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce';
+
 
 
 @Component({
@@ -37,6 +41,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   valuationType: ValuationType | null = null;
   maxDate: string = '';
 
+
   form!: FormGroup;
   loading = true;
   error: string | null = null;
@@ -45,12 +50,15 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   submitInProgress = false;
   saved = false;
 
+
   photoFiles: File[] = [];
+
 
   private assignedTo = '';
   private assignedToPhoneNumber = '';
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
+
 
   // ✅ ADD THESE FOR TRACKING
   private currentUser: User | null = null;
@@ -58,10 +66,12 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   private currentUserName: string = 'Unknown User';
   private originalFormData: any = {};
 
+
   // Mandatory photo validation state
   isSaving: boolean = false;
   mandatoryPhotosError: string | null = null;
   missingPhotos: string[] = [];
+
 
   private visibilityMap: Record<ValuationType, string[]> = {
     'four-wheeler': [
@@ -116,6 +126,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     ]
   };
 
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -129,12 +140,14 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     private historyLogger: HistoryLoggerService  // ✅ INJECT
   ) {}
 
+
   ngOnInit(): void {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2,'0');
     const dd = String(today.getDate()).padStart(2,'0');
     this.maxDate = `${yyyy}-${mm}-${dd}`;
+
 
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     
@@ -147,6 +160,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
       this.applyAssignedFromUser(u);
     });
+
 
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
@@ -164,13 +178,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
   ngOnDestroy(): void {
     // Cleanup if needed
   }
 
+
   showField(key: string): boolean {
     return !!(this.valuationType && this.visibilityMap[this.valuationType]?.includes(key));
   }
+
 
   private applyAssignedFromUser(u: User | null): void {
     const name = (u?.displayName?.trim() || '') || (u?.email ? u.email.split('@')[0] : '') || (u?.phoneNumber || '') || 'User';
@@ -179,6 +196,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.assignedToEmail = u?.email || '';
     this.assignedToWhatsapp = u?.phoneNumber || '';
   }
+
 
   private initForm() {
     this.form = this.fb.group({
@@ -240,6 +258,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
   private loadInspection() {
     this.loading = true;
     this.error = null;
@@ -265,6 +284,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
     });
   }
+
 
   private patchForm(data: Inspection) {
     const v = this.form;
@@ -327,6 +347,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
   pastOrTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) return null;
@@ -338,15 +359,18 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     };
   }
 
+
   onPhotoChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
+
   // ✅ NEW METHOD: TRACK CHANGED FIELDS
   private getChangedFields(): any[] {
     const currentData = this.form.getRawValue();
     const changedFields: any[] = [];
+
 
     Object.keys(currentData).forEach(key => {
       if (this.originalFormData[key] !== currentData[key]) {
@@ -358,13 +382,35 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
     });
 
+
     return changedFields;
   }
+
+
+  // ✅ NEW METHOD: FORMAT DATE VALUE FOR PROPER SERIALIZATION
+  private formatDateValue(key: string, value: any): any {
+    if (key === 'dateOfInspection' && value) {
+      if (value instanceof Date) {
+        // Convert Date object to YYYY-MM-DD format
+        return value.toISOString().split('T')[0];
+      }
+      // Already string in "YYYY-MM-DD" format from form, return as-is
+      return value;
+    }
+    return value;
+  }
+
 
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
-    Object.keys(v).forEach(k => fd.append(k, v[k]));
+    
+    // ✅ FIXED: Proper date formatting before appending to FormData
+    Object.keys(v).forEach(k => {
+      const value = this.formatDateValue(k, v[k]);
+      fd.append(k, value);
+    });
+    
     this.photoFiles.forEach(file => fd.append('photos', file, file.name));
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
@@ -376,11 +422,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return fd;
   }
 
+
   onClick() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
       queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
     });
   }
+
 
   public updateDefaultValues(): void {
     if (!this.valuationType) { return; }
@@ -398,6 +446,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
     this.form.patchValue(defaults);
   }
+
 
   checkMandatoryPhotosBeforeSave(): Promise<boolean> {
     return new Promise((resolve) => {
@@ -422,17 +471,20 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
   showMissingPhotosDialog(): void {
     const missingList = this.missingPhotos.map(p => `• ${p}`).join('\n');
     const message = `⚠️ Cannot save inspection!\n\n${this.missingPhotos.length} mandatory images are missing:\n\n${missingList}\n\nPlease go back and upload all required photos before saving.`;
     alert(message);
   }
 
+
   goBackToPhotoUpload(): void {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
       queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
     });
   }
+
 
   // ✅ NEW METHOD: LOG HISTORY
   private logHistoryAction(
@@ -462,11 +514,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
   async onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
 
     const photosValid = await this.checkMandatoryPhotosBeforeSave();
     if (!photosValid) {
@@ -474,11 +528,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
+
     this.saving = true;
     this.saveInProgress = true;
     const payload = this.buildFormData();
     const changedFields = this.getChangedFields();
     const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
@@ -521,11 +577,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       });
   }
 
+
   async onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
+
 
     const photosValid = await this.checkMandatoryPhotosBeforeSave();
     if (!photosValid) {
@@ -533,11 +591,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
+
     this.saving = true;
     this.submitInProgress = true;
     const payload = this.buildFormData();
     const changedFields = this.getChangedFields();
     const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
+
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
@@ -579,6 +639,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         }
       });
   }
+
 
   onCancel() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
