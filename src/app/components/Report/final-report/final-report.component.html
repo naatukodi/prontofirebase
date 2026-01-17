@@ -1,11 +1,8 @@
-<!-- src/app/components/final-report-view/final-report-view.component.html -->
-
 <div *ngIf="loading">Loading final report…</div>
 <div *ngIf="error" class="error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error">
 
-  <!-- Workflow buttons at top -->
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
@@ -13,25 +10,16 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <!-- Actions at Bottom -->
   <div class="actions">
-  <button
-    mat-raised-button
-    color="primary"
-    class="back-button"
-    (click)="onBack()">
-    Back
-  </button>
+    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">
+      Back
+    </button>
 
-  <button
-    mat-raised-button
-    color="accent"
-    (click)="downloadPdf()">
-    Download PDF
-  </button>
-</div>
+    <button mat-raised-button color="accent" (click)="downloadPdf()">
+      Download PDF
+    </button>
+  </div>
 
-  <!-- Stakeholder Section -->
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
@@ -74,7 +62,6 @@
     </div>
   </fieldset>
 
-  <!-- Vehicle Details Section -->
   <fieldset class="nested-group">
     <legend>Vehicle Details</legend>
     <div class="grid">
@@ -126,11 +113,9 @@
         <mat-label>Remarks</mat-label>
         <textarea matInput [value]="report.vehicleDetails.remarks" readonly rows="3"></textarea>
       </mat-form-field>
-      <!-- Add additional fields (e.g., insuranceValidUpTo, seatingCapacity) as needed -->
     </div>
   </fieldset>
 
-  <!-- Inspection Details Section -->
   <fieldset class="nested-group">
     <legend>Inspection Details</legend>
     <div class="grid">
@@ -174,11 +159,9 @@
         <mat-label>Remarks</mat-label>
         <textarea matInput [value]="report.inspectionDetails.remarks" readonly rows="3"></textarea>
       </mat-form-field>
-      <!-- Add other inspection fields (e.g. suspensionSystem, chassisCondition, etc.) similarly -->
     </div>
   </fieldset>
 
-  <!-- Quality Control Section -->
   <fieldset class="nested-group">
     <legend>Quality Control</legend>
     <div class="grid">
@@ -201,7 +184,6 @@
     </div>
   </fieldset>
 
-  <!-- FINAL REPORT REMARKS SECTION -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <div class="grid">
@@ -211,36 +193,6 @@
     </div>
   </fieldset>
 
-
-
-  <!-- Valuation Response Section -->
-  <!-- <fieldset class="nested-group">
-    <legend>Valuation Response</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline" style="grid-column: span 2;">
-        <mat-label>Raw Response</mat-label>
-        <textarea matInput [value]="report.valuationResponse.rawResponse" rows="5" readonly></textarea>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Low Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.lowRange" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Mid Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.midRange" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>High Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.highRange" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset> -->
-
-
-  <!-- Photos Section -->
   <fieldset class="nested-group">
     <legend>Photos</legend>
     <div class="photo-grid">
@@ -253,31 +205,31 @@
     </div>  
   </fieldset>
 
-  <!-- ✅ Final Report Notes Section -->
   <fieldset class="nested-group">
     <legend>Final Report Notes</legend>
     <div class="notes-container">
       <app-common-notes
         [entityType]="'FinalReport'"
         [entityId]="valuationId"
-        [currentUser]="getCurrentUser()"
+        [currentUser]="getCurrentUserObj().name || 'User'"
         [collapsible]="true">
       </app-common-notes>
     </div>
   </fieldset>
   
-  <!-- Actions -->
   <fieldset>
     <div class="actions">
-      <button
-    mat-raised-button
-    color="accent"
-    (click)="downloadPdf()">
-    Download PDF
-  </button>
+      <button mat-raised-button color="accent" (click)="downloadPdf()">
+        Download PDF
+      </button>
       <button *ngIf="canEditFinalReport()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
       </button>
+      
+      <button *ngIf="canEditFinalReport()" mat-raised-button color="warn" (click)="openRejectModal()" style="background-color: #f44336; color: white;">
+        Reject Report
+      </button>
+
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn" (click)="onDelete()">
         Delete
       </button>
@@ -287,3 +239,45 @@
     </div>
   </fieldset>
 </ng-container>
+
+<div class="modal-overlay" *ngIf="showRejectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Reject Final Report</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    <div class="modal-body">
+      <p>This case will be sent back to <b>Quality Control</b>.</p>
+      <label>Reason:</label>
+      <textarea [(ngModel)]="rejectReason" class="modal-input" rows="3" placeholder="Enter reason..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="submitRejection()">Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showOverrideModal">
+  <div class="modal-box">
+    <div class="modal-header warning">
+      <h3>⚠️ User Not Found</h3>
+    </div>
+    <div class="modal-body">
+      <p>The original QC user could not be found. Please manually select a user:</p>
+      <label>Assign To (QC):</label>
+      <select [(ngModel)]="selectedOverrideUser" class="modal-input">
+        <option value="" disabled selected>-- Select QC User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
+          {{ user.name }} ({{ user.phoneNumber }})
+        </option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
+        Assign & Reject
+      </button>
+    </div>
+  </div>
+</div>

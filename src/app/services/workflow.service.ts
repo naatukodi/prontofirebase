@@ -1,4 +1,4 @@
-// src/app/services/valuation.service.ts
+// src/app/services/workflow.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
@@ -98,7 +98,6 @@ export class WorkflowService {
     return this.http.get<any>(url, { params })
       .pipe(
         catchError((err: HttpErrorResponse) => {
-          // normalize or rethrow
           return throwError(() => err);
         })
       );
@@ -113,5 +112,35 @@ export class WorkflowService {
     return this.http.get<WorkflowTable>(url, {
       params: { vehicleNumber, applicantContact }
     });
+  }
+
+  // ✅ NEW METHOD: Reject Workflow (Supports Manual Override)
+  rejectWorkflow(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    currentStep: string,
+    rejectReason: string,
+    currentUserId: string,
+    currentUserName: string,
+    targetRejectedStep: string,
+    overrideAssigneeId: string = "" // Optional parameter for override scenario
+  ): Observable<void> {
+    // Matches Backend: POST api/valuations/{valuationId}/workflow/reject
+    const url = `${this.baseUrl}/${valuationId}/workflow/reject`;
+    
+    const body = {
+      valuationId,
+      vehicleNumber,
+      applicantContact,
+      currentStep,
+      rejectReason,
+      currentUserId,
+      currentUserName,
+      targetRejectedStep,
+      overrideAssigneeId
+    };
+
+    return this.http.post<void>(url, body);
   }
 }

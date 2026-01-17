@@ -1,5 +1,3 @@
-<!-- src/app/valuation-quality-control/quality-control-view.component.html -->
-
 <div *ngIf="loading" class="loading">Loading quality control details…</div>
 <div *ngIf="error" class="error">{{ error }}</div>
 
@@ -11,11 +9,33 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
+  <div *ngIf="rejectionMessage" class="rejection-banner" 
+       style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    
+    <div style="font-size: 1.5rem; margin-right: 15px;">⚠️</div>
+    
+    <div style="width: 100%;">
+      <h4 style="margin: 0 0 8px 0; font-weight: bold; text-transform: uppercase; color: #b71c1c; font-size: 1.1rem;">
+        CASE REJECTED <span *ngIf="rejectedBy">BY {{ rejectedBy }}</span>
+      </h4>
+      
+      <div style="background-color: rgba(255,255,255,0.6); padding: 10px 12px; border-radius: 4px; border: 1px solid #e57373;">
+        <span style="font-size: 1.05rem; white-space: pre-wrap; font-weight: 500; color: #b71c1c; display: block;">
+          {{ rejectionMessage }}
+        </span>
+      </div>
+    </div>
+  </div>
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
       </button>
+      
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openRejectModal()" style="background-color: #f44336; color: white;">
+        Reject
+      </button>
+
       <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
         Delete
       </button>
@@ -25,25 +45,16 @@
     </div>
   </fieldset>
 
-  <!-- Actions at Bottom -->
   <div class="actions">
-    <button
-      mat-raised-button
-      color="primary"
-      class="back-button"
-      (click)="onBack()">
+    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">
       Back
     </button>
 
-    <button
-      mat-raised-button
-      color="accent"
-      (click)="downloadPdf()">
+    <button mat-raised-button color="accent" (click)="downloadPdf()">
       Download PDF
     </button>
   </div>
 
-  <!-- Stakeholder Section -->
   <fieldset class="nested-group">
     <legend>Stakeholder</legend>
     <div class="grid">
@@ -86,7 +97,6 @@
     </div>
   </fieldset>
 
-  <!-- Vehicle Details Section -->
   <fieldset class="nested-group">
     <legend>Vehicle Details</legend>
     <div class="grid">
@@ -134,11 +144,9 @@
         <mat-label>RTO</mat-label>
         <input matInput [value]="report.vehicleDetails.rto" readonly />
       </mat-form-field>
-      <!-- Add additional fields (e.g., insuranceValidUpTo, seatingCapacity) as needed -->
     </div>
   </fieldset>
 
-  <!-- Inspection Details Section -->
   <fieldset class="nested-group">
     <legend>Inspection Details</legend>
     <div class="grid">
@@ -178,11 +186,9 @@
         <mat-label>Brake System Condition</mat-label>
         <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
       </mat-form-field>
-      <!-- Add other inspection fields (e.g. suspensionSystem, chassisCondition, etc.) similarly -->
     </div>
   </fieldset>
 
-  <!-- Quality Control Section -->
   <fieldset class="nested-group">
     <legend>Quality Control</legend>
     <div class="grid">
@@ -205,7 +211,6 @@
     </div>
   </fieldset>
 
-  <!-- Valuation Response Section -->
   <fieldset class="nested-group">
     <legend>Valuation Response</legend>
     <div class="grid">
@@ -213,17 +218,14 @@
         <mat-label>Raw Response</mat-label>
         <textarea matInput [value]="report.valuationResponse.rawResponse" rows="5" readonly></textarea>
       </mat-form-field>
-
       <mat-form-field appearance="outline">
         <mat-label>Low Range (Lacs)</mat-label>
         <input matInput [value]="report.valuationResponse.lowRange" readonly />
       </mat-form-field>
-
       <mat-form-field appearance="outline">
         <mat-label>Mid Range (Lacs)</mat-label>
         <input matInput [value]="report.valuationResponse.midRange" readonly />
       </mat-form-field>
-
       <mat-form-field appearance="outline">
         <mat-label>High Range (Lacs)</mat-label>
         <input matInput [value]="report.valuationResponse.highRange" readonly />
@@ -231,7 +233,6 @@
     </div>
   </fieldset>
 
-  <!-- Photos Section - PROFESSIONAL GRID -->
   <fieldset class="nested-group">
     <legend>Photos</legend>
     <div class="photo-grid">
@@ -244,79 +245,44 @@
     </div>
   </fieldset>
 
-  <!-- Actions at Bottom -->
   <div class="actions">
-    <button
-      mat-raised-button
-      color="primary"
-      class="back-button"
-      (click)="onBack()">
-      Back
-    </button>
+    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">Back</button>
+    <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
+  </div>
 
-    <button
-      mat-raised-button
-      color="accent"
-      (click)="downloadPdf()">
-      Download PDF
-    </button>
-  </div> <!-- Close the .actions div opened above -->
-
-  <!-- Quality Control + Price Estimate Info -->
   <fieldset class="nested-group">
     <legend>Quality Control & Valuation Estimate</legend>
-
     <div class="grid">
-
-      <!-- 1. Overall Rating -->
       <mat-form-field appearance="outline">
         <mat-label>Overall Rating</mat-label>
         <input matInput [value]="viewModel.overallRating" readonly />
       </mat-form-field>
-
-      <!-- 2. Valuation Amount -->
       <mat-form-field appearance="outline">
         <mat-label>Valuation Amount (₹)</mat-label>
         <input matInput [value]="viewModel.valuationAmount" readonly />
       </mat-form-field>
-
-      <!-- 3. Chassis Punch -->
       <mat-form-field appearance="outline">
         <mat-label>Chassis Punch</mat-label>
         <input matInput [value]="viewModel.chassisPunch" readonly />
       </mat-form-field>
-
-      <!-- 4. Remarks -->
       <mat-form-field appearance="outline">
         <mat-label>Remarks</mat-label>
-        <textarea
-          matInput
-          [value]="viewModel.remarks"
-          rows="2"
-          readonly
-        ></textarea>
+        <textarea matInput [value]="viewModel.remarks" rows="2" readonly></textarea>
       </mat-form-field>
-
     </div>
   </fieldset>
 
-  <!-- Valuation Ranges -->
   <fieldset class="nested-group">
     <legend>Valuation Ranges</legend>
     <div class="grid">
-      <!-- 5. Low Range -->
       <mat-form-field appearance="outline">
         <mat-label>Low Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.lowRange" readonly />
       </mat-form-field>
-
-      <!-- 6. Mid Range -->
       <mat-form-field appearance="outline">
         <mat-label>Mid Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.midRange" readonly />
       </mat-form-field>
-
-      <!-- 7. High Range -->
       <mat-form-field appearance="outline">
         <mat-label>High Range (₹ Lacs)</mat-label>
         <input matInput [value]="viewModel.highRange" readonly />
@@ -324,24 +290,16 @@
     </div>
   </fieldset>
 
-  <!-- Raw Response -->
   <fieldset class="nested-group">
     <legend>AI Analysis</legend>
     <div style="width: 100%;">
       <mat-form-field appearance="outline" class="full-width" style="width: 100%;">
         <mat-label>Raw Response</mat-label>
-        <textarea
-          matInput
-          [value]="viewModel.rawResponse"
-          rows="6"
-          readonly
-          style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"
-        ></textarea>
+        <textarea matInput [value]="viewModel.rawResponse" rows="6" readonly style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"></textarea>
       </mat-form-field>
     </div>
   </fieldset>
 
-  <!-- ✅ Quality Control Notes Section -->
   <fieldset class="nested-group">
     <legend>Quality Control Notes</legend>
     <div class="notes-container">
@@ -354,20 +312,65 @@
     </div>
   </fieldset>
 
-  <!-- Actions -->
   <fieldset>
     <div class="actions">
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
-        Edit
-      </button>
-      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
-        Delete
-      </button>
-      <button mat-raised-button color="accent" (click)="onBack()">
-        Back
-      </button>
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openRejectModal()" style="background-color: #f44336; color: white;">Reject</button>
+      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
     </div>
   </fieldset>
 </ng-container>
 
 <router-outlet></router-outlet>
+
+<div class="modal-overlay" *ngIf="showRejectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Reject Quality Control</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    
+    <div class="modal-body">
+      <label>Send Back To:</label>
+      <select [(ngModel)]="selectedTargetStep" class="modal-input">
+        <option value="AVO">AVO (Inspection)</option>
+        <option value="Backend">Backend</option>
+      </select>
+
+      <label>Reason:</label>
+      <textarea [(ngModel)]="rejectReason" class="modal-input" rows="3" placeholder="Enter rejection reason..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="submitRejection()">Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showOverrideModal">
+  <div class="modal-box">
+    <div class="modal-header warning">
+      <h3>⚠️ User Not Found</h3>
+    </div>
+    <div class="modal-body">
+      <p>The original user for <b>{{selectedTargetStep}}</b> could not be found.</p>
+      <p>Please manually select a user to assign this case to:</p>
+      
+      <label>Assign To:</label>
+      <select [(ngModel)]="selectedOverrideUser" class="modal-input">
+        <option value="" disabled selected>-- Select User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
+          {{ user.name }} ({{ user.phoneNumber }})
+        </option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
+        Assign & Reject
+      </button>
+    </div>
+  </div>
+</div>
