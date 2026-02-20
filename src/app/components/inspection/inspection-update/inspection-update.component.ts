@@ -1,31 +1,29 @@
 // src/app/valuation-inspection-update/inspection-update.component.ts
 
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { InspectionService } from '../../../services/inspection.service';
-import { VehicleInspectionService } from '../../../services/vehicle-inspection.service';
-import { Inspection } from '../../../models/Inspection';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap } from 'rxjs/operators';
-import { WorkflowService } from '../../../services/workflow.service';
-import { QualityControlService } from '../../../services/quality-control.service';
-import { SharedModule } from '../../shared/shared.module/shared.module';
-import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
+import { switchMap, take } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { take, Observable } from 'rxjs';
 
-
-// ✅ IMPORT HISTORY LOGGER SERVICE
+// Services
+import { InspectionService } from '../../../services/inspection.service';
+import { VehicleInspectionService } from '../../../services/vehicle-inspection.service';
+import { WorkflowService } from '../../../services/workflow.service';
+import { QualityControlService } from '../../../services/quality-control.service';
 import { HistoryLoggerService } from '../../../services/history-logger.service';
 
+// Models
+import { Inspection } from '../../../models/Inspection';
 
+// Components
+import { SharedModule } from '../../shared/shared.module/shared.module';
+import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
 type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce';
-
-
 
 @Component({
   selector: 'app-valuation-inspection-update',
@@ -41,7 +39,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   valuationType: ValuationType | null = null;
   maxDate: string = '';
 
-
   form!: FormGroup;
   loading = true;
   error: string | null = null;
@@ -50,28 +47,23 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   submitInProgress = false;
   saved = false;
 
-
   photoFiles: File[] = [];
-
 
   private assignedTo = '';
   private assignedToPhoneNumber = '';
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
 
-
-  // ✅ ADD THESE FOR TRACKING
+  // Tracking
   private currentUser: User | null = null;
   private currentUserId: string = 'unknown';
   private currentUserName: string = 'Unknown User';
   private originalFormData: any = {};
 
-
   // Mandatory photo validation state
   isSaving: boolean = false;
   mandatoryPhotosError: string | null = null;
   missingPhotos: string[] = [];
-
 
   private visibilityMap: Record<ValuationType, string[]> = {
     'four-wheeler': [
@@ -126,7 +118,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     ]
   };
 
-
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -137,9 +128,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     private qualityControlSvc: QualityControlService,
     private _snackBar: MatSnackBar,
     private auth: Auth,
-    private historyLogger: HistoryLoggerService  // ✅ INJECT
+    private historyLogger: HistoryLoggerService
   ) {}
-
 
   ngOnInit(): void {
     const today = new Date();
@@ -148,10 +138,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const dd = String(today.getDate()).padStart(2,'0');
     this.maxDate = `${yyyy}-${mm}-${dd}`;
 
-
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     
-    // ✅ GET CURRENT USER INFO
+    // GET CURRENT USER INFO
     authState(this.auth).pipe(take(1)).subscribe(u => {
       this.currentUser = u;
       if (u) {
@@ -160,7 +149,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
       this.applyAssignedFromUser(u);
     });
-
 
     this.route.queryParamMap.subscribe(params => {
       const vn = params.get('vehicleNumber');
@@ -178,16 +166,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-
   ngOnDestroy(): void {
     // Cleanup if needed
   }
 
-
   showField(key: string): boolean {
     return !!(this.valuationType && this.visibilityMap[this.valuationType]?.includes(key));
   }
-
 
   private applyAssignedFromUser(u: User | null): void {
     const name = (u?.displayName?.trim() || '') || (u?.email ? u.email.split('@')[0] : '') || (u?.phoneNumber || '') || 'User';
@@ -197,8 +182,22 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.assignedToWhatsapp = u?.phoneNumber || '';
   }
 
+  // ✅ HELPER: Date Converters
+  private toLocalDateTimeInput(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
 
+  private toIsoUtc(datetimeLocal: string): string {
+    if (!datetimeLocal) return new Date().toISOString();
+    const date = new Date(datetimeLocal);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+  }
+
+  // ✅ UPDATED: Init Form with Payment Fields
   private initForm() {
+    const nowLocal = this.toLocalDateTimeInput(new Date());
+
     this.form = this.fb.group({
       vehicleInspectedBy: ['', Validators.required],
       dateOfInspection: ['', [Validators.required, this.pastOrTodayValidator()]],
@@ -254,10 +253,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       rear: [''],
       axles: [''],
       airConditioner: [''],
-      audio: ['']
+      audio: [''],
+
+      // ✅ ADDED PAYMENT FIELDS
+      paymentStatus: ['Pending', Validators.required],
+      paymentReference: [''],
+      paymentDate: [nowLocal, Validators.required],
+      paymentMethod: ['Online', Validators.required],
+      paymentAmount: [800, [Validators.required, Validators.min(0)]]
     });
   }
-
 
   private loadInspection() {
     this.loading = true;
@@ -266,7 +271,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       next: data => {
         console.log('✅ Inspection Data Loaded:', data);
         this.patchForm(data);
-        // ✅ STORE ORIGINAL DATA
+        // STORE ORIGINAL DATA
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
         this.checkMandatoryPhotosBeforeSave().then(isComplete => {
@@ -285,8 +290,13 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ✅ UPDATED: Patch Form with Payment Data
+  private patchForm(data: Inspection | any) {
+    // Handle payment date
+    const existingPaymentDate = data.paymentDate 
+      ? this.toLocalDateTimeInput(new Date(data.paymentDate)) 
+      : this.toLocalDateTimeInput(new Date());
 
-  private patchForm(data: Inspection) {
     const v = this.form;
     v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy || '',
@@ -343,10 +353,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       rear: data.rear || '',
       axles: data.axles || '',
       airConditioner: data.airConditioner || '',
-      audio: data.audio || ''
+      audio: data.audio || '',
+
+      // Payment Data
+      paymentStatus: data.paymentStatus || 'Pending',
+      paymentReference: data.paymentReference || '',
+      paymentDate: existingPaymentDate,
+      paymentMethod: data.paymentMethod || 'Online',
+      paymentAmount: data.paymentAmount || 800
     });
   }
-
 
   pastOrTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -359,18 +375,15 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     };
   }
 
-
   onPhotoChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
-
-  // ✅ NEW METHOD: TRACK CHANGED FIELDS
+  // Track Changed Fields
   private getChangedFields(): any[] {
     const currentData = this.form.getRawValue();
     const changedFields: any[] = [];
-
 
     Object.keys(currentData).forEach(key => {
       if (this.originalFormData[key] !== currentData[key]) {
@@ -382,33 +395,36 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
     });
 
-
     return changedFields;
   }
 
-
-  // ✅ NEW METHOD: FORMAT DATE VALUE FOR PROPER SERIALIZATION
+  // ✅ UPDATED: Format Date Value for proper serialization
   private formatDateValue(key: string, value: any): any {
+    // Handle Inspection Date (YYYY-MM-DD)
     if (key === 'dateOfInspection' && value) {
       if (value instanceof Date) {
-        // Convert Date object to YYYY-MM-DD format
         return value.toISOString().split('T')[0];
       }
-      // Already string in "YYYY-MM-DD" format from form, return as-is
       return value;
+    }
+    // Handle Payment Date (ISO String)
+    if (key === 'paymentDate' && value) {
+      return this.toIsoUtc(value);
     }
     return value;
   }
 
-
+  // ✅ UPDATED: Build FormData to include payment fields properly
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
     
-    // ✅ FIXED: Proper date formatting before appending to FormData
     Object.keys(v).forEach(k => {
       const value = this.formatDateValue(k, v[k]);
-      fd.append(k, value);
+      // Append only if value is not null/undefined to avoid sending "null" strings
+      if (value !== null && value !== undefined) {
+         fd.append(k, value);
+      }
     });
     
     this.photoFiles.forEach(file => fd.append('photos', file, file.name));
@@ -422,13 +438,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return fd;
   }
 
-
   onClick() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
       queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
     });
   }
-
 
   public updateDefaultValues(): void {
     if (!this.valuationType) { return; }
@@ -446,7 +460,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
     this.form.patchValue(defaults);
   }
-
 
   checkMandatoryPhotosBeforeSave(): Promise<boolean> {
     return new Promise((resolve) => {
@@ -471,13 +484,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-
   showMissingPhotosDialog(): void {
     const missingList = this.missingPhotos.map(p => `• ${p}`).join('\n');
     const message = `⚠️ Cannot save inspection!\n\n${this.missingPhotos.length} mandatory images are missing:\n\n${missingList}\n\nPlease go back and upload all required photos before saving.`;
     alert(message);
   }
-
 
   goBackToPhotoUpload(): void {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
@@ -485,8 +496,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-
-  // ✅ NEW METHOD: LOG HISTORY
+  // History Logger
   private logHistoryAction(
     action: string,
     remarks: string,
@@ -514,13 +524,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-
   async onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-
 
     const photosValid = await this.checkMandatoryPhotosBeforeSave();
     if (!photosValid) {
@@ -528,13 +536,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
-
     this.saving = true;
     this.saveInProgress = true;
     const payload = this.buildFormData();
     const changedFields = this.getChangedFields();
     const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
-
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
@@ -551,7 +557,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
           avoAssignedToEmail: this.assignedToEmail,
           avoAssignedToWhatsapp: this.assignedToWhatsapp
         })),
-        // ✅ LOG HISTORY
+        // LOG HISTORY
         switchMap(() =>
           this.logHistoryAction(
             'Inspection Details Saved - AVO',
@@ -577,13 +583,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       });
   }
 
-
   async onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-
 
     const photosValid = await this.checkMandatoryPhotosBeforeSave();
     if (!photosValid) {
@@ -591,13 +595,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
-
     this.saving = true;
     this.submitInProgress = true;
     const payload = this.buildFormData();
     const changedFields = this.getChangedFields();
     const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
-
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
@@ -616,7 +618,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
           avoAssignedToEmail: this.assignedToEmail,
           avoAssignedToWhatsapp: this.assignedToWhatsapp
         })),
-        // ✅ LOG HISTORY
+        // LOG HISTORY
         switchMap(() =>
           this.logHistoryAction(
             'Inspection Submitted - Moving to QC',
@@ -639,7 +641,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         }
       });
   }
-
 
   onCancel() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection'], {

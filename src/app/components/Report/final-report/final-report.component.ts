@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms'; 
-import { CommonModule } from '@angular/common'; // Important for *ngIf
+import { CommonModule } from '@angular/common';
 
 import { ValuationService } from '../../../services/valuation.service';
 import { ValuationResponseService } from '../../../services/valuation-response.service';
@@ -36,10 +36,10 @@ export class FinalReportComponent implements OnInit {
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
 
-  // --- REJECTION STATE VARIABLES ---
-  showRejectModal: boolean = false;
+  // --- RETURN STATE VARIABLES (Renamed from Reject) ---
+  showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
-  rejectReason: string = '';
+  returnReason: string = '';
   
   availableUsers: any[] = [];
   selectedOverrideUser: string = '';
@@ -133,46 +133,47 @@ export class FinalReportComponent implements OnInit {
   }
 
   // =================================================================
-  //  NEW REJECTION LOGIC
+  //  NEW RETURN LOGIC (Updated to match Service)
   // =================================================================
 
-  openRejectModal() {
-    this.rejectReason = '';
-    this.showRejectModal = true;
+  openReturnModal() {
+    this.returnReason = '';
+    this.showReturnModal = true;
   }
 
-  submitRejection() {
-    if (!this.rejectReason) {
-      alert("Please provide a reason for rejection.");
+  submitReturn() {
+    if (!this.returnReason) {
+      alert("Please provide a reason for returning.");
       return;
     }
-    // Attempt rejection without override first
-    this.callRejectApi("");
+    // Attempt return without override first
+    this.callReturnApi("");
   }
 
-  callRejectApi(overrideId: string) {
+  callReturnApi(overrideId: string) {
     const currentUserJson = this.getCurrentUserObj(); 
     
-    this.workflowService.rejectWorkflow(
+    // ✅ CALLING THE RENAMED SERVICE METHOD
+    this.workflowService.returnWorkflow(
       this.valuationId,
       this.vehicleNumber,
       this.applicantContact,
       "FinalReport",      // Current Step
-      this.rejectReason,
+      this.returnReason,  // Reason
       currentUserJson.userId || '',
       currentUserJson.name || '',
       this.targetStep,    // 'QualityControl'
       overrideId          // Optional Override
     ).subscribe({
       next: () => {
-        alert("Report Rejected Successfully. Sent back to Quality Control.");
+        alert("Report Returned Successfully. Sent back to Quality Control.");
         this.closeModals();
-        this.onBack(); // Return to dashboard
+        this.onBack(); // Return to dashboard or previous screen
       },
       error: (err: any) => {
         // Handle 400 Error -> Open Override Modal
         if (err.status === 400 && err.error?.message?.includes("overrideAssigneeId")) {
-          this.showRejectModal = false; // Close reason modal
+          this.showReturnModal = false; // Close reason modal
           this.fetchQCUsers();          // Load users for override
         } else {
           alert("Error: " + (err.error?.message || "Unknown error occurred"));
@@ -182,7 +183,6 @@ export class FinalReportComponent implements OnInit {
   }
 
   fetchQCUsers() {
-    // Assuming UsersService has this method. If not, use getAll() and filter manually.
     this.userService.getUsersByRole('QualityControl').subscribe({
       next: (users: any[]) => {
         this.availableUsers = users;
@@ -197,12 +197,12 @@ export class FinalReportComponent implements OnInit {
 
   confirmOverride() {
     if (this.selectedOverrideUser) {
-      this.callRejectApi(this.selectedOverrideUser);
+      this.callReturnApi(this.selectedOverrideUser);
     }
   }
 
   closeModals() {
-    this.showRejectModal = false;
+    this.showReturnModal = false;
     this.showOverrideModal = false;
   }
 

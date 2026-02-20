@@ -1,3 +1,5 @@
+// src/app/components/valution/valuation-vehicle-details/valuation-vehicle-details.component.ts
+
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,8 +14,8 @@ import { environment } from '../../../../environments/environment';
 // Services
 import { ValuationService } from '../../../services/valuation.service';
 import { AuthorizationService } from '../../../services/authorization.service';
-import { WorkflowService } from '../../../services/workflow.service'; // ✅ Added
-import { UsersService } from '../../../services/users.service';         // ✅ Added
+import { WorkflowService } from '../../../services/workflow.service'; 
+import { UsersService } from '../../../services/users.service';         
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -44,15 +46,15 @@ export class ValuationVehicleDetailsComponent implements OnInit {
   applicantContact!: string;
   valuationType!: string;
 
-  // ✅ Rejection Display Variables
-  rejectionMessage: string | null = null;
-  rejectedBy: string | null = null;
+  // ✅ UPDATED: Return Status Display Variables
+  returnMessage: string | null = null;
+  returnedBy: string | null = null;
 
-  // --- REJECTION ACTION VARIABLES ---
-  showRejectModal: boolean = false;
+  // --- RETURN ACTION VARIABLES ---
+  showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
-  rejectReason: string = '';
-  selectedTargetStep: string = 'Stakeholder'; // Backend usually rejects to Stakeholder
+  returnReason: string = '';
+  selectedTargetStep: string = 'Stakeholder'; // Backend usually returns to Stakeholder
   
   // Override Data
   availableUsers: any[] = [];
@@ -93,8 +95,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
         // 1. Fetch Data
         this.fetchVehicleDetails();
 
-        // 2. ✅ Fetch Rejection Status (To show banner if AVO rejected this)
-        this.checkRejectionStatus(this.valuationId, vn, ac);
+        // 2. ✅ Fetch Return Status (To show banner if AVO returned this)
+        this.checkReturnStatus(this.valuationId, vn, ac);
 
       } else {
         this.loading = false;
@@ -103,9 +105,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     });
   }
 
-  // ✅ ROBUST REJECTION CHECKER
-  // UPDATED: Now checks if the current step is 'Backend' before showing banner
-  private checkRejectionStatus(id: string, vn: string, ac: string) {
+  // ✅ ROBUST RETURN CHECKER
+  private checkReturnStatus(id: string, vn: string, ac: string) {
     this.workflowService.getTable(id, vn, ac).subscribe({
       next: (table: any) => {
         // 1. Get Flags
@@ -114,36 +115,47 @@ export class ValuationVehicleDetailsComponent implements OnInit {
 
         // 2. Get Current Step
         const currentStep = table?.workflow || table?.Workflow || '';
-        // Check if the current step is specifically 'Backend' (handling case sensitivity)
+        // Check if the current step is specifically 'Backend'
         const isBackendStep = currentStep === 'Backend' || currentStep === 'BackEnd';
 
         // 3. Logic: Only show if RedFlag is true AND we are currently in Backend step
         if (isRedFlag && remark && isBackendStep) {
-          // Parse "REJECTED by {Step}: {Reason}"
-          const prefix = "REJECTED by ";
+          
+          const prefix = "RETURNED BY "; // ✅ Updated Prefix
           const remarkUpper = remark.toUpperCase();
           const prefixUpper = prefix.toUpperCase();
 
           if (remarkUpper.startsWith(prefixUpper)) {
             const splitIndex = remark.indexOf(':');
             if (splitIndex !== -1) {
-              // Extract the Role (e.g., "AVO")
-              this.rejectedBy = remark.substring(prefix.length, splitIndex).trim();
-              // Extract the Reason
-              this.rejectionMessage = remark.substring(splitIndex + 1).trim();
+              const returnerName = remark.substring(prefix.length, splitIndex).trim();
+              
+              // ⛔️ STALE RETURN CHECK ⛔️
+              // If "Returned By Backend" exists, it means *we* sent it back. Hide it.
+              const invalidReturners = ['BACKEND'];
+              
+              if (invalidReturners.includes(returnerName.toUpperCase())) {
+                 console.log(`VehicleDetails: Stale Return detected from [${returnerName}]. Hiding banner.`);
+                 this.returnedBy = null;
+                 this.returnMessage = null;
+                 return; // Stop here
+              }
+
+              this.returnedBy = returnerName;
+              this.returnMessage = remark.substring(splitIndex + 1).trim();
             } else {
-              this.rejectedBy = "Previous Stage"; 
-              this.rejectionMessage = remark;
+              this.returnedBy = "Previous Stage"; 
+              this.returnMessage = remark;
             }
           } else {
             // Fallback for old format
-            this.rejectedBy = null; 
-            this.rejectionMessage = remark;
+            this.returnedBy = null; 
+            this.returnMessage = remark;
           }
         } else {
           // Hide banner if not red flag or not on this step
-          this.rejectionMessage = null;
-          this.rejectedBy = null;
+          this.returnMessage = null;
+          this.returnedBy = null;
         }
       },
       error: (err) => console.error('VehicleDetails: Failed to fetch workflow table', err)
@@ -273,45 +285,46 @@ export class ValuationVehicleDetailsComponent implements OnInit {
   }
 
   // =================================================================
-  //  REJECTION LOGIC (Backend -> Stakeholder)
+  //  RETURN LOGIC (Backend -> Stakeholder)
   // =================================================================
 
-  openRejectModal() {
-    this.rejectReason = '';
-    this.selectedTargetStep = 'Stakeholder'; // Backend usually rejects to Stakeholder
-    this.showRejectModal = true;
+  openReturnModal() {
+    this.returnReason = '';
+    this.selectedTargetStep = 'Stakeholder'; // Backend usually returns to Stakeholder
+    this.showReturnModal = true;
   }
 
-  submitRejection() {
-    if (!this.rejectReason) {
-      alert("Please provide a reason for rejection.");
+  submitReturn() {
+    if (!this.returnReason) {
+      alert("Please provide a reason for returning.");
       return;
     }
-    this.callRejectApi("");
+    this.callReturnApi("");
   }
 
-  callRejectApi(overrideId: string) {
+  callReturnApi(overrideId: string) {
     const currentUserJson = this.getCurrentUserObj(); 
     
-    this.workflowService.rejectWorkflow(
+    // ✅ Calling returnWorkflow
+    this.workflowService.returnWorkflow(
       this.valuationId,
       this.vehicleNumber,
       this.applicantContact,
       "Backend",          // Current Step (Vehicle Details is usually Backend)
-      this.rejectReason,
+      this.returnReason,  // Reason
       currentUserJson.userId || '',
       currentUserJson.name || '',
       this.selectedTargetStep, 
       overrideId
     ).subscribe({
       next: () => {
-        alert(`Case Rejected Successfully. Sent back to ${this.selectedTargetStep}.`);
+        alert(`Case Returned Successfully. Sent back to ${this.selectedTargetStep}.`);
         this.closeModals();
         this.onBack();
       },
       error: (err: any) => {
         if (err.status === 400 && err.error?.message?.includes("overrideAssigneeId")) {
-          this.showRejectModal = false; 
+          this.showReturnModal = false; 
           this.fetchOverrideUsers(); 
         } else {
           alert("Error: " + (err.error?.message || "Unknown error occurred"));
@@ -337,12 +350,12 @@ export class ValuationVehicleDetailsComponent implements OnInit {
 
   confirmOverride() {
     if (this.selectedOverrideUser) {
-      this.callRejectApi(this.selectedOverrideUser);
+      this.callReturnApi(this.selectedOverrideUser);
     }
   }
 
   closeModals() {
-    this.showRejectModal = false;
+    this.showReturnModal = false;
     this.showOverrideModal = false;
   }
 }

@@ -8,19 +8,27 @@ import { WorkflowTable } from '../../models/WorkflowTable';
 import { SharedModule } from '../shared/shared.module/shared.module';
 import { UserModel } from '../../models/user.model';
 import { UsersService } from '../../services/users.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CommonNotesComponent } from '../common-notes/common-notes.component';
+import { CaseHistoryComponent } from '../case-history/case-history.component';
+import { CasePaymentComponent } from '../case-payment/case-payment.component';
+import { AuthService } from '../../services/auth.service';
+
 
 @Component({
   selector: 'app-workflow-buttons',
   templateUrl: './workflow-buttons.component.html',
   styleUrls: ['./workflow-buttons.component.scss'],
-  imports: [CommonModule, RouterModule, SharedModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    SharedModule,
+    MatDialogModule
+  ],
   standalone: true
 })
 export class WorkflowButtonsComponent {
-  /**
-   * `id` is the Valuation ID (route param).
-   * `vehicleNumber` and `applicantContact` are passed as query params.
-   */
+
   @Input() id!: string;
   @Input() vehicleNumber!: string;
   @Input() applicantContact!: string;
@@ -33,36 +41,45 @@ export class WorkflowButtonsComponent {
   error?: string;
   loadingAssigned = false;
 
+  currentUserName: string = '';
+
   constructor(
     private tableSvc: WorkflowService,
-    private usersSvc: UsersService
-  ) { }
+    private usersSvc: UsersService,
+    private dialog: MatDialog,
+    private authService: AuthService
+  ) {}
 
   private authz = inject(AuthorizationService);
 
-  ngOnInit(): void {
-    // after you have valuationId, vehicleNumber, applicantContact:
+  async ngOnInit(): Promise<void> {
     this.loadAssignedUser();
+
+    const user = await this.authService.getCurrentUser();
+    this.currentUserName =
+      user?.displayName ||
+      user?.phoneNumber ||
+      user?.email ||
+      'Unknown';
   }
 
   private loadAssignedUser() {
-      this.loadingAssigned = true;
-      this.usersSvc
-        .getAssignedUser(this.id, this.vehicleNumber, this.applicantContact)
-        .subscribe({
-          next: user => {
-            this.assignedUser = user;
-            this.loadingAssigned = false;
-          },
-          error: err => {
-            this.error = err.message || 'Failed to load assigned user';
-            this.loadingAssigned = false;
-          }
-        });
-    }
+    this.loadingAssigned = true;
+    this.usersSvc
+      .getAssignedUser(this.id, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: user => {
+          this.assignedUser = user;
+          this.loadingAssigned = false;
+        },
+        error: err => {
+          this.error = err.message || 'Failed to load assigned user';
+          this.loadingAssigned = false;
+        }
+      });
+  }
 
   ngOnChanges(changes: SimpleChanges) {
-    // whenever inputs change, re-fetch
     if (changes['id'] || changes['vehicleNumber'] || changes['applicantContact']) {
       this.tableSvc.getTable(this.id, this.vehicleNumber, this.applicantContact)
         .subscribe({
@@ -70,16 +87,53 @@ export class WorkflowButtonsComponent {
             this.table = table;
             this.loadingTable = false;
           },
-          error: (err) => {
+          error: () => {
             this.tableError = 'Failed to load table';
             this.loadingTable = false;
           }
         });
     }
   }
-  
 
-  // check any of these three
+  // 🔹 Open Common Notes Popup
+  openNotesPopup(): void {
+    const dialogRef = this.dialog.open(CommonNotesComponent, {
+      width: '800px',
+      maxHeight: '90vh'
+    });
+
+    dialogRef.componentInstance.entityType = 'Valuation';
+    dialogRef.componentInstance.entityId = this.id;
+    dialogRef.componentInstance.currentUser = this.currentUserName;
+  }
+
+  // 🔹 Open Case History Popup
+  openHistoryPopup(): void {
+    this.dialog.open(CaseHistoryComponent, {
+      width: '800px',
+      maxHeight: '90vh',
+      data: {
+        valuationId: this.id
+      }
+    });
+  }
+
+  // 🔹 Open Payment Popup
+  openPaymentPopup(): void {
+  this.dialog.open(CasePaymentComponent, {
+    width: '600px',
+    maxHeight: '90vh',
+    data: {
+      valuationId: this.id,
+      vehicleNumber: this.vehicleNumber,
+      applicantContact: this.applicantContact,
+      table: this.table
+    }
+  });
+}
+
+
+
   canViewStakeholder() {
     return this.authz.hasAnyPermission([
       'CanViewStakeholder',

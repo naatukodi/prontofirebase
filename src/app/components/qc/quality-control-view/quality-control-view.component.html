@@ -2,6 +2,7 @@
 <div *ngIf="error" class="error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error && viewModel">
+  
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
@@ -9,31 +10,32 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <div *ngIf="rejectionMessage" class="rejection-banner" 
+  <div *ngIf="returnMessage" class="rejection-banner" 
        style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     
     <div style="font-size: 1.5rem; margin-right: 15px;">⚠️</div>
     
     <div style="width: 100%;">
       <h4 style="margin: 0 0 8px 0; font-weight: bold; text-transform: uppercase; color: #b71c1c; font-size: 1.1rem;">
-        CASE REJECTED <span *ngIf="rejectedBy">BY {{ rejectedBy }}</span>
+        CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span>
       </h4>
       
       <div style="background-color: rgba(255,255,255,0.6); padding: 10px 12px; border-radius: 4px; border: 1px solid #e57373;">
         <span style="font-size: 1.05rem; white-space: pre-wrap; font-weight: 500; color: #b71c1c; display: block;">
-          {{ rejectionMessage }}
+          {{ returnMessage }}
         </span>
       </div>
     </div>
   </div>
+
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
       </button>
       
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openRejectModal()" style="background-color: #f44336; color: white;">
-        Reject
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
+        Return
       </button>
 
       <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
@@ -315,7 +317,9 @@
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openRejectModal()" style="background-color: #f44336; color: white;">Reject</button>
+      
+      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">Return</button>
+      
       <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
       <button mat-raised-button color="accent" (click)="onBack()">Back</button>
     </div>
@@ -324,10 +328,10 @@
 
 <router-outlet></router-outlet>
 
-<div class="modal-overlay" *ngIf="showRejectModal">
+<div class="modal-overlay" *ngIf="showReturnModal">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>Reject Quality Control</h3>
+      <h3>Return Quality Control</h3>
       <span class="close-btn" (click)="closeModals()">×</span>
     </div>
     
@@ -338,13 +342,13 @@
         <option value="Backend">Backend</option>
       </select>
 
-      <label>Reason:</label>
-      <textarea [(ngModel)]="rejectReason" class="modal-input" rows="3" placeholder="Enter rejection reason..."></textarea>
+      <label>Reason for Returning:</label>
+      <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason..."></textarea>
     </div>
 
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="submitRejection()">Confirm Reject</button>
+      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
     </div>
   </div>
 </div>
@@ -369,7 +373,7 @@
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
       <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
-        Assign & Reject
+        Assign & Return
       </button>
     </div>
   </div>

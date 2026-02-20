@@ -47,39 +47,17 @@ export class CommonNotesComponent
   constructor(private commonNoteService: CommonNoteService) {}
 
   ngOnInit(): void {
-  console.log('🔍 CommonNotesComponent initialized with:', {
-    entityType: this.entityType,
-    entityId: this.entityId
-  });
-
-  if (!this.entityType || !this.entityId) {
-    console.error('❌ CommonNotesComponent: entityType and entityId are required');
-    return;
+    if (!this.entityType || !this.entityId) return;
+    this.loadNotes();
   }
 
-  this.loadNotes();
-}
-
   ngOnChanges(changes: SimpleChanges): void {
-    // prevent premature load
-    const entityIdChanged =
-      changes['entityId'] &&
-      changes['entityId'].currentValue &&
-      changes['entityId'].currentValue !==
-        changes['entityId'].previousValue;
+    const entityChanged =
+      (changes['entityId'] || changes['entityType']) &&
+      this.entityId &&
+      this.entityId.trim() !== '';
 
-    const entityTypeChanged =
-      changes['entityType'] &&
-      changes['entityType'].currentValue &&
-      changes['entityType'].currentValue !==
-        changes['entityType'].previousValue;
-
-    if ((entityIdChanged || entityTypeChanged) && this.entityId && this.entityId.trim() !== '') {
-      console.log(
-        'Entity data ready → loading notes for:',
-        this.entityType,
-        this.entityId
-      );
+    if (entityChanged) {
       this.loadNotes();
     }
   }
@@ -89,12 +67,8 @@ export class CommonNotesComponent
     this.destroy$.complete();
   }
 
-  // ✅ Load all notes for current entity
   loadNotes(): void {
-    if (!this.entityType || !this.entityId || this.entityId.trim() === '') {
-      console.warn('Skipping note load — invalid entity info');
-      return;
-    }
+    if (!this.entityType || !this.entityId) return;
 
     this.isLoading = true;
     this.error = null;
@@ -110,17 +84,14 @@ export class CommonNotesComponent
               new Date(a.createdDate).getTime()
           );
           this.isLoading = false;
-          console.log('Notes loaded:', this.notes);
         },
-        error: (err) => {
-          console.error('Error loading notes:', err);
+        error: () => {
           this.error = 'Failed to load notes';
           this.isLoading = false;
         }
       });
   }
 
-  // ✅ Create new note
   createNote(): void {
     if (!this.newNoteText.trim()) {
       this.error = 'Note cannot be empty';
@@ -139,18 +110,12 @@ export class CommonNotesComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (newNote) => {
-          // Add locally for instant update
           this.notes.unshift(newNote);
-
-          // (optional) refresh from DB for sync
-          // this.loadNotes();
-
           this.newNoteText = '';
           this.showForm = false;
           this.error = null;
         },
-        error: (err) => {
-          console.error('Error creating note:', err);
+        error: () => {
           this.error = 'Failed to create note';
         }
       });
@@ -189,36 +154,15 @@ export class CommonNotesComponent
           this.cancelEditing();
           this.error = null;
         },
-        error: (err) => {
-          console.error('Error updating note:', err);
+        error: () => {
           this.error = 'Failed to update note';
         }
       });
   }
 
-  deleteNote(noteId: string): void {
-    if (confirm('Are you sure you want to delete this note?')) {
-      this.commonNoteService
-        .deleteNote(noteId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.notes = this.notes.filter((n) => n.id !== noteId);
-            this.error = null;
-          },
-          error: (err) => {
-            console.error('Error deleting note:', err);
-            this.error = 'Failed to delete note';
-          }
-        });
-    }
-  }
-
   toggleForm(): void {
     this.showForm = !this.showForm;
-    if (!this.showForm) {
-      this.newNoteText = '';
-    }
+    if (!this.showForm) this.newNoteText = '';
   }
 
   toggleCollapse(): void {
@@ -230,10 +174,7 @@ export class CommonNotesComponent
     return (
       d.toLocaleDateString() +
       ' ' +
-      d.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     );
   }
 

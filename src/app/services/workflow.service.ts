@@ -10,24 +10,46 @@ import { WorkflowTable } from '../models/WorkflowTable';
   providedIn: 'root'
 })
 export class WorkflowService {
+
   private readonly baseUrl = environment.apiBaseUrl + 'valuations';
+  private readonly paymentUrl = environment.apiBaseUrl + 'payments';
 
   constructor(private http: HttpClient) {}
 
-  startWorkflow(valuationId: string, stepOrder: number, vehicleNumber: string, applicantContact: string): Observable<void> {
+  // ===============================
+  // START WORKFLOW
+  // ===============================
+  startWorkflow(
+    valuationId: string,
+    stepOrder: number,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/${valuationId}/workflow/${stepOrder}/start?vehicleNumber=${vehicleNumber}&applicantContact=${applicantContact}`,
       null
     );
   }
 
-  completeWorkflow(valuationId: string, stepOrder: number, vehicleNumber: string, applicantContact: string): Observable<void> {
+  // ===============================
+  // COMPLETE WORKFLOW
+  // ===============================
+  completeWorkflow(
+    valuationId: string,
+    stepOrder: number,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/${valuationId}/workflow/${stepOrder}/complete?vehicleNumber=${vehicleNumber}&applicantContact=${applicantContact}`,
       null
     );
   }
 
+  // ===============================
+  // UPDATE WORKFLOW TABLE
+  // (NO PAYMENT FIELDS HERE)
+  // ===============================
   updateWorkflowTable(
     valuationId: string,
     vehicleNumber: string,
@@ -47,35 +69,41 @@ export class WorkflowService {
       assignedToPhoneNumber: string;
       assignedToEmail: string;
       assignedToWhatsapp: string;
+
       stakeholderAssignedTo: string;
       stakeholderAssignedToPhoneNumber: string;
       stakeholderAssignedToEmail: string;
       stakeholderAssignedToWhatsapp: string;
+
       backEndAssignedTo: string;
       backEndAssignedToPhoneNumber: string;
       backEndAssignedToEmail: string;
       backEndAssignedToWhatsapp: string;
+
       avoAssignedTo: string;
       avoAssignedToPhoneNumber: string;
       avoAssignedToEmail: string;
       avoAssignedToWhatsapp: string;
+
       qualityControlAssignedTo: string;
       qualityControlAssignedToPhoneNumber: string;
       qualityControlAssignedToEmail: string;
       qualityControlAssignedToWhatsapp: string;
+
       finalReportAssignedTo: string;
       finalReportAssignedToPhoneNumber: string;
       finalReportAssignedToEmail: string;
       finalReportAssignedToWhatsapp: string;
+
       redFlag: string;
       remarks: string;
       name: string;
       valuationType: string;
     }>
   ): Observable<void> {
-    const url = `${environment.apiBaseUrl}valuations/${valuationId}/workflow/Table`;
 
-    // Always include these identifiers
+    const url = `${this.baseUrl}/${valuationId}/workflow/Table`;
+
     const body: any = {
       valuationId,
       vehicleNumber,
@@ -88,8 +116,47 @@ export class WorkflowService {
     });
   }
 
-  getWorkflowStatus(valuationId: string, vehicleNumber: string, applicantContact: string, valuationType: string): Observable<any> {
+  // ===============================
+  // ✅ SAVE PAYMENT (NEW SEPARATE API)
+  // ===============================
+  savePayment(data: {
+    valuationId: string;
+    vehicleNumber: string;
+    applicantContact: string;
+    paymentStatus: string;
+    paymentReference?: string;
+    paymentDate: string;
+    paymentMethod: string;
+    paymentAmount: number;
+    paymentNotes?: string;
+  }): Observable<any> {
+
+    return this.http.put<any>(
+      this.paymentUrl,
+      data,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  getPayment(valuationId: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.apiBaseUrl}payments/${valuationId}`
+    );
+  }
+
+
+  // ===============================
+  // GET WORKFLOW STATUS
+  // ===============================
+  getWorkflowStatus(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    valuationType: string
+  ): Observable<any> {
+
     const url = `${this.baseUrl}/${valuationId}/workflow`;
+
     const params = new HttpParams()
       .set('vehicleNumber', vehicleNumber)
       .set('applicantContact', applicantContact)
@@ -103,44 +170,59 @@ export class WorkflowService {
       );
   }
 
+  // ===============================
+  // GET WORKFLOW TABLE
+  // ===============================
   getTable(
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string
   ): Observable<WorkflowTable> {
+
     const url = `${this.baseUrl}/${valuationId}/workflow/Table`;
+
     return this.http.get<WorkflowTable>(url, {
       params: { vehicleNumber, applicantContact }
     });
   }
 
-  // ✅ NEW METHOD: Reject Workflow (Supports Manual Override)
-  rejectWorkflow(
+  // ===============================
+  // RETURN WORKFLOW
+  // ===============================
+  returnWorkflow(
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string,
     currentStep: string,
-    rejectReason: string,
+    returnReason: string,
     currentUserId: string,
     currentUserName: string,
-    targetRejectedStep: string,
-    overrideAssigneeId: string = "" // Optional parameter for override scenario
+    targetReturnStep: string,
+    overrideAssigneeId: string = ""
   ): Observable<void> {
-    // Matches Backend: POST api/valuations/{valuationId}/workflow/reject
-    const url = `${this.baseUrl}/${valuationId}/workflow/reject`;
-    
+
+    const url = `${this.baseUrl}/${valuationId}/workflow/return`;
+
     const body = {
       valuationId,
       vehicleNumber,
       applicantContact,
       currentStep,
-      rejectReason,
+      returnReason,
       currentUserId,
       currentUserName,
-      targetRejectedStep,
+      targetReturnStep,
       overrideAssigneeId
     };
 
     return this.http.post<void>(url, body);
+  }
+
+  // ===============================
+  // GET CASE HISTORY
+  // ===============================
+  getHistory(valuationId: string): Observable<any[]> {
+    const url = `${this.baseUrl}/${valuationId}/workflow/gethistory`;
+    return this.http.get<any[]>(url);
   }
 }

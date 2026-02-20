@@ -53,20 +53,20 @@ export class InspectionViewComponent implements OnInit {
   applicantContact!: string;
   valuationType: ValuationType | null = null;
   
-  // ✅ Variable to hold the rejection message
-  rejectionMessage: string | null = null;
-  // ✅ Variable to store WHO rejected the case
-  rejectedBy: string | null = null; 
+  // ✅ UPDATED: Variable to hold the return message
+  returnMessage: string | null = null;
+  // ✅ UPDATED: Variable to store WHO returned the case
+  returnedBy: string | null = null; 
 
-  // --- REJECTION VARIABLES ---
-  showRejectModal: boolean = false;
+  // --- RETURN VARIABLES (Renamed from Reject) ---
+  showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
-  rejectReason: string = '';
+  returnReason: string = '';
   
   // Override Data
   availableUsers: any[] = [];
   selectedOverrideUser: string = '';
-  targetStep: string = 'Backend'; // AVO always rejects to Backend
+  targetStep: string = 'Backend'; // AVO always returns to Backend
 
   private visibilityMap: Record<ValuationType, string[]> = {
    'four-wheeler': [
@@ -217,8 +217,8 @@ export class InspectionViewComponent implements OnInit {
         // 1. Fetch Inspection Data
         this.fetchInspection();
 
-        // 2. ✅ Fetch Rejection Status (Using correct params)
-        this.checkRejectionStatus(this.valuationId, vn, ac);
+        // 2. ✅ Fetch Return Status (Renamed)
+        this.checkReturnStatus(this.valuationId, vn, ac);
 
       } else {
         this.loading = false;
@@ -227,9 +227,8 @@ export class InspectionViewComponent implements OnInit {
     });
   }
 
-  // ✅ ROBUST REJECTION CHECKER & PARSER
-  // UPDATED: Added filtering logic to ignore "Stale" rejections
-  private checkRejectionStatus(id: string, vn: string, ac: string) {
+  // ✅ ROBUST RETURN CHECKER & PARSER
+  private checkReturnStatus(id: string, vn: string, ac: string) {
     this.workflowService.getTable(id, vn, ac).subscribe({
       next: (table: any) => {
         // Debugging
@@ -246,50 +245,49 @@ export class InspectionViewComponent implements OnInit {
         if (isRedFlag && remark && isAVOStep) {
           // 1. Normalize string for checking
           const remarkUpper = remark.toUpperCase();
-          const prefix = "REJECTED BY ";
+          // ✅ UPDATED PREFIX CHECK
+          const prefix = "RETURNED BY ";
 
-          // 2. Check if it starts with "REJECTED BY " (Case Insensitive)
+          // 2. Check if it starts with "RETURNED BY " (Case Insensitive)
           if (remarkUpper.startsWith(prefix)) {
             const splitIndex = remark.indexOf(':'); // Find the first colon
             
             if (splitIndex !== -1) {
-              // Extract the name (Length of "REJECTED by " is 12)
-              const rejectorName = remark.substring(12, splitIndex).trim();
+              // Extract the name (Length of "RETURNED by " is 12)
+              const returnerName = remark.substring(12, splitIndex).trim();
               
-              // ⛔️ STALE/INVALID REJECTION CHECK ⛔️
-              // If we are at AVO step, we should NOT see "Rejected By AVO" (that's stale).
-              // We should also not see "Rejected By Backend" or "Stakeholder" (impossible forward reject).
-              // We ONLY want to see rejection from QC or FinalReport.
-              const invalidRejectors = ['AVO', 'BACKEND', 'STAKEHOLDER'];
+              // ⛔️ STALE/INVALID RETURN CHECK ⛔️
+              // We should not see "Returned By AVO" if we are IN AVO step (circular).
+              const invalidReturners = ['AVO', 'STAKEHOLDER'];
               
-              if (invalidRejectors.includes(rejectorName.toUpperCase())) {
-                 console.log(`InspectionView: Stale/Invalid Rejection detected from [${rejectorName}]. Hiding banner.`);
-                 this.rejectedBy = null;
-                 this.rejectionMessage = null;
-                 return; // Stop here, do not show banner
+              if (invalidReturners.includes(returnerName.toUpperCase())) {
+                 console.log(`InspectionView: Stale/Invalid Return detected from [${returnerName}]. Hiding banner.`);
+                 this.returnedBy = null;
+                 this.returnMessage = null;
+                 return; // Stop here
               }
 
-              this.rejectedBy = rejectorName;
-              this.rejectionMessage = remark.substring(splitIndex + 1).trim();
+              this.returnedBy = returnerName;
+              this.returnMessage = remark.substring(splitIndex + 1).trim();
             } else {
               // Fallback for malformed strings
-              this.rejectedBy = "Previous Stage"; 
-              this.rejectionMessage = remark;
+              this.returnedBy = "Previous Stage"; 
+              this.returnMessage = remark;
             }
           } 
           // 3. Fallback: Data exists but doesn't have the prefix
           else {
-            this.rejectedBy = null; 
-            this.rejectionMessage = remark;
+            this.returnedBy = null; 
+            this.returnMessage = remark;
           }
 
-          console.log(`✅ PARSED: By [${this.rejectedBy}] -> Reason: [${this.rejectionMessage}]`);
+          console.log(`✅ PARSED: By [${this.returnedBy}] -> Reason: [${this.returnMessage}]`);
 
         } else {
           // No Red Flag OR Not current step -> Hide banner
-          this.rejectionMessage = null;
-          this.rejectedBy = null;
-          console.log('InspectionView: No rejection active for this step.');
+          this.returnMessage = null;
+          this.returnedBy = null;
+          console.log('InspectionView: No return flag active for this step.');
         }
       },
       error: (err) => console.error('InspectionView: Failed to fetch workflow table', err)
@@ -443,46 +441,47 @@ export class InspectionViewComponent implements OnInit {
   }
 
   // =================================================================
-  //  REJECTION LOGIC (AVO -> Backend)
+  //  RETURN LOGIC (AVO -> Backend)
   // =================================================================
 
-  openRejectModal() {
-    this.rejectReason = '';
-    this.showRejectModal = true;
+  openReturnModal() {
+    this.returnReason = '';
+    this.showReturnModal = true;
   }
 
-  submitRejection() {
-    if (!this.rejectReason) {
-      alert("Please provide a reason for rejection.");
+  submitReturn() {
+    if (!this.returnReason) {
+      alert("Please provide a reason for returning.");
       return;
     }
-    // Attempt rejection without override first
-    this.callRejectApi("");
+    // Attempt return without override first
+    this.callReturnApi("");
   }
 
-  callRejectApi(overrideId: string) {
+  callReturnApi(overrideId: string) {
     const currentUserJson = this.getCurrentUserObj(); 
     
-    this.workflowService.rejectWorkflow(
+    // ✅ CALLING THE RENAMED SERVICE METHOD
+    this.workflowService.returnWorkflow(
       this.valuationId,
       this.vehicleNumber,
       this.applicantContact,
       "AVO",              // Current Step
-      this.rejectReason,
+      this.returnReason,  // Reason
       currentUserJson.userId || '',
       currentUserJson.name || '',
       this.targetStep,    // 'Backend'
       overrideId          // Optional Override
     ).subscribe({
       next: () => {
-        alert("Case Rejected Successfully. Sent back to Backend.");
+        alert("Case Returned Successfully. Sent back to Backend.");
         this.closeModals();
         this.onBack(); // Return to dashboard
       },
       error: (err: any) => {
         // Handle 400 Error -> Open Override Modal
         if (err.status === 400 && err.error?.message?.includes("overrideAssigneeId")) {
-          this.showRejectModal = false; // Close reason modal
+          this.showReturnModal = false; // Close reason modal
           this.fetchBackendUsers();     // Load users for override
         } else {
           alert("Error: " + (err.error?.message || "Unknown error occurred"));
@@ -506,12 +505,12 @@ export class InspectionViewComponent implements OnInit {
 
   confirmOverride() {
     if (this.selectedOverrideUser) {
-      this.callRejectApi(this.selectedOverrideUser);
+      this.callReturnApi(this.selectedOverrideUser);
     }
   }
 
   closeModals() {
-    this.showRejectModal = false;
+    this.showReturnModal = false;
     this.showOverrideModal = false;
   }
 }

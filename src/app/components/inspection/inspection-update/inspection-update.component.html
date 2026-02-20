@@ -412,6 +412,61 @@
       </div>
     </fieldset>
 
+    <!-- ── Payment Details Section ────────────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Payment Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Status</mat-label>
+          <mat-select formControlName="paymentStatus" required>
+            <mat-option value="Pending">Pending</mat-option>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Failed">Failed</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">
+            Payment Status is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Reference</mat-label>
+          <input matInput formControlName="paymentReference" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Date</mat-label>
+          <input matInput type="datetime-local" formControlName="paymentDate" />
+          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">
+            Payment Date is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Method</mat-label>
+          <mat-select formControlName="paymentMethod" required>
+            <mat-option value="Online">Online</mat-option>
+            <mat-option value="Cash">Cash</mat-option>
+            <mat-option value="UPI">UPI</mat-option>
+            <mat-option value="Card">Card</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">
+            Payment Method is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Amount</mat-label>
+          <input matInput type="number" formControlName="paymentAmount" />
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">
+            Amount is required
+          </mat-error>
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">
+            Amount must be ≥ 0
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
     <!-- ── Remarks Section ────────────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Remarks</legend>

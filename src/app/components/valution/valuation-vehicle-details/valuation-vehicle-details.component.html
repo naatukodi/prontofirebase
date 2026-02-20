@@ -1,14 +1,8 @@
-<!-- src/app/valuation-vehicle-details/valuation-vehicle-details.component.html -->
-
-<!-- ───────────────────────────────────────────────────────────── -->
-<!-- Loading & Error States -->
-<!-- ───────────────────────────────────────────────────────────── -->
 <div *ngIf="loading" class="loading">Loading vehicle details...</div>
 <div *ngIf="error" class="error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error && vehicleDetails">
 
-  <!-- ── Duplicate Summary Bar ────────────────────────────────── -->
   <div *ngIf="duplicateInfo?.isDuplicate" class="duplicate-summary-bar">
     <span class="warning-icon">⚠️</span>
     <span>
@@ -17,7 +11,6 @@
     </span>
   </div>
 
-  <!-- ── Workflow Buttons ─────────────────────────────────────── -->
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
@@ -25,8 +18,7 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <!-- ── Rejection Banner (NEW) ───────────────────────────────── -->
-  <div *ngIf="rejectionMessage"
+  <div *ngIf="returnMessage"
        class="rejection-banner"
        style="background-color:#ffebee;color:#c62828;padding:15px;margin:15px 0 20px 0;
               border:1px solid #ef9a9a;border-left:5px solid #d32f2f;border-radius:4px;
@@ -36,28 +28,29 @@
 
     <div style="width:100%;">
       <h4 style="margin:0 0 8px 0;font-weight:bold;text-transform:uppercase;color:#b71c1c;">
-        CASE REJECTED <span *ngIf="rejectedBy">BY {{ rejectedBy }}</span>
+        CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span>
       </h4>
 
       <div style="background-color:rgba(255,255,255,0.6);padding:10px 12px;
                   border-radius:4px;border:1px solid #e57373;">
         <span style="white-space:pre-wrap;font-weight:500;color:#b71c1c;">
-          {{ rejectionMessage }}
+          {{ returnMessage }}
         </span>
       </div>
     </div>
   </div>
 
-  <!-- ── Top Action Buttons ───────────────────────────────────── -->
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditVehicleDetails()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+      
+      <button *ngIf="canEditVehicleDetails()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">Return</button>
+
       <button *ngIf="canDeleteVehicleDetails()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
       <button mat-raised-button color="warn" (click)="onBack()">Back</button>
     </div>
   </fieldset>
 
-  <!-- ── Vehicle Basic Information ────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Vehicle Information</legend>
     <div class="grid">
@@ -96,7 +89,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Manufacturing & Engine Details ───────────────────────── -->
   <fieldset class="nested-group">
     <legend>Manufacturing & Engine Details</legend>
     <div class="grid">
@@ -141,7 +133,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Registration & RTO Information ───────────────────────── -->
   <fieldset class="nested-group">
     <legend>Registration & RTO</legend>
     <div class="grid">
@@ -179,7 +170,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Owner & Hypothecation Information ────────────────────── -->
   <fieldset class="nested-group">
     <legend>Owner & Hypothecation</legend>
     <div class="grid">
@@ -217,7 +207,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Insurance Details ───────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Insurance Details</legend>
     <div class="grid">
@@ -240,7 +229,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Permit & Fitness Information ────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Permit & Fitness</legend>
     <div class="grid">
@@ -283,7 +271,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Pollution Certificate & Tax Information ─────────────── -->
   <fieldset class="nested-group">
     <legend>Pollution Certificate & Tax</legend>
     <div class="grid">
@@ -311,7 +298,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Additional Vehicle Information ──────────────────────── -->
   <fieldset class="nested-group">
     <legend>Additional Info</legend>
     <div class="grid">
@@ -354,16 +340,14 @@
     </div>
   </fieldset>
 
-  <!-- ── Remarks Section ─────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <mat-form-field appearance="outline" class="full-width">
       <textarea matInput [value]="vehicleDetails.remarks" readonly rows="3"
-                placeholder="No remarks available"></textarea>
+              placeholder="No remarks available"></textarea>
     </mat-form-field>
   </fieldset>
 
-  <!-- ── Document Upload Section ─────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Documents</legend>
     <div class="grid">
@@ -402,7 +386,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Backend Notes Section ───────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Backend Notes</legend>
     <app-common-notes
@@ -413,13 +396,61 @@
     </app-common-notes>
   </fieldset>
 
-  <!-- ── Bottom Action Buttons ───────────────────────────────── -->
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditVehicleDetails()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+      
+      <button *ngIf="canEditVehicleDetails()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">Return</button>
+
       <button *ngIf="canDeleteVehicleDetails()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
       <button mat-raised-button color="warn" (click)="onBack()">Back</button>
     </div>
   </fieldset>
 
 </ng-container>
+
+<div class="modal-overlay" *ngIf="showReturnModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Return Case</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    
+    <div class="modal-body">
+      <p>This case will be sent back to <b>Stakeholder</b>.</p>
+      <label>Reason for Returning:</label>
+      <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason for returning..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showOverrideModal">
+  <div class="modal-box">
+    <div class="modal-header warning">
+      <h3>⚠️ User Not Found</h3>
+    </div>
+    <div class="modal-body">
+      <p>The original Stakeholder user could not be found.</p>
+      <p>Please manually select a user to assign this case to:</p>
+      
+      <label>Assign To (Stakeholder):</label>
+      <select [(ngModel)]="selectedOverrideUser" class="modal-input">
+        <option value="" disabled selected>-- Select User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
+          {{ user.name }} ({{ user.phoneNumber }})
+        </option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
+        Assign & Return
+      </button>
+    </div>
+  </div>
+</div>

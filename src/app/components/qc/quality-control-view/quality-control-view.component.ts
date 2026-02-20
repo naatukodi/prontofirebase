@@ -1,19 +1,19 @@
-// src/app/valuation-quality-control/quality-control-view.component.ts
+// src/app/components/qc/quality-control-view/quality-control-view.component.ts
 
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { HttpParams } from '@angular/common/http';
-import { CommonModule } from '@angular/common'; // Import CommonModule
-import { FormsModule } from '@angular/forms'; // Import FormsModule
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 // Services
 import { QualityControlService } from '../../../services/quality-control.service';
 import { ValuationService } from '../../../services/valuation.service';
 import { AuthorizationService } from '../../../services/authorization.service';
-import { WorkflowService } from '../../../services/workflow.service'; // ✅ Added
-import { UsersService } from '../../../services/users.service';         // ✅ Added
+import { WorkflowService } from '../../../services/workflow.service'; 
+import { UsersService } from '../../../services/users.service';         
 
 // Models
 import { QualityControlViewModel } from '../../../models/QualityControlViewModel';
@@ -48,16 +48,16 @@ export class QualityControlViewComponent implements OnInit {
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
 
-  // ✅ NEW: Rejection Display Variables
-  rejectionMessage: string | null = null;
-  rejectedBy: string | null = null;
+  // ✅ UPDATED: Return Status Display Variables
+  returnMessage: string | null = null;
+  returnedBy: string | null = null;
 
-  // --- REJECTION VARIABLES ---
-  showRejectModal: boolean = false;
+  // --- RETURN VARIABLES (Renamed from Rejection) ---
+  showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
   
-  rejectReason: string = '';
-  selectedTargetStep: string = 'AVO'; // Default reject target
+  returnReason: string = '';
+  selectedTargetStep: string = 'AVO'; // Default return target (can be AVO or Backend)
   
   // Override Data
   availableUsers: any[] = [];
@@ -68,8 +68,8 @@ export class QualityControlViewComponent implements OnInit {
     private router: Router,
     private qcService: QualityControlService,
     private valuationService: ValuationService,
-    private workflowService: WorkflowService, // ✅ Injected
-    private userService: UsersService         // ✅ Injected
+    private workflowService: WorkflowService, 
+    private userService: UsersService         
   ) {}
 
   ngOnInit(): void {
@@ -98,7 +98,6 @@ export class QualityControlViewComponent implements OnInit {
           this.photoKeys = Object.keys(this.report.photoUrls) as (keyof PhotoUrls)[];
         },
         error: (err) => {
-          // Ideally handle error silently if report isn't ready yet, or log it
           console.warn('Final report data load failed (optional):', err);
         },
       });
@@ -124,8 +123,8 @@ export class QualityControlViewComponent implements OnInit {
         // 1. Fetch Main Data
         this.fetchAllData();
 
-        // 2. ✅ Fetch Rejection Status (To show "Rejected By..." banner)
-        this.checkRejectionStatus(this.valuationId, vn, ac);
+        // 2. ✅ Fetch Return Status (To show "Returned By..." banner)
+        this.checkReturnStatus(this.valuationId, vn, ac);
 
       } else {
         this.loading = false;
@@ -134,9 +133,9 @@ export class QualityControlViewComponent implements OnInit {
     });
   }
 
-  // ✅ ROBUST REJECTION CHECKER & PARSER
-  // UPDATED: Now filters out stale rejections from QC itself
-  private checkRejectionStatus(id: string, vn: string, ac: string) {
+  // ✅ ROBUST RETURN CHECKER & PARSER
+  // Filters out stale returns created BY this step (QualityControl)
+  private checkReturnStatus(id: string, vn: string, ac: string) {
     this.workflowService.getTable(id, vn, ac).subscribe({
       next: (table: any) => {
         // 1. Get the RedFlag
@@ -150,7 +149,7 @@ export class QualityControlViewComponent implements OnInit {
         // 3. Logic: Only show if RedFlag is true AND we are currently in QC step
         if (isRedFlag && remark && isQCStep) {
           
-          const prefix = "REJECTED by ";
+          const prefix = "RETURNED BY "; // ✅ Updated Prefix
           const remarkUpper = remark.toUpperCase();
           const prefixUpper = prefix.toUpperCase();
 
@@ -158,37 +157,35 @@ export class QualityControlViewComponent implements OnInit {
             const splitIndex = remark.indexOf(':');
             
             if (splitIndex !== -1) {
-              const rejectorName = remark.substring(prefix.length, splitIndex).trim();
+              const returnerName = remark.substring(prefix.length, splitIndex).trim();
               
-              // ⛔️ STALE REJECTION CHECK ⛔️
-              // If "Rejected By QualityControl" (or QC) and we are IN "QualityControl" step,
-              // it means QC rejected it, and it came back. HIDE BANNER.
-              const invalidRejectors = ['QUALITYCONTROL', 'QC', 'AVO', 'BACKEND'];
-              // Note: AVO/Backend logic is just defensive; mainly we care about QC here.
-              // QC shouldn't see rejections from previous stages (AVO/Backend) either.
+              // ⛔️ STALE RETURN CHECK ⛔️
+              // If "Returned By QualityControl" (or QC) exists, it means *we* sent it back.
+              // We shouldn't see our own return message in our own view.
+              const invalidReturners = ['QUALITYCONTROL', 'QC'];
               
-              if (invalidRejectors.includes(rejectorName.toUpperCase())) {
-                 console.log(`QCView: Stale/Invalid Rejection detected from [${rejectorName}]. Hiding banner.`);
-                 this.rejectedBy = null;
-                 this.rejectionMessage = null;
+              if (invalidReturners.includes(returnerName.toUpperCase())) {
+                 console.log(`QCView: Stale Return detected from [${returnerName}]. Hiding banner.`);
+                 this.returnedBy = null;
+                 this.returnMessage = null;
                  return; // Stop here
               }
 
-              this.rejectedBy = rejectorName;
-              this.rejectionMessage = remark.substring(splitIndex + 1).trim();
+              this.returnedBy = returnerName;
+              this.returnMessage = remark.substring(splitIndex + 1).trim();
             } else {
-              this.rejectedBy = "Previous Stage"; 
-              this.rejectionMessage = remark;
+              this.returnedBy = "Previous Stage"; 
+              this.returnMessage = remark;
             }
           } else {
             // Fallback
-            this.rejectedBy = null; 
-            this.rejectionMessage = remark;
+            this.returnedBy = null; 
+            this.returnMessage = remark;
           }
         } else {
           // If not red flag OR not QC step, hide the banner
-          this.rejectionMessage = null;
-          this.rejectedBy = null;
+          this.returnMessage = null;
+          this.returnedBy = null;
         }
       },
       error: (err) => console.error('QCView: Failed to fetch workflow table', err)
@@ -298,46 +295,47 @@ export class QualityControlViewComponent implements OnInit {
   }
 
   // =================================================================
-  //  NEW REJECTION LOGIC (Supports AVO & Backend targets)
+  //  NEW RETURN LOGIC (Supports AVO & Backend targets)
   // =================================================================
 
-  openRejectModal() {
-    this.rejectReason = '';
+  openReturnModal() {
+    this.returnReason = '';
     this.selectedTargetStep = 'AVO'; // Default target
-    this.showRejectModal = true;
+    this.showReturnModal = true;
   }
 
-  submitRejection() {
-    if (!this.rejectReason) {
-      alert("Please provide a reason for rejection.");
+  submitReturn() {
+    if (!this.returnReason) {
+      alert("Please provide a reason for returning.");
       return;
     }
-    this.callRejectApi("");
+    this.callReturnApi("");
   }
 
-  callRejectApi(overrideId: string) {
+  callReturnApi(overrideId: string) {
     const currentUserJson = this.getCurrentUserObj(); 
     
-    this.workflowService.rejectWorkflow(
+    // ✅ Calling returnWorkflow
+    this.workflowService.returnWorkflow(
       this.valuationId,
       this.vehicleNumber,
       this.applicantContact,
       "QualityControl",   // Current Step
-      this.rejectReason,
+      this.returnReason,  // Reason
       currentUserJson.userId || '',
       currentUserJson.name || '',
-      this.selectedTargetStep, // User selected target (AVO or Backend)
+      this.selectedTargetStep, // 'AVO' or 'Backend'
       overrideId
     ).subscribe({
       next: () => {
-        alert(`Case Rejected Successfully. Sent back to ${this.selectedTargetStep}.`);
+        alert(`Case Returned Successfully. Sent back to ${this.selectedTargetStep}.`);
         this.closeModals();
         this.onBack();
       },
       error: (err: any) => {
         // Handle 400 Error -> Open Override Modal
         if (err.status === 400 && err.error?.message?.includes("overrideAssigneeId")) {
-          this.showRejectModal = false; 
+          this.showReturnModal = false; 
           this.fetchOverrideUsers(); // Fetch users for the selected target step
         } else {
           alert("Error: " + (err.error?.message || "Unknown error occurred"));
@@ -348,7 +346,6 @@ export class QualityControlViewComponent implements OnInit {
 
   fetchOverrideUsers() {
     // The backend expects specific role names: "AVO" or "Backend"
-    // Adjust role string if your DB uses different names (e.g., "BackEnd")
     let roleToFetch = this.selectedTargetStep;
     if(roleToFetch === 'Backend') roleToFetch = 'BackEnd'; // Handle potential casing diffs
 
@@ -366,12 +363,12 @@ export class QualityControlViewComponent implements OnInit {
 
   confirmOverride() {
     if (this.selectedOverrideUser) {
-      this.callRejectApi(this.selectedOverrideUser);
+      this.callReturnApi(this.selectedOverrideUser);
     }
   }
 
   closeModals() {
-    this.showRejectModal = false;
+    this.showReturnModal = false;
     this.showOverrideModal = false;
   }
 }
