@@ -47,17 +47,17 @@
       </div>
     </div>
 
-    <!-- Notes List -->
+    <!-- Empty State -->
     <div *ngIf="!isLoading && notes.length === 0 && !showForm" class="empty-state">
       No notes yet. Click "Add Note" to create one.
     </div>
 
+    <!-- Notes List -->
     <div *ngIf="!isLoading" class="notes-list">
 
       <div *ngFor="let note of notes" class="note-item">
 
-        <!-- View Mode -->
-        <div *ngIf="editingNoteId !== note.id" class="note-view">
+        <div class="note-view">
 
           <div class="note-content">
             {{ note.note }}
@@ -81,37 +81,18 @@
             </span>
           </div>
 
-          <!-- 🔒 Edit Only If Creator -->
-          <div class="note-actions">
-            <button
-              *ngIf="note.createdBy === currentUser"
-              class="btn-edit"
-              (click)="startEditing(note)">
-              Edit
-            </button>
-          </div>
-
-        </div>
-
-        <!-- Edit Mode -->
-        <div *ngIf="editingNoteId === note.id" class="note-edit">
-          <textarea
-            [(ngModel)]="editNoteText"
-            class="note-textarea">
-          </textarea>
-
-          <div class="form-buttons">
-            <button class="btn-primary" (click)="updateNote(note.id)">
-              Save
-            </button>
-            <button class="btn-secondary" (click)="cancelEditing()">
-              Cancel
-            </button>
-          </div>
         </div>
 
       </div>
     </div>
 
   </div>
+
+  <!-- Close Button -->
+  <div class="dialog-actions">
+    <button mat-raised-button color="primary" (click)="closeDialog()">
+      Close
+    </button>
+  </div>
+
 </div>

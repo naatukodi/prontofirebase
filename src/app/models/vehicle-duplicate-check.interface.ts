@@ -6,6 +6,8 @@ export interface VehicleDuplicateCheckResponse {
   totalDuplicatesFound: number;
   existingRecords: ExistingVehicleRecord[];
   messages: string[];
+  // ✅ ADD THIS
+  averageValuationAmount?: number;
 }
 
 export interface ExistingVehicleRecord {
@@ -16,4 +18,7 @@ export interface ExistingVehicleRecord {
   status: string;
   createdDate: string;
   matchedField: string;
+  // ✅ ADD THESE
+  company?: string;
+  valuationAmount?: number;
 }

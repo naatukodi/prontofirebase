@@ -7,6 +7,18 @@
   margin: 1rem 0;
 }
 
+/* Case action buttons (Notes, History, Payment) */
+.case-actions {
+  display: flex;
+  gap: 15px;              // 🔥 Adds space between buttons
+  margin-bottom: 20px;
+  flex-wrap: wrap;        // prevents overflow on small screens
+}
+
+.case-actions button {
+  border-radius: 6px;
+}
+
 /* Base styling for every button */
 .button-group button {
   background-color: #e0e0e0;

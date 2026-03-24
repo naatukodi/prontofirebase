@@ -1,4 +1,5 @@
 // src/app/shared/workflow-buttons/workflow-buttons.component.ts
+
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Component, Input, inject, SimpleChanges } from '@angular/core';
@@ -13,7 +14,10 @@ import { CommonNotesComponent } from '../common-notes/common-notes.component';
 import { CaseHistoryComponent } from '../case-history/case-history.component';
 import { CasePaymentComponent } from '../case-payment/case-payment.component';
 import { AuthService } from '../../services/auth.service';
-
+import { ValuationService } from '../../services/valuation.service';
+import { VehicleDuplicateCheckResponse } from '../../models/vehicle-duplicate-check.interface';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { DuplicateDialogComponent } from '../duplicate-dialog/duplicate-dialog.component';
 
 @Component({
   selector: 'app-workflow-buttons',
@@ -23,7 +27,8 @@ import { AuthService } from '../../services/auth.service';
     CommonModule,
     RouterModule,
     SharedModule,
-    MatDialogModule
+    MatDialogModule,
+    MatSnackBarModule
   ],
   standalone: true
 })
@@ -43,14 +48,16 @@ export class WorkflowButtonsComponent {
 
   currentUserName: string = '';
 
+  private authz = inject(AuthorizationService);
+
   constructor(
     private tableSvc: WorkflowService,
     private usersSvc: UsersService,
     private dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private valuationService: ValuationService,
+    private snackBar: MatSnackBar
   ) {}
-
-  private authz = inject(AuthorizationService);
 
   async ngOnInit(): Promise<void> {
     this.loadAssignedUser();
@@ -81,6 +88,8 @@ export class WorkflowButtonsComponent {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['id'] || changes['vehicleNumber'] || changes['applicantContact']) {
+      this.loadingTable = true;
+
       this.tableSvc.getTable(this.id, this.vehicleNumber, this.applicantContact)
         .subscribe({
           next: (table) => {
@@ -95,7 +104,40 @@ export class WorkflowButtonsComponent {
     }
   }
 
-  // 🔹 Open Common Notes Popup
+  // ================= DUPLICATE CHECK =================
+
+  checkDuplicates() {
+
+    // First get vehicle details to fetch engine & chassis
+    this.valuationService.getVehicleDetails(
+      this.id,
+      this.vehicleNumber,
+      this.applicantContact
+    ).subscribe(details => {
+
+      const engineNumber = details?.engineNumber || '';
+      const chassisNumber = details?.chassisNumber || '';
+
+      // Now call duplicate API with ALL fields
+      this.valuationService.checkDuplicateVehicle(
+        this.vehicleNumber,
+        engineNumber,
+        chassisNumber
+      ).subscribe(response => {
+
+        this.dialog.open(DuplicateDialogComponent, {
+          width: '950px',
+          maxHeight: '90vh',
+          data: response
+        });
+
+      });
+
+    });
+  }
+
+  // ================= POPUPS =================
+
   openNotesPopup(): void {
     const dialogRef = this.dialog.open(CommonNotesComponent, {
       width: '800px',
@@ -107,7 +149,6 @@ export class WorkflowButtonsComponent {
     dialogRef.componentInstance.currentUser = this.currentUserName;
   }
 
-  // 🔹 Open Case History Popup
   openHistoryPopup(): void {
     this.dialog.open(CaseHistoryComponent, {
       width: '800px',
@@ -118,21 +159,20 @@ export class WorkflowButtonsComponent {
     });
   }
 
-  // 🔹 Open Payment Popup
   openPaymentPopup(): void {
-  this.dialog.open(CasePaymentComponent, {
-    width: '600px',
-    maxHeight: '90vh',
-    data: {
-      valuationId: this.id,
-      vehicleNumber: this.vehicleNumber,
-      applicantContact: this.applicantContact,
-      table: this.table
-    }
-  });
-}
+    this.dialog.open(CasePaymentComponent, {
+      width: '600px',
+      maxHeight: '90vh',
+      data: {
+        valuationId: this.id,
+        vehicleNumber: this.vehicleNumber,
+        applicantContact: this.applicantContact,
+        table: this.table
+      }
+    });
+  }
 
-
+  // ================= PERMISSIONS =================
 
   canViewStakeholder() {
     return this.authz.hasAnyPermission([

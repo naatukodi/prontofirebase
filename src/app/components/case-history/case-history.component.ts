@@ -2,6 +2,8 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../services/workflow.service';
 import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
+import { Optional } from '@angular/core';
 
 export interface LeadHistoryDto {
   valuationId: string;
@@ -44,7 +46,8 @@ export class CaseHistoryComponent implements OnInit {
 
   constructor(
     private workflowService: WorkflowService,
-    @Inject(MAT_DIALOG_DATA) public data: { valuationId: string }
+    @Inject(MAT_DIALOG_DATA) public data: { valuationId: string },
+    @Optional() private dialogRef?: MatDialogRef<CaseHistoryComponent>
   ) {
     this.valuationId = data.valuationId;
   }
@@ -75,6 +78,12 @@ export class CaseHistoryComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  closeDialog(): void {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    }
   }
 
   formatDate(date: Date | string): string {

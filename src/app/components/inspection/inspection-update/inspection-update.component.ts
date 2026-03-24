@@ -47,6 +47,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   submitInProgress = false;
   saved = false;
 
+  // [ADDED FOR PDF READ-ONLY VIEW]
+  isViewOnly: boolean = false; 
+
   photoFiles: File[] = [];
 
   private assignedTo = '';
@@ -154,6 +157,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
       this.valuationType = params.get('valuationType') as ValuationType | null;
+
+      // [ADDED FOR PDF READ-ONLY VIEW] Check if 'viewOnly' is passed in the URL
+      this.isViewOnly = params.get('viewOnly') === 'true';
+
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -271,16 +278,26 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       next: data => {
         console.log('✅ Inspection Data Loaded:', data);
         this.patchForm(data);
+        
+        // [ADDED FOR PDF READ-ONLY VIEW] Disable the entire form if viewOnly=true
+        if (this.isViewOnly) {
+           this.form.disable();
+        }
+
         // STORE ORIGINAL DATA
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
-        this.checkMandatoryPhotosBeforeSave().then(isComplete => {
-          console.log('📸 Photo Validation Result:', {
-            isComplete: isComplete,
-            missingPhotos: this.missingPhotos,
-            errorMessage: this.mandatoryPhotosError
-          });
-        });
+        
+        // Skip mandatory photo check if read-only, we aren't saving anyway
+        if (!this.isViewOnly) {
+            this.checkMandatoryPhotosBeforeSave().then(isComplete => {
+            console.log('📸 Photo Validation Result:', {
+                isComplete: isComplete,
+                missingPhotos: this.missingPhotos,
+                errorMessage: this.mandatoryPhotosError
+            });
+            });
+        }
       },
       error: err => {
         console.error('❌ Error Loading Inspection:', err);
@@ -376,6 +393,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   onPhotoChange(event: Event) {
+    // [ADDED FOR PDF READ-ONLY VIEW] Block photo changes if view only
+    if (this.isViewOnly) return;
+
     const input = event.target as HTMLInputElement;
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
@@ -440,12 +460,14 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   onClick() {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
+      // [ADDED FOR PDF READ-ONLY VIEW] pass viewOnly forward to the image upload screen
+      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType, viewOnly: this.isViewOnly }
     });
   }
 
   public updateDefaultValues(): void {
-    if (!this.valuationType) { return; }
+    // [ADDED FOR PDF READ-ONLY VIEW] Prevent default updates
+    if (this.isViewOnly || !this.valuationType) { return; }
     const defaults: Record<string, any> = {};
     Object.keys(this.form.controls).forEach(key => {
       if (!this.showField(key)) { return; }
@@ -492,7 +514,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   goBackToPhotoUpload(): void {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
+      // [ADDED FOR PDF READ-ONLY VIEW] Pass viewOnly back
+      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType, viewOnly: this.isViewOnly }
     });
   }
 
@@ -525,6 +548,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   async onSave() {
+    if (this.isViewOnly) return; // Prevent action if read only
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -584,6 +609,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit() {
+    if (this.isViewOnly) return; // Prevent action if read only
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

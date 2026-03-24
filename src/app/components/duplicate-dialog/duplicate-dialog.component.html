@@ -1,0 +1,58 @@
+<h2 mat-dialog-title>Duplicate Check Results</h2>
+
+<div mat-dialog-content>
+
+  <p><strong>Total Duplicates:</strong> {{ data.totalDuplicatesFound }}</p>
+  <p>
+    <strong>Average Valuation:</strong>
+    ₹{{ (data.averageValuationAmount || 0) | number:'1.0-0' }}
+  </p>
+
+  <div class="table-wrapper" *ngIf="data.existingRecords.length">
+
+    <table class="dup-table">
+      <thead>
+        <tr>
+          <th>Valuation ID</th>
+          <th>Vehicle No</th>
+          <th>Status</th>
+          <th>Company</th>
+          <th>Date</th>
+          <th>Valuation</th>
+          <th>Matched Field</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let record of data.existingRecords">
+          <td>{{ record.valuationId }}</td>
+          <td>{{ record.vehicleNumber }}</td>
+          <td>{{ record.status }}</td>
+          <td>{{ record.company || '-' }}</td>
+
+          <!-- ✅ NEW DATE COLUMN -->
+          <td>
+            {{ record.createdDate ? (record.createdDate | date:'dd-MM-yyyy') : '-' }}
+          </td>
+
+          <!-- ✅ Proper Currency Format -->
+          <td>
+            ₹{{ (record.valuationAmount || 0) | number:'1.0-0' }}
+          </td>
+
+          <td>{{ record.matchedField }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <div *ngIf="!data.existingRecords.length">
+    No duplicates found.
+  </div>
+
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</div>

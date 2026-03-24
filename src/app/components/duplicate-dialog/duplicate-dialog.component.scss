@@ -1,0 +1,16 @@
+.dup-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.dup-table th,
+.dup-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.dup-table th {
+  background: #f5f5f5;
+}

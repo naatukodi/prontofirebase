@@ -11,12 +11,12 @@ import { FormsModule } from '@angular/forms';
 import { CommonNoteService } from '../../services/common-note.service';
 import {
   CommonNote,
-  CreateCommonNoteDto,
-  UpdateCommonNoteDto
+  CreateCommonNoteDto
 } from '../../models/common-note.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
+import { MatDialogRef } from '@angular/material/dialog';
+import { Optional } from '@angular/core';
 @Component({
   selector: 'app-common-notes',
   standalone: true,
@@ -37,14 +37,15 @@ export class CommonNotesComponent
   isLoading = false;
   error: string | null = null;
   showForm = false;
-  editingNoteId: string | null = null;
   newNoteText = '';
-  editNoteText = '';
   isCollapsed = false;
 
   private destroy$ = new Subject<void>();
 
-  constructor(private commonNoteService: CommonNoteService) {}
+  constructor(
+  private commonNoteService: CommonNoteService,
+  @Optional() private dialogRef?: MatDialogRef<CommonNotesComponent>
+  ) {}
 
   ngOnInit(): void {
     if (!this.entityType || !this.entityId) return;
@@ -121,45 +122,6 @@ export class CommonNotesComponent
       });
   }
 
-  startEditing(note: CommonNote): void {
-    this.editingNoteId = note.id;
-    this.editNoteText = note.note;
-  }
-
-  cancelEditing(): void {
-    this.editingNoteId = null;
-    this.editNoteText = '';
-  }
-
-  updateNote(noteId: string): void {
-    if (!this.editNoteText.trim()) {
-      this.error = 'Note cannot be empty';
-      return;
-    }
-
-    const updateDto: UpdateCommonNoteDto = {
-      note: this.editNoteText,
-      modifiedBy: this.currentUser
-    };
-
-    this.commonNoteService
-      .updateNote(noteId, updateDto)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedNote) => {
-          const index = this.notes.findIndex((n) => n.id === noteId);
-          if (index !== -1) {
-            this.notes[index] = updatedNote;
-          }
-          this.cancelEditing();
-          this.error = null;
-        },
-        error: () => {
-          this.error = 'Failed to update note';
-        }
-      });
-  }
-
   toggleForm(): void {
     this.showForm = !this.showForm;
     if (!this.showForm) this.newNoteText = '';
@@ -167,6 +129,12 @@ export class CommonNotesComponent
 
   toggleCollapse(): void {
     this.isCollapsed = !this.isCollapsed;
+  }
+
+  closeDialog(): void {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    }
   }
 
   formatDate(date: Date | string): string {
