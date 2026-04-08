@@ -1,23 +1,26 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { QualityControlService } from '../../../services/quality-control.service';
-import { QualityControl } from '../../../models/QualityControl';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkflowService } from '../../../services/workflow.service';
-import { SharedModule } from '../../shared/shared.module/shared.module';
-import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { switchMap, map, take } from 'rxjs/operators';
 import { of, Observable, Subscription } from 'rxjs';
+
+// Services
+import { QualityControlService } from '../../../services/quality-control.service';
+import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
-
-// ✅ IMPORT HISTORY LOGGER SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
 
+// Models
+import { QualityControl } from '../../../models/QualityControl';
+
+// Components
+import { SharedModule } from '../../shared/shared.module/shared.module';
+import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
 @Component({
   selector: 'app-valuation-quality-control-update',
@@ -37,7 +40,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   private assignedToEmail = '';
   private assignedToWhatsapp = '';
 
-  // ✅ ADD THESE FOR TRACKING
+  // Tracking User Info
   private currentUser: User | null = null;
   private currentUserId: string = 'unknown';
   private currentUserName: string = 'Unknown User';
@@ -63,13 +66,13 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     private usersSvc: UsersService,
     private valuationSvc: ValuationService,
     private auth: Auth,
-    private historyLogger: HistoryLoggerService  // ✅ INJECT
+    private historyLogger: HistoryLoggerService
   ) {}
 
   ngOnInit(): void {
     this.valuationId = this.route.snapshot.paramMap.get('valuationId')!;
     
-    // ✅ GET CURRENT USER INFO
+    // Get Current User Info
     authState(this.auth).pipe(take(1)).subscribe(u => {
       this.currentUser = u;
       if (u) {
@@ -87,6 +90,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
       this.valuationType = params.get('valuationType')!;
+      
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -103,15 +107,26 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
+  // ✅ UPDATED: Initialize Form with Payment Fields
   private initForm() {
+    const nowLocal = this.toLocalDateTimeInput(new Date());
+
     this.form = this.fb.group({
       overallRating: ['', Validators.required],
       valuationAmount: [0, [Validators.required, Validators.min(0)]],
       chassisPunch: ['', Validators.required],
-      remarks: ['']
+      remarks: [''],
+
+      // Payment Fields
+      paymentStatus: ['Pending', Validators.required],
+      paymentReference: [''],
+      paymentDate: [nowLocal, Validators.required],
+      paymentMethod: ['Online', Validators.required],
+      paymentAmount: [800, [Validators.required, Validators.min(0)]]
     });
   }
 
+  // Load Data
   private loadQualityControl() {
     this.loading = true;
     this.error = null;
@@ -121,7 +136,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data: QualityControl) => {
           this.patchForm(data);
-          // ✅ STORE ORIGINAL DATA
+          // Store original data for change tracking
           this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
           this.loading = false;
         },
@@ -132,6 +147,29 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ✅ UPDATED: Patch Form with Payment Data
+  private patchForm(data: QualityControl | any) {
+    // Handle date conversion safely
+    const existingDate = data.paymentDate 
+      ? this.toLocalDateTimeInput(new Date(data.paymentDate)) 
+      : this.toLocalDateTimeInput(new Date());
+
+    this.form.patchValue({
+      overallRating: data.overallRating,
+      valuationAmount: data.valuationAmount,
+      chassisPunch: data.chassisPunch,
+      remarks: data.remarks || '',
+      
+      // Payment Fields
+      paymentStatus: data.paymentStatus || 'Pending',
+      paymentReference: data.paymentReference || '',
+      paymentDate: existingDate,
+      paymentMethod: data.paymentMethod || 'Online',
+      paymentAmount: data.paymentAmount || 800
+    });
+  }
+
+  // User Resolution Helpers
   private resolveDisplayName(u: User | null): Observable<string> {
     return of(u).pipe(
       switchMap(user => {
@@ -168,16 +206,19 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-  private patchForm(data: QualityControl) {
-    this.form.patchValue({
-      overallRating: data.overallRating,
-      valuationAmount: data.valuationAmount,
-      chassisPunch: data.chassisPunch,
-      remarks: data.remarks || ''
-    });
+  // ✅ HELPER: Date Converters
+  private toLocalDateTimeInput(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
-  // ✅ NEW METHOD: TRACK CHANGED FIELDS
+  private toIsoUtc(datetimeLocal: string): string {
+    if (!datetimeLocal) return new Date().toISOString();
+    const date = new Date(datetimeLocal);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+  }
+
+  // Change Tracking
   private getChangedFields(): any[] {
     const currentData = this.form.getRawValue();
     const changedFields: any[] = [];
@@ -195,9 +236,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     return changedFields;
   }
 
+  // ✅ UPDATED: Build Payload with Payment Data
   private buildPayload(): Partial<QualityControl> {
     const v = this.form.getRawValue();
-    const payload: Partial<QualityControl> = {
+    
+    // Explicitly casting payload to include new fields if the interface isn't updated yet
+    const payload: Partial<QualityControl> | any = {
       overallRating: v.overallRating,
       valuationAmount: v.valuationAmount,
       chassisPunch: v.chassisPunch,
@@ -205,12 +249,19 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       assignedTo: this.assignedTo,
       assignedToPhoneNumber: this.assignedToPhoneNumber,
       assignedToEmail: this.assignedToEmail,
-      assignedToWhatsapp: this.assignedToWhatsapp
+      assignedToWhatsapp: this.assignedToWhatsapp,
+
+      // Payment Data
+      paymentStatus: v.paymentStatus,
+      paymentReference: v.paymentReference || null,
+      paymentDate: this.toIsoUtc(v.paymentDate),
+      paymentMethod: v.paymentMethod,
+      paymentAmount: v.paymentAmount 
     };
     return payload;
   }
 
-  // ✅ NEW METHOD: LOG HISTORY
+  // History Logger
   private logHistoryAction(
     action: string,
     remarks: string,
@@ -238,6 +289,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Save Action
   onSave() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -258,6 +310,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Start Workflow Step 4 (QC)
         switchMap(() =>
           this.workflowSvc.startWorkflow(
             this.valuationId,
@@ -266,6 +319,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             encodeURIComponent(this.applicantContact)
           )
         ),
+        // Update Workflow Table
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -285,6 +339,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             }
           )
         ),
+        // Assign QC
         switchMap(() =>
           this.qcService.assignQualityControl(
             this.valuationId,
@@ -296,6 +351,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             this.assignedToWhatsapp
           )
         ),
+        // Assign Valuation
         switchMap(() =>
           this.valuationSvc.assignValuation(
             this.valuationId,
@@ -307,7 +363,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             this.assignedToWhatsapp
           )
         ),
-        // ✅ LOG HISTORY
+        // Log History
         switchMap(() =>
           this.logHistoryAction(
             'Quality Control Details Saved',
@@ -327,7 +383,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             horizontalPosition: 'center',
             verticalPosition: 'top'
           });
-          // ✅ UPDATE ORIGINAL DATA AFTER SAVE
+          // Update original data after save
           this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         },
         error: (err) => {
@@ -338,6 +394,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Submit Action
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -358,6 +415,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Complete QC Workflow (Step 4)
         switchMap(() =>
           this.workflowSvc.completeWorkflow(
             this.valuationId,
@@ -366,6 +424,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             encodeURIComponent(this.applicantContact)
           )
         ),
+        // Start Final Report Workflow (Step 5)
         switchMap(() =>
           this.workflowSvc.startWorkflow(
             this.valuationId,
@@ -374,6 +433,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             encodeURIComponent(this.applicantContact)
           )
         ),
+        // Update Workflow Table for Final Report
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -393,6 +453,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             }
           )
         ),
+        // Assign Valuation
         switchMap(() =>
           this.valuationSvc.assignValuation(
             this.valuationId,
@@ -404,6 +465,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             this.assignedToWhatsapp
           )
         ),
+        // Assign QC
         switchMap(() =>
           this.qcService.assignQualityControl(
             this.valuationId,
@@ -415,7 +477,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             this.assignedToWhatsapp
           )
         ),
-        // ✅ LOG HISTORY
+        // Log History
         switchMap(() =>
           this.logHistoryAction(
             'Quality Control Submitted - Moving to Final Report',

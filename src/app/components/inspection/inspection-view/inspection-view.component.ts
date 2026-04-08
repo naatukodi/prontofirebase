@@ -1,15 +1,22 @@
-// src/app/valuation-inspection/inspection-view.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms'; 
+import { CommonModule } from '@angular/common'; 
+
+// Models
 import { Inspection } from '../../../models/Inspection';
+
+// Services
 import { InspectionService } from '../../../services/inspection.service';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { WorkflowService } from '../../../services/workflow.service'; 
+import { UsersService } from '../../../services/users.service';         
+
+// Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
 import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 type ValuationType =
@@ -28,7 +35,9 @@ type ValuationType =
     WorkflowButtonsComponent,
     RouterModule,
     ReactiveFormsModule,
-    CommonNotesComponent
+    CommonNotesComponent,
+    CommonModule, 
+    FormsModule   
   ],
   templateUrl: './inspection-view.component.html',
   styleUrls: ['./inspection-view.component.scss']
@@ -43,7 +52,21 @@ export class InspectionViewComponent implements OnInit {
   vehicleNumber!: string;
   applicantContact!: string;
   valuationType: ValuationType | null = null;
+  
+  // ✅ UPDATED: Variable to hold the return message
+  returnMessage: string | null = null;
+  // ✅ UPDATED: Variable to store WHO returned the case
+  returnedBy: string | null = null; 
 
+  // --- RETURN VARIABLES (Renamed from Reject) ---
+  showReturnModal: boolean = false;
+  showOverrideModal: boolean = false;
+  returnReason: string = '';
+  
+  // Override Data
+  availableUsers: any[] = [];
+  selectedOverrideUser: string = '';
+  targetStep: string = 'Backend'; // AVO always returns to Backend
 
   private visibilityMap: Record<ValuationType, string[]> = {
    'four-wheeler': [
@@ -103,7 +126,9 @@ export class InspectionViewComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private inspectionService: InspectionService,
-    private authz: AuthorizationService 
+    private authz: AuthorizationService,
+    private workflowService: WorkflowService, 
+    private userService: UsersService         
   ) {}
 
   ngOnInit(): void {
@@ -184,14 +209,88 @@ export class InspectionViewComponent implements OnInit {
       const vn = qp.get('vehicleNumber');
       const ac = qp.get('applicantContact');
       this.valuationType = qp.get('valuationType') as ValuationType | null;
+      
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
+        
+        // 1. Fetch Inspection Data
         this.fetchInspection();
+
+        // 2. ✅ Fetch Return Status (Renamed)
+        this.checkReturnStatus(this.valuationId, vn, ac);
+
       } else {
         this.loading = false;
         this.error = 'Missing required query parameters.';
       }
+    });
+  }
+
+  // ✅ ROBUST RETURN CHECKER & PARSER
+  private checkReturnStatus(id: string, vn: string, ac: string) {
+    this.workflowService.getTable(id, vn, ac).subscribe({
+      next: (table: any) => {
+        // Debugging
+        console.log('InspectionView: Workflow Table Response:', table);
+
+        const isRedFlag = String(table?.redFlag || table?.RedFlag || 'false').toLowerCase() === 'true';
+        const remark = table?.remarks || table?.Remarks || '';
+
+        // ✅ CHECK: Is the current step "AVO"?
+        const currentStep = table?.workflow || table?.Workflow || '';
+        const isAVOStep = currentStep === 'AVO';
+
+        // ONLY show banner if RedFlag is True AND we are currently in AVO step
+        if (isRedFlag && remark && isAVOStep) {
+          // 1. Normalize string for checking
+          const remarkUpper = remark.toUpperCase();
+          // ✅ UPDATED PREFIX CHECK
+          const prefix = "RETURNED BY ";
+
+          // 2. Check if it starts with "RETURNED BY " (Case Insensitive)
+          if (remarkUpper.startsWith(prefix)) {
+            const splitIndex = remark.indexOf(':'); // Find the first colon
+            
+            if (splitIndex !== -1) {
+              // Extract the name (Length of "RETURNED by " is 12)
+              const returnerName = remark.substring(12, splitIndex).trim();
+              
+              // ⛔️ STALE/INVALID RETURN CHECK ⛔️
+              // We should not see "Returned By AVO" if we are IN AVO step (circular).
+              const invalidReturners = ['AVO', 'STAKEHOLDER'];
+              
+              if (invalidReturners.includes(returnerName.toUpperCase())) {
+                 console.log(`InspectionView: Stale/Invalid Return detected from [${returnerName}]. Hiding banner.`);
+                 this.returnedBy = null;
+                 this.returnMessage = null;
+                 return; // Stop here
+              }
+
+              this.returnedBy = returnerName;
+              this.returnMessage = remark.substring(splitIndex + 1).trim();
+            } else {
+              // Fallback for malformed strings
+              this.returnedBy = "Previous Stage"; 
+              this.returnMessage = remark;
+            }
+          } 
+          // 3. Fallback: Data exists but doesn't have the prefix
+          else {
+            this.returnedBy = null; 
+            this.returnMessage = remark;
+          }
+
+          console.log(`✅ PARSED: By [${this.returnedBy}] -> Reason: [${this.returnMessage}]`);
+
+        } else {
+          // No Red Flag OR Not current step -> Hide banner
+          this.returnMessage = null;
+          this.returnedBy = null;
+          console.log('InspectionView: No return flag active for this step.');
+        }
+      },
+      error: (err) => console.error('InspectionView: Failed to fetch workflow table', err)
     });
   }
 
@@ -221,7 +320,7 @@ export class InspectionViewComponent implements OnInit {
             engineCondition: data.engineCondition,
             suspensionSystem: data.suspensionSystem,
             steeringAssy: data.steeringAssy,
-            steeringWheel: (data as any).steeringWheel,        // if present
+            steeringWheel: (data as any).steeringWheel,
             steeringColumn: (data as any).steeringColumn,
             steeringBox: (data as any).steeringBox,
             steeringLinkages: (data as any).steeringLinkages,
@@ -327,17 +426,91 @@ export class InspectionViewComponent implements OnInit {
     return this.authz.hasAnyPermission(['CanDeleteInspection']);
   }
 
-  getCurrentUser(): string {
-  try {
-    const userJson =
-      localStorage.getItem('currentUser') ||
-      localStorage.getItem('user') ||
-      '{}';
-    const user = JSON.parse(userJson);
-    return user.name || user.username || user.email || 'User';
-  } catch {
-    return 'User';
+  getCurrentUserObj(): any {
+    try {
+      const userJson = localStorage.getItem('currentUser') || localStorage.getItem('user') || '{}';
+      return JSON.parse(userJson);
+    } catch {
+      return {};
+    }
   }
-}
 
+  getCurrentUser(): string {
+    const user = this.getCurrentUserObj();
+    return user.name || user.username || user.email || 'User';
+  }
+
+  // =================================================================
+  //  RETURN LOGIC (AVO -> Backend)
+  // =================================================================
+
+  openReturnModal() {
+    this.returnReason = '';
+    this.showReturnModal = true;
+  }
+
+  submitReturn() {
+    if (!this.returnReason) {
+      alert("Please provide a reason for returning.");
+      return;
+    }
+    // Attempt return without override first
+    this.callReturnApi("");
+  }
+
+  callReturnApi(overrideId: string) {
+    const currentUserJson = this.getCurrentUserObj(); 
+    
+    // ✅ CALLING THE RENAMED SERVICE METHOD
+    this.workflowService.returnWorkflow(
+      this.valuationId,
+      this.vehicleNumber,
+      this.applicantContact,
+      "AVO",              // Current Step
+      this.returnReason,  // Reason
+      currentUserJson.userId || '',
+      currentUserJson.name || '',
+      this.targetStep,    // 'Backend'
+      overrideId          // Optional Override
+    ).subscribe({
+      next: () => {
+        alert("Case Returned Successfully. Sent back to Backend.");
+        this.closeModals();
+        this.onBack(); // Return to dashboard
+      },
+      error: (err: any) => {
+        // Handle 400 Error -> Open Override Modal
+        if (err.status === 400 && err.error?.message?.includes("overrideAssigneeId")) {
+          this.showReturnModal = false; // Close reason modal
+          this.fetchBackendUsers();     // Load users for override
+        } else {
+          alert("Error: " + (err.error?.message || "Unknown error occurred"));
+        }
+      }
+    });
+  }
+
+  fetchBackendUsers() {
+    this.userService.getUsersByRole('BackEnd').subscribe({
+      next: (users: any[]) => {
+        this.availableUsers = users;
+        this.showOverrideModal = true;
+      },
+      error: () => {
+        alert("Could not fetch user list for override. Please contact admin.");
+        this.showOverrideModal = false;
+      }
+    });
+  }
+
+  confirmOverride() {
+    if (this.selectedOverrideUser) {
+      this.callReturnApi(this.selectedOverrideUser);
+    }
+  }
+
+  closeModals() {
+    this.showReturnModal = false;
+    this.showOverrideModal = false;
+  }
 }

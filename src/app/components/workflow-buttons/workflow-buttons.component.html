@@ -50,6 +50,27 @@
   </mat-expansion-panel>
 </mat-accordion>
 
+
+  <!-- Notes Button Section -->
+  <div class="case-actions" style="margin-bottom: 15px;">
+    <button mat-raised-button color="primary" (click)="openNotesPopup()">
+      📝 Notes
+    </button>
+
+    <button mat-raised-button color="accent" (click)="openHistoryPopup()">
+    📜 History
+    </button>
+    
+    <button mat-raised-button color="warn" (click)="openPaymentPopup()">
+    💳 Payment
+    </button>
+
+    <!-- Duplicate Button Visible in ALL Steps -->
+    <button mat-raised-button color="primary" (click)="checkDuplicates()">
+      🔎 Check Duplicates
+    </button>
+  </div>
+
   <div class="button-group">
     <!-- Stakeholder Tab -->
     <button

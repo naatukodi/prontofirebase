@@ -1,4 +1,3 @@
-<!-- src/app/valuation-inspection-update/inspection-update.component.html -->
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <app-workflow-buttons
     [id]="valuationId"
@@ -7,12 +6,10 @@
     [valuationType]="valuationType ?? ''">
   </app-workflow-buttons>
 
-  <!-- ── Loading & Error ────────────────────────────────────────────────── -->
   <div *ngIf="loading">Loading inspection details …</div>
   <div *ngIf="error" class="error">{{ error }}</div>
 
-  <!-- ── Mandatory Photos Validation Alert ──────────────────────────────── -->
-  <div class="error-alert" *ngIf="mandatoryPhotosError && missingPhotos && missingPhotos.length > 0">
+  <div class="error-alert" *ngIf="mandatoryPhotosError && missingPhotos && missingPhotos.length > 0 && !isViewOnly">
     <div class="alert-header">
       <span class="alert-icon">⚠️</span>
       <span class="alert-title">Cannot Save - Missing Mandatory Images</span>
@@ -40,8 +37,7 @@
     </div>
   </div>
 
-  <!-- ── Default Values Button ────────────────────────────────────────────── -->
-  <fieldset>
+  <fieldset *ngIf="!isViewOnly">
     <div class="actions">
       <button mat-stroked-button type="button" (click)="updateDefaultValues()">
         Set Default Values
@@ -51,7 +47,6 @@
 
   <ng-container *ngIf="!loading && !error">
 
-    <!-- ── Inspection Info ────────────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Inspection Info</legend>
       <div class="grid">
@@ -67,7 +62,7 @@
             [matDatepicker]="inspectionPicker"
             formControlName="dateOfInspection"
             [max]="maxDate" />
-          <mat-datepicker-toggle matSuffix [for]="inspectionPicker"></mat-datepicker-toggle>
+          <mat-datepicker-toggle *ngIf="!isViewOnly" matSuffix [for]="inspectionPicker"></mat-datepicker-toggle>
           <mat-datepicker #inspectionPicker></mat-datepicker>
 
           <mat-error *ngIf="form.get('dateOfInspection')?.hasError('required')">
@@ -85,7 +80,6 @@
       </div>
     </fieldset>
 
-    <!-- ── Basic Vehicle Checks ──────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Basic Vehicle Checks</legend>
       <div class="grid">
@@ -141,7 +135,6 @@
       </div>
     </fieldset>
 
-    <!-- ── External Visual Checks ────────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>External Visual Checks</legend>
       <div class="grid">
@@ -217,7 +210,6 @@
       </div>
     </fieldset>
 
-    <!-- ── Structural & Body Checks ──────────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Structural & Body Checks</legend>
       <div class="grid">
@@ -336,7 +328,6 @@
       </div>
     </fieldset>
 
-    <!-- ── Interior & Electrical Checks ──────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Interior & Electrical Checks</legend>
       <div class="grid">
@@ -412,7 +403,60 @@
       </div>
     </fieldset>
 
-    <!-- ── Remarks Section ────────────────────────────────────────────────── -->
+    <fieldset class="nested-group">
+      <legend>Payment Details</legend>
+      <div class="grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Status</mat-label>
+          <mat-select formControlName="paymentStatus" required>
+            <mat-option value="Pending">Pending</mat-option>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Failed">Failed</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">
+            Payment Status is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Reference</mat-label>
+          <input matInput formControlName="paymentReference" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Date</mat-label>
+          <input matInput type="datetime-local" formControlName="paymentDate" />
+          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">
+            Payment Date is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Method</mat-label>
+          <mat-select formControlName="paymentMethod" required>
+            <mat-option value="Online">Online</mat-option>
+            <mat-option value="Cash">Cash</mat-option>
+            <mat-option value="UPI">UPI</mat-option>
+            <mat-option value="Card">Card</mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">
+            Payment Method is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Payment Amount</mat-label>
+          <input matInput type="number" formControlName="paymentAmount" />
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">
+            Amount is required
+          </mat-error>
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">
+            Amount must be ≥ 0
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
     <fieldset class="nested-group">
       <legend>Remarks</legend>
       <mat-form-field appearance="outline" class="full-width">
@@ -421,7 +465,6 @@
       </mat-form-field>
     </fieldset>
 
-    <!-- ── View / Upload Images Section ─────────────────────────────────── -->
     <fieldset class="nested-group">
       <legend>Photos & Images</legend>
       <div class="actions">
@@ -429,14 +472,13 @@
           mat-raised-button
           color="primary"
           (click)="onClick()"
-          [disabled]="!saved || saving">
-          View / Upload Images
+          [disabled]="(!saved && !isViewOnly) || saving">
+          {{ isViewOnly ? 'View Images' : 'View / Upload Images' }}
         </button>
       </div>
     </fieldset>
 
-    <!-- ── Save, Submit, Cancel Buttons ──────────────────────────────────── -->
-    <fieldset>
+    <fieldset *ngIf="!isViewOnly">
       <div class="button-group">
         <button
           mat-raised-button

@@ -1,19 +1,50 @@
-<!-- src/app/valuation-inspection/inspection-view.component.html -->
+<app-workflow-buttons
+  [id]="valuationId"
+  [vehicleNumber]="vehicleNumber"
+  [applicantContact]="applicantContact"
+  [valuationType]="valuationType ?? ''">
+</app-workflow-buttons>
+
+<div *ngIf="returnMessage" class="rejection-banner" 
+     style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  
+  <div style="font-size: 1.5rem; margin-right: 15px;">⚠️</div>
+  
+  <div style="width: 100%;">
+    <h4 style="margin: 0 0 8px 0; font-weight: bold; text-transform: uppercase; color: #b71c1c; font-size: 1.1rem;">
+      CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span>
+    </h4>
+    
+    <div style="background-color: rgba(255,255,255,0.6); padding: 10px 12px; border-radius: 4px; border: 1px solid #e57373;">
+      <span style="font-size: 1.05rem; white-space: pre-wrap; font-weight: 500; color: #b71c1c; display: block;">
+        {{ returnMessage }}
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<div *ngIf="loading" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+  <div class="spinner-border text-primary" role="status" style="margin-bottom: 10px;"></div>
+  <p>Loading Inspection Details...</p>
+</div>
+
+<div *ngIf="error" style="background-color: #f8d7da; color: #721c24; padding: 15px; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">
+  <strong>Error:</strong> {{ error }}
+</div>
+
 <ng-container *ngIf="!loading && !error && inspection">
 
-  <app-workflow-buttons
-    [id]="valuationId"
-    [vehicleNumber]="vehicleNumber"
-    [applicantContact]="applicantContact"
-    [valuationType]="valuationType ?? ''">
-  </app-workflow-buttons>
-
-  <!-- ── Top Action Buttons ──────────────────────────────────────────────── -->
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditInspection()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
       </button>
+      
+      <button *ngIf="canEditInspection()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
+        Return
+      </button>
+
       <button *ngIf="canDeleteInspection()" mat-raised-button color="warn" (click)="onDelete()">
         Delete
       </button>
@@ -23,7 +54,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Inspection Info ─────────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Inspection Info</legend>
     <div class="grid">
@@ -44,7 +74,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Basic Vehicle Checks ────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Basic Vehicle Checks</legend>
     <div class="grid">
@@ -85,7 +114,6 @@
     </div>
   </fieldset>
 
-  <!-- ── External Visual Checks ──────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>External Visual Checks</legend>
     <div class="grid">
@@ -146,7 +174,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Structural & Body Checks ────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Structural & Body Checks</legend>
     <div class="grid">
@@ -247,7 +274,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Interior & Electrical Checks ────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Interior & Electrical Checks</legend>
     <div class="grid">
@@ -323,7 +349,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Remarks Section ─────────────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <div class="grid">
@@ -340,7 +365,6 @@
     </div>
   </fieldset>
 
-  <!-- ── Photos & Images Section ─────────────────────────────────────────── -->
   <fieldset class="nested-group">
     <legend>Photos & Images</legend>
     <div class="actions">
@@ -350,7 +374,6 @@
     </div>
   </fieldset>
 
-  <!-- ✅ Common Notes Section (Inspection Notes) -->
   <fieldset class="nested-group">
     <legend>Inspection Notes</legend>
     <div class="notes-container">
@@ -363,12 +386,16 @@
     </div>
   </fieldset>
 
-  <!-- ── Bottom Action Buttons ────────────────────────────────────────────── -->
   <fieldset>
     <div class="actions">
       <button *ngIf="canEditInspection()" mat-raised-button color="primary" (click)="onEdit()">
         Edit
       </button>
+      
+      <button *ngIf="canEditInspection()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
+        Return
+      </button>
+
       <button *ngIf="canDeleteInspection()" mat-raised-button color="warn" (click)="onDelete()">
         Delete
       </button>
@@ -379,3 +406,49 @@
   </fieldset>
 
 </ng-container>
+
+<div class="modal-overlay" *ngIf="showReturnModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Return Inspection</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    
+    <div class="modal-body">
+      <p>This case will be sent back to <b>Backend</b>.</p>
+      <label>Reason for Return:</label>
+      <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason for returning..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showOverrideModal">
+  <div class="modal-box">
+    <div class="modal-header warning">
+      <h3>⚠️ User Not Found</h3>
+    </div>
+    <div class="modal-body">
+      <p>The original Backend user could not be found.</p>
+      <p>Please manually select a user to assign this case to:</p>
+      
+      <label>Assign To (Backend):</label>
+      <select [(ngModel)]="selectedOverrideUser" class="modal-input">
+        <option value="" disabled selected>-- Select User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
+          {{ user.name }} ({{ user.phoneNumber }})
+        </option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
+        Assign & Return
+      </button>
+    </div>
+  </div>
+</div>
