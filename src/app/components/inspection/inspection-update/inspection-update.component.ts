@@ -23,7 +23,7 @@ import { Inspection } from '../../../models/Inspection';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
-type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce';
+type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce' | 'bus';
 
 @Component({
   selector: 'app-valuation-inspection-update',
@@ -68,13 +68,15 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   mandatoryPhotosError: string | null = null;
   missingPhotos: string[] = [];
 
-  private visibilityMap: Record<ValuationType, string[]> = {
+  private visibilityMap: Record<string, string[]> = {
     'four-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'airBags','sunRoof','sideFenders'
     ],
     'cv': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -84,14 +86,19 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
       'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'hydraulicLift','sideUnderRunProtection'
     ],
     'two-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'mainStand','sideStand','frontMudGuard','rearMudGuard','fuelTankCondition','chainSprocket',
+      'frontBrakeCondition','rearBrakeCondition','headLight','tailLight','indicators',
+      'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
     ],
     'three-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -100,7 +107,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
       'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
       'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
     ],
     'tractor': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -108,7 +116,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
       'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'rightIndividualBrakes','leftIndividualBrakes','threePointLinkage','powerTakeOff',
+      'hitchSystem','hydraulicLiftFe','frontWeights','rearWeights','ropsCanopy',
+      'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
     ],
     'ce': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -117,7 +128,22 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
       'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
       'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
-      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'retarder','differentialLock','pto','hydraulicSystem','boomArm','bucketCondition',
+      'bladeCondition','liftingCapacity','tyreConditionCe','underCarriage','crawlerTracks',
+      'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
+    ],
+    'bus': [
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
+      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
+      'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
+      'vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'coachCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','sideMirrors'
     ]
   };
 
@@ -262,6 +288,107 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       airConditioner: [''],
       audio: [''],
 
+      // Body & Structure
+      speedoMeter: [''],
+      frontAxles: [''],
+      rearAxles: [''],
+      driveShafts: [''],
+      steeringHandle: [''],
+      frontForkAssy: [''],
+      frontFairing: [''],
+      rearCowls: [''],
+      bumpers: [''],
+      doors: [''],
+      fenders: [''],
+      rightSideWing: [''],
+      leftSideWing: [''],
+      tailGate: [''],
+      loadFloor: [''],
+
+      // Brakes Additional
+      parkingBrake: [''],
+      abs: [''],
+
+      // Electrical Additional
+      tailLightsIndicators: [''],
+      wiringAssy: [''],
+
+      // Crash Guards
+      frontCrashGuard: [''],
+      rearCrashGuard: [''],
+
+      // 4W Specific
+      airBags: [''],
+      sunRoof: [''],
+      sideFenders: [''],
+
+      // CV Specific
+      hydraulicLift: [''],
+      sideUnderRunProtection: [''],
+
+      // 2W Specific
+      mainStand: [''],
+      sideStand: [''],
+      frontMudGuard: [''],
+      rearMudGuard: [''],
+      fuelTankCondition: [''],
+      chainSprocket: [''],
+      frontBrakeCondition: [''],
+      rearBrakeCondition: [''],
+      headLight: [''],
+      tailLight: [''],
+      indicators: [''],
+      hornCondition: [''],
+      mirrorCondition: [''],
+      seatCondition: [''],
+      handleBarGrips: [''],
+      footRest: [''],
+      alloyWheelRim: [''],
+
+      // CE Specific
+      retarder: [''],
+      differentialLock: [''],
+      pto: [''],
+      hydraulicSystem: [''],
+      boomArm: [''],
+      bucketCondition: [''],
+      bladeCondition: [''],
+      liftingCapacity: [''],
+      tyreConditionCe: [''],
+      underCarriage: [''],
+      crawlerTracks: [''],
+      steelRims: [''],
+      attachmentCondition: [''],
+      cabCondition: [''],
+      counterWeight: [''],
+      rockBreaker: [''],
+
+      // BUS Specific
+      coachCondition: [''],
+      passengerSeats: [''],
+      emergencyExits: [''],
+      luggageCompartment: [''],
+      acSystem: [''],
+      destinationBoard: [''],
+      sideMirrors: [''],
+
+      // FE / Tractor Specific
+      rightIndividualBrakes: [''],
+      leftIndividualBrakes: [''],
+      threePointLinkage: [''],
+      powerTakeOff: [''],
+      hitchSystem: [''],
+      hydraulicLiftFe: [''],
+      frontWeights: [''],
+      rearWeights: [''],
+      ropsCanopy: [''],
+      frontTyreCondition: [''],
+      rearTyreCondition: [''],
+      implementAttachments: [''],
+      fuelTankFe: [''],
+      frontAxleFe: [''],
+      rearDrawbar: [''],
+
       // ✅ ADDED PAYMENT FIELDS
       paymentStatus: ['Pending', Validators.required],
       paymentReference: [''],
@@ -371,6 +498,98 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       axles: data.axles || '',
       airConditioner: data.airConditioner || '',
       audio: data.audio || '',
+
+      // Body & Structure
+      speedoMeter: data.speedoMeter || '',
+      frontAxles: data.frontAxles || '',
+      rearAxles: data.rearAxles || '',
+      driveShafts: data.driveShafts || '',
+      steeringHandle: data.steeringHandle || '',
+      frontForkAssy: data.frontForkAssy || '',
+      frontFairing: data.frontFairing || '',
+      rearCowls: data.rearCowls || '',
+      bumpers: data.bumpers || '',
+      doors: data.doors || '',
+      fenders: data.fenders || '',
+      rightSideWing: data.rightSideWing || '',
+      leftSideWing: data.leftSideWing || '',
+      tailGate: data.tailGate || '',
+      loadFloor: data.loadFloor || '',
+      // Brakes Additional
+      parkingBrake: data.parkingBrake || '',
+      abs: data.abs || '',
+      // Electrical Additional
+      tailLightsIndicators: data.tailLightsIndicators || '',
+      wiringAssy: data.wiringAssy || '',
+      // Crash Guards
+      frontCrashGuard: data.frontCrashGuard || '',
+      rearCrashGuard: data.rearCrashGuard || '',
+      // 4W Specific
+      airBags: data.airBags || '',
+      sunRoof: data.sunRoof || '',
+      sideFenders: data.sideFenders || '',
+      // CV Specific
+      hydraulicLift: data.hydraulicLift || '',
+      sideUnderRunProtection: data.sideUnderRunProtection || '',
+      // 2W Specific
+      mainStand: data.mainStand || '',
+      sideStand: data.sideStand || '',
+      frontMudGuard: data.frontMudGuard || '',
+      rearMudGuard: data.rearMudGuard || '',
+      fuelTankCondition: data.fuelTankCondition || '',
+      chainSprocket: data.chainSprocket || '',
+      frontBrakeCondition: data.frontBrakeCondition || '',
+      rearBrakeCondition: data.rearBrakeCondition || '',
+      headLight: data.headLight || '',
+      tailLight: data.tailLight || '',
+      indicators: data.indicators || '',
+      hornCondition: data.hornCondition || '',
+      mirrorCondition: data.mirrorCondition || '',
+      seatCondition: data.seatCondition || '',
+      handleBarGrips: data.handleBarGrips || '',
+      footRest: data.footRest || '',
+      alloyWheelRim: data.alloyWheelRim || '',
+      // CE Specific
+      retarder: data.retarder || '',
+      differentialLock: data.differentialLock || '',
+      pto: data.pto || '',
+      hydraulicSystem: data.hydraulicSystem || '',
+      boomArm: data.boomArm || '',
+      bucketCondition: data.bucketCondition || '',
+      bladeCondition: data.bladeCondition || '',
+      liftingCapacity: data.liftingCapacity || '',
+      tyreConditionCe: data.tyreConditionCe || '',
+      underCarriage: data.underCarriage || '',
+      crawlerTracks: data.crawlerTracks || '',
+      steelRims: data.steelRims || '',
+      attachmentCondition: data.attachmentCondition || '',
+      cabCondition: data.cabCondition || '',
+      counterWeight: data.counterWeight || '',
+      rockBreaker: data.rockBreaker || '',
+      // BUS Specific
+      coachCondition: data.coachCondition || '',
+      passengerSeats: data.passengerSeats || '',
+      emergencyExits: data.emergencyExits || '',
+      luggageCompartment: data.luggageCompartment || '',
+      acSystem: data.acSystem || '',
+      destinationBoard: data.destinationBoard || '',
+      sideMirrors: data.sideMirrors || '',
+      // FE / Tractor Specific
+      rightIndividualBrakes: data.rightIndividualBrakes || '',
+      leftIndividualBrakes: data.leftIndividualBrakes || '',
+      threePointLinkage: data.threePointLinkage || '',
+      powerTakeOff: data.powerTakeOff || '',
+      hitchSystem: data.hitchSystem || '',
+      hydraulicLiftFe: data.hydraulicLiftFe || '',
+      frontWeights: data.frontWeights || '',
+      rearWeights: data.rearWeights || '',
+      ropsCanopy: data.ropsCanopy || '',
+      frontTyreCondition: data.frontTyreCondition || '',
+      rearTyreCondition: data.rearTyreCondition || '',
+      implementAttachments: data.implementAttachments || '',
+      fuelTankFe: data.fuelTankFe || '',
+      frontAxleFe: data.frontAxleFe || '',
+      rearDrawbar: data.rearDrawbar || '',
 
       // Payment Data
       paymentStatus: data.paymentStatus || 'Pending',

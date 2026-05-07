@@ -403,6 +403,143 @@
       </div>
     </fieldset>
 
+    <!-- BODY & STRUCTURE -->
+    <fieldset class="nested-group">
+      <legend>Body & Structure</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('speedoMeter')" appearance="outline"><mat-label>Speedometer</mat-label><input matInput formControlName="speedoMeter" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontAxles')" appearance="outline"><mat-label>Front Axles</mat-label><input matInput formControlName="frontAxles" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearAxles')" appearance="outline"><mat-label>Rear Axles</mat-label><input matInput formControlName="rearAxles" /></mat-form-field>
+        <mat-form-field *ngIf="showField('driveShafts')" appearance="outline"><mat-label>Drive Shafts</mat-label><input matInput formControlName="driveShafts" /></mat-form-field>
+        <mat-form-field *ngIf="showField('steeringHandle')" appearance="outline"><mat-label>Steering Handle</mat-label><input matInput formControlName="steeringHandle" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontForkAssy')" appearance="outline"><mat-label>Front Fork Assembly</mat-label><input matInput formControlName="frontForkAssy" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontFairing')" appearance="outline"><mat-label>Front Fairing</mat-label><input matInput formControlName="frontFairing" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearCowls')" appearance="outline"><mat-label>Rear Cowls</mat-label><input matInput formControlName="rearCowls" /></mat-form-field>
+        <mat-form-field *ngIf="showField('bumpers')" appearance="outline"><mat-label>Bumpers</mat-label><input matInput formControlName="bumpers" /></mat-form-field>
+        <mat-form-field *ngIf="showField('doors')" appearance="outline"><mat-label>Doors</mat-label><input matInput formControlName="doors" /></mat-form-field>
+        <mat-form-field *ngIf="showField('fenders')" appearance="outline"><mat-label>Fenders</mat-label><input matInput formControlName="fenders" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rightSideWing')" appearance="outline"><mat-label>Right Side Wing</mat-label><input matInput formControlName="rightSideWing" /></mat-form-field>
+        <mat-form-field *ngIf="showField('leftSideWing')" appearance="outline"><mat-label>Left Side Wing</mat-label><input matInput formControlName="leftSideWing" /></mat-form-field>
+        <mat-form-field *ngIf="showField('tailGate')" appearance="outline"><mat-label>Tail Gate</mat-label><input matInput formControlName="tailGate" /></mat-form-field>
+        <mat-form-field *ngIf="showField('loadFloor')" appearance="outline"><mat-label>Load Floor</mat-label><input matInput formControlName="loadFloor" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- BRAKES, ELECTRICAL & CRASH GUARDS -->
+    <fieldset class="nested-group">
+      <legend>Brakes, Electrical & Crash Guards</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('parkingBrake')" appearance="outline"><mat-label>Parking Brake</mat-label><input matInput formControlName="parkingBrake" /></mat-form-field>
+        <mat-form-field *ngIf="showField('abs')" appearance="outline"><mat-label>ABS</mat-label><input matInput formControlName="abs" /></mat-form-field>
+        <mat-form-field *ngIf="showField('tailLightsIndicators')" appearance="outline"><mat-label>Tail Lights / Indicators</mat-label><input matInput formControlName="tailLightsIndicators" /></mat-form-field>
+        <mat-form-field *ngIf="showField('wiringAssy')" appearance="outline"><mat-label>Wiring Assembly</mat-label><input matInput formControlName="wiringAssy" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontCrashGuard')" appearance="outline"><mat-label>Front Crash Guard</mat-label><input matInput formControlName="frontCrashGuard" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearCrashGuard')" appearance="outline"><mat-label>Rear Crash Guard</mat-label><input matInput formControlName="rearCrashGuard" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- 4W SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('airBags') || showField('sunRoof') || showField('sideFenders')">
+      <legend>4W Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('airBags')" appearance="outline"><mat-label>Air Bags</mat-label><input matInput formControlName="airBags" /></mat-form-field>
+        <mat-form-field *ngIf="showField('sunRoof')" appearance="outline"><mat-label>Sun Roof</mat-label><input matInput formControlName="sunRoof" /></mat-form-field>
+        <mat-form-field *ngIf="showField('sideFenders')" appearance="outline"><mat-label>Side Fenders</mat-label><input matInput formControlName="sideFenders" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- CV SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('hydraulicLift') || showField('sideUnderRunProtection')">
+      <legend>CV Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('hydraulicLift')" appearance="outline"><mat-label>Hydraulic Lift</mat-label><input matInput formControlName="hydraulicLift" /></mat-form-field>
+        <mat-form-field *ngIf="showField('sideUnderRunProtection')" appearance="outline"><mat-label>Side Under-Run Protection</mat-label><input matInput formControlName="sideUnderRunProtection" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- 2W SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('mainStand')">
+      <legend>2W Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('mainStand')" appearance="outline"><mat-label>Main Stand</mat-label><input matInput formControlName="mainStand" /></mat-form-field>
+        <mat-form-field *ngIf="showField('sideStand')" appearance="outline"><mat-label>Side Stand</mat-label><input matInput formControlName="sideStand" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontMudGuard')" appearance="outline"><mat-label>Front Mud Guard</mat-label><input matInput formControlName="frontMudGuard" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearMudGuard')" appearance="outline"><mat-label>Rear Mud Guard</mat-label><input matInput formControlName="rearMudGuard" /></mat-form-field>
+        <mat-form-field *ngIf="showField('fuelTankCondition')" appearance="outline"><mat-label>Fuel Tank Condition</mat-label><input matInput formControlName="fuelTankCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('chainSprocket')" appearance="outline"><mat-label>Chain & Sprocket</mat-label><input matInput formControlName="chainSprocket" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontBrakeCondition')" appearance="outline"><mat-label>Front Brake Condition</mat-label><input matInput formControlName="frontBrakeCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearBrakeCondition')" appearance="outline"><mat-label>Rear Brake Condition</mat-label><input matInput formControlName="rearBrakeCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('headLight')" appearance="outline"><mat-label>Head Light</mat-label><input matInput formControlName="headLight" /></mat-form-field>
+        <mat-form-field *ngIf="showField('tailLight')" appearance="outline"><mat-label>Tail Light</mat-label><input matInput formControlName="tailLight" /></mat-form-field>
+        <mat-form-field *ngIf="showField('indicators')" appearance="outline"><mat-label>Indicators</mat-label><input matInput formControlName="indicators" /></mat-form-field>
+        <mat-form-field *ngIf="showField('hornCondition')" appearance="outline"><mat-label>Horn Condition</mat-label><input matInput formControlName="hornCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('mirrorCondition')" appearance="outline"><mat-label>Mirror Condition</mat-label><input matInput formControlName="mirrorCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('seatCondition')" appearance="outline"><mat-label>Seat Condition</mat-label><input matInput formControlName="seatCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('handleBarGrips')" appearance="outline"><mat-label>Handle Bar Grips</mat-label><input matInput formControlName="handleBarGrips" /></mat-form-field>
+        <mat-form-field *ngIf="showField('footRest')" appearance="outline"><mat-label>Foot Rest</mat-label><input matInput formControlName="footRest" /></mat-form-field>
+        <mat-form-field *ngIf="showField('alloyWheelRim')" appearance="outline"><mat-label>Alloy Wheel / Rim</mat-label><input matInput formControlName="alloyWheelRim" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- CE SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('retarder')">
+      <legend>CE / Construction Equipment Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('retarder')" appearance="outline"><mat-label>Retarder</mat-label><input matInput formControlName="retarder" /></mat-form-field>
+        <mat-form-field *ngIf="showField('differentialLock')" appearance="outline"><mat-label>Differential Lock</mat-label><input matInput formControlName="differentialLock" /></mat-form-field>
+        <mat-form-field *ngIf="showField('pto')" appearance="outline"><mat-label>PTO</mat-label><input matInput formControlName="pto" /></mat-form-field>
+        <mat-form-field *ngIf="showField('hydraulicSystem')" appearance="outline"><mat-label>Hydraulic System</mat-label><input matInput formControlName="hydraulicSystem" /></mat-form-field>
+        <mat-form-field *ngIf="showField('boomArm')" appearance="outline"><mat-label>Boom / Arm</mat-label><input matInput formControlName="boomArm" /></mat-form-field>
+        <mat-form-field *ngIf="showField('bucketCondition')" appearance="outline"><mat-label>Bucket Condition</mat-label><input matInput formControlName="bucketCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('bladeCondition')" appearance="outline"><mat-label>Blade Condition</mat-label><input matInput formControlName="bladeCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('liftingCapacity')" appearance="outline"><mat-label>Lifting Capacity</mat-label><input matInput formControlName="liftingCapacity" /></mat-form-field>
+        <mat-form-field *ngIf="showField('tyreConditionCe')" appearance="outline"><mat-label>Tyre Condition (CE)</mat-label><input matInput formControlName="tyreConditionCe" /></mat-form-field>
+        <mat-form-field *ngIf="showField('underCarriage')" appearance="outline"><mat-label>Under Carriage</mat-label><input matInput formControlName="underCarriage" /></mat-form-field>
+        <mat-form-field *ngIf="showField('crawlerTracks')" appearance="outline"><mat-label>Crawler Tracks</mat-label><input matInput formControlName="crawlerTracks" /></mat-form-field>
+        <mat-form-field *ngIf="showField('steelRims')" appearance="outline"><mat-label>Steel Rims</mat-label><input matInput formControlName="steelRims" /></mat-form-field>
+        <mat-form-field *ngIf="showField('attachmentCondition')" appearance="outline"><mat-label>Attachment Condition</mat-label><input matInput formControlName="attachmentCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('cabCondition')" appearance="outline"><mat-label>Cab Condition</mat-label><input matInput formControlName="cabCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('counterWeight')" appearance="outline"><mat-label>Counter Weight</mat-label><input matInput formControlName="counterWeight" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rockBreaker')" appearance="outline"><mat-label>Rock Breaker</mat-label><input matInput formControlName="rockBreaker" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- BUS SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('coachCondition')">
+      <legend>BUS Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('coachCondition')" appearance="outline"><mat-label>Coach Condition</mat-label><input matInput formControlName="coachCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('passengerSeats')" appearance="outline"><mat-label>Passenger Seats</mat-label><input matInput formControlName="passengerSeats" /></mat-form-field>
+        <mat-form-field *ngIf="showField('emergencyExits')" appearance="outline"><mat-label>Emergency Exits</mat-label><input matInput formControlName="emergencyExits" /></mat-form-field>
+        <mat-form-field *ngIf="showField('luggageCompartment')" appearance="outline"><mat-label>Luggage Compartment</mat-label><input matInput formControlName="luggageCompartment" /></mat-form-field>
+        <mat-form-field *ngIf="showField('acSystem')" appearance="outline"><mat-label>AC System</mat-label><input matInput formControlName="acSystem" /></mat-form-field>
+        <mat-form-field *ngIf="showField('destinationBoard')" appearance="outline"><mat-label>Destination Board</mat-label><input matInput formControlName="destinationBoard" /></mat-form-field>
+        <mat-form-field *ngIf="showField('sideMirrors')" appearance="outline"><mat-label>Side Mirrors</mat-label><input matInput formControlName="sideMirrors" /></mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- FE / TRACTOR SPECIFIC -->
+    <fieldset class="nested-group" *ngIf="showField('rightIndividualBrakes')">
+      <legend>FE / Farm Equipment Specific</legend>
+      <div class="grid">
+        <mat-form-field *ngIf="showField('rightIndividualBrakes')" appearance="outline"><mat-label>Right Individual Brakes</mat-label><input matInput formControlName="rightIndividualBrakes" /></mat-form-field>
+        <mat-form-field *ngIf="showField('leftIndividualBrakes')" appearance="outline"><mat-label>Left Individual Brakes</mat-label><input matInput formControlName="leftIndividualBrakes" /></mat-form-field>
+        <mat-form-field *ngIf="showField('threePointLinkage')" appearance="outline"><mat-label>Three Point Linkage</mat-label><input matInput formControlName="threePointLinkage" /></mat-form-field>
+        <mat-form-field *ngIf="showField('powerTakeOff')" appearance="outline"><mat-label>Power Take Off</mat-label><input matInput formControlName="powerTakeOff" /></mat-form-field>
+        <mat-form-field *ngIf="showField('hitchSystem')" appearance="outline"><mat-label>Hitch System</mat-label><input matInput formControlName="hitchSystem" /></mat-form-field>
+        <mat-form-field *ngIf="showField('hydraulicLiftFe')" appearance="outline"><mat-label>Hydraulic Lift (FE)</mat-label><input matInput formControlName="hydraulicLiftFe" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontWeights')" appearance="outline"><mat-label>Front Weights</mat-label><input matInput formControlName="frontWeights" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearWeights')" appearance="outline"><mat-label>Rear Weights</mat-label><input matInput formControlName="rearWeights" /></mat-form-field>
+        <mat-form-field *ngIf="showField('ropsCanopy')" appearance="outline"><mat-label>ROPS / Canopy</mat-label><input matInput formControlName="ropsCanopy" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontTyreCondition')" appearance="outline"><mat-label>Front Tyre Condition</mat-label><input matInput formControlName="frontTyreCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearTyreCondition')" appearance="outline"><mat-label>Rear Tyre Condition</mat-label><input matInput formControlName="rearTyreCondition" /></mat-form-field>
+        <mat-form-field *ngIf="showField('implementAttachments')" appearance="outline"><mat-label>Implement Attachments</mat-label><input matInput formControlName="implementAttachments" /></mat-form-field>
+        <mat-form-field *ngIf="showField('fuelTankFe')" appearance="outline"><mat-label>Fuel Tank (FE)</mat-label><input matInput formControlName="fuelTankFe" /></mat-form-field>
+        <mat-form-field *ngIf="showField('frontAxleFe')" appearance="outline"><mat-label>Front Axle (FE)</mat-label><input matInput formControlName="frontAxleFe" /></mat-form-field>
+        <mat-form-field *ngIf="showField('rearDrawbar')" appearance="outline"><mat-label>Rear Drawbar</mat-label><input matInput formControlName="rearDrawbar" /></mat-form-field>
+      </div>
+    </fieldset>
+
     <fieldset class="nested-group">
       <legend>Payment Details</legend>
       <div class="grid">
