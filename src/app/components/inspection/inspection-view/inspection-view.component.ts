@@ -25,7 +25,8 @@ type ValuationType =
   | 'two-wheeler'
   | 'three-wheeler'
   | 'tractor'
-  | 'ce';
+  | 'ce'
+  | 'bus';
 
 @Component({
   selector: 'app-valuation-inspection',
@@ -69,12 +70,14 @@ export class InspectionViewComponent implements OnInit {
   targetStep: string = 'Backend'; // AVO always returns to Backend
 
   private visibilityMap: Record<ValuationType, string[]> = {
-   'four-wheeler': [
+    'four-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'airBags','sunRoof','sideFenders'
     ],
     'cv': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -84,14 +87,19 @@ export class InspectionViewComponent implements OnInit {
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
       'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'hydraulicLift','sideUnderRunProtection'
     ],
     'two-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'mainStand','sideStand','frontMudGuard','rearMudGuard','fuelTankCondition','chainSprocket',
+      'frontBrakeCondition','rearBrakeCondition','headLight','tailLight','indicators',
+      'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
     ],
     'three-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -100,7 +108,8 @@ export class InspectionViewComponent implements OnInit {
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
       'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
       'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
     ],
     'tractor': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -108,7 +117,10 @@ export class InspectionViewComponent implements OnInit {
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
       'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'rightIndividualBrakes','leftIndividualBrakes','threePointLinkage','powerTakeOff',
+      'hitchSystem','hydraulicLiftFe','frontWeights','rearWeights','ropsCanopy',
+      'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
     ],
     'ce': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
@@ -117,7 +129,22 @@ export class InspectionViewComponent implements OnInit {
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
       'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
       'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
-      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
+      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'retarder','differentialLock','pto','hydraulicSystem','boomArm','bucketCondition',
+      'bladeCondition','liftingCapacity','tyreConditionCe','underCarriage','crawlerTracks',
+      'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
+    ],
+    'bus': [
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
+      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
+      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
+      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
+      'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
+      'vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
+      'coachCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','sideMirrors'
     ]
   };
 
@@ -373,6 +400,16 @@ export class InspectionViewComponent implements OnInit {
   showField(key: string): boolean {
     if (!this.valuationType) return false;
     return this.visibilityMap[this.valuationType]?.includes(key) ?? false;
+  }
+
+  hv(keys: string[]): boolean {
+    return keys.some(k => this.showField(k));
+  }
+
+  displayBool(val: any, trueLabel: string = 'Yes', falseLabel: string = 'No'): string {
+    if (val === true || val === 'true') return trueLabel;
+    if (val === false || val === 'false') return falseLabel;
+    return val ?? '';
   }
 
   onClick() {
