@@ -207,6 +207,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return !!(this.valuationType && this.visibilityMap[this.valuationType]?.includes(key));
   }
 
+  /** Returns true if at least one key in the list is visible for the current vehicle type. */
+  hv(keys: string[]): boolean {
+    return keys.some(k => this.showField(k));
+  }
+
   private applyAssignedFromUser(u: User | null): void {
     const name = (u?.displayName?.trim() || '') || (u?.email ? u.email.split('@')[0] : '') || (u?.phoneNumber || '') || 'User';
     this.assignedTo = name;
