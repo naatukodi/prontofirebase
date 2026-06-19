@@ -442,36 +442,40 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   // ✅ UPDATED: Patch Form with Payment Data
   private patchForm(data: Inspection | any) {
     // Handle payment date
-    const existingPaymentDate = data.paymentDate 
-      ? this.toLocalDateTimeInput(new Date(data.paymentDate)) 
+    const existingPaymentDate = data.paymentDate
+      ? this.toLocalDateTimeInput(new Date(data.paymentDate))
       : this.toLocalDateTimeInput(new Date());
+
+    // FormData serializes booleans as "true"/"false" strings — convert back to boolean for mat-select
+    const toBool = (v: any): boolean | null =>
+      v === true || v === 'true' ? true : v === false || v === 'false' ? false : null;
 
     const v = this.form;
     v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy || '',
       dateOfInspection: data.dateOfInspection?.slice(0, 10) || '',
       inspectionLocation: data.inspectionLocation || '',
-      vehicleMoved: data.vehicleMoved || false,
-      engineStarted: data.engineStarted || false,
+      vehicleMoved: toBool(data.vehicleMoved) ?? false,
+      engineStarted: toBool(data.engineStarted) ?? false,
       odometer: data.odometer || 0,
-      vinPlate: data.vinPlate || false,
+      vinPlate: toBool(data.vinPlate) ?? false,
       bodyType: data.bodyType || '',
-      overallTyreCondition: data.overallTyreCondition || '',
-      otherAccessoryFitment: data.otherAccessoryFitment || false,
+      overallTyreCondition: toBool(data.overallTyreCondition),
+      otherAccessoryFitment: toBool(data.otherAccessoryFitment) ?? false,
       windshieldGlass: data.windshieldGlass || '',
-      roadWorthyCondition: data.roadWorthyCondition || false,
-      engineCondition: data.engineCondition || '',
-      suspensionSystem: data.suspensionSystem || '',
-      steeringSystem: data.steeringSystem || (data as any).steeringAssy || '',
-      brakeSystem: data.brakeSystem || '',
-      chassisCondition: data.chassisCondition || '',
+      roadWorthyCondition: toBool(data.roadWorthyCondition) ?? false,
+      engineCondition: toBool(data.engineCondition),
+      suspensionSystem: toBool(data.suspensionSystem),
+      steeringSystem: toBool(data.steeringSystem ?? (data as any).steeringAssy),
+      brakeSystem: toBool(data.brakeSystem),
+      chassisCondition: toBool(data.chassisCondition),
       bodyCondition: data.bodyCondition || '',
       batteryCondition: data.batteryCondition || '',
-      paintWork: data.paintWork || '',
-      clutchSystem: data.clutchSystem || '',
-      gearBoxAssy: data.gearBoxAssy || '',
-      propellerShaft: data.propellerShaft || '',
-      differentialAssy: data.differentialAssy || '',
+      paintWork: toBool(data.paintWork),
+      clutchSystem: toBool(data.clutchSystem),
+      gearBoxAssy: toBool(data.gearBoxAssy),
+      propellerShaft: toBool(data.propellerShaft),
+      differentialAssy: toBool(data.differentialAssy),
       cabin: data.cabin || '',
       dashboard: data.dashboard || '',
       seats: data.seats || '',
