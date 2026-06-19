@@ -77,7 +77,7 @@ export class InspectionViewComponent implements OnInit {
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
       'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
-      'airBags','sunRoof','sideFenders'
+      'airBags','sunRoof','sideFenders','headLamps','batteryCondition'
     ],
     'cv': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
