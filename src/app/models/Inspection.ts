@@ -53,7 +53,7 @@ export interface Inspection {
   chainTrack: string;
   hydraulicCylinders: string;
   swingUnit: string;
-  upholestry: string;
+  upholstery: string;
   interiorTrims: string;
   front: string;
   rear: string;

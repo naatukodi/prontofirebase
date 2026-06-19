@@ -1,3 +1,4 @@
+<div class="pg-wrap">
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <app-workflow-buttons
     [id]="valuationId"
@@ -115,7 +116,7 @@
         </mat-form-field>
         <mat-form-field *ngIf="showField('tyreCondition')" appearance="outline">
           <mat-label>Overall Tyre Condition</mat-label>
-          <mat-select formControlName="tyreCondition">
+          <mat-select formControlName="overallTyreCondition">
             <mat-option [value]="true">Good</mat-option>
             <mat-option [value]="false">Not Good</mat-option>
           </mat-select>
@@ -205,7 +206,7 @@
         </mat-form-field>
         <mat-form-field *ngIf="showField('gearboxAssembly')" appearance="outline">
           <mat-label>Gearbox Assembly</mat-label>
-          <mat-select formControlName="gearboxAssembly">
+          <mat-select formControlName="gearBoxAssy">
             <mat-option [value]="true">Good</mat-option>
             <mat-option [value]="false">Not Good</mat-option>
           </mat-select>
@@ -299,7 +300,7 @@
         <mat-form-field *ngIf="showField('cabinCondition')" appearance="outline"><mat-label>Cabin Condition</mat-label><input matInput formControlName="cabin" /></mat-form-field>
         <mat-form-field *ngIf="showField('dashboard')" appearance="outline"><mat-label>Dashboard Condition</mat-label><input matInput formControlName="dashboard" /></mat-form-field>
         <mat-form-field *ngIf="showField('seats')" appearance="outline"><mat-label>Seats Condition</mat-label><input matInput formControlName="seats" /></mat-form-field>
-        <mat-form-field *ngIf="showField('upholestry')" appearance="outline"><mat-label>Upholestry</mat-label><input matInput formControlName="upholestry" /></mat-form-field>
+        <mat-form-field *ngIf="showField('upholstery')" appearance="outline"><mat-label>Upholstery</mat-label><input matInput formControlName="upholstery" /></mat-form-field>
         <mat-form-field *ngIf="showField('interiorTrims')" appearance="outline"><mat-label>Interior Trims</mat-label><input matInput formControlName="interiorTrims" /></mat-form-field>
         <mat-form-field *ngIf="showField('audio')" appearance="outline"><mat-label>Audio</mat-label><input matInput formControlName="audio" /></mat-form-field>
         <mat-form-field *ngIf="showField('airConditioner')" appearance="outline"><mat-label>Air Conditioner</mat-label><input matInput formControlName="airConditioner" /></mat-form-field>
@@ -500,6 +501,17 @@
     </fieldset>
 
   </ng-container>
+  <div class="pg-content" style="padding-top:8px">
+    <div *ngIf="!isViewOnly" class="pg-btn-group">
+      <button mat-raised-button color="accent" type="button"
+        [disabled]="saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)"
+        (click)="onSave()">{{ saving && saveInProgress ? 'Saving…' : 'Save' }}</button>
+      <button mat-raised-button color="primary" type="submit"
+        [disabled]="!saved || saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)">
+        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}</button>
+      <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">Cancel</button>
+    </div>
+  </div>
 </form>
-
+</div>
 <router-outlet></router-outlet>

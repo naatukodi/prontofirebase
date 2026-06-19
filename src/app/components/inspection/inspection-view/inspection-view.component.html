@@ -1,9 +1,11 @@
+<div class="pg-wrap">
 <app-workflow-buttons
   [id]="valuationId"
   [vehicleNumber]="vehicleNumber"
   [applicantContact]="applicantContact"
   [valuationType]="valuationType ?? ''">
 </app-workflow-buttons>
+<div class="pg-content">
 
 <div *ngIf="returnMessage" class="rejection-banner"
      style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -240,13 +242,13 @@
   </fieldset>
 
   <!-- 7. INTERIOR & CABIN -->
-  <fieldset class="nested-group" *ngIf="hv(['cabinCondition','dashBoard','seats','upholestry','interiorTrims','audio','airConditioner','airBags','sunRoof','headLamps','front','rear','axles','cabCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','seatCondition'])">
+  <fieldset class="nested-group" *ngIf="hv(['cabinCondition','dashBoard','seats','upholstery','interiorTrims','audio','airConditioner','airBags','sunRoof','headLamps','front','rear','axles','cabCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','seatCondition'])">
     <legend>Interior &amp; Cabin</legend>
     <div class="grid">
       <mat-form-field appearance="outline" *ngIf="showField('cabinCondition')"><mat-label>Cabin Condition</mat-label><input matInput [value]="inspection.cabin" readonly /></mat-form-field>
       <mat-form-field appearance="outline" *ngIf="showField('dashboard')"><mat-label>Dashboard Condition</mat-label><input matInput [value]="inspection.dashboard" readonly /></mat-form-field>
       <mat-form-field appearance="outline" *ngIf="showField('seats')"><mat-label>Seats Condition</mat-label><input matInput [value]="inspection.seats" readonly /></mat-form-field>
-      <mat-form-field appearance="outline" *ngIf="showField('upholestry')"><mat-label>Upholestry</mat-label><input matInput [value]="inspection.upholestry" readonly /></mat-form-field>
+      <mat-form-field appearance="outline" *ngIf="showField('upholstery')"><mat-label>Upholstery</mat-label><input matInput [value]="inspection.upholstery" readonly /></mat-form-field>
       <mat-form-field appearance="outline" *ngIf="showField('interiorTrims')"><mat-label>Interior Trims</mat-label><input matInput [value]="inspection.interiorTrims" readonly /></mat-form-field>
       <mat-form-field appearance="outline" *ngIf="showField('audio')"><mat-label>Audio</mat-label><input matInput [value]="inspection.audio" readonly /></mat-form-field>
       <mat-form-field appearance="outline" *ngIf="showField('airConditioner')"><mat-label>Air Conditioner</mat-label><input matInput [value]="inspection.airConditioner" readonly /></mat-form-field>
@@ -388,6 +390,7 @@
   </fieldset>
 
 </ng-container>
+</div><!-- /pg-content -->
 
 <div class="modal-overlay" *ngIf="showReturnModal">
   <div class="modal-box">
@@ -434,3 +437,4 @@
     </div>
   </div>
 </div>
+</div><!-- /pg-wrap -->
