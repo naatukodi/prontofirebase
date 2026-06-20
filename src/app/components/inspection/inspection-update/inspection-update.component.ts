@@ -652,10 +652,14 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   private formatDateValue(key: string, value: any): any {
     // Handle Inspection Date (YYYY-MM-DD)
     if (key === 'dateOfInspection' && value) {
-      if (value instanceof Date) {
-        return value.toISOString().split('T')[0];
+      const d = value instanceof Date ? value : new Date(value);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
       }
-      return value;
+      return typeof value === 'string' ? value.slice(0, 10) : value;
     }
     // Handle Payment Date (ISO String)
     if (key === 'paymentDate' && value) {
