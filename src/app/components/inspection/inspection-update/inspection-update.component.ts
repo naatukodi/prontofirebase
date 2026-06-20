@@ -52,8 +52,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   inspection: Inspection | null = null;
   photoFiles: File[] = [];
-  chassisVerificationFile: File | null = null;
-  chassisStencilTraceFile: File | null = null;
 
   private assignedTo = '';
   private assignedToPhoneNumber = '';
@@ -632,18 +630,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
-  onChassisVerificationChange(event: Event) {
-    if (this.isViewOnly) return;
-    const input = event.target as HTMLInputElement;
-    this.chassisVerificationFile = input.files?.[0] ?? null;
-  }
-
-  onChassisStencilTraceChange(event: Event) {
-    if (this.isViewOnly) return;
-    const input = event.target as HTMLInputElement;
-    this.chassisStencilTraceFile = input.files?.[0] ?? null;
-  }
-
   // Track Changed Fields
   private getChangedFields(): any[] {
     const currentData = this.form.getRawValue();
@@ -692,10 +678,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
     
     this.photoFiles.forEach(file => fd.append('photos', file, file.name));
-    if (this.chassisVerificationFile)
-      fd.append('chassisVerificationPhoto', this.chassisVerificationFile, this.chassisVerificationFile.name);
-    if (this.chassisStencilTraceFile)
-      fd.append('chassisStencilTracePhoto', this.chassisStencilTraceFile, this.chassisStencilTraceFile.name);
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
     fd.append('applicantContact', this.applicantContact);
@@ -735,19 +717,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return new Promise((resolve) => {
       this.vehicleInspectionService.checkMandatoryPhotos(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
         next: (response) => {
-          const missing: string[] = [...(response.missingPhotos ?? [])];
-
-          // Check chassis photos — valid if already uploaded (URL exists) OR a new file is selected
-          if (!this.inspection?.chassisVerificationPhotoUrl && !this.chassisVerificationFile) {
-            missing.push('Chassis Verification');
-          }
-          if (!this.inspection?.chassisStencilTracePhotoUrl && !this.chassisStencilTraceFile) {
-            missing.push('Chassis Stencil Trace');
-          }
-
-          if (missing.length > 0) {
-            this.missingPhotos = missing;
-            this.mandatoryPhotosError = `${missing.length} mandatory images are missing:\n` + missing.map(p => `• ${p}`).join('\n');
+          if (!response.isComplete) {
+            this.missingPhotos = response.missingPhotos;
+            this.mandatoryPhotosError = `${response.missingPhotos.length} mandatory images are missing:\n` + response.missingPhotos.map(p => `• ${p}`).join('\n');
             resolve(false);
           } else {
             this.mandatoryPhotosError = null;

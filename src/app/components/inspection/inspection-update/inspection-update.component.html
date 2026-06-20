@@ -459,21 +459,6 @@
         </button>
       </div>
 
-      <div class="image-upload-row" style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
-        <div class="image-upload-item">
-          <label style="display:block; font-weight:500; margin-bottom:6px;">Chassis Verification</label>
-          <input *ngIf="!isViewOnly" type="file" accept="image/*" (change)="onChassisVerificationChange($event)" style="display:block; margin-bottom:6px;" />
-          <img *ngIf="inspection?.chassisVerificationPhotoUrl" [src]="inspection!.chassisVerificationPhotoUrl" alt="Chassis Verification" style="max-width:200px; max-height:160px; border:1px solid #ccc; border-radius:4px;" />
-          <span *ngIf="!inspection?.chassisVerificationPhotoUrl && isViewOnly" style="color:#999;">No image uploaded</span>
-        </div>
-
-        <div class="image-upload-item">
-          <label style="display:block; font-weight:500; margin-bottom:6px;">Chassis Stencil Trace</label>
-          <input *ngIf="!isViewOnly" type="file" accept="image/*" (change)="onChassisStencilTraceChange($event)" style="display:block; margin-bottom:6px;" />
-          <img *ngIf="inspection?.chassisStencilTracePhotoUrl" [src]="inspection!.chassisStencilTracePhotoUrl" alt="Chassis Stencil Trace" style="max-width:200px; max-height:160px; border:1px solid #ccc; border-radius:4px;" />
-          <span *ngIf="!inspection?.chassisStencilTracePhotoUrl && isViewOnly" style="color:#999;">No image uploaded</span>
-        </div>
-      </div>
     </fieldset>
 
     <fieldset *ngIf="!isViewOnly">

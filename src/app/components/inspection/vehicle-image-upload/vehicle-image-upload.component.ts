@@ -21,7 +21,8 @@ type ImageKey =
   | 'dashboard' | 'instrumentCluster' | 'engineBay'
   | 'chassisNumberPlate' | 'chassisImprint' | 'gearAndSeats'
   | 'dashboardCloseup' | 'odometer' | 'selfieWithVehicle'
-  | 'underbody' | 'tiresAndRims';
+  | 'underbody' | 'tiresAndRims'
+  | 'chassisVerification' | 'chassisStencilTrace';
 
 type MediaKey = ImageKey | 'vehicleVideo';
 
@@ -75,7 +76,9 @@ export class VehicleImageUploadComponent implements OnInit {
     { key: 'selfieWithVehicle',   label: 'Selfie of Inspector with Vehicle',   type: 'image', optional: false },
     { key: 'underbody',           label: 'Underbody',                          type: 'image', optional: true  },
     { key: 'tiresAndRims',        label: 'Tires and Rims',                     type: 'image', optional: false },
-    { key: 'vehicleVideo',        label: 'Vehicle Video',                      type: 'video', optional: false }
+    { key: 'vehicleVideo',        label: 'Vehicle Video',                      type: 'video', optional: false },
+    { key: 'chassisVerification', label: 'Chassis Verification',                type: 'image', optional: false },
+    { key: 'chassisStencilTrace', label: 'Chassis Stencil Trace',               type: 'image', optional: false }
   ];
 
   selectedFiles: Record<MediaKey, File | null> = this.initRecord(null);
