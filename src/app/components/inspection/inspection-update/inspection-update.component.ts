@@ -50,6 +50,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   // [ADDED FOR PDF READ-ONLY VIEW]
   isViewOnly: boolean = false; 
 
+  inspection: Inspection | null = null;
   photoFiles: File[] = [];
   chassisVerificationFile: File | null = null;
   chassisStencilTraceFile: File | null = null;
@@ -411,6 +412,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.inspectionSvc.getInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
       next: data => {
         console.log('✅ Inspection Data Loaded:', data);
+        this.inspection = data;
         this.patchForm(data);
         
         // [ADDED FOR PDF READ-ONLY VIEW] Disable the entire form if viewOnly=true
@@ -733,9 +735,19 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return new Promise((resolve) => {
       this.vehicleInspectionService.checkMandatoryPhotos(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
         next: (response) => {
-          if (!response.isComplete) {
-            this.missingPhotos = response.missingPhotos;
-            this.mandatoryPhotosError = `${response.missingPhotos.length} mandatory images are missing:\n` + response.missingPhotos.map(p => `• ${p}`).join('\n');
+          const missing: string[] = [...(response.missingPhotos ?? [])];
+
+          // Check chassis photos — valid if already uploaded (URL exists) OR a new file is selected
+          if (!this.inspection?.chassisVerificationPhotoUrl && !this.chassisVerificationFile) {
+            missing.push('Chassis Verification');
+          }
+          if (!this.inspection?.chassisStencilTracePhotoUrl && !this.chassisStencilTraceFile) {
+            missing.push('Chassis Stencil Trace');
+          }
+
+          if (missing.length > 0) {
+            this.missingPhotos = missing;
+            this.mandatoryPhotosError = `${missing.length} mandatory images are missing:\n` + missing.map(p => `• ${p}`).join('\n');
             resolve(false);
           } else {
             this.mandatoryPhotosError = null;
