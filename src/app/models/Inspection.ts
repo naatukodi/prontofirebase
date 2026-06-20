@@ -61,6 +61,8 @@ export interface Inspection {
   airConditioner: string;
   audio: string;
   photos: string[];             // array of URLs
+  chassisVerificationPhotoUrl?: string;
+  chassisStencilTracePhotoUrl?: string;
   remarks?: string;
 
   // Body & Structure

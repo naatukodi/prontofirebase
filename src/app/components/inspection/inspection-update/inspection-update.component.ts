@@ -51,6 +51,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   isViewOnly: boolean = false; 
 
   photoFiles: File[] = [];
+  chassisVerificationFile: File | null = null;
+  chassisStencilTraceFile: File | null = null;
 
   private assignedTo = '';
   private assignedToPhoneNumber = '';
@@ -628,6 +630,18 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.photoFiles = input.files ? Array.from(input.files) : [];
   }
 
+  onChassisVerificationChange(event: Event) {
+    if (this.isViewOnly) return;
+    const input = event.target as HTMLInputElement;
+    this.chassisVerificationFile = input.files?.[0] ?? null;
+  }
+
+  onChassisStencilTraceChange(event: Event) {
+    if (this.isViewOnly) return;
+    const input = event.target as HTMLInputElement;
+    this.chassisStencilTraceFile = input.files?.[0] ?? null;
+  }
+
   // Track Changed Fields
   private getChangedFields(): any[] {
     const currentData = this.form.getRawValue();
@@ -676,6 +690,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
     
     this.photoFiles.forEach(file => fd.append('photos', file, file.name));
+    if (this.chassisVerificationFile)
+      fd.append('chassisVerificationPhoto', this.chassisVerificationFile, this.chassisVerificationFile.name);
+    if (this.chassisStencilTraceFile)
+      fd.append('chassisStencilTracePhoto', this.chassisStencilTraceFile, this.chassisStencilTraceFile.name);
     fd.append('valuationId', this.valuationId);
     fd.append('vehicleNumber', this.vehicleNumber);
     fd.append('applicantContact', this.applicantContact);

@@ -356,6 +356,17 @@
         View / Upload Images
       </button>
     </div>
+
+    <div style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
+      <div *ngIf="inspection?.chassisVerificationPhotoUrl">
+        <label style="display:block; font-weight:500; margin-bottom:6px;">Chassis Verification</label>
+        <img [src]="inspection!.chassisVerificationPhotoUrl" alt="Chassis Verification" style="max-width:200px; max-height:160px; border:1px solid #ccc; border-radius:4px;" />
+      </div>
+      <div *ngIf="inspection?.chassisStencilTracePhotoUrl">
+        <label style="display:block; font-weight:500; margin-bottom:6px;">Chassis Stencil Trace</label>
+        <img [src]="inspection!.chassisStencilTracePhotoUrl" alt="Chassis Stencil Trace" style="max-width:200px; max-height:160px; border:1px solid #ccc; border-radius:4px;" />
+      </div>
+    </div>
   </fieldset>
 
   <fieldset class="nested-group">
