@@ -67,7 +67,7 @@
 
       <mat-form-field appearance="outline" *ngIf="showField('inspectionDate')">
         <mat-label>Date of Inspection</mat-label>
-        <input matInput [value]="inspection.dateOfInspection?.slice(0,10) | date:'mediumDate':'UTC'" readonly />
+        <input matInput [value]="inspection.dateOfInspection | date:'mediumDate':'+0530'" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="outline" *ngIf="showField('inspectionLocation')">

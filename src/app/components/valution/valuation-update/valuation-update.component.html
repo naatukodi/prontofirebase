@@ -1,7 +1,7 @@
 <!-- src/app/components/valution/valuation-update/valuation-update.component.html -->
 
+<div class="pg-wrap">
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <h2>Valuation Update</h2>
 
   <!-- 🔥 COLLAPSIBLE DUPLICATE WARNING (REPLACES OLD WARNING CARD) -->
 
@@ -100,9 +100,9 @@
       [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <!-- Loading & Error -->
-  <div *ngIf="loading">Loading vehicle details …</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div class="pg-content">
+  <div *ngIf="loading" class="pg-loading">Loading vehicle details…</div>
+  <div *ngIf="error" class="pg-error">{{ error }}</div>
 
   <ng-container *ngIf="!loading && !error">
     <!-- VEHICLE IDENTIFICATION GROUP -->
@@ -145,6 +145,16 @@
         <mat-form-field appearance="outline">
           <mat-label>Month of Mfg</mat-label>
           <input matInput type="number" formControlName="monthOfMfg"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Colour</mat-label>
+          <input matInput formControlName="colour"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fuel Type</mat-label>
+          <input matInput formControlName="fuel"/>
         </mat-form-field>
       </div>
     </fieldset>
@@ -236,6 +246,11 @@
         <mat-form-field appearance="outline">
           <mat-label>Owner Name</mat-label>
           <input matInput formControlName="ownerName"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Owner Serial No</mat-label>
+          <input matInput formControlName="ownerSerialNo" placeholder="e.g. 1st Owner"/>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -394,6 +409,11 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Stencil Trace</mat-label>
+          <input matInput formControlName="stencilTrace" placeholder="Chassis number from stencil rubbing"/>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Stencil Trace URL</mat-label>
           <input matInput formControlName="stencilTraceUrl"/>
         </mat-form-field>
@@ -516,6 +536,8 @@
     </fieldset>
 
   </ng-container>
+  </div><!-- /pg-content -->
 </form>
+</div><!-- /pg-wrap -->
 
 <router-outlet></router-outlet>

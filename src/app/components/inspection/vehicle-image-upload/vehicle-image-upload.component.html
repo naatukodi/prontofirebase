@@ -1,3 +1,4 @@
+<div class="pg-wrap">
 <app-workflow-buttons
   [id]="valuationId"
   [vehicleNumber]="vehicleNumber"
@@ -5,10 +6,10 @@
   [valuationType]="valuationType">
 </app-workflow-buttons>
 
+<div class="pg-content">
 <div class="upload-container">
-  <h2>Vehicle Media Upload (Photos + Video)</h2>
 
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="error" class="pg-error">{{ error }}</div>
 
   <ng-container *ngIf="!error">
     <div class="grid">
@@ -101,9 +102,11 @@
     </div>
   </ng-container>
 
-  <div class="actions">
-    <button mat-raised-button color="primary" (click)="onBack()">Back</button>
+  <div class="pg-btn-group">
+    <button mat-raised-button color="accent" (click)="onBack()">Back</button>
   </div>
-</div>
+</div><!-- /upload-container -->
+</div><!-- /pg-content -->
+</div><!-- /pg-wrap -->
 
 <router-outlet></router-outlet>

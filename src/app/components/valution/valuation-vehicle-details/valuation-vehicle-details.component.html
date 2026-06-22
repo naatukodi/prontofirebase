@@ -1,5 +1,6 @@
-<div *ngIf="loading" class="loading">Loading vehicle details...</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pg-wrap">
+<div *ngIf="loading" class="pg-loading">Loading vehicle details...</div>
+<div *ngIf="error" class="pg-error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error && vehicleDetails">
 
@@ -17,6 +18,8 @@
     [applicantContact]="applicantContact"
     [valuationType]="valuationType">
   </app-workflow-buttons>
+
+  <div class="pg-content">
 
   <div *ngIf="returnMessage"
        class="rejection-banner"
@@ -406,6 +409,7 @@
       <button mat-raised-button color="warn" (click)="onBack()">Back</button>
     </div>
   </fieldset>
+  </div><!-- /pg-content -->
 
 </ng-container>
 
@@ -454,3 +458,4 @@
     </div>
   </div>
 </div>
+</div><!-- /pg-wrap -->

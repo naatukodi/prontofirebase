@@ -56,12 +56,24 @@ mat-sidenav {
 }
 
 .navbar-title {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
 .navbar-text {
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
+
+.nav-link,
+.dropdown-item {
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 0.85rem;
+}
+

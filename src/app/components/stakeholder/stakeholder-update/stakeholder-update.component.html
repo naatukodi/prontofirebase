@@ -1,7 +1,4 @@
-<!-- stakeholder-update.component.html -->
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <h2>Stakeholder Update</h2>
-
+<div class="pg-wrap">
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
@@ -9,229 +6,114 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <!-- PIN-Code lookup -->
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Pincode</mat-label>
-    <input
-      matInput
-      formControlName="pincode"
-      (blur)="onPincodeLookup()"
-      maxlength="6"
-      placeholder="e.g. 533001"
-    />
-    <mat-error *ngIf="form.get('pincode')?.hasError('pattern')">
-      Enter a valid 6-digit PIN code
-    </mat-error>
-  </mat-form-field>
+  <div class="pg-content">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-  <!-- Stakeholder Group -->
-  <fieldset class="nested-group">
-    <legend>Stakeholder</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Name of Stakeholder</mat-label>
-        <mat-select formControlName="stakeholderName">
-          <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">
-            {{ opt }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Executive Name</mat-label>
-        <input matInput formControlName="stakeholderExecutiveName" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Contact Number</mat-label>
-        <input matInput formControlName="stakeholderExecutiveContact" maxlength="10" />
-      </mat-form-field>
-
-      <div class="grid-item full-width">
-        <div class="whatsapp-section">
-          <mat-form-field appearance="outline" class="whatsapp-field">
-            <mat-label>WhatsApp Number</mat-label>
-            <!-- --- THIS LINE IS MODIFIED --- -->
-            <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
+      <!-- Pincode -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Location Lookup</div>
+        <div class="pg-card-body">
+          <mat-form-field appearance="outline" style="width:240px">
+            <mat-label>Pincode</mat-label>
+            <input matInput formControlName="pincode" (blur)="onPincodeLookup()" maxlength="6" placeholder="e.g. 533001" />
+            <mat-error *ngIf="form.get('pincode')?.hasError('pattern')">Enter a valid 6-digit PIN code</mat-error>
           </mat-form-field>
-
-          <mat-checkbox
-            formControlName="sameAsContact"
-            color="primary"
-          >
-            Same as Contact Number
-          </mat-checkbox>
         </div>
       </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Email ID</mat-label>
-        <input matInput formControlName="stakeholderExecutiveEmail" />
-      </mat-form-field>
+      <!-- Stakeholder -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Name of Stakeholder</mat-label>
+            <mat-select formControlName="stakeholderName">
+              <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">{{ opt }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput formControlName="stakeholderExecutiveName" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput formControlName="stakeholderExecutiveContact" maxlength="10" /></mat-form-field>
+          <div class="pg-grid-full" style="display:flex;align-items:center;gap:16px">
+            <mat-form-field appearance="outline" style="flex:1">
+              <mat-label>WhatsApp Number</mat-label>
+              <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
+            </mat-form-field>
+            <mat-checkbox formControlName="sameAsContact" color="primary">Same as Contact Number</mat-checkbox>
+          </div>
+          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput formControlName="stakeholderExecutiveEmail" /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Valuation Type</mat-label>
+            <mat-select formControlName="valuationType">
+              <mat-option value="four-wheeler">Four Wheeler</mat-option>
+              <mat-option value="cv">Commercial Vehicle</mat-option>
+              <mat-option value="two-wheeler">Two Wheeler</mat-option>
+              <mat-option value="three-wheeler">Three Wheeler</mat-option>
+              <mat-option value="tractor">Tractor</mat-option>
+              <mat-option value="ce">Commercial Equipment</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Location</mat-label>
+            <mat-select formControlName="location" (selectionChange)="onLocationChange($event.value)">
+              <mat-option *ngFor="let loc of locationOptions" [value]="loc">{{ loc.name }}</mat-option>
+            </mat-select>
+            <mat-hint *ngIf="locationOptions.length === 0">Enter a valid PIN code first</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Block / City</mat-label><input matInput formControlName="block" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput formControlName="district" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Division</mat-label><input matInput formControlName="division" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput formControlName="state" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput formControlName="country" [disabled]="true" /></mat-form-field>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Type</mat-label>
-        <mat-select formControlName="valuationType">
-          <mat-option value="four-wheeler">Four Wheeler</mat-option>
-          <mat-option value="cv">Commercial Vehicle</mat-option>
-          <mat-option value="two-wheeler">Two Wheeler</mat-option>
-          <mat-option value="three-wheeler">Three Wheeler</mat-option>
-          <mat-option value="tractor">Tractor</mat-option>
-          <mat-option value="ce">Commercial Equipment</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <!-- Applicant -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Applicant</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput formControlName="applicantName" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput formControlName="applicantContact" maxlength="10" /></mat-form-field>
+        </div>
+      </div>
 
-      <!-- Location dropdown -->
-      <mat-form-field appearance="outline">
-        <mat-label>Location</mat-label>
-        <mat-select
-          formControlName="location"
-          (selectionChange)="onLocationChange($event.value)"
-        >
-          <mat-option *ngFor="let loc of locationOptions" [value]="loc">
-            {{ loc.name }}
-          </mat-option>
-        </mat-select>
-        <mat-hint *ngIf="locationOptions.length === 0">
-          Enter a valid PIN code first
-        </mat-hint>
-      </mat-form-field>
+      <!-- Remarks -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Remarks</div>
+        <div class="pg-card-body">
+          <mat-form-field appearance="outline" style="width:100%">
+            <mat-label>Remarks</mat-label>
+            <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
 
-      <!-- Auto-filled fields -->
-      <mat-form-field appearance="outline">
-        <mat-label>Block / City</mat-label>
-        <input matInput formControlName="block" [disabled]="true" />
-      </mat-form-field>
+      <!-- Vehicle Details -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline"><mat-label>Vehicle Number</mat-label><input matInput formControlName="vehicleNumber" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Vehicle Segment</mat-label><input matInput formControlName="vehicleSegment" /></mat-form-field>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>District</mat-label>
-        <input matInput formControlName="district" [disabled]="true" />
-      </mat-form-field>
+      <!-- Documents -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Documents</div>
+        <div class="pg-card-body pg-grid">
+          <div class="file-upload"><label for="rcFile">Upload RC</label><input id="rcFile" type="file" (change)="onFileChange($event, 'rcFile')" accept=".pdf,.jpg,.png" /></div>
+          <div class="file-upload"><label for="insuranceFile">Upload Insurance</label><input id="insuranceFile" type="file" (change)="onFileChange($event, 'insuranceFile')" accept=".pdf,.jpg,.png" /></div>
+          <div class="file-upload"><label for="otherFiles">Upload Others</label><input id="otherFiles" type="file" multiple (change)="onMultiFileChange($event)" accept=".pdf,.jpg,.png" /></div>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Division</mat-label>
-        <input matInput formControlName="division" [disabled]="true" />
-      </mat-form-field>
+      <!-- Actions -->
+      <div class="pg-btn-group">
+        <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">{{ saving && saveInProgress ? 'Saving…' : 'Save' }}</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="!saved || saving">{{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}</button>
+        <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">Cancel</button>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>State</mat-label>
-        <input matInput formControlName="state" [disabled]="true" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Country</mat-label>
-        <input matInput formControlName="country" [disabled]="true" />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Applicant Group -->
-  <fieldset class="nested-group">
-    <legend>Applicant</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Name</mat-label>
-        <input matInput formControlName="applicantName" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Contact</mat-label>
-        <input matInput formControlName="applicantContact" maxlength="10"/>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Remarks Field -->
-  <fieldset class="nested-group">
-  <legend>Remarks</legend>
-  <div class="grid">
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Remarks</mat-label>
-      <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
-    </mat-form-field>
+    </form>
   </div>
-</fieldset>
-
-  <!-- Vehicle Details Group -->
-  <fieldset class="nested-group">
-    <legend>Vehicle Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Vehicle Number</mat-label>
-        <input matInput formControlName="vehicleNumber" />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Vehicle Segment</mat-label>
-        <input matInput formControlName="vehicleSegment" />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Document Upload Group -->
-  <fieldset class="nested-group">
-    <legend>Documents</legend>
-    <div class="grid">
-      <div class="file-upload">
-        <label for="rcFile">Upload RC</label>
-        <input
-          id="rcFile"
-          type="file"
-          (change)="onFileChange($event, 'rcFile')"
-          accept=".pdf,.jpg,.png"
-        />
-      </div>
-      <div class="file-upload">
-        <label for="insuranceFile">Upload Insurance</label>
-        <input
-          id="insuranceFile"
-          type="file"
-          (change)="onFileChange($event, 'insuranceFile')"
-          accept=".pdf,.jpg,.png"
-        />
-      </div>
-      <div class="file-upload">
-        <label for="otherFiles">Upload Others</label>
-        <input
-          id="otherFiles"
-          type="file"
-          multiple
-          (change)="onMultiFileChange($event)"
-          accept=".pdf,.jpg,.png"
-        />
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- Action Buttons -->
-  <div class="button-group" style="margin-top:1rem; display:flex; gap:1rem;">
-    <button
-      mat-raised-button
-      color="accent"
-      type="button"
-      [disabled]="saving"
-      (click)="onSave()"
-    >
-      {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
-    </button>
-
-    <button
-      mat-raised-button
-      color="primary"
-      type="submit"
-      [disabled]="!saved || saving"
-    >
-      {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
-    </button>
-
-    <button
-      mat-raised-button
-      color="warn"
-      type="button"
-      [disabled]="saving"
-      (click)="onCancel()"
-    >
-      Cancel
-    </button>
-  </div>
-</form>
-
+</div>
 <router-outlet></router-outlet>

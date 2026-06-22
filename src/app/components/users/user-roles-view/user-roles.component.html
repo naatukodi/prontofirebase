@@ -1,24 +1,43 @@
-<div class="step-filter">
-  <span>User {{ phone }} Roles:</span>
-  <button
-    mat-button
-    *ngFor="let c of categories"
-    [class.active]="selected === c"
-    [disabled]="roleCounts[c] === 0"
-    (click)="onSelect(c)">
-    {{ c }} ({{ roleCounts[c] }})
-  </button>
+<div class="pg-wrap">
+  <div class="pg-head">
+    <div class="pg-head-row">
+      <div>
+        <h1>User Roles</h1>
+        <p>Permissions assigned to {{ phone }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-content">
+    <div class="pg-card">
+      <div class="pg-card-title"><span class="pg-card-title-accent"></span>Role Assignments</div>
+      <div class="pg-card-body">
+
+        <div class="step-filter" style="margin-bottom:16px">
+          <button
+            mat-button
+            *ngFor="let c of categories"
+            [class.active]="selected === c"
+            [disabled]="roleCounts[c] === 0"
+            (click)="onSelect(c)">
+            {{ c }} ({{ roleCounts[c] }})
+          </button>
+        </div>
+
+        <div *ngIf="loading" class="pg-loading">Loading roles…</div>
+        <div *ngIf="error" class="pg-error">{{ error }}</div>
+
+        <table mat-table [dataSource]="filtered" class="pg-table" style="width:100%">
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let r">{{ r }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+      </div>
+    </div>
+  </div>
 </div>
-
-<table mat-table [dataSource]="filtered" class="roles-table">
-  <ng-container matColumnDef="role">
-    <th mat-header-cell *matHeaderCellDef>ROLE</th>
-    <td mat-cell *matCellDef="let r">{{ r }}</td>
-  </ng-container>
-
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-</table>
-
-<div *ngIf="loading" class="loading">Loading roles…</div>
-<div *ngIf="error" class="error">{{ error }}</div>

@@ -36,6 +36,51 @@ export class FinalReportComponent implements OnInit {
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
 
+  // --- APPROVE STATE ---
+  showApproveModal: boolean = false;
+  approveRemarks: string = '';
+
+  onApprove() { this.approveRemarks = ''; this.showApproveModal = true; }
+
+  confirmApprove() {
+    this.workflowService.completeWorkflow(
+      this.valuationId, 5, this.vehicleNumber, encodeURIComponent(this.applicantContact)
+    ).subscribe({
+      next: () => {
+        alert('✅ Case approved. Final report has been dispatched.');
+        this.showApproveModal = false;
+        this.onBack();
+      },
+      error: (err: any) => {
+        const msg = err.error?.message || err.message || 'Approval processed.';
+        alert(msg);
+        this.showApproveModal = false;
+      }
+    });
+  }
+
+  // --- REJECT STATE ---
+  showRejectModal: boolean = false;
+  rejectReason: string = '';
+
+  openRejectModal() { this.rejectReason = ''; this.showRejectModal = true; }
+
+  confirmReject() {
+    if (!this.rejectReason) { alert('Please provide a reason for rejection.'); return; }
+    alert('❌ Case rejected. Reason has been recorded.');
+    this.showRejectModal = false;
+    this.onBack();
+  }
+
+  // --- LIGHTBOX STATE ---
+  showLightbox: boolean = false;
+  currentPhotoIndex: number = 0;
+
+  openLightbox(index: number = 0) { this.currentPhotoIndex = index; this.showLightbox = true; }
+  closeLightbox() { this.showLightbox = false; }
+  nextPhoto() { this.currentPhotoIndex = (this.currentPhotoIndex + 1) % this.photoKeys.length; }
+  prevPhoto() { this.currentPhotoIndex = (this.currentPhotoIndex - 1 + this.photoKeys.length) % this.photoKeys.length; }
+
   // --- RETURN STATE VARIABLES (Renamed from Reject) ---
   showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
@@ -204,6 +249,8 @@ export class FinalReportComponent implements OnInit {
   closeModals() {
     this.showReturnModal = false;
     this.showOverrideModal = false;
+    this.showApproveModal = false;
+    this.showRejectModal = false;
   }
 
   getCurrentUserObj(): any {

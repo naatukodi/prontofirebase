@@ -1,8 +1,10 @@
-<div *ngIf="loading" class="loading">Loading quality control details…</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pg-wrap">
+
+<div *ngIf="loading" class="pg-loading">Loading quality control details…</div>
+<div *ngIf="error" class="pg-error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error && viewModel">
-  
+
   <app-workflow-buttons
     [id]="valuationId"
     [vehicleNumber]="vehicleNumber"
@@ -10,371 +12,636 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <div *ngIf="returnMessage" class="rejection-banner" 
-       style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    
-    <div style="font-size: 1.5rem; margin-right: 15px;">⚠️</div>
-    
-    <div style="width: 100%;">
-      <h4 style="margin: 0 0 8px 0; font-weight: bold; text-transform: uppercase; color: #b71c1c; font-size: 1.1rem;">
+  <!-- Return Banner -->
+  <div *ngIf="returnMessage" class="rejection-banner"
+       style="background:#ffebee;color:#c62828;padding:15px;margin:12px 0;border:1px solid #ef9a9a;border-left:5px solid #d32f2f;border-radius:4px;display:flex;align-items:flex-start;box-shadow:0 2px 4px rgba(0,0,0,.1);">
+    <div style="font-size:1.5rem;margin-right:15px;">⚠️</div>
+    <div style="width:100%;">
+      <h4 style="margin:0 0 8px 0;font-weight:bold;text-transform:uppercase;color:#b71c1c;font-size:1.1rem;">
         CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span>
       </h4>
-      
-      <div style="background-color: rgba(255,255,255,0.6); padding: 10px 12px; border-radius: 4px; border: 1px solid #e57373;">
-        <span style="font-size: 1.05rem; white-space: pre-wrap; font-weight: 500; color: #b71c1c; display: block;">
-          {{ returnMessage }}
-        </span>
+      <div style="background:rgba(255,255,255,.6);padding:10px 12px;border-radius:4px;border:1px solid #e57373;">
+        <span style="font-size:1.05rem;white-space:pre-wrap;font-weight:500;color:#b71c1c;display:block;">{{ returnMessage }}</span>
       </div>
     </div>
   </div>
 
-  <fieldset>
-    <div class="actions">
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
-        Edit
-      </button>
-      
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
-        Return
-      </button>
-
-      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
-        Delete
-      </button>
-      <button mat-raised-button color="accent" (click)="onBack()">
-        Back
-      </button>
-    </div>
-  </fieldset>
-
+  <!-- Action Buttons -->
   <div class="actions">
-    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">
-      Back
-    </button>
-
-    <button mat-raised-button color="accent" (click)="downloadPdf()">
-      Download PDF
-    </button>
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background:#f44336;color:#fff;">Return</button>
+    <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+    <button mat-raised-button color="accent" (click)="onBack()">Back</button>
   </div>
 
+  <!-- ═══════════════════════════════════════════
+       QC DETAILS CARD
+  ════════════════════════════════════════════ -->
   <fieldset class="nested-group">
-    <legend>Stakeholder</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Stakeholder Name</mat-label>
-        <input matInput [value]="report.stakeholder.name" readonly />
-      </mat-form-field>
+    <legend>QC Details</legend>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Executive Name</mat-label>
-        <input matInput [value]="report.stakeholder.executiveName" readonly />
-      </mat-form-field>
+    <!-- ── HERO HEADER ── -->
+    <div class="qc-hero">
+      <div class="qch-photo" (click)="openLightbox(0)">
+        <img [src]="report.photoUrls[photoKeys[0]]" alt="Vehicle" *ngIf="photoKeys.length > 0" />
+        <div class="qch-photo-badge">🔍 {{ photoKeys.length }} photos</div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Contact Number</mat-label>
-        <input matInput [value]="report.stakeholder.executiveContact" readonly />
-      </mat-form-field>
+      <div class="qch-identity">
+        <div class="qch-title">{{ report.vehicleDetails.make }} {{ report.vehicleDetails.model }}</div>
+        <div class="qch-reg">{{ report.vehicleDetails.registrationNumber }}</div>
+        <div class="qch-tags">
+          <span class="qch-tag" *ngFor="let tag of getVehicleTags()">{{ tag }}</span>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>WhatsApp Number</mat-label>
-        <input matInput [value]="report.stakeholder.executiveWhatsapp" readonly />
-      </mat-form-field>
+      <div style="flex:1"></div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Email ID</mat-label>
-        <input matInput [value]="report.stakeholder.executiveEmail" readonly />
-      </mat-form-field>
-    </div>
-
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Name</mat-label>
-        <input matInput [value]="report.stakeholder.applicant.name" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Contact</mat-label>
-        <input matInput [value]="report.stakeholder.applicant.contact" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Vehicle Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Registration Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.registrationNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Make</mat-label>
-        <input matInput [value]="report.vehicleDetails.make" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Model</mat-label>
-        <input matInput [value]="report.vehicleDetails.model" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Year of Mfg</mat-label>
-        <input matInput [value]="report.vehicleDetails.yearOfMfg" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Body Type</mat-label>
-        <input matInput [value]="report.vehicleDetails.bodyType" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.chassisNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.engineNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Color</mat-label>
-        <input matInput [value]="report.vehicleDetails.colour" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Fuel Type</mat-label>
-        <input matInput [value]="report.vehicleDetails.fuel" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Owner Name</mat-label>
-        <input matInput [value]="report.vehicleDetails.ownerName" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>RTO</mat-label>
-        <input matInput [value]="report.vehicleDetails.rto" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Inspection Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Inspected By</mat-label>
-        <input matInput [value]="report.inspectionDetails.vehicleInspectedBy" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Date of Inspection</mat-label>
-        <input matInput [value]="report.inspectionDetails.dateOfInspection | date:'mediumDate'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Location</mat-label>
-        <input matInput [value]="report.inspectionDetails.inspectionLocation" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Odometer Reading</mat-label>
-        <input matInput [value]="report.inspectionDetails.odometer" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Started</mat-label>
-        <input matInput [value]="report.inspectionDetails.engineStarted ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Road Worthy Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.roadWorthyCondition ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Tyre Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.overallTyreCondition" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.engineCondition" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Brake System Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Quality Control</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Rating</mat-label>
-        <input matInput [value]="report.qualityControl.overallRating" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Amount (₹)</mat-label>
-        <input matInput [value]="report.qualityControl.valuationAmount" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Punch</mat-label>
-        <input matInput [value]="report.qualityControl.chassisPunch" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="report.qualityControl.remarks" readonly></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Valuation Response</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline" style="grid-column: span 2;">
-        <mat-label>Raw Response</mat-label>
-        <textarea matInput [value]="report.valuationResponse.rawResponse" rows="5" readonly></textarea>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Low Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.lowRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Mid Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.midRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>High Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.highRange" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Photos</legend>
-    <div class="photo-grid">
-      <div class="photo-item" *ngFor="let key of photoKeys">
-        <div>{{ key }}</div>
-        <a [href]="report.photoUrls[key]" target="_blank">
-          <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
-        </a>
+      <div class="qch-valuation">
+        <div class="qchv-label">VALUATION</div>
+        <div class="qchv-amount">₹{{ viewModel.valuationAmount | number }}</div>
+        <div class="qchv-range" [class.qchv-range--out]="!isInRange()">
+          {{ isInRange() ? '✓ Within market range' : (viewModel.lowRange > 0 ? '✗ Outside market range' : '') }}
+        </div>
       </div>
     </div>
+
+    <div class="qch-score-bar">
+      <span class="qch-score">{{ report.qualityControl?.overallRating }}</span>
+    </div>
+
+    <!-- ── DATA VERIFICATION GRID ── -->
+    <div class="qc-data-section">
+      <div class="qc-data-grid">
+
+        <!-- Row 1 -->
+        <div class="qc-data-row">
+          <div class="qcd-cell">
+            <div class="qcd-label">CHASSIS NO</div>
+            <div class="qcd-value">{{ report.vehicleDetails.chassisNumber || '—' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">ENGINE NO</div>
+            <div class="qcd-value">{{ report.vehicleDetails.engineNumber || '—' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">YEAR OF MFG</div>
+            <div class="qcd-value">
+              {{ report.vehicleDetails.yearOfMfg }}
+              <span class="qcd-age">({{ getVehicleAge() }} yrs)</span>
+            </div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">ODO METER</div>
+            <div class="qcd-value">{{ report.inspectionDetails?.odometer | number }} km</div>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="qc-data-row">
+          <div class="qcd-cell">
+            <div class="qcd-label">OWNER SERIAL NO</div>
+            <div class="qcd-value">
+              <span class="qcd-badge">{{ report.vehicleDetails.ownerSerialNo || '—' }}</span>
+            </div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">REGISTERED OWNER</div>
+            <div class="qcd-value qcd-ok">✓ {{ report.vehicleDetails.ownerName || '—' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">APPLICANT</div>
+            <div class="qcd-value qcd-ok">✓ {{ report.stakeholder?.applicant?.name || '—' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">HYPOTHECATION</div>
+            <div class="qcd-value" [class.qcd-ok]="report.vehicleDetails.hypothecation">
+              {{ report.vehicleDetails.hypothecation ? '✓ ' + (report.vehicleDetails.lender || 'Yes') : '—' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="qc-data-row qc-data-row--last">
+          <div class="qcd-cell">
+            <div class="qcd-label">RC STATUS</div>
+            <div class="qcd-value" [class.qcd-ok]="report.vehicleDetails.rcStatus" [class.qcd-warn]="!report.vehicleDetails.rcStatus">
+              {{ report.vehicleDetails.rcStatus ? 'ACTIVE' : 'INACTIVE' }}
+            </div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">CLASS OF VEHICLE</div>
+            <div class="qcd-value">{{ report.vehicleDetails.classOfVehicle || '—' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">REGISTRATION DATE</div>
+            <div class="qcd-value">{{ report.vehicleDetails.dateOfRegistration | date:'dd-MM-yyyy' }}</div>
+          </div>
+          <div class="qcd-cell">
+            <div class="qcd-label">BODY TYPE</div>
+            <div class="qcd-value">{{ report.vehicleDetails.bodyType || '—' }}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chassis Quick Compare -->
+      <div class="qcc">
+        <div class="qcc-title">CHASSIS QUICK COMPARE</div>
+
+        <div class="qcc-number">{{ report.vehicleDetails.chassisNumber }}</div>
+        <a class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisNumberPlate'))">↑ Chassis Photo</a>
+
+        <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails.stencilTrace || report.vehicleDetails.chassisNumber }}</div>
+        <a class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</a>
+
+        <div class="qcc-match" [class.qcc-match--ok]="chassisNumbersMatch()" [class.qcc-match--fail]="!chassisNumbersMatch()">
+          {{ chassisNumbersMatch() ? '✓ Numbers Match' : (report.vehicleDetails.stencilTrace ? '✗ Mismatch' : '— Pending') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PHOTO THUMBNAILS ── -->
+    <div class="qc-photo-strip">
+      <div class="qc-photo-thumb" *ngFor="let key of photoKeys; let i = index" (click)="openLightbox(i)">
+        <img [src]="report.photoUrls[key]" [alt]="key" />
+        <div class="qc-photo-label">{{ key }}</div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Valuation summary -->
+    <div class="info-strip-label">VALUATION</div>
+    <div class="info-strip">
+      <div class="is-col">
+        <div class="is-label">Rating</div>
+        <div class="is-value">{{ report.qualityControl?.overallRating || '—' }}</div>
+      </div>
+      <div class="is-col">
+        <div class="is-label">Amount (₹)</div>
+        <div class="is-value">{{ viewModel.valuationAmount | number }}</div>
+      </div>
+      <div class="is-col">
+        <div class="is-label">Low Range</div>
+        <div class="is-value">{{ viewModel.lowRange | number }}</div>
+      </div>
+      <div class="is-col">
+        <div class="is-label">Mid Range</div>
+        <div class="is-value">{{ viewModel.midRange | number }}</div>
+      </div>
+      <div class="is-col">
+        <div class="is-label">High Range</div>
+        <div class="is-value">{{ viewModel.highRange | number }}</div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── DOCUMENT VERIFICATION ── -->
+    <div class="qc-section-head">Document Verification</div>
+
+    <div class="cl-sub-title">DOCUMENT STATUS</div>
+    <div class="cl-row">
+      <div class="cl-label">Registration Certificate (RC)</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docRC']==='ok'" (click)="setCl('docRC','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docRC']==='flag'" (click)="setCl('docRC','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Insurance Policy</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docIns']==='ok'" (click)="setCl('docIns','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docIns']==='flag'" (click)="setCl('docIns','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Permit</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docPermit']==='ok'" (click)="setCl('docPermit','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docPermit']==='flag'" (click)="setCl('docPermit','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Fitness Certificate</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docFitness']==='ok'" (click)="setCl('docFitness','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docFitness']==='flag'" (click)="setCl('docFitness','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Road Tax</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docTax']==='ok'" (click)="setCl('docTax','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docTax']==='flag'" (click)="setCl('docTax','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Chassis Punch</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docChassis']==='original'" (click)="setCl('docChassis','original')">✓ Original</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched')">~ Re-Punched</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered')">✗ Tampered</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Hypothecation</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docHypo']==='same'" (click)="setCl('docHypo','same')">✓ Same Bank</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docHypo']==='different'" (click)="setCl('docHypo','different')">✗ Different</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">PAN / Address Proof</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['docPAN']==='ok'" (click)="setCl('docPAN','ok')">✓ OK</button>
+        <button class="cl-btn" [class.cl-flag]="cl['docPAN']==='flag'" (click)="setCl('docPAN','flag')">✗ Flag</button>
+      </div>
+    </div>
+    <div class="cl-remarks">
+      <label>Document Remarks</label>
+      <textarea [(ngModel)]="clRemarks['doc']" rows="3" placeholder="Note any document issues or expiry concerns…"></textarea>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── DATA ACCURACY ── -->
+    <div class="qc-section-head">Data Accuracy</div>
+
+    <div class="cl-sub-title">VEHICLE IDENTITY VERIFICATION</div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Vehicle Registration Number matches photos and RC
+        <small>Verify plate visible in front &amp; rear photos</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accReg']==='pass'" (click)="setCl('accReg','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accReg']==='fail'" (click)="setCl('accReg','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Chassis Number matches photos, RC and stencil trace
+        <small>Compare across all 3 sources</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accChassis']==='pass'" (click)="setCl('accChassis','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accChassis']==='fail'" (click)="setCl('accChassis','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Odometer photo uploaded and reading verified
+        <small>Photo must show reading clearly</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accOdo']==='pass'" (click)="setCl('accOdo','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accOdo']==='fail'" (click)="setCl('accOdo','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        VAHAN data matches physical inspection findings
+        <small>Make, model, colour, engine CC, body type</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accVahan']==='pass'" (click)="setCl('accVahan','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accVahan']==='fail'" (click)="setCl('accVahan','fail')">✗ Fail</button>
+      </div>
+    </div>
+
+    <div class="cl-sub-title">OWNER / APPLICANT VERIFICATION</div>
+    <div class="cl-row">
+      <div class="cl-label">Owner and applicant identity verified from submitted docs</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accOwner']==='pass'" (click)="setCl('accOwner','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accOwner']==='fail'" (click)="setCl('accOwner','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Ownership serial number verified (1st / 2nd / 3rd owner)</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accSerial']==='pass'" (click)="setCl('accSerial','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accSerial']==='fail'" (click)="setCl('accSerial','fail')">✗ Fail</button>
+      </div>
+    </div>
+
+    <div class="cl-sub-title">PHOTO QUALITY &amp; COMPLETENESS</div>
+    <div class="cl-row">
+      <div class="cl-label">
+        All photos taken at the same location
+        <small>Background, GPS tags and timestamp should be consistent</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accPhotoLoc']==='pass'" (click)="setCl('accPhotoLoc','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accPhotoLoc']==='fail'" (click)="setCl('accPhotoLoc','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Vehicle photos taken in clear daylight
+        <small>No dark, blurry or indoors photos</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accDaylight']==='pass'" (click)="setCl('accDaylight','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accDaylight']==='fail'" (click)="setCl('accDaylight','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Number plate clearly visible in both front and rear photos
+        <small>Plate must be legible — not covered, dirty or at angle</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accPlate']==='pass'" (click)="setCl('accPlate','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accPlate']==='fail'" (click)="setCl('accPlate','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">GPS timestamp in photos matches declared inspection date</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accGPS']==='pass'" (click)="setCl('accGPS','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accGPS']==='fail'" (click)="setCl('accGPS','fail')">✗ Fail</button>
+      </div>
+    </div>
+
+    <div class="cl-sub-title">INSPECTION FORM ACCURACY</div>
+    <div class="cl-row">
+      <div class="cl-label">All mandatory fields filled — no blanks in inspection form</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accMandatory']==='pass'" (click)="setCl('accMandatory','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accMandatory']==='fail'" (click)="setCl('accMandatory','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Inspector remarks are complete and relevant</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['accRemarks']==='pass'" (click)="setCl('accRemarks','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['accRemarks']==='fail'" (click)="setCl('accRemarks','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-remarks">
+      <label>Data Accuracy Remarks</label>
+      <textarea [(ngModel)]="clRemarks['acc']" rows="3" placeholder="Note any discrepancies found during data verification…"></textarea>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── VALUATION QUALITY ── -->
+    <div class="qc-section-head">Valuation Quality</div>
+
+    <div class="cl-sub-title">PHOTO DOCUMENTATION QUALITY</div>
+    <div class="cl-row">
+      <div class="cl-label">
+        All photos taken at the same place / location
+        <small>GPS metadata and background consistency must match</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valPhotoLoc']==='pass'" (click)="setCl('valPhotoLoc','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valPhotoLoc']==='fail'" (click)="setCl('valPhotoLoc','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Vehicle photos taken in clear daylight
+        <small>No flash photography, no night-time, no indoor shots</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valDaylight']==='pass'" (click)="setCl('valDaylight','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valDaylight']==='fail'" (click)="setCl('valDaylight','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">
+        Number plate clearly visible in both front and rear photos
+        <small>Check front view and rear view photos specifically</small>
+      </div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valPlate']==='pass'" (click)="setCl('valPlate','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valPlate']==='fail'" (click)="setCl('valPlate','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Minimum required photos uploaded (Front, Rear, L, R, Odo, Engine, Chassis, Stencil)</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valMinPhotos']==='pass'" (click)="setCl('valMinPhotos','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valMinPhotos']==='fail'" (click)="setCl('valMinPhotos','fail')">✗ Fail</button>
+      </div>
+    </div>
+
+    <div class="cl-sub-title">VALUATION ACCURACY</div>
+    <div class="cl-row">
+      <div class="cl-label">Valuation amount is within acceptable market range for this vehicle</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valInRange']==='pass'" (click)="setCl('valInRange','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valInRange']==='fail'" (click)="setCl('valInRange','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Dedupe check completed — vehicle not reported stolen or blacklisted</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valDedupe']==='pass'" (click)="setCl('valDedupe','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valDedupe']==='fail'" (click)="setCl('valDedupe','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Vehicle age and odometer reading are consistent with condition rating</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valAgeOdo']==='pass'" (click)="setCl('valAgeOdo','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valAgeOdo']==='fail'" (click)="setCl('valAgeOdo','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-row">
+      <div class="cl-label">Inspection checklist ratings support the overall vehicle score</div>
+      <div class="cl-btns">
+        <button class="cl-btn" [class.cl-ok]="cl['valScore']==='pass'" (click)="setCl('valScore','pass')">✓ Pass</button>
+        <button class="cl-btn" [class.cl-flag]="cl['valScore']==='fail'" (click)="setCl('valScore','fail')">✗ Fail</button>
+      </div>
+    </div>
+    <div class="cl-remarks">
+      <label>Valuation Quality Remarks</label>
+      <textarea [(ngModel)]="clRemarks['val']" rows="3" placeholder="Note any concerns about valuation quality or market range discrepancies…"></textarea>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── QC RECOMMENDATION ── -->
+    <div class="qc-section-head">QC Recommendation</div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">1. CHASSIS PUNCH STATUS</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recChassis']==='original'" (click)="setCl('recChassis','original')">
+          <span class="rec-icon">🔩</span><span class="rec-label">ORIGINAL</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recChassis']==='repunched'" (click)="setCl('recChassis','repunched')">
+          <span class="rec-icon">⚠️</span><span class="rec-label">RE-PUNCHED</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recChassis']==='tampered'" (click)="setCl('recChassis','tampered')">
+          <span class="rec-icon">❌</span><span class="rec-label">TAMPERED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">2. OVERALL VEHICLE CONDITION</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recCondition']==='good'" (click)="setCl('recCondition','good')">
+          <span class="rec-icon">🟢</span><span class="rec-label">GOOD</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recCondition']==='average'" (click)="setCl('recCondition','average')">
+          <span class="rec-icon">🟡</span><span class="rec-label">AVERAGE</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recCondition']==='poor'" (click)="setCl('recCondition','poor')">
+          <span class="rec-icon">🔴</span><span class="rec-label">POOR</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">3. EXTERIOR CONDITION</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recExterior']==='good'" (click)="setCl('recExterior','good')">
+          <span class="rec-icon">✨</span><span class="rec-label">GOOD</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')">
+          <span class="rec-icon">🔧</span><span class="rec-label">MINOR DAMAGE</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recExterior']==='major'" (click)="setCl('recExterior','major')">
+          <span class="rec-icon">💥</span><span class="rec-label">MAJOR DAMAGE</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">4. ENGINE / MECHANICAL CONDITION</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recEngine']==='good'" (click)="setCl('recEngine','good')">
+          <span class="rec-icon">⚙️</span><span class="rec-label">GOOD</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')">
+          <span class="rec-icon">⚠️</span><span class="rec-label">AVERAGE</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recEngine']==='poor'" (click)="setCl('recEngine','poor')">
+          <span class="rec-icon">❌</span><span class="rec-label">POOR</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">5. TYRE CONDITION</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recTyre']==='good'" (click)="setCl('recTyre','good')">
+          <span class="rec-icon">🟢</span><span class="rec-label">GOOD</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recTyre']==='average'" (click)="setCl('recTyre','average')">
+          <span class="rec-icon">🟡</span><span class="rec-label">AVERAGE</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recTyre']==='replacement'" (click)="setCl('recTyre','replacement')">
+          <span class="rec-icon">🔴</span><span class="rec-label">NEEDS REPLACEMENT</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-section">
+      <div class="cl-sub-title">6. FINAL QC RECOMMENDATION</div>
+      <div class="rec-opts">
+        <div class="rec-opt" [class.rec-green]="cl['recFinal']==='recommended'" (click)="setCl('recFinal','recommended')">
+          <span class="rec-icon">✅</span><span class="rec-label">RECOMMENDED</span>
+        </div>
+        <div class="rec-opt" [class.rec-amber]="cl['recFinal']==='conditional'" (click)="setCl('recFinal','conditional')">
+          <span class="rec-icon">⚠️</span><span class="rec-label">RECOMMENDED WITH CONDITIONS</span>
+        </div>
+        <div class="rec-opt" [class.rec-red]="cl['recFinal']==='not-recommended'" (click)="setCl('recFinal','not-recommended')">
+          <span class="rec-icon">❌</span><span class="rec-label">NOT RECOMMENDED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cl-remarks" style="margin-top:16px;">
+      <label>QC Summary Remarks</label>
+      <textarea [(ngModel)]="clRemarks['rec']" rows="4" placeholder="Summarise the overall QC findings for the Approver…"></textarea>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- QC Notes -->
+    <app-common-notes
+      [entityType]="'QC'"
+      [entityId]="valuationId"
+      [currentUser]="getCurrentUser()"
+      [collapsible]="true">
+    </app-common-notes>
   </fieldset>
 
+  <!-- Bottom Actions -->
   <div class="actions">
-    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">Back</button>
-    <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+    <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background:#f44336;color:#fff;">Return</button>
+    <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+    <button mat-raised-button color="accent" (click)="onBack()">Back</button>
   </div>
 
-  <fieldset class="nested-group">
-    <legend>Quality Control & Valuation Estimate</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Rating</mat-label>
-        <input matInput [value]="viewModel.overallRating" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Amount (₹)</mat-label>
-        <input matInput [value]="viewModel.valuationAmount" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Punch</mat-label>
-        <input matInput [value]="viewModel.chassisPunch" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="viewModel.remarks" rows="2" readonly></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Valuation Ranges</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Low Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.lowRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Mid Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.midRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>High Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.highRange" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>AI Analysis</legend>
-    <div style="width: 100%;">
-      <mat-form-field appearance="outline" class="full-width" style="width: 100%;">
-        <mat-label>Raw Response</mat-label>
-        <textarea matInput [value]="viewModel.rawResponse" rows="6" readonly style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Quality Control Notes</legend>
-    <div class="notes-container">
-      <app-common-notes
-        [entityType]="'QC'"
-        [entityId]="valuationId"
-        [currentUser]="getCurrentUser()"
-        [collapsible]="true">
-      </app-common-notes>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <div class="actions">
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-      
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">Return</button>
-      
-      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
-      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
-    </div>
-  </fieldset>
 </ng-container>
 
 <router-outlet></router-outlet>
 
+<!-- Return Modal -->
 <div class="modal-overlay" *ngIf="showReturnModal">
   <div class="modal-box">
     <div class="modal-header">
       <h3>Return Quality Control</h3>
       <span class="close-btn" (click)="closeModals()">×</span>
     </div>
-    
     <div class="modal-body">
       <label>Send Back To:</label>
       <select [(ngModel)]="selectedTargetStep" class="modal-input">
         <option value="AVO">AVO (Inspection)</option>
         <option value="Backend">Backend</option>
       </select>
-
       <label>Reason for Returning:</label>
       <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason..."></textarea>
     </div>
-
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+      <button class="btn-confirm" (click)="submitReturn()">Submit Return</button>
     </div>
   </div>
 </div>
 
+<!-- Override Modal -->
 <div class="modal-overlay" *ngIf="showOverrideModal">
   <div class="modal-box">
-    <div class="modal-header warning">
-      <h3>⚠️ User Not Found</h3>
+    <div class="modal-header">
+      <h3>Select Override Assignee</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
     </div>
     <div class="modal-body">
-      <p>The original user for <b>{{selectedTargetStep}}</b> could not be found.</p>
-      <p>Please manually select a user to assign this case to:</p>
-      
-      <label>Assign To:</label>
+      <label>Select a User to Override:</label>
       <select [(ngModel)]="selectedOverrideUser" class="modal-input">
-        <option value="" disabled selected>-- Select User --</option>
-        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
-          {{ user.name }} ({{ user.phoneNumber }})
-        </option>
+        <option value="">-- Select User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.userId">{{ user.name }}</option>
       </select>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
-        Assign & Return
-      </button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">Confirm Override</button>
     </div>
   </div>
 </div>
+
+<!-- ── LIGHTBOX ── -->
+<div class="lb-overlay" *ngIf="lightboxOpen" (click)="closeLightbox()">
+  <div class="lb-box" (click)="$event.stopPropagation()">
+    <button class="lb-close" (click)="closeLightbox()">×</button>
+    <button class="lb-arrow lb-prev" (click)="prevPhoto()">&#8249;</button>
+    <div class="lb-img-wrap">
+      <img [src]="report.photoUrls[photoKeys[lightboxIndex]]" [alt]="photoKeys[lightboxIndex]" />
+    </div>
+    <button class="lb-arrow lb-next" (click)="nextPhoto()">&#8250;</button>
+    <div class="lb-caption">{{ photoKeys[lightboxIndex] }} &nbsp;·&nbsp; {{ lightboxIndex + 1 }} / {{ photoKeys.length }}</div>
+  </div>
+</div>
+
+</div><!-- /.pg-wrap -->

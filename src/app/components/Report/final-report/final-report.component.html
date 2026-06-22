@@ -1,5 +1,6 @@
-<div *ngIf="loading">Loading final report…</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pg-wrap">
+<div *ngIf="loading" class="pg-loading">Loading final report…</div>
+<div *ngIf="error" class="pg-error">{{ error }}</div>
 
 <ng-container *ngIf="!loading && !error">
 
@@ -10,15 +11,11 @@
     [valuationType]="valuationType">
   </app-workflow-buttons>
 
-  <div class="actions">
-    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">
-      Back
-    </button>
-
-    <button mat-raised-button color="accent" (click)="downloadPdf()">
-      Download PDF
-    </button>
-  </div>
+  <div class="pg-content">
+    <div class="pg-btn-group" style="margin-bottom:16px;margin-top:0">
+      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
+      <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
+    </div>
 
   <!-- ================= Stakeholder ================= -->
   <fieldset class="nested-group">
@@ -105,16 +102,37 @@
 
   <!-- ================= Photos ================= -->
   <fieldset class="nested-group">
-    <legend>Photos</legend>
+    <legend>Photos ({{ photoKeys.length }})</legend>
     <div class="photo-grid">
-      <div class="photo-item" *ngFor="let key of photoKeys">
-        <div>{{ key }}</div>
-        <a [href]="report.photoUrls[key]" target="_blank">
-          <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
-        </a>
+      <div class="photo-item" *ngFor="let key of photoKeys; let i = index" (click)="openLightbox(i)">
+        <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
+        <div class="photo-label">{{ key }}</div>
       </div>
     </div>
   </fieldset>
+
+  <!-- ================= LIGHTBOX ================= -->
+  <div class="lightbox" [class.open]="showLightbox" (click)="closeLightbox()">
+    <div class="lb-close" (click)="closeLightbox()">✕</div>
+    <div class="lb-img" (click)="$event.stopPropagation()">
+      <img *ngIf="photoKeys.length > 0"
+           [src]="report.photoUrls[photoKeys[currentPhotoIndex]]"
+           style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;">
+      <div class="lb-label">{{ photoKeys[currentPhotoIndex] | uppercase }}</div>
+    </div>
+    <div class="lb-nav" *ngIf="photoKeys.length > 1" (click)="$event.stopPropagation()">
+      <div class="lb-arrow" (click)="prevPhoto()">←</div>
+      <div class="lb-counter">{{ currentPhotoIndex + 1 }} / {{ photoKeys.length }}</div>
+      <div class="lb-arrow" (click)="nextPhoto()">→</div>
+    </div>
+    <div class="lb-thumbs" *ngIf="photoKeys.length > 1" (click)="$event.stopPropagation()">
+      <div *ngFor="let key of photoKeys; let i = index"
+           class="lb-thumb" [class.on]="i === currentPhotoIndex"
+           (click)="currentPhotoIndex = i">
+        <img [src]="report.photoUrls[key]" style="width:100%; height:100%; object-fit:cover; border-radius:3px;">
+      </div>
+    </div>
+  </div>
 
   <!-- ================= Notes ================= -->
   <fieldset class="nested-group">
@@ -129,25 +147,81 @@
     </div>
   </fieldset>
 
+  <!-- ================= APPROVER DECISION PANEL ================= -->
+  <div class="apr-panel" *ngIf="canEditFinalReport()">
+    <!-- Dark header -->
+    <div class="apr-header">
+      <div>
+        <div class="apr-header-title">📋 Case Summary — {{ report.vehicleDetails.registrationNumber }}</div>
+        <div class="apr-header-sub">{{ report.vehicleDetails.make }} {{ report.vehicleDetails.model }} · {{ report.vehicleDetails.yearOfMfg }} · Rating: {{ report.qualityControl.overallRating || 'N/A' }}</div>
+      </div>
+      <span class="apr-score">₹{{ report.qualityControl.valuationAmount | number }}</span>
+    </div>
+
+    <!-- Summary comparison grid -->
+    <div class="summary-grid">
+      <div class="sg-col">
+        <div class="sg-col-title">VEHICLE &amp; CASE INFORMATION</div>
+        <div class="sg-row"><span class="sg-row-l">Registration</span><span class="sg-row-v" style="color:#0d7c66;font-family:monospace">{{ report.vehicleDetails.registrationNumber }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Vehicle</span><span class="sg-row-v">{{ report.vehicleDetails.make }} {{ report.vehicleDetails.model }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Year of Mfg</span><span class="sg-row-v">{{ report.vehicleDetails.yearOfMfg }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Body / Fuel</span><span class="sg-row-v">{{ report.vehicleDetails.bodyType }} · {{ report.vehicleDetails.fuel }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">ODO Meter</span><span class="sg-row-v" style="font-family:monospace">{{ report.inspectionDetails.odometer }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Registered Owner</span><span class="sg-row-v">{{ report.vehicleDetails.ownerName }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Applicant</span><span class="sg-row-v">{{ report.stakeholder.applicant.name }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Chassis Punch</span><span class="sg-row-v" style="color:#10b981">✓ {{ report.qualityControl.chassisPunch || 'Original' }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Inspector</span><span class="sg-row-v">{{ report.inspectionDetails.vehicleInspectedBy }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Inspection Date</span><span class="sg-row-v">{{ report.inspectionDetails.dateOfInspection | date:'mediumDate' }}</span></div>
+      </div>
+      <div class="sg-col">
+        <div class="sg-col-title">FINANCIAL &amp; CONDITION SUMMARY</div>
+        <div class="vbox-summary">
+          <div class="vbox-summary-label">QC RECOMMENDED VALUATION</div>
+          <div class="vbox-summary-amount">₹{{ report.qualityControl.valuationAmount | number }}/-</div>
+        </div>
+        <div class="sg-row"><span class="sg-row-l">Overall Rating</span><span class="sg-row-v">{{ report.qualityControl.overallRating }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Engine Condition</span><span class="sg-row-v">{{ report.inspectionDetails.engineCondition }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Tyre Condition</span><span class="sg-row-v">{{ report.inspectionDetails.overallTyreCondition }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Brake System</span><span class="sg-row-v">{{ report.inspectionDetails.brakeSystem }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Engine Started</span><span class="sg-row-v">{{ report.inspectionDetails.engineStarted ? '✓ Yes' : '✗ No' }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Road Worthy</span><span class="sg-row-v">{{ report.inspectionDetails.roadWorthyCondition ? '✓ Yes' : '✗ No' }}</span></div>
+        <div class="sg-row"><span class="sg-row-l">Stakeholder</span><span class="sg-row-v">{{ report.stakeholder.name }}</span></div>
+      </div>
+    </div>
+
+    <!-- Decision bar -->
+    <div class="decision-section">
+      <div class="decision-label">APPROVER DECISION</div>
+      <div class="decision-bar">
+        <div class="dec-btn dec-approve" (click)="onApprove()">
+          <span class="db-icon">✅</span>
+          <div class="db-title">Approve Case</div>
+          <div class="db-sub">Generate &amp; dispatch final report</div>
+        </div>
+        <div class="dec-btn dec-return" (click)="openReturnModal()">
+          <span class="db-icon">↩</span>
+          <div class="db-title">Return with Recommendations</div>
+          <div class="db-sub">Send back to QC / Inspector</div>
+        </div>
+        <div class="dec-btn dec-reject" (click)="openRejectModal()">
+          <span class="db-icon">❌</span>
+          <div class="db-title">Reject Case</div>
+          <div class="db-sub">Permanently close this case</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= Actions ================= -->
   <fieldset>
     <div class="actions">
       <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
-
       <button *ngIf="canEditFinalReport()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-
-      <button *ngIf="canEditFinalReport()"
-              mat-raised-button color="warn"
-              (click)="openReturnModal()"
-              style="background-color:#f44336;color:white;">
-        Return Report
-      </button>
-
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
-
       <button mat-raised-button color="accent" (click)="onBack()">Back</button>
     </div>
   </fieldset>
+  </div><!-- /pg-content -->
 </ng-container>
 
 <!-- ================= RETURN MODAL ================= -->
@@ -166,6 +240,46 @@
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
       <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APPROVE MODAL ================= -->
+<div class="modal-overlay" *ngIf="showApproveModal">
+  <div class="modal-box">
+    <div class="modal-header" style="background-color:#10b981;">
+      <h3>✅ Approve Case</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    <div class="modal-body">
+      <p>Once approved, the final report will be marked complete and dispatched.</p>
+      <label>Approval Remarks (optional):</label>
+      <textarea [(ngModel)]="approveRemarks" class="modal-input" rows="3"
+                placeholder="Add any remarks for the record…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" style="background:#10b981;" (click)="confirmApprove()">✅ Confirm Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= REJECT MODAL ================= -->
+<div class="modal-overlay" *ngIf="showRejectModal">
+  <div class="modal-box">
+    <div class="modal-header" style="background-color:#7f1d1d;">
+      <h3>❌ Reject Case</h3>
+      <span class="close-btn" (click)="closeModals()">×</span>
+    </div>
+    <div class="modal-body">
+      <p style="color:#991b1b;font-weight:600;">⚠ This action permanently closes the case.</p>
+      <label>Rejection Reason *</label>
+      <textarea [(ngModel)]="rejectReason" class="modal-input" rows="4"
+                placeholder="Provide detailed reason for rejection…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+      <button class="btn-confirm" style="background:#7f1d1d;" (click)="confirmReject()">❌ Confirm Rejection</button>
     </div>
   </div>
 </div>
@@ -194,3 +308,4 @@
     </div>
   </div>
 </div>
+</div><!-- /pg-wrap -->

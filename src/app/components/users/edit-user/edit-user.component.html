@@ -1,248 +1,130 @@
-<!-- src/app/users/edit-user/edit-user.component.html -->
-<mat-card *ngIf="!loading; else loadingTpl">
-  <h2 style="text-align:center">Edit User</h2>
-
-  <form [formGroup]="form" class="grid" (ngSubmit)="submit()">
-    <!-- User ID -->
-    <mat-form-field appearance="fill">
-      <mat-label>User ID</mat-label>
-      <input matInput formControlName="userId" [disabled]="true" />
-    </mat-form-field>
-
-    <!-- Name -->
-    <mat-form-field appearance="fill">
-      <mat-label>Name</mat-label>
-      <input matInput formControlName="name" />
-      <mat-error *ngIf="form.get('name')!.hasError('required')">Required</mat-error>
-    </mat-form-field>
-
-    <!-- Email -->
-    <mat-form-field appearance="fill">
-      <mat-label>Email</mat-label>
-      <input matInput formControlName="email" />
-      <mat-error *ngIf="form.get('email')!.hasError('required')">Required</mat-error>
-      <mat-error *ngIf="form.get('email')!.hasError('email')">Invalid email</mat-error>
-    </mat-form-field>
-
-    <!-- Role -->
-    <mat-form-field appearance="fill">
-      <mat-label>Role</mat-label>
-      <mat-select formControlName="roleId">
-        <mat-option *ngFor="let r of roleOptions" [value]="r">{{ r }}</mat-option>
-      </mat-select>
-      <mat-error *ngIf="form.get('roleId')!.hasError('required')">Required</mat-error>
-    </mat-form-field>
-
-    <!-- WhatsApp -->
-    <mat-form-field appearance="fill">
-      <mat-label>WhatsApp</mat-label>
-      <input matInput formControlName="whatsapp" [disabled]="true" />
-    </mat-form-field>
-
-    <!-- Phone -->
-    <mat-form-field appearance="fill">
-      <mat-label>Phone Number</mat-label>
-      <input matInput formControlName="phoneNumber" [disabled]="true"/>
-    </mat-form-field>
-
-    <!-- Description -->
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description"></textarea>
-    </mat-form-field>
-
-    <!-- Branch Type -->
-    <mat-form-field appearance="fill">
-      <mat-label>Branch Type</mat-label>
-      <mat-select formControlName="branchType">
-        <mat-option *ngFor="let b of branchTypes" [value]="b">{{ b }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <!-- Service Status -->
-    <mat-form-field appearance="fill">
-      <mat-label>Service Status</mat-label>
-      <mat-select formControlName="serviceStatus">
-        <mat-option *ngFor="let s of serviceStatuses" [value]="s">{{ s }}</mat-option>
-      </mat-select>
-      <mat-error *ngIf="form.get('serviceStatus')!.hasError('required')">Required</mat-error>
-    </mat-form-field>
-
-    <!-- Pincode -->
-    <mat-form-field appearance="fill">
-      <mat-label>Pincode</mat-label>
-      <input matInput formControlName="pincode" />
-      <mat-hint *ngIf="loadingPincode">Looking up…</mat-hint>
-      <mat-error *ngIf="form.get('pincode')!.hasError('required')">Required</mat-error>
-      <mat-error *ngIf="form.get('pincode')!.hasError('pattern')">Invalid</mat-error>
-      <mat-error *ngIf="pincodeError">{{ pincodeError }}</mat-error>
-    </mat-form-field>
-
-    <!-- Location -->
-    <mat-form-field appearance="fill">
-      <mat-label>Location</mat-label>
-      <mat-select
-        formControlName="location"
-        (selectionChange)="onLocationChange($event.value)"
-        [compareWith]="compareByName"
-      >
-        <mat-option *ngFor="let loc of locationOptions" [value]="loc">
-          {{ loc.name }}
-        </mat-option>
-      </mat-select>
-      <mat-hint *ngIf="locationOptions.length === 0">Enter a valid PIN first</mat-hint>
-      <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
-    </mat-form-field>
-
-    <!-- Auto-filled fields -->
-    <mat-form-field appearance="fill">
-      <mat-label>Circle</mat-label>
-      <input matInput formControlName="circle" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>District</mat-label>
-      <input matInput formControlName="district" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Division</mat-label>
-      <input matInput formControlName="division" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Region</mat-label>
-      <input matInput formControlName="region" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Block</mat-label>
-      <input matInput formControlName="block" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>State</mat-label>
-      <input matInput formControlName="state" [disabled]="true" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Country</mat-label>
-      <input matInput formControlName="country" [disabled]="true" />
-    </mat-form-field>
-
-    <!-- ─── Permissions Buttons ─────────────────────────── -->
-
-    <div class="roles-buttons full-width">
-      <!-- Edit Roles -->
-      <h3>Edit Roles</h3>
-      <div class="role-row">
-        <ng-container *ngFor="let r of editRoles">
-          <button
-            mat-stroked-button
-            [ngClass]="{ 'selected': userRoles.includes(r) }"
-            type="button"
-            (click)="toggleRole(r)"
-          >
-            {{ formatRole(r) }}
-          </button>
-        </ng-container>
-      </div>
-
-      <!-- View Roles -->
-      <h3>View Roles</h3>
-      <div class="role-row">
-        <ng-container *ngFor="let r of viewRoles">
-          <button
-            mat-stroked-button
-            [ngClass]="{ 'selected': userRoles.includes(r) }"
-            type="button"
-            (click)="toggleRole(r)"
-          >
-            {{ formatRole(r) }}
-          </button>
-        </ng-container>
-      </div>
-
-      <!-- Other Roles -->
-      <h3>Other Roles</h3>
-      <div class="role-row">
-        <ng-container *ngFor="let r of otherRoles">
-          <button
-            mat-stroked-button
-            [ngClass]="{ 'selected': userRoles.includes(r) }"
-            type="button"
-            (click)="toggleRole(r)"
-          >
-            {{ formatRole(r) }}
-          </button>
-        </ng-container>
+<div class="pg-wrap" *ngIf="!loading; else loadingTpl">
+  <div class="pg-head">
+    <div class="pg-head-row">
+      <div>
+        <h1>Edit User</h1>
+        <p>Update user account details and permissions</p>
       </div>
     </div>
+  </div>
 
-    <!-- ─── States Selection ─────────────────────────── -->
-    <div class="states-buttons full-width">
-      <h3>States</h3>
-      <div class="state-row district-row">
-        <ng-container *ngFor="let s of allStates">
-          <button
-            mat-stroked-button
-            [ngClass]="{'selected': userStates.includes(s.name)}"
-            type="button"
-            (click)="toggleState(s.name)"
-          >
-            {{ s.name }}
-          </button>
-        </ng-container>
+  <div class="pg-content">
+    <div class="pg-card">
+      <div class="pg-card-title"><span class="pg-card-title-accent"></span>User Details</div>
+      <div class="pg-card-body">
+        <form [formGroup]="form" class="pg-grid" (ngSubmit)="submit()">
+
+          <mat-form-field appearance="outline"><mat-label>User ID</mat-label><input matInput formControlName="userId" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" /><mat-error *ngIf="form.get('name')!.hasError('required')">Required</mat-error></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /><mat-error *ngIf="form.get('email')!.hasError('required')">Required</mat-error><mat-error *ngIf="form.get('email')!.hasError('email')">Invalid email</mat-error></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="roleId">
+              <mat-option *ngFor="let r of roleOptions" [value]="r">{{ r }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('roleId')!.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>WhatsApp</mat-label><input matInput formControlName="whatsapp" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Phone Number</mat-label><input matInput formControlName="phoneNumber" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline" class="pg-grid-full"><mat-label>Description</mat-label><textarea matInput formControlName="description"></textarea></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Branch Type</mat-label>
+            <mat-select formControlName="branchType">
+              <mat-option *ngFor="let b of branchTypes" [value]="b">{{ b }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Service Status</mat-label>
+            <mat-select formControlName="serviceStatus">
+              <mat-option *ngFor="let s of serviceStatuses" [value]="s">{{ s }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('serviceStatus')!.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Pincode</mat-label>
+            <input matInput formControlName="pincode" />
+            <mat-hint *ngIf="loadingPincode">Looking up…</mat-hint>
+            <mat-error *ngIf="form.get('pincode')!.hasError('required')">Required</mat-error>
+            <mat-error *ngIf="form.get('pincode')!.hasError('pattern')">Invalid</mat-error>
+            <mat-error *ngIf="pincodeError">{{ pincodeError }}</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Location</mat-label>
+            <mat-select formControlName="location" (selectionChange)="onLocationChange($event.value)" [compareWith]="compareByName">
+              <mat-option *ngFor="let loc of locationOptions" [value]="loc">{{ loc.name }}</mat-option>
+            </mat-select>
+            <mat-hint *ngIf="locationOptions.length === 0">Enter a valid PIN first</mat-hint>
+            <mat-error *ngIf="form.get('location')!.hasError('required')">Required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Circle</mat-label><input matInput formControlName="circle" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput formControlName="district" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Division</mat-label><input matInput formControlName="division" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Region</mat-label><input matInput formControlName="region" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Block</mat-label><input matInput formControlName="block" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput formControlName="state" [disabled]="true" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput formControlName="country" [disabled]="true" /></mat-form-field>
+
+          <!-- Roles -->
+          <div class="pg-grid-full">
+            <div class="pg-section">
+              <span class="pg-section-title">Edit Roles</span>
+              <div class="role-row" style="display:flex;flex-wrap:wrap;gap:8px">
+                <ng-container *ngFor="let r of editRoles">
+                  <button mat-stroked-button [ngClass]="{'selected':userRoles.includes(r)}" type="button" (click)="toggleRole(r)">{{ formatRole(r) }}</button>
+                </ng-container>
+              </div>
+            </div>
+            <div class="pg-section">
+              <span class="pg-section-title">View Roles</span>
+              <div class="role-row" style="display:flex;flex-wrap:wrap;gap:8px">
+                <ng-container *ngFor="let r of viewRoles">
+                  <button mat-stroked-button [ngClass]="{'selected':userRoles.includes(r)}" type="button" (click)="toggleRole(r)">{{ formatRole(r) }}</button>
+                </ng-container>
+              </div>
+            </div>
+            <div class="pg-section">
+              <span class="pg-section-title">Other Roles</span>
+              <div class="role-row" style="display:flex;flex-wrap:wrap;gap:8px">
+                <ng-container *ngFor="let r of otherRoles">
+                  <button mat-stroked-button [ngClass]="{'selected':userRoles.includes(r)}" type="button" (click)="toggleRole(r)">{{ formatRole(r) }}</button>
+                </ng-container>
+              </div>
+            </div>
+            <div class="pg-section">
+              <span class="pg-section-title">States</span>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <ng-container *ngFor="let s of allStates">
+                  <button mat-stroked-button [ngClass]="{'selected':userStates.includes(s.name)}" type="button" (click)="toggleState(s.name)">{{ s.name }}</button>
+                </ng-container>
+              </div>
+            </div>
+            <div class="pg-section">
+              <span class="pg-section-title">Districts</span>
+              <mat-form-field appearance="outline" style="width:280px;margin-bottom:12px">
+                <mat-label>Select State for Districts</mat-label>
+                <mat-select [(value)]="selectedStateKey" (selectionChange)="onDistrictStateChange($event.value)">
+                  <mat-option *ngFor="let s of userStateOptions" [value]="s.key">{{ s.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div *ngIf="allDistricts.length" style="display:flex;flex-wrap:wrap;gap:8px">
+                <ng-container *ngFor="let d of allDistricts">
+                  <button mat-stroked-button [ngClass]="{'selected':userDistricts.includes(d)}" type="button" (click)="toggleDistrict(d)">{{ d }}</button>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+
+          <div class="pg-btn-group pg-grid-full">
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save Changes</button>
+            <button mat-raised-button color="warn" type="button" (click)="onCancel()">Cancel</button>
+          </div>
+        </form>
+        <div *ngIf="submitError" class="pg-error" style="margin-top:12px">{{ submitError }}</div>
       </div>
     </div>
-
-     <!-- ─── District Selection ─────────────────────────── -->
-    <div class="districts-section  full-width">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Select State for Districts</mat-label>
-        <mat-select
-          [(value)]="selectedStateKey"
-          (selectionChange)="onDistrictStateChange($event.value)"
-        >
-          <mat-option *ngFor="let s of userStateOptions" [value]="s.key">
-            {{ s.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <div class="districts-buttons full-width" *ngIf="allDistricts.length">
-        <h3>Districts</h3>
-        <div class="district-row">
-          <ng-container *ngFor="let d of allDistricts">
-            <button
-              mat-stroked-button
-              [ngClass]="{ 'selected': userDistricts.includes(d) }"
-              type="button"
-              (click)="toggleDistrict(d)"
-            >
-              {{ d }}
-            </button>
-          </ng-container>
-        </div>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-        Save Changes
-      </button>
-      <button mat-raised-button color="warn" type="button" (click)="onCancel()">
-        Cancel
-      </button>
-    </div>
-  </form>
-
-  <div *ngIf="submitError" class="error">{{ submitError }}</div>
-</mat-card>
+  </div>
+</div>
 
 <ng-template #loadingTpl>
-  <div class="loading-spinner">
-    <mat-spinner></mat-spinner>
-  </div>
+  <div class="pg-loading"><mat-spinner diameter="40"></mat-spinner></div>
 </ng-template>

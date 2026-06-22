@@ -157,6 +157,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       bodyType: ['', Validators.required],
       yearOfMfg: [null, [Validators.required, Validators.min(1900)]],
       monthOfMfg: [null, [Validators.required, Validators.min(1), Validators.max(12)]],
+      colour: [''],
+      fuel: [''],
 
       // Engine & Specs
       engineNumber: ['', Validators.required],
@@ -175,6 +177,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
       // Owner & Address
       ownerName: ['', Validators.required],
+      ownerSerialNo: [''],
       presentAddress: ['', Validators.required],
       permanentAddress: ['', Validators.required],
       hypothecation: [false],
@@ -210,6 +213,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       // URLs
       stencilTraceUrl: [''],
       chassisNoPhotoUrl: [''],
+      stencilTrace: [''],
       remarks: ['']
     });
   }
@@ -442,7 +446,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.valuationSvc
-      .getVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
         next: (data: VehicleDetails) => {
           this.patchForm(data);
@@ -451,8 +455,20 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (err) => {
-          this.error = err.message || 'Failed to load vehicle details.';
-          this.loading = false;
+          // Fall back to stored data if RC check fails
+          this.valuationSvc
+            .getVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
+            .subscribe({
+              next: (data: VehicleDetails) => {
+                this.patchForm(data);
+                this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
+                this.loading = false;
+              },
+              error: (fallbackErr) => {
+                this.error = fallbackErr.message || 'Failed to load vehicle details.';
+                this.loading = false;
+              }
+            });
         }
       });
   }
@@ -477,7 +493,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       categoryCode: data.categoryCode,
       normsType: data.normsType,
       makerVariant: data.makerVariant,
+      colour: data.colour,
+      fuel: data.fuel,
       ownerName: data.ownerName,
+      ownerSerialNo: data.ownerSerialNo,
       presentAddress: data.presentAddress,
       permanentAddress: data.permanentAddress,
       hypothecation: data.hypothecation,
@@ -502,6 +521,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       manufacturedDate: data.manufacturedDate?.slice(0, 10) || '',
       stencilTraceUrl: data.stencilTraceUrl,
       chassisNoPhotoUrl: data.chassisNoPhotoUrl,
+      stencilTrace: data.stencilTrace,
       remarks: data.remarks || ''
     });
   }
@@ -571,7 +591,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     fd.append('categoryCode', v.categoryCode || '');
     fd.append('normsType', v.normsType || '');
     fd.append('makerVariant', v.makerVariant || '');
+    fd.append('colour', v.colour || '');
+    fd.append('fuel', v.fuel || '');
     fd.append('ownerName', v.ownerName);
+    fd.append('ownerSerialNo', v.ownerSerialNo || '');
     fd.append('presentAddress', v.presentAddress);
     fd.append('permanentAddress', v.permanentAddress);
     fd.append('hypothecation', v.hypothecation ? 'true' : 'false');
@@ -601,6 +624,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     fd.append('manufacturedDate', v.manufacturedDate || '');
     fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
     fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
+    fd.append('stencilTrace', v.stencilTrace || '');
     fd.append('remarks', v.remarks || '');
     fd.append('AssignedTo', this.assignedTo);
     fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);

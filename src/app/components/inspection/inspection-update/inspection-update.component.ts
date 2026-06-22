@@ -227,6 +227,17 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
+  // Converts any ISO string (with or without Z/offset) to YYYY-MM-DD in LOCAL (IST) timezone
+  private toLocalDateOnly(isoString?: string | null): string {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString.slice(0, 10);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   private toIsoUtc(datetimeLocal: string): string {
     if (!datetimeLocal) return new Date().toISOString();
     const date = new Date(datetimeLocal);
@@ -455,7 +466,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const v = this.form;
     v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy || '',
-      dateOfInspection: data.dateOfInspection?.slice(0, 10) || '',
+      dateOfInspection: this.toLocalDateOnly(data.dateOfInspection),
       inspectionLocation: data.inspectionLocation || '',
       vehicleMoved: toBool(data.vehicleMoved) ?? false,
       engineStarted: toBool(data.engineStarted) ?? false,

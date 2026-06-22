@@ -1,217 +1,103 @@
-<div *ngIf="loading">Loading stakeholder…</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pg-wrap">
+  <div *ngIf="loading" class="pg-loading">Loading stakeholder…</div>
+  <div *ngIf="error" class="pg-error" style="margin:20px 24px">{{ error }}</div>
 
-<ng-container *ngIf="!loading && !error">
+  <ng-container *ngIf="!loading && !error">
+    <app-workflow-buttons
+      [id]="valuationId"
+      [vehicleNumber]="vehicleNumber"
+      [applicantContact]="applicantContact"
+      [valuationType]="valuationType">
+    </app-workflow-buttons>
 
-  <app-workflow-buttons
-    [id]="valuationId"
-    [vehicleNumber]="vehicleNumber"
-    [applicantContact]="applicantContact"
-    [valuationType]="valuationType">
-  </app-workflow-buttons>
+    <div class="pg-content">
 
-  <!-- Actions -->
-  <div class="actions">
-    <button
-      *ngIf="canEditStakeholder()"
-      mat-raised-button color="primary" (click)="onEdit()">
-      Edit
-    </button>
-    <button
-      *ngIf="canDeleteStakeholder()"
-      mat-raised-button color="warn" (click)="onDelete()">
-      Delete
-    </button>
-    <button mat-raised-button color="warn" (click)="onBack()">
-      Back
-    </button>
-  </div>
-
-  <!-- Stakeholder -->
-  <fieldset class="nested-group">
-    
-
-    <legend>Stakeholder</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Name of Stakeholder</mat-label>
-        <input matInput [value]="stakeholder.name" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Executive Name</mat-label>
-        <input matInput [value]="stakeholder.executiveName" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Contact Number</mat-label>
-        <input matInput [value]="stakeholder.executiveContact" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>WhatsApp Number</mat-label>
-        <input matInput [value]="stakeholder.executiveWhatsapp" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Email ID</mat-label>
-        <input matInput [value]="stakeholder.executiveEmail" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Type</mat-label>
-        <input
-          matInput
-          [value]="
-            stakeholder.valuationType === 'cv'
-              ? 'Commercial Vehicle'
-              : stakeholder.valuationType === 'four-wheeler'
-              ? 'Four Wheeler'
-              : stakeholder.valuationType === 'two-wheeler'
-              ? 'Two Wheeler'
-              : stakeholder.valuationType === 'three-wheeler'
-              ? 'Three Wheeler'
-              : stakeholder.valuationType === 'tractor'
-              ? 'Tractor'
-              : stakeholder.valuationType === 'ce'
-              ? 'Construction Equipment'
-              : (stakeholder.valuationType || '-')"
-          readonly
-        />
-      </mat-form-field>
-
-      <!--
-      <mat-form-field appearance="fill">
-        <mat-label>Vehicle Segment</mat-label>
-        <input matInput [value]="stakeholder.vehicleSegment || '-'" readonly />
-      </mat-form-field>
-      -->
-
-      <!-- Location composite: you can pick whichever sub-fields you want -->
-      <mat-form-field appearance="outline">
-        <mat-label>Pincode</mat-label>
-        <input matInput [value]="stakeholder.vehicleLocation.pincode || '-'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Block</mat-label>
-        <input matInput [value]="stakeholder.vehicleLocation.block || '-'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>District</mat-label>
-        <input matInput [value]="stakeholder.vehicleLocation.district || '-'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>State</mat-label>
-        <input matInput [value]="stakeholder.vehicleLocation.state || '-'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Country</mat-label>
-        <input matInput [value]="stakeholder.vehicleLocation.country || '-'" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- Applicant -->
-  <fieldset class="nested-group">
-    <legend>Applicant</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Name</mat-label>
-        <input matInput [value]="stakeholder.applicant.name" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Contact</mat-label>
-        <input matInput [value]="stakeholder.applicant.contact" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ✅ Vehicle Details Section (Simplified) -->
-  <fieldset class="nested-group">
-    <legend>Vehicle Details</legend>
-    <div class="grid">
-
-      <mat-form-field appearance="outline">
-        <mat-label>Vehicle Number</mat-label>
-        <input matInput [value]="stakeholder.vehicleNumber || '-'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Vehicle Segment</mat-label>
-        <input matInput [value]="stakeholder.vehicleSegment || '-'" readonly />
-      </mat-form-field>
-
-    </div>
-  </fieldset>
-
-  <!-- Remarks -->
-  <fieldset class="nested-group">
-    <legend>Remarks</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="stakeholder.remarks" readonly rows="3"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-
-  <!-- Documents -->
-  <fieldset class="nested-group">
-    <legend>Documents</legend>
-    <div class="grid">
-      <div class="file-upload">
-        <label>RC</label>
-        <a [href]="getDocumentFilePath('RC')" target="_blank">
-          Download
-        </a>
+      <!-- Actions -->
+      <div class="pg-btn-group" style="margin-bottom:16px;margin-top:0">
+        <button *ngIf="canEditStakeholder()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+        <button *ngIf="canDeleteStakeholder()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+        <button mat-raised-button color="warn" (click)="onBack()">Back</button>
       </div>
-      <div class="file-upload">
-        <label>Insurance</label>
-        <a [href]="getDocumentFilePath('Insurance')" target="_blank">
-          Download
-        </a>
+
+      <!-- Stakeholder -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline"><mat-label>Name of Stakeholder</mat-label><input matInput [value]="stakeholder.name" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput [value]="stakeholder.executiveName" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput [value]="stakeholder.executiveContact" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>WhatsApp Number</mat-label><input matInput [value]="stakeholder.executiveWhatsapp" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput [value]="stakeholder.executiveEmail" readonly /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Valuation Type</mat-label>
+            <input matInput [value]="stakeholder.valuationType === 'cv' ? 'Commercial Vehicle' : stakeholder.valuationType === 'four-wheeler' ? 'Four Wheeler' : stakeholder.valuationType === 'two-wheeler' ? 'Two Wheeler' : stakeholder.valuationType === 'three-wheeler' ? 'Three Wheeler' : stakeholder.valuationType === 'tractor' ? 'Tractor' : stakeholder.valuationType === 'ce' ? 'Construction Equipment' : (stakeholder.valuationType || '-')" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [value]="stakeholder.vehicleLocation.pincode || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Block</mat-label><input matInput [value]="stakeholder.vehicleLocation.block || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [value]="stakeholder.vehicleLocation.district || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput [value]="stakeholder.vehicleLocation.state || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput [value]="stakeholder.vehicleLocation.country || '-'" readonly /></mat-form-field>
+        </div>
       </div>
-      <div class="file-upload" style="grid-column: span 2;">
-        <label>Others</label>
-        <ng-container *ngFor="let doc of otherDocuments">
-          <a [href]="doc.filePath" target="_blank">{{ doc.type }}</a>
-        </ng-container>
+
+      <!-- Applicant -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Applicant</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput [value]="stakeholder.applicant.name" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput [value]="stakeholder.applicant.contact" readonly /></mat-form-field>
+        </div>
       </div>
+
+      <!-- Vehicle Details -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline"><mat-label>Vehicle Number</mat-label><input matInput [value]="stakeholder.vehicleNumber || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Vehicle Segment</mat-label><input matInput [value]="stakeholder.vehicleSegment || '-'" readonly /></mat-form-field>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Remarks</div>
+        <div class="pg-card-body">
+          <mat-form-field appearance="outline" style="width:100%">
+            <mat-label>Remarks</mat-label>
+            <textarea matInput [value]="stakeholder.remarks" readonly rows="3"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Documents</div>
+        <div class="pg-card-body pg-grid">
+          <div class="file-upload"><label>RC</label><a [href]="getDocumentFilePath('RC')" target="_blank">Download</a></div>
+          <div class="file-upload"><label>Insurance</label><a [href]="getDocumentFilePath('Insurance')" target="_blank">Download</a></div>
+          <div class="file-upload" style="grid-column:span 2">
+            <label>Others</label>
+            <ng-container *ngFor="let doc of otherDocuments"><a [href]="doc.filePath" target="_blank">{{ doc.type }}</a></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder Notes</div>
+        <div class="pg-card-body">
+          <app-common-notes [entityType]="'Stakeholder'" [entityId]="valuationId" [currentUser]="getCurrentUser()" [collapsible]="true"></app-common-notes>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="pg-btn-group">
+        <button *ngIf="canEditStakeholder()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+        <button *ngIf="canDeleteStakeholder()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+        <button mat-raised-button color="warn" (click)="onBack()">Back</button>
+      </div>
+
     </div>
-  </fieldset>
-  
-  <!-- Common Notes-->
-  <fieldset class="nested-group">
-    <legend>StakeHolder Notes</legend>
-    <div class="notes-container">
-      <app-common-notes
-        [entityType]="'Stakeholder'"
-        [entityId]="valuationId"
-        [currentUser]="getCurrentUser()"
-        [collapsible]="true">
-      </app-common-notes>
-    </div>
-  </fieldset>
-
-  <!-- Actions -->
-  <div class="actions">
-    <button
-      *ngIf="canEditStakeholder()"
-      mat-raised-button color="primary" (click)="onEdit()">
-      Edit
-    </button>
-    <button
-      *ngIf="canDeleteStakeholder()"
-      mat-raised-button color="warn" (click)="onDelete()">
-      Delete
-    </button>
-    <button mat-raised-button color="warn" (click)="onBack()">
-      Back
-    </button>
-  </div>
-
-</ng-container>
-
+  </ng-container>
+</div>
 <router-outlet></router-outlet>
