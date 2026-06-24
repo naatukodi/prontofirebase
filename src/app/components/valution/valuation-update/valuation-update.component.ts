@@ -566,6 +566,13 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   }
 
 
+  private toIsoDate(val: any): string {
+    if (!val) return '';
+    if (val instanceof Date) return val.toISOString().slice(0, 10);
+    if (typeof val === 'string') return val.slice(0, 10);
+    return '';
+  }
+
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
@@ -585,7 +592,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     if (v.seatingCapacity !== null) {
       fd.append('seatingCapacity', v.seatingCapacity.toString());
     }
-    fd.append('dateOfRegistration', v.dateOfRegistration);
+    fd.append('dateOfRegistration', this.toIsoDate(v.dateOfRegistration));
     fd.append('rto', v.rto);
     fd.append('classOfVehicle', v.classOfVehicle);
     fd.append('categoryCode', v.categoryCode || '');
@@ -601,18 +608,18 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     fd.append('lender', v.lender || '');
     fd.append('insurer', v.insurer || '');
     fd.append('insurancePolicyNo', v.insurancePolicyNo || '');
-    fd.append('insuranceValidUpTo', v.insuranceValidUpTo || '');
+    fd.append('insuranceValidUpTo', this.toIsoDate(v.insuranceValidUpTo));
     fd.append('permitNo', v.permitNo || '');
-    fd.append('permitValidUpTo', v.permitValidUpTo || '');
+    fd.append('permitValidUpTo', this.toIsoDate(v.permitValidUpTo));
     fd.append('permitType', v.permitType || '');
-    fd.append('permitIssued', v.permitIssued || '');
-    fd.append('permitFrom', v.permitFrom || '');
+    fd.append('permitIssued', this.toIsoDate(v.permitIssued));
+    fd.append('permitFrom', this.toIsoDate(v.permitFrom));
     fd.append('fitnessNo', v.fitnessNo || '');
-    fd.append('fitnessValidTo', v.fitnessValidTo || '');
+    fd.append('fitnessValidTo', this.toIsoDate(v.fitnessValidTo));
     fd.append('pollutionCertificateNumber', v.pollutionCertificateNumber || '');
-    fd.append('pollutionCertificateUpto', v.pollutionCertificateUpto || '');
-    fd.append('taxUpto', v.taxUpto || '');
-    fd.append('taxPaidUpTo', v.taxPaidUpTo || '');
+    fd.append('pollutionCertificateUpto', this.toIsoDate(v.pollutionCertificateUpto));
+    fd.append('taxUpto', this.toIsoDate(v.taxUpto));
+    fd.append('taxPaidUpTo', this.toIsoDate(v.taxPaidUpTo));
     if (v.idv !== null) {
       fd.append('idv', v.idv.toString());
     }
@@ -621,7 +628,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     }
     fd.append('backlistStatus', v.backlistStatus ? 'true' : 'false');
     fd.append('rcStatus', v.rcStatus ? 'true' : 'false');
-    fd.append('manufacturedDate', v.manufacturedDate || '');
+    fd.append('manufacturedDate', this.toIsoDate(v.manufacturedDate));
     fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
     fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
     fd.append('stencilTrace', v.stencilTrace || '');

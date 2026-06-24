@@ -137,17 +137,31 @@ export class VehicleInspectionService {
   updatePhotoMetadata(
     valuationId: string,
     photoType: string,
-    metadata: PhotoMetadata
+    metadata: PhotoMetadata,
+    vehicleNumber: string,
+    applicantContact: string
   ): Observable<any> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
     return this.http.put<any>(
       `${this.baseUrl}/${valuationId}/photos/${photoType}/metadata`,
-      metadata
+      metadata,
+      { params }
     ).pipe(catchError(this.handleError));
   }
 
-  getPhotoMetadata(valuationId: string): Observable<Record<string, PhotoMetadata>> {
+  getPhotoMetadata(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<Record<string, PhotoMetadata>> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
     return this.http.get<Record<string, PhotoMetadata>>(
-      `${this.baseUrl}/${valuationId}/photos/metadata`
+      `${this.baseUrl}/${valuationId}/photos/metadata`,
+      { params }
     ).pipe(catchError(this.handleError));
   }
 

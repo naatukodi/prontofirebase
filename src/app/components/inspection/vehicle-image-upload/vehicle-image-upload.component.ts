@@ -155,7 +155,7 @@ export class VehicleImageUploadComponent implements OnInit {
 
   // ✅ LOAD METADATA & CONVERT TIMEZONE
   private loadExistingMetadata(): void {
-    this.vehicleInspectionService.getPhotoMetadata(this.valuationId).subscribe({
+    this.vehicleInspectionService.getPhotoMetadata(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
         next: (data) => {
             if(data) {
                 Object.keys(data).forEach(key => {
@@ -193,7 +193,7 @@ export class VehicleImageUploadComponent implements OnInit {
 
     console.log(`Saving metadata for ${fieldKey}:`, payload);
 
-    this.vehicleInspectionService.updatePhotoMetadata(this.valuationId, fieldKey, payload)
+    this.vehicleInspectionService.updatePhotoMetadata(this.valuationId, fieldKey, payload, this.vehicleNumber, this.applicantContact)
         .subscribe({
             next: () => alert(`Details saved for ${this.getLabel(fieldKey as MediaKey)}`),
             error: (err) => {
