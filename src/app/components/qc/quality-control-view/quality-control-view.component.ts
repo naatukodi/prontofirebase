@@ -52,13 +52,9 @@ export class QualityControlViewComponent implements OnInit {
   returnMessage: string | null = null;
   returnedBy: string | null = null;
 
-  // Checklist state
+  // Checklist state (read-only on view page — editing happens on update page)
   cl: Record<string, string | null> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
-
-  setCl(key: string, val: string): void {
-    this.cl[key] = this.cl[key] === val ? null : val;
-  }
 
   // ── Lightbox ──
   lightboxOpen = false;
@@ -90,6 +86,18 @@ export class QualityControlViewComponent implements OnInit {
   // ── Helpers ──
   getVehicleAge(): number {
     return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
+  }
+
+  getRatingDisplay(): string {
+    const raw = (this.report?.qualityControl?.overallRating || this.viewModel?.overallRating || '').trim();
+    if (!raw) return '—';
+    const num = Number(raw);
+    if (!isNaN(num)) return num.toFixed(1);
+    const map: Record<string, string> = {
+      'EXCELLENT': '9.5', 'VERY GOOD': '8.5', 'GOOD': '7.5',
+      'AVERAGE': '5.0', 'BELOW AVERAGE': '3.5', 'POOR': '2.5', 'VERY POOR': '1.5'
+    };
+    return map[raw.toUpperCase()] ?? raw;
   }
 
   isInRange(): boolean {
@@ -371,6 +379,19 @@ export class QualityControlViewComponent implements OnInit {
           rawResponse: ve?.rawResponse ?? (ve as any)?.RawResponse
         };
         this.prefillChecklist();
+
+        // Override prefilled values with whatever was previously saved by the QC officer
+        if (qcData.qcChecklist) {
+          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) this.cl[k] = v;
+          });
+        }
+        if (qcData.qcChecklistRemarks) {
+          Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
+            if (v) this.clRemarks[k] = v;
+          });
+        }
+
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {

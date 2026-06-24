@@ -12,7 +12,7 @@
   <div *ngIf="error" class="error">{{ error }}</div>
 
   <ng-container *ngIf="!loading && !error">
-    
+
     <fieldset class="nested-group">
       <legend>Quality Control</legend>
       <div class="grid">
@@ -39,7 +39,6 @@
     <fieldset class="nested-group">
       <legend>Payment Details</legend>
       <div class="grid">
-
         <mat-form-field appearance="outline">
           <mat-label>Payment Status</mat-label>
           <mat-select formControlName="paymentStatus" required>
@@ -47,9 +46,7 @@
             <mat-option value="Completed">Completed</mat-option>
             <mat-option value="Failed">Failed</mat-option>
           </mat-select>
-          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">
-            Payment Status is required
-          </mat-error>
+          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Payment Status is required</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -60,9 +57,7 @@
         <mat-form-field appearance="outline">
           <mat-label>Payment Date</mat-label>
           <input matInput type="datetime-local" formControlName="paymentDate" />
-          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">
-            Payment Date is required
-          </mat-error>
+          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">Payment Date is required</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -73,22 +68,15 @@
             <mat-option value="UPI">UPI</mat-option>
             <mat-option value="Card">Card</mat-option>
           </mat-select>
-          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">
-            Payment Method is required
-          </mat-error>
+          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Payment Method is required</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Payment Amount</mat-label>
           <input matInput type="number" formControlName="paymentAmount" />
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">
-            Amount is required
-          </mat-error>
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">
-            Amount must be ≥ 0
-          </mat-error>
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">Amount is required</mat-error>
+          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">Amount must be ≥ 0</mat-error>
         </mat-form-field>
-
       </div>
     </fieldset>
 
@@ -97,43 +85,175 @@
       <div class="grid">
         <mat-form-field appearance="outline" style="width: 100%;">
           <mat-label>General Remarks</mat-label>
-          <textarea
-            matInput
-            formControlName="remarks"
-            rows="3"
-          ></textarea>
+          <textarea matInput formControlName="remarks" rows="3"></textarea>
         </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- ══════════════════════════════════════
+         QC CHECKLIST
+    ═══════════════════════════════════════ -->
+    <fieldset class="nested-group cl-fieldset">
+      <legend>Document Verification</legend>
+
+      <div class="cl-sub-title">DOCUMENT STATUS</div>
+      <div class="cl-row"><div class="cl-label">Registration Certificate (RC)</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docRC']==='ok'" (click)="setCl('docRC','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docRC']==='flag'" (click)="setCl('docRC','flag')">✗ Flag</button></div></div>
+      <div class="cl-row"><div class="cl-label">Insurance Policy</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docIns']==='ok'" (click)="setCl('docIns','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docIns']==='flag'" (click)="setCl('docIns','flag')">✗ Flag</button></div></div>
+      <div class="cl-row"><div class="cl-label">Permit</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docPermit']==='ok'" (click)="setCl('docPermit','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docPermit']==='flag'" (click)="setCl('docPermit','flag')">✗ Flag</button></div></div>
+      <div class="cl-row"><div class="cl-label">Fitness Certificate</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docFitness']==='ok'" (click)="setCl('docFitness','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docFitness']==='flag'" (click)="setCl('docFitness','flag')">✗ Flag</button></div></div>
+      <div class="cl-row"><div class="cl-label">Road Tax</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docTax']==='ok'" (click)="setCl('docTax','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docTax']==='flag'" (click)="setCl('docTax','flag')">✗ Flag</button></div></div>
+      <div class="cl-row">
+        <div class="cl-label">Chassis Punch</div>
+        <div class="cl-btns">
+          <button type="button" class="cl-btn" [class.cl-ok]="cl['docChassis']==='original'" (click)="setCl('docChassis','original')">✓ Original</button>
+          <button type="button" class="cl-btn" [class.cl-flag]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched')">~ Re-Punched</button>
+          <button type="button" class="cl-btn" [class.cl-flag]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered')">✗ Tampered</button>
+        </div>
+      </div>
+      <div class="cl-row">
+        <div class="cl-label">Hypothecation</div>
+        <div class="cl-btns">
+          <button type="button" class="cl-btn" [class.cl-ok]="cl['docHypo']==='same'" (click)="setCl('docHypo','same')">✓ Same Bank</button>
+          <button type="button" class="cl-btn" [class.cl-flag]="cl['docHypo']==='different'" (click)="setCl('docHypo','different')">✗ Different</button>
+        </div>
+      </div>
+      <div class="cl-row"><div class="cl-label">PAN / Address Proof</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['docPAN']==='ok'" (click)="setCl('docPAN','ok')">✓ OK</button><button type="button" class="cl-btn" [class.cl-flag]="cl['docPAN']==='flag'" (click)="setCl('docPAN','flag')">✗ Flag</button></div></div>
+      <div class="cl-remarks">
+        <label>Document Remarks</label>
+        <textarea [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['doc']" rows="3" placeholder="Note any document issues or expiry concerns…"></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset class="nested-group cl-fieldset">
+      <legend>Data Accuracy</legend>
+
+      <div class="cl-sub-title">VEHICLE IDENTITY VERIFICATION</div>
+      <div class="cl-row"><div class="cl-label">Vehicle Registration Number matches photos and RC<small>Verify plate visible in front &amp; rear photos</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accReg']==='pass'" (click)="setCl('accReg','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accReg']==='fail'" (click)="setCl('accReg','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Chassis Number matches photos, RC and stencil trace<small>Compare across all 3 sources</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accChassis']==='pass'" (click)="setCl('accChassis','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accChassis']==='fail'" (click)="setCl('accChassis','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Odometer reading in photo matches reported KM value on inspection report<small>Compare dashboard photo vs KM reading stated in the report</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accOdo']==='pass'" (click)="setCl('accOdo','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accOdo']==='fail'" (click)="setCl('accOdo','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">VIN plate in photos matches RC and inspection report<small>Check VIN plate photo number matches report exactly</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accVIN']==='pass'" (click)="setCl('accVIN','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accVIN']==='fail'" (click)="setCl('accVIN','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Manufacture year vs registration date gap is within logical range<small>Registration typically within 12 months of manufacture</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accMfgReg']==='pass'" (click)="setCl('accMfgReg','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accMfgReg']==='fail'" (click)="setCl('accMfgReg','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">VAHAN data matches physical inspection findings<small>Make, model, colour, engine CC, body type</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accVahan']==='pass'" (click)="setCl('accVahan','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accVahan']==='fail'" (click)="setCl('accVahan','fail')">✗ Fail</button></div></div>
+
+      <div class="cl-sub-title">OWNER / APPLICANT VERIFICATION</div>
+      <div class="cl-row"><div class="cl-label">Owner and applicant identity verified from submitted docs</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accOwner']==='pass'" (click)="setCl('accOwner','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accOwner']==='fail'" (click)="setCl('accOwner','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Ownership serial number verified (1st / 2nd / 3rd owner)</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accSerial']==='pass'" (click)="setCl('accSerial','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accSerial']==='fail'" (click)="setCl('accSerial','fail')">✗ Fail</button></div></div>
+
+      <div class="cl-sub-title">TECHNICAL SPECIFICATIONS</div>
+      <div class="cl-row"><div class="cl-label">Transmission type matches vehicle class and RC details<small>Manual / Automatic declared in report matches RC and photos</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accTransmission']==='pass'" (click)="setCl('accTransmission','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accTransmission']==='fail'" (click)="setCl('accTransmission','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Fuel type matches engine specifications and RC<small>Petrol / Diesel / CNG declared must match engine type on RC</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accFuel']==='pass'" (click)="setCl('accFuel','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accFuel']==='fail'" (click)="setCl('accFuel','fail')">✗ Fail</button></div></div>
+
+      <div class="cl-sub-title">PHOTO QUALITY &amp; COMPLETENESS</div>
+      <div class="cl-row"><div class="cl-label">All photos taken at the same location<small>Background, GPS tags and timestamp should be consistent</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accPhotoLoc']==='pass'" (click)="setCl('accPhotoLoc','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accPhotoLoc']==='fail'" (click)="setCl('accPhotoLoc','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Vehicle photos taken in clear daylight<small>No dark, blurry or indoors photos</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accDaylight']==='pass'" (click)="setCl('accDaylight','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accDaylight']==='fail'" (click)="setCl('accDaylight','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Number plate clearly visible in both front and rear photos<small>Plate must be legible — not covered, dirty or at angle</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accPlate']==='pass'" (click)="setCl('accPlate','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accPlate']==='fail'" (click)="setCl('accPlate','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">GPS timestamp in photos matches declared inspection date</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accGPS']==='pass'" (click)="setCl('accGPS','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accGPS']==='fail'" (click)="setCl('accGPS','fail')">✗ Fail</button></div></div>
+
+      <div class="cl-sub-title">INSPECTION FORM ACCURACY</div>
+      <div class="cl-row"><div class="cl-label">Report date is valid — not set in the future<small>Report creation date must be on or before today</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accReportDate']==='pass'" (click)="setCl('accReportDate','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accReportDate']==='fail'" (click)="setCl('accReportDate','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">All mandatory fields filled — no blanks in inspection form</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accMandatory']==='pass'" (click)="setCl('accMandatory','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accMandatory']==='fail'" (click)="setCl('accMandatory','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Inspector remarks are complete and relevant</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['accRemarks']==='pass'" (click)="setCl('accRemarks','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['accRemarks']==='fail'" (click)="setCl('accRemarks','fail')">✗ Fail</button></div></div>
+      <div class="cl-remarks">
+        <label>Data Accuracy Remarks</label>
+        <textarea [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['acc']" rows="3" placeholder="Note any discrepancies found during data verification…"></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset class="nested-group cl-fieldset">
+      <legend>Valuation Quality</legend>
+
+      <div class="cl-sub-title">VALUATION ACCURACY</div>
+      <div class="cl-row"><div class="cl-label">Minimum required photos uploaded<small>Front, Rear, Left, Right, Odometer, Engine, Chassis, Stencil</small></div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['valMinPhotos']==='pass'" (click)="setCl('valMinPhotos','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['valMinPhotos']==='fail'" (click)="setCl('valMinPhotos','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Valuation amount is within acceptable market range for this vehicle</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['valInRange']==='pass'" (click)="setCl('valInRange','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['valInRange']==='fail'" (click)="setCl('valInRange','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Dedupe check completed — vehicle not reported stolen or blacklisted</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['valDedupe']==='pass'" (click)="setCl('valDedupe','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['valDedupe']==='fail'" (click)="setCl('valDedupe','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Vehicle age and odometer reading are consistent with condition rating</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['valAgeOdo']==='pass'" (click)="setCl('valAgeOdo','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['valAgeOdo']==='fail'" (click)="setCl('valAgeOdo','fail')">✗ Fail</button></div></div>
+      <div class="cl-row"><div class="cl-label">Inspection checklist ratings support the overall vehicle score</div><div class="cl-btns"><button type="button" class="cl-btn" [class.cl-ok]="cl['valScore']==='pass'" (click)="setCl('valScore','pass')">✓ Pass</button><button type="button" class="cl-btn" [class.cl-flag]="cl['valScore']==='fail'" (click)="setCl('valScore','fail')">✗ Fail</button></div></div>
+      <div class="cl-remarks">
+        <label>Valuation Quality Remarks</label>
+        <textarea [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['val']" rows="3" placeholder="Note any concerns about valuation quality or market range discrepancies…"></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset class="nested-group cl-fieldset">
+      <legend>QC Recommendation</legend>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">1. OVERALL VEHICLE CONDITION</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recCondition']==='good'" (click)="setCl('recCondition','good')"><span class="rec-icon">🟢</span><span class="rec-label">GOOD</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recCondition']==='average'" (click)="setCl('recCondition','average')"><span class="rec-icon">🟡</span><span class="rec-label">AVERAGE</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recCondition']==='poor'" (click)="setCl('recCondition','poor')"><span class="rec-icon">🔴</span><span class="rec-label">POOR</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">2. EXTERIOR CONDITION</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recExterior']==='good'" (click)="setCl('recExterior','good')"><span class="rec-icon">✨</span><span class="rec-label">GOOD</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')"><span class="rec-icon">🔧</span><span class="rec-label">MINOR DAMAGE</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recExterior']==='major'" (click)="setCl('recExterior','major')"><span class="rec-icon">💥</span><span class="rec-label">MAJOR DAMAGE</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">3. ENGINE / MECHANICAL CONDITION</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recEngine']==='good'" (click)="setCl('recEngine','good')"><span class="rec-icon">⚙️</span><span class="rec-label">GOOD</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')"><span class="rec-icon">⚠️</span><span class="rec-label">AVERAGE</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recEngine']==='poor'" (click)="setCl('recEngine','poor')"><span class="rec-icon">❌</span><span class="rec-label">POOR</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">4. TYRE CONDITION</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recTyre']==='good'" (click)="setCl('recTyre','good')"><span class="rec-icon">🟢</span><span class="rec-label">GOOD</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recTyre']==='average'" (click)="setCl('recTyre','average')"><span class="rec-icon">🟡</span><span class="rec-label">AVERAGE</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recTyre']==='replacement'" (click)="setCl('recTyre','replacement')"><span class="rec-icon">🔴</span><span class="rec-label">NEEDS REPLACEMENT</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">5. DAMAGE DETECTED</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recDamage']==='none'" (click)="setCl('recDamage','none')"><span class="rec-icon">✅</span><span class="rec-label">NONE</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recDamage']==='minor'" (click)="setCl('recDamage','minor')"><span class="rec-icon">⚠️</span><span class="rec-label">MINOR</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recDamage']==='major'" (click)="setCl('recDamage','major')"><span class="rec-icon">💥</span><span class="rec-label">MAJOR</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">6. MISSING PARTS</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recMissingParts']==='none'" (click)="setCl('recMissingParts','none')"><span class="rec-icon">✅</span><span class="rec-label">NONE</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recMissingParts']==='present'" (click)="setCl('recMissingParts','present')"><span class="rec-icon">❌</span><span class="rec-label">PARTS MISSING</span></div>
+        </div>
+      </div>
+
+      <div class="rec-section">
+        <div class="cl-sub-title">7. FINAL QC RECOMMENDATION</div>
+        <div class="rec-opts">
+          <div class="rec-opt" [class.rec-green]="cl['recFinal']==='recommended'" (click)="setCl('recFinal','recommended')"><span class="rec-icon">✅</span><span class="rec-label">RECOMMENDED</span></div>
+          <div class="rec-opt" [class.rec-amber]="cl['recFinal']==='conditional'" (click)="setCl('recFinal','conditional')"><span class="rec-icon">⚠️</span><span class="rec-label">RECOMMENDED WITH CONDITIONS</span></div>
+          <div class="rec-opt" [class.rec-red]="cl['recFinal']==='not-recommended'" (click)="setCl('recFinal','not-recommended')"><span class="rec-icon">❌</span><span class="rec-label">NOT RECOMMENDED</span></div>
+        </div>
+      </div>
+
+      <div class="cl-remarks" style="margin-top:16px;">
+        <label>QC Summary Remarks</label>
+        <textarea [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['rec']" rows="4" placeholder="Summarise the overall QC findings for the Approver…"></textarea>
       </div>
     </fieldset>
 
     <fieldset>
       <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
-        <button
-          mat-raised-button
-          color="accent"
-          type="button"
-          [disabled]="saving"
-          (click)="onSave()"
-        >
+        <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">
           {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
         </button>
-
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="!saved || saving"
-        >
+        <button mat-raised-button color="primary" type="submit" [disabled]="!saved || saving">
           {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
         </button>
-
-        <button
-          mat-raised-button
-          color="warn"
-          type="button"
-          [disabled]="saving"
-          (click)="onCancel()"
-        >
+        <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">
           Cancel
         </button>
       </div>

@@ -11,4 +11,6 @@ export interface QualityControl {
   assignedToPhoneNumber: string;
   assignedToEmail: string;
   assignedToWhatsapp: string;
+  qcChecklist?: Record<string, string | null>;
+  qcChecklistRemarks?: Record<string, string>;
 }

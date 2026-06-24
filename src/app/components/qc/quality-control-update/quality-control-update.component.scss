@@ -73,3 +73,94 @@ mat-form-field {
     color: rgba(0,0,0,0.12);
   }
 }
+
+/* ── Checklist ── */
+.cl-fieldset { padding: 20px 16px; }
+
+.cl-sub-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #025054;
+  background: linear-gradient(135deg,#037076 0%,#025054 100%);
+  color: #fff;
+  border-radius: 5px;
+  padding: 5px 12px;
+  margin: 14px 0 8px;
+}
+
+.cl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  gap: 12px;
+}
+
+.cl-label {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #374151;
+  small { display: block; font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
+}
+
+.cl-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+.cl-btn {
+  padding: 4px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 20px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { border-color: #9ca3af; background: #f3f4f6; }
+  &.cl-ok   { background: #dcfce7; border-color: #4ade80; color: #15803d; }
+  &.cl-flag { background: #fee2e2; border-color: #f87171; color: #b91c1c; }
+}
+
+.cl-remarks {
+  margin-top: 12px;
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 4px; }
+  textarea {
+    width: 100%;
+    border: 1.5px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.875rem;
+    resize: vertical;
+    box-sizing: border-box;
+    &:focus { outline: none; border-color: #037076; }
+  }
+}
+
+/* Recommendation tiles */
+.rec-section { margin-bottom: 16px; }
+
+.rec-opts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.rec-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.15s;
+  &:hover { border-color: #94a3b8; background: #f1f5f9; }
+  .rec-icon { font-size: 1.1rem; }
+  .rec-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; color: #475569; }
+  &.rec-green { background: #f0fdf4; border-color: #4ade80; .rec-label { color: #15803d; } }
+  &.rec-amber { background: #fffbeb; border-color: #fbbf24; .rec-label { color: #a16207; } }
+  &.rec-red   { background: #fef2f2; border-color: #f87171; .rec-label { color: #b91c1c; } }
+}

@@ -1,311 +1,405 @@
-<div class="pg-wrap">
-<div *ngIf="loading" class="pg-loading">Loading final report…</div>
-<div *ngIf="error" class="pg-error">{{ error }}</div>
+<div class="fr-wrap">
 
-<ng-container *ngIf="!loading && !error">
+  <div *ngIf="loading" class="pg-loading">Loading final report…</div>
+  <div *ngIf="error"   class="pg-error">{{ error }}</div>
 
-  <app-workflow-buttons
-    [id]="valuationId"
-    [vehicleNumber]="vehicleNumber"
-    [applicantContact]="applicantContact"
-    [valuationType]="valuationType">
-  </app-workflow-buttons>
+  <ng-container *ngIf="!loading && !error">
 
-  <div class="pg-content">
-    <div class="pg-btn-group" style="margin-bottom:16px;margin-top:0">
-      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
-      <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
+    <app-workflow-buttons
+      [id]="valuationId"
+      [vehicleNumber]="vehicleNumber"
+      [applicantContact]="applicantContact"
+      [valuationType]="valuationType">
+    </app-workflow-buttons>
+
+    <!-- Top action bar (outside the report) -->
+    <div class="fr-toolbar">
+      <button mat-raised-button color="accent"   (click)="downloadPdf()">⬇ Download PDF</button>
+      <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+      <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
+      <button mat-raised-button (click)="onBack()">Back</button>
     </div>
 
-  <!-- ================= Stakeholder ================= -->
-  <fieldset class="nested-group">
-    <legend>Stakeholder</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline"><mat-label>Stakeholder Name</mat-label><input matInput [value]="report.stakeholder.name" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput [value]="report.stakeholder.executiveName" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput [value]="report.stakeholder.executiveContact" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>WhatsApp Number</mat-label><input matInput [value]="report.stakeholder.executiveWhatsapp" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput [value]="report.stakeholder.executiveEmail" readonly /></mat-form-field>
-    </div>
+    <!-- ══════════════════════════════════════
+         REPORT PAPER PREVIEW
+    ═══════════════════════════════════════ -->
+    <div class="report-paper">
 
-    <div class="grid">
-      <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput [value]="report.stakeholder.applicant.name" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput [value]="report.stakeholder.applicant.contact" readonly /></mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ================= Vehicle Details ================= -->
-  <fieldset class="nested-group">
-    <legend>Vehicle Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline"><mat-label>Registration Number</mat-label><input matInput [value]="report.vehicleDetails.registrationNumber" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Make</mat-label><input matInput [value]="report.vehicleDetails.make" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Model</mat-label><input matInput [value]="report.vehicleDetails.model" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Year of Mfg</mat-label><input matInput [value]="report.vehicleDetails.yearOfMfg" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Body Type</mat-label><input matInput [value]="report.vehicleDetails.bodyType" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Chassis Number</mat-label><input matInput [value]="report.vehicleDetails.chassisNumber" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Engine Number</mat-label><input matInput [value]="report.vehicleDetails.engineNumber" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Color</mat-label><input matInput [value]="report.vehicleDetails.colour" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Fuel Type</mat-label><input matInput [value]="report.vehicleDetails.fuel" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Owner Name</mat-label><input matInput [value]="report.vehicleDetails.ownerName" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>RTO</mat-label><input matInput [value]="report.vehicleDetails.rto" readonly /></mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="report.vehicleDetails.remarks" readonly rows="3"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ================= Inspection ================= -->
-  <fieldset class="nested-group">
-    <legend>Inspection Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline"><mat-label>Inspected By</mat-label><input matInput [value]="report.inspectionDetails.vehicleInspectedBy" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Date of Inspection</mat-label><input matInput [value]="report.inspectionDetails.dateOfInspection | date:'mediumDate'" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Location</mat-label><input matInput [value]="report.inspectionDetails.inspectionLocation" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Odometer Reading</mat-label><input matInput [value]="report.inspectionDetails.odometer" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Engine Started</mat-label><input matInput [value]="report.inspectionDetails.engineStarted ? 'Yes' : 'No'" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Road Worthy Condition</mat-label><input matInput [value]="report.inspectionDetails.roadWorthyCondition ? 'Yes' : 'No'" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Overall Tyre Condition</mat-label><input matInput [value]="report.inspectionDetails.overallTyreCondition" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Engine Condition</mat-label><input matInput [value]="report.inspectionDetails.engineCondition" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Brake System Condition</mat-label><input matInput [value]="report.inspectionDetails.brakeSystem" readonly /></mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="report.inspectionDetails.remarks" readonly rows="3"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ================= Quality Control ================= -->
-  <fieldset class="nested-group">
-    <legend>Quality Control</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline"><mat-label>Overall Rating</mat-label><input matInput [value]="report.qualityControl.overallRating" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Valuation Amount (₹)</mat-label><input matInput [value]="report.qualityControl.valuationAmount" readonly /></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Chassis Punch</mat-label><input matInput [value]="report.qualityControl.chassisPunch" readonly /></mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="report.qualityControl.remarks" readonly></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ================= Remarks ================= -->
-  <fieldset class="nested-group">
-    <legend>Remarks</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline" style="width:100%;">
-        <textarea matInput [value]="report.remarks" readonly rows="3"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <!-- ================= Photos ================= -->
-  <fieldset class="nested-group">
-    <legend>Photos ({{ photoKeys.length }})</legend>
-    <div class="photo-grid">
-      <div class="photo-item" *ngFor="let key of photoKeys; let i = index" (click)="openLightbox(i)">
-        <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
-        <div class="photo-label">{{ key }}</div>
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- ================= LIGHTBOX ================= -->
-  <div class="lightbox" [class.open]="showLightbox" (click)="closeLightbox()">
-    <div class="lb-close" (click)="closeLightbox()">✕</div>
-    <div class="lb-img" (click)="$event.stopPropagation()">
-      <img *ngIf="photoKeys.length > 0"
-           [src]="report.photoUrls[photoKeys[currentPhotoIndex]]"
-           style="max-width:100%; max-height:100%; object-fit:contain; border-radius:12px;">
-      <div class="lb-label">{{ photoKeys[currentPhotoIndex] | uppercase }}</div>
-    </div>
-    <div class="lb-nav" *ngIf="photoKeys.length > 1" (click)="$event.stopPropagation()">
-      <div class="lb-arrow" (click)="prevPhoto()">←</div>
-      <div class="lb-counter">{{ currentPhotoIndex + 1 }} / {{ photoKeys.length }}</div>
-      <div class="lb-arrow" (click)="nextPhoto()">→</div>
-    </div>
-    <div class="lb-thumbs" *ngIf="photoKeys.length > 1" (click)="$event.stopPropagation()">
-      <div *ngFor="let key of photoKeys; let i = index"
-           class="lb-thumb" [class.on]="i === currentPhotoIndex"
-           (click)="currentPhotoIndex = i">
-        <img [src]="report.photoUrls[key]" style="width:100%; height:100%; object-fit:cover; border-radius:3px;">
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= Notes ================= -->
-  <fieldset class="nested-group">
-    <legend>Final Report Notes</legend>
-    <div class="notes-container">
-      <app-common-notes
-        [entityType]="'FinalReport'"
-        [entityId]="valuationId"
-        [currentUser]="getCurrentUserObj().name || 'User'"
-        [collapsible]="true">
-      </app-common-notes>
-    </div>
-  </fieldset>
-
-  <!-- ================= APPROVER DECISION PANEL ================= -->
-  <div class="apr-panel" *ngIf="canEditFinalReport()">
-    <!-- Dark header -->
-    <div class="apr-header">
-      <div>
-        <div class="apr-header-title">📋 Case Summary — {{ report.vehicleDetails.registrationNumber }}</div>
-        <div class="apr-header-sub">{{ report.vehicleDetails.make }} {{ report.vehicleDetails.model }} · {{ report.vehicleDetails.yearOfMfg }} · Rating: {{ report.qualityControl.overallRating || 'N/A' }}</div>
-      </div>
-      <span class="apr-score">₹{{ report.qualityControl.valuationAmount | number }}</span>
-    </div>
-
-    <!-- Summary comparison grid -->
-    <div class="summary-grid">
-      <div class="sg-col">
-        <div class="sg-col-title">VEHICLE &amp; CASE INFORMATION</div>
-        <div class="sg-row"><span class="sg-row-l">Registration</span><span class="sg-row-v" style="color:#0d7c66;font-family:monospace">{{ report.vehicleDetails.registrationNumber }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Vehicle</span><span class="sg-row-v">{{ report.vehicleDetails.make }} {{ report.vehicleDetails.model }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Year of Mfg</span><span class="sg-row-v">{{ report.vehicleDetails.yearOfMfg }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Body / Fuel</span><span class="sg-row-v">{{ report.vehicleDetails.bodyType }} · {{ report.vehicleDetails.fuel }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">ODO Meter</span><span class="sg-row-v" style="font-family:monospace">{{ report.inspectionDetails.odometer }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Registered Owner</span><span class="sg-row-v">{{ report.vehicleDetails.ownerName }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Applicant</span><span class="sg-row-v">{{ report.stakeholder.applicant.name }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Chassis Punch</span><span class="sg-row-v" style="color:#10b981">✓ {{ report.qualityControl.chassisPunch || 'Original' }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Inspector</span><span class="sg-row-v">{{ report.inspectionDetails.vehicleInspectedBy }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Inspection Date</span><span class="sg-row-v">{{ report.inspectionDetails.dateOfInspection | date:'mediumDate' }}</span></div>
-      </div>
-      <div class="sg-col">
-        <div class="sg-col-title">FINANCIAL &amp; CONDITION SUMMARY</div>
-        <div class="vbox-summary">
-          <div class="vbox-summary-label">QC RECOMMENDED VALUATION</div>
-          <div class="vbox-summary-amount">₹{{ report.qualityControl.valuationAmount | number }}/-</div>
+      <!-- REPORT HEADER -->
+      <div class="rp-header">
+        <div class="rph-left">
+          <div class="rph-title">VEHICLE INSPECTION &amp; VALUATION REPORT</div>
+          <div class="rph-sub">Pronto Vehicle Valuation Platform</div>
         </div>
-        <div class="sg-row"><span class="sg-row-l">Overall Rating</span><span class="sg-row-v">{{ report.qualityControl.overallRating }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Engine Condition</span><span class="sg-row-v">{{ report.inspectionDetails.engineCondition }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Tyre Condition</span><span class="sg-row-v">{{ report.inspectionDetails.overallTyreCondition }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Brake System</span><span class="sg-row-v">{{ report.inspectionDetails.brakeSystem }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Engine Started</span><span class="sg-row-v">{{ report.inspectionDetails.engineStarted ? '✓ Yes' : '✗ No' }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Road Worthy</span><span class="sg-row-v">{{ report.inspectionDetails.roadWorthyCondition ? '✓ Yes' : '✗ No' }}</span></div>
-        <div class="sg-row"><span class="sg-row-l">Stakeholder</span><span class="sg-row-v">{{ report.stakeholder.name }}</span></div>
-      </div>
-    </div>
-
-    <!-- Decision bar -->
-    <div class="decision-section">
-      <div class="decision-label">APPROVER DECISION</div>
-      <div class="decision-bar">
-        <div class="dec-btn dec-approve" (click)="onApprove()">
-          <span class="db-icon">✅</span>
-          <div class="db-title">Approve Case</div>
-          <div class="db-sub">Generate &amp; dispatch final report</div>
-        </div>
-        <div class="dec-btn dec-return" (click)="openReturnModal()">
-          <span class="db-icon">↩</span>
-          <div class="db-title">Return with Recommendations</div>
-          <div class="db-sub">Send back to QC / Inspector</div>
-        </div>
-        <div class="dec-btn dec-reject" (click)="openRejectModal()">
-          <span class="db-icon">❌</span>
-          <div class="db-title">Reject Case</div>
-          <div class="db-sub">Permanently close this case</div>
+        <div class="rph-right">
+          <div class="rph-date">Date: {{ report.createdAt | date:'dd-MM-yyyy' }}</div>
+          <div class="rph-id">Ref: {{ valuationId | slice:0:8 | uppercase }}</div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ================= Actions ================= -->
-  <fieldset>
-    <div class="actions">
-      <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
-      <button *ngIf="canEditFinalReport()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-      <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
-      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
-    </div>
-  </fieldset>
-  </div><!-- /pg-content -->
-</ng-container>
+      <!-- VEHICLE HERO STRIP -->
+      <div class="rp-hero">
+        <div class="rph-photo" (click)="openLightbox(0)">
+          <img [src]="report.photoUrls[photoKeys[0]]" *ngIf="photoKeys.length" alt="Vehicle" />
+          <div class="rph-no-img" *ngIf="!photoKeys.length">NO IMAGE</div>
+        </div>
+        <div class="rph-identity">
+          <div class="rph-make">{{ report.vehicleDetails?.make }} {{ report.vehicleDetails?.model }}</div>
+          <div class="rph-reg">{{ report.vehicleDetails?.registrationNumber }}</div>
+          <div class="rph-meta-row">
+            <span>{{ report.vehicleDetails?.yearOfMfg }}</span>
+            <span class="rph-sep">·</span>
+            <span>{{ report.vehicleDetails?.fuel }}</span>
+            <span class="rph-sep">·</span>
+            <span>{{ report.vehicleDetails?.bodyType }}</span>
+            <span class="rph-sep">·</span>
+            <span>{{ report.vehicleDetails?.colour }}</span>
+          </div>
+          <div class="rph-owner">Owner: {{ report.vehicleDetails?.ownerName || '—' }}</div>
+        </div>
+        <div class="rph-valuation">
+          <div class="rphv-label">QC RECOMMENDED VALUATION</div>
+          <div class="rphv-amount">₹{{ report.qualityControl?.valuationAmount | number }}</div>
+          <div class="rphv-rating">
+            Rating: <strong>{{ getRatingDisplay() }} / 10</strong>
+          </div>
+          <div class="rphv-range-row">
+            <div class="rphv-range-item rphv-low">
+              <div class="rphv-rl">LOW</div>
+              <div class="rphv-rv">₹{{ viewModel?.lowRange | number }}</div>
+            </div>
+            <div class="rphv-range-item rphv-mid">
+              <div class="rphv-rl">MID</div>
+              <div class="rphv-rv">₹{{ viewModel?.midRange | number }}</div>
+            </div>
+            <div class="rphv-range-item rphv-high">
+              <div class="rphv-rl">HIGH</div>
+              <div class="rphv-rv">₹{{ viewModel?.highRange | number }}</div>
+            </div>
+          </div>
+          <div class="rphv-in-range" [class.rphv-out]="!isInRange()">
+            {{ isInRange() ? '✓ Within Market Range' : '⚠ Outside Market Range' }}
+          </div>
+        </div>
+      </div>
 
-<!-- ================= RETURN MODAL ================= -->
-<div class="modal-overlay" *ngIf="showReturnModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>Return Final Report</h3>
-      <span class="close-btn" (click)="closeModals()">×</span>
-    </div>
-    <div class="modal-body">
-      <p>This case will be returned to <b>Quality Control</b>.</p>
-      <label>Reason:</label>
-      <textarea [(ngModel)]="returnReason" class="modal-input" rows="3"
-                placeholder="Enter reason..."></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
-    </div>
-  </div>
-</div>
+      <!-- ── SECTION: STAKEHOLDER ── -->
+      <div class="rp-section">
+        <div class="rps-heading">1. STAKEHOLDER &amp; APPLICANT</div>
+        <div class="rps-grid">
+          <div class="rps-row"><span class="rps-l">Stakeholder</span><span class="rps-v">{{ report.stakeholder?.name || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Executive</span><span class="rps-v">{{ report.stakeholder?.executiveName || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Contact</span><span class="rps-v">{{ report.stakeholder?.executiveContact || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">WhatsApp</span><span class="rps-v">{{ report.stakeholder?.executiveWhatsapp || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Email</span><span class="rps-v">{{ report.stakeholder?.executiveEmail || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Applicant Name</span><span class="rps-v">{{ report.stakeholder?.applicant?.name || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Applicant Contact</span><span class="rps-v">{{ report.stakeholder?.applicant?.contact || '—' }}</span></div>
+        </div>
+      </div>
 
-<!-- ================= APPROVE MODAL ================= -->
-<div class="modal-overlay" *ngIf="showApproveModal">
-  <div class="modal-box">
-    <div class="modal-header" style="background-color:#10b981;">
-      <h3>✅ Approve Case</h3>
-      <span class="close-btn" (click)="closeModals()">×</span>
-    </div>
-    <div class="modal-body">
-      <p>Once approved, the final report will be marked complete and dispatched.</p>
-      <label>Approval Remarks (optional):</label>
-      <textarea [(ngModel)]="approveRemarks" class="modal-input" rows="3"
-                placeholder="Add any remarks for the record…"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" style="background:#10b981;" (click)="confirmApprove()">✅ Confirm Approval</button>
-    </div>
-  </div>
-</div>
+      <!-- ── SECTION: VEHICLE DETAILS ── -->
+      <div class="rp-section">
+        <div class="rps-heading">2. VEHICLE DETAILS</div>
+        <div class="rps-grid rps-grid--2col">
+          <div class="rps-row"><span class="rps-l">Registration No</span><span class="rps-v rps-mono">{{ report.vehicleDetails?.registrationNumber || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Make</span><span class="rps-v">{{ report.vehicleDetails?.make || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Model</span><span class="rps-v">{{ report.vehicleDetails?.model || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Year of Manufacture</span><span class="rps-v">{{ report.vehicleDetails?.yearOfMfg || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Body Type</span><span class="rps-v">{{ report.vehicleDetails?.bodyType || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Fuel Type</span><span class="rps-v">{{ report.vehicleDetails?.fuel || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Colour</span><span class="rps-v">{{ report.vehicleDetails?.colour || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">RTO</span><span class="rps-v">{{ report.vehicleDetails?.rto || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Chassis Number</span><span class="rps-v rps-mono">{{ report.vehicleDetails?.chassisNumber || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Engine Number</span><span class="rps-v rps-mono">{{ report.vehicleDetails?.engineNumber || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Owner Name</span><span class="rps-v">{{ report.vehicleDetails?.ownerName || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Class of Vehicle</span><span class="rps-v">{{ report.vehicleDetails?.classOfVehicle || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Chassis Punch Status</span>
+            <span class="rps-v">
+              <span class="rps-badge" [class.rps-badge--ok]="report.qualityControl?.chassisPunch?.toLowerCase()==='original'" [class.rps-badge--warn]="report.qualityControl?.chassisPunch?.toLowerCase()==='re-punched'" [class.rps-badge--err]="report.qualityControl?.chassisPunch?.toLowerCase()==='tampered'">
+                {{ report.qualityControl?.chassisPunch || '—' }}
+              </span>
+            </span>
+          </div>
+          <div class="rps-row"><span class="rps-l">Hypothecation</span>
+            <span class="rps-v">{{ report.vehicleDetails?.hypothecation ? (report.vehicleDetails?.lender || 'Yes') : 'NIL' }}</span>
+          </div>
+        </div>
+        <div class="rps-remarks" *ngIf="report.vehicleDetails?.remarks">
+          <strong>Remarks:</strong> {{ report.vehicleDetails?.remarks }}
+        </div>
+      </div>
 
-<!-- ================= REJECT MODAL ================= -->
-<div class="modal-overlay" *ngIf="showRejectModal">
-  <div class="modal-box">
-    <div class="modal-header" style="background-color:#7f1d1d;">
-      <h3>❌ Reject Case</h3>
-      <span class="close-btn" (click)="closeModals()">×</span>
-    </div>
-    <div class="modal-body">
-      <p style="color:#991b1b;font-weight:600;">⚠ This action permanently closes the case.</p>
-      <label>Rejection Reason *</label>
-      <textarea [(ngModel)]="rejectReason" class="modal-input" rows="4"
-                placeholder="Provide detailed reason for rejection…"></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" style="background:#7f1d1d;" (click)="confirmReject()">❌ Confirm Rejection</button>
-    </div>
-  </div>
-</div>
+      <!-- ── SECTION: INSPECTION ── -->
+      <div class="rp-section">
+        <div class="rps-heading">3. INSPECTION DETAILS</div>
+        <div class="rps-grid rps-grid--2col">
+          <div class="rps-row"><span class="rps-l">Inspected By</span><span class="rps-v">{{ report.inspectionDetails?.vehicleInspectedBy || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Date of Inspection</span><span class="rps-v">{{ report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Inspection Location</span><span class="rps-v">{{ report.inspectionDetails?.inspectionLocation || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Odometer Reading</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer | number }} km</span></div>
+          <div class="rps-row"><span class="rps-l">Engine Started</span>
+            <span class="rps-v">
+              <span class="rps-badge" [class.rps-badge--ok]="report.inspectionDetails?.engineStarted" [class.rps-badge--err]="!report.inspectionDetails?.engineStarted">
+                {{ report.inspectionDetails?.engineStarted ? 'YES' : 'NO' }}
+              </span>
+            </span>
+          </div>
+          <div class="rps-row"><span class="rps-l">Road Worthy</span>
+            <span class="rps-v">
+              <span class="rps-badge" [class.rps-badge--ok]="report.inspectionDetails?.roadWorthyCondition" [class.rps-badge--err]="!report.inspectionDetails?.roadWorthyCondition">
+                {{ report.inspectionDetails?.roadWorthyCondition ? 'YES' : 'NO' }}
+              </span>
+            </span>
+          </div>
+          <div class="rps-row"><span class="rps-l">Engine Condition</span><span class="rps-v">{{ report.inspectionDetails?.engineCondition || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Overall Tyre Condition</span><span class="rps-v">{{ report.inspectionDetails?.overallTyreCondition || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Brake System</span><span class="rps-v">{{ report.inspectionDetails?.brakeSystem || '—' }}</span></div>
+        </div>
+        <div class="rps-remarks" *ngIf="report.inspectionDetails?.remarks">
+          <strong>Remarks:</strong> {{ report.inspectionDetails?.remarks }}
+        </div>
+      </div>
 
-<!-- ================= OVERRIDE USER MODAL ================= -->
-<div class="modal-overlay" *ngIf="showOverrideModal">
-  <div class="modal-box">
-    <div class="modal-header warning">
-      <h3>⚠️ User Not Found</h3>
+      <!-- ── SECTION: QC CHECKLIST SUMMARY ── -->
+      <div class="rp-section">
+        <div class="rps-heading">4. QC CHECKLIST SUMMARY</div>
+
+        <div class="rp-cl-table">
+          <div class="rp-cl-sub">DOCUMENT VERIFICATION</div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Registration Certificate (RC)</span><span class="rp-cl-badge" [class.cl-ok]="cl['docRC']==='ok'" [class.cl-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Insurance Policy</span><span class="rp-cl-badge" [class.cl-ok]="cl['docIns']==='ok'" [class.cl-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Permit</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPermit']==='ok'" [class.cl-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Fitness Certificate</span><span class="rp-cl-badge" [class.cl-ok]="cl['docFitness']==='ok'" [class.cl-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Road Tax</span><span class="rp-cl-badge" [class.cl-ok]="cl['docTax']==='ok'" [class.cl-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Chassis Punch Status</span><span class="rp-cl-badge" [class.cl-ok]="cl['docChassis']==='original'" [class.cl-warn]="cl['docChassis']==='repunched'" [class.cl-flag]="cl['docChassis']==='tampered'">{{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Hypothecation</span><span class="rp-cl-badge" [class.cl-ok]="cl['docHypo']==='same'" [class.cl-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">PAN / Address Proof</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPAN']==='ok'" [class.cl-flag]="cl['docPAN']==='flag'">{{ cl['docPAN'] === 'ok' ? '✓ OK' : cl['docPAN'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+
+          <div class="rp-cl-sub">DATA ACCURACY</div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Registration No matches photos &amp; RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accReg']==='pass'" [class.cl-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Chassis No matches photos, RC &amp; stencil</span><span class="rp-cl-badge" [class.cl-ok]="cl['accChassis']==='pass'" [class.cl-flag]="cl['accChassis']==='fail'">{{ cl['accChassis'] === 'pass' ? '✓ Pass' : cl['accChassis'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Odometer reading matches reported KM</span><span class="rp-cl-badge" [class.cl-ok]="cl['accOdo']==='pass'" [class.cl-flag]="cl['accOdo']==='fail'">{{ cl['accOdo'] === 'pass' ? '✓ Pass' : cl['accOdo'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">VIN plate matches RC &amp; inspection report</span><span class="rp-cl-badge" [class.cl-ok]="cl['accVIN']==='pass'" [class.cl-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Manufacture year vs registration gap logical</span><span class="rp-cl-badge" [class.cl-ok]="cl['accMfgReg']==='pass'" [class.cl-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">VAHAN data matches inspection findings</span><span class="rp-cl-badge" [class.cl-ok]="cl['accVahan']==='pass'" [class.cl-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Transmission type matches RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accTransmission']==='pass'" [class.cl-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Fuel type matches engine specs &amp; RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accFuel']==='pass'" [class.cl-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">All mandatory inspection fields filled</span><span class="rp-cl-badge" [class.cl-ok]="cl['accMandatory']==='pass'" [class.cl-flag]="cl['accMandatory']==='fail'">{{ cl['accMandatory'] === 'pass' ? '✓ Pass' : cl['accMandatory'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+
+          <div class="rp-cl-sub">VALUATION QUALITY</div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Minimum required photos uploaded</span><span class="rp-cl-badge" [class.cl-ok]="cl['valMinPhotos']==='pass'" [class.cl-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Valuation within acceptable market range</span><span class="rp-cl-badge" [class.cl-ok]="cl['valInRange']==='pass'" [class.cl-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Dedupe check completed</span><span class="rp-cl-badge" [class.cl-ok]="cl['valDedupe']==='pass'" [class.cl-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Vehicle age &amp; odometer reading consistent</span><span class="rp-cl-badge" [class.cl-ok]="cl['valAgeOdo']==='pass'" [class.cl-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Checklist ratings support overall vehicle score</span><span class="rp-cl-badge" [class.cl-ok]="cl['valScore']==='pass'" [class.cl-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+        </div>
+      </div>
+
+      <!-- ── SECTION: CONDITION ASSESSMENT ── -->
+      <div class="rp-section">
+        <div class="rps-heading">5. CONDITION ASSESSMENT</div>
+        <div class="rp-condition-grid">
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Overall Condition</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recCondition']==='good'" [class.cv-amber]="cl['recCondition']==='average'" [class.cv-red]="cl['recCondition']==='poor'">
+              {{ cl['recCondition'] === 'good' ? 'GOOD' : cl['recCondition'] === 'average' ? 'AVERAGE' : cl['recCondition'] === 'poor' ? 'POOR' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Exterior Condition</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recExterior']==='good'" [class.cv-amber]="cl['recExterior']==='minor'" [class.cv-red]="cl['recExterior']==='major'">
+              {{ cl['recExterior'] === 'good' ? 'GOOD' : cl['recExterior'] === 'minor' ? 'MINOR DAMAGE' : cl['recExterior'] === 'major' ? 'MAJOR DAMAGE' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Engine / Mechanical</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recEngine']==='good'" [class.cv-amber]="cl['recEngine']==='average'" [class.cv-red]="cl['recEngine']==='poor'">
+              {{ cl['recEngine'] === 'good' ? 'GOOD' : cl['recEngine'] === 'average' ? 'AVERAGE' : cl['recEngine'] === 'poor' ? 'POOR' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Tyre Condition</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recTyre']==='good'" [class.cv-amber]="cl['recTyre']==='average'" [class.cv-red]="cl['recTyre']==='replacement'">
+              {{ cl['recTyre'] === 'good' ? 'GOOD' : cl['recTyre'] === 'average' ? 'AVERAGE' : cl['recTyre'] === 'replacement' ? 'NEEDS REPLACEMENT' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Damage Detected</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recDamage']==='none'" [class.cv-amber]="cl['recDamage']==='minor'" [class.cv-red]="cl['recDamage']==='major'">
+              {{ cl['recDamage'] === 'none' ? 'NONE' : cl['recDamage'] === 'minor' ? 'MINOR' : cl['recDamage'] === 'major' ? 'MAJOR' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Missing Parts</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['recMissingParts']==='none'" [class.cv-red]="cl['recMissingParts']==='present'">
+              {{ cl['recMissingParts'] === 'none' ? 'NONE' : cl['recMissingParts'] === 'present' ? 'PARTS MISSING' : '—' }}
+            </div>
+          </div>
+        </div>
+        <div class="rps-remarks" *ngIf="clRemarks['rec']">
+          <strong>QC Summary Remarks:</strong> {{ clRemarks['rec'] }}
+        </div>
+      </div>
+
+      <!-- ── SECTION: PHOTOS ── -->
+      <div class="rp-section">
+        <div class="rps-heading">6. VEHICLE PHOTOGRAPHS ({{ photoKeys.length }})</div>
+        <div class="rp-photo-grid">
+          <div class="rp-photo-item" *ngFor="let key of photoKeys; let i = index" (click)="openLightbox(i)">
+            <img [src]="report.photoUrls[key]" [alt]="key" />
+            <div class="rp-photo-label">{{ key }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FINAL RECOMMENDATION ── -->
+      <div class="rp-recommendation"
+           [class.rpr-green]="cl['recFinal']==='recommended'"
+           [class.rpr-amber]="cl['recFinal']==='conditional'"
+           [class.rpr-red]="cl['recFinal']==='not-recommended'">
+        <div class="rpr-title">FINAL QC RECOMMENDATION</div>
+        <div class="rpr-value">
+          {{ cl['recFinal'] === 'recommended' ? '✅ RECOMMENDED FOR DISBURSEMENT'
+           : cl['recFinal'] === 'conditional'  ? '⚠️ RECOMMENDED WITH CONDITIONS'
+           : cl['recFinal'] === 'not-recommended' ? '❌ NOT RECOMMENDED'
+           : '— PENDING ASSESSMENT' }}
+        </div>
+      </div>
+
+      <!-- REPORT FOOTER -->
+      <div class="rp-footer">
+        <div class="rpf-left">
+          <div class="rpf-label">GENERATED BY</div>
+          <div class="rpf-val">Pronto Vehicle Valuation Platform</div>
+        </div>
+        <div class="rpf-right">
+          <div class="rpf-label">GENERATED ON</div>
+          <div class="rpf-val">{{ report.createdAt | date:'dd MMM yyyy, hh:mm a' }}</div>
+        </div>
+      </div>
+
+    </div><!-- /report-paper -->
+
+    <!-- Notes (outside the report paper) -->
+    <div class="pg-card" style="margin-top:8px">
+      <div class="pg-card-title"><span class="pg-card-title-accent"></span>Notes</div>
+      <div class="pg-card-body">
+        <app-common-notes
+          [entityType]="'FinalReport'"
+          [entityId]="valuationId"
+          [currentUser]="getCurrentUser()"
+          [collapsible]="true">
+        </app-common-notes>
+      </div>
     </div>
-    <div class="modal-body">
-      <p>The original QC user could not be found. Please manually select a user:</p>
-      <label>Assign To (QC):</label>
-      <select [(ngModel)]="selectedOverrideUser" class="modal-input">
-        <option value="" disabled selected>-- Select QC User --</option>
-        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
-          {{ user.name }} ({{ user.phoneNumber }})
-        </option>
-      </select>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
-        Assign & Return
+
+    <!-- Approver Decision (only for permitted users) -->
+    <div class="apr-action-bar" *ngIf="canEditFinalReport()">
+      <button type="button" class="aab-btn aab-approve" (click)="onApprove()">
+        <span class="aab-icon">✅</span>
+        <div class="aab-title">Approve Case</div>
+        <div class="aab-sub">Generate &amp; dispatch final report</div>
+      </button>
+      <button type="button" class="aab-btn aab-return" (click)="openReturnModal()">
+        <span class="aab-icon">↩</span>
+        <div class="aab-title">Return with Recommendations</div>
+        <div class="aab-sub">Send back to QC / Inspector</div>
+      </button>
+      <button type="button" class="aab-btn aab-reject" (click)="openRejectModal()">
+        <span class="aab-icon">❌</span>
+        <div class="aab-title">Reject Case</div>
+        <div class="aab-sub">Permanently close this case</div>
       </button>
     </div>
+
+    <!-- Bottom bar -->
+    <div class="fr-toolbar">
+      <button mat-raised-button color="accent" (click)="downloadPdf()">⬇ Download PDF</button>
+      <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+      <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
+      <button mat-raised-button (click)="onBack()">Back</button>
+    </div>
+
+  </ng-container>
+
+  <!-- LIGHTBOX -->
+  <div class="lb-overlay" *ngIf="lightboxOpen" (click)="closeLightbox()">
+    <div class="lb-box" (click)="$event.stopPropagation()">
+      <button class="lb-close" (click)="closeLightbox()">×</button>
+      <button class="lb-arrow" (click)="prevPhoto()">&#8249;</button>
+      <div class="lb-img-wrap">
+        <img [src]="report.photoUrls[photoKeys[lightboxIndex]]" [alt]="photoKeys[lightboxIndex]" />
+        <div class="lb-caption">{{ photoKeys[lightboxIndex] }} &nbsp;·&nbsp; {{ lightboxIndex + 1 }} / {{ photoKeys.length }}</div>
+      </div>
+      <button class="lb-arrow" (click)="nextPhoto()">&#8250;</button>
+    </div>
   </div>
-</div>
-</div><!-- /pg-wrap -->
+
+  <!-- RETURN MODAL -->
+  <div class="modal-overlay" *ngIf="showReturnModal">
+    <div class="modal-box">
+      <div class="modal-header"><h3>Return Final Report</h3><span class="close-btn" (click)="closeModals()">×</span></div>
+      <div class="modal-body">
+        <p>This case will be returned to <b>Quality Control</b>.</p>
+        <label>Reason:</label>
+        <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+        <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVE MODAL -->
+  <div class="modal-overlay" *ngIf="showApproveModal">
+    <div class="modal-box">
+      <div class="modal-header" style="background:#10b981"><h3>✅ Approve Case</h3><span class="close-btn" (click)="closeModals()">×</span></div>
+      <div class="modal-body">
+        <p>Once approved, the final report will be marked complete and dispatched.</p>
+        <label>Approval Remarks (optional):</label>
+        <textarea [(ngModel)]="approveRemarks" class="modal-input" rows="3" placeholder="Add any remarks…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+        <button class="btn-confirm" style="background:#10b981" (click)="confirmApprove()">✅ Confirm Approval</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REJECT MODAL -->
+  <div class="modal-overlay" *ngIf="showRejectModal">
+    <div class="modal-box">
+      <div class="modal-header" style="background:#7f1d1d"><h3>❌ Reject Case</h3><span class="close-btn" (click)="closeModals()">×</span></div>
+      <div class="modal-body">
+        <p style="color:#991b1b;font-weight:600">⚠ This action permanently closes the case.</p>
+        <label>Rejection Reason *</label>
+        <textarea [(ngModel)]="rejectReason" class="modal-input" rows="4" placeholder="Provide detailed reason…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+        <button class="btn-confirm" style="background:#7f1d1d" (click)="confirmReject()">❌ Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERRIDE MODAL -->
+  <div class="modal-overlay" *ngIf="showOverrideModal">
+    <div class="modal-box">
+      <div class="modal-header warning"><h3>⚠️ User Not Found</h3></div>
+      <div class="modal-body">
+        <p>The original QC user could not be found. Please manually select a user:</p>
+        <label>Assign To (QC):</label>
+        <select [(ngModel)]="selectedOverrideUser" class="modal-input">
+          <option value="" disabled selected>-- Select QC User --</option>
+          <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">{{ user.name }} ({{ user.phoneNumber }})</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModals()">Cancel</button>
+        <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">Assign &amp; Return</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /fr-wrap -->

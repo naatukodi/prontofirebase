@@ -1,12 +1,13 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { switchMap, map, take } from 'rxjs/operators';
-import { of, Observable, Subscription } from 'rxjs';
+import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
 import { QualityControlService } from '../../../services/quality-control.service';
@@ -17,6 +18,7 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
 
 // Models
 import { QualityControl } from '../../../models/QualityControl';
+import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -25,7 +27,7 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 @Component({
   selector: 'app-valuation-quality-control-update',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent],
+  imports: [SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule],
   templateUrl: './quality-control-update.component.html',
   styleUrls: ['./quality-control-update.component.scss']
 })
@@ -53,6 +55,16 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   saveInProgress = false;
   submitInProgress = false;
   saved = false;
+
+  // Checklist state
+  cl: Record<string, string | null> = {};
+  clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
+  report!: FinalReport;
+  photoKeys: (keyof PhotoUrls)[] = [];
+
+  setCl(key: string, val: string): void {
+    this.cl[key] = this.cl[key] === val ? null : val;
+  }
 
   private subscriptions = new Subscription();
 
@@ -126,25 +138,104 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  private prefillChecklist(): void {
+    const vd  = this.report?.vehicleDetails;
+    const ins = this.report?.inspectionDetails;
+    const ve  = this.report?.valuationResponse as any;
+    const qcFormVal = this.form.getRawValue();
+
+    const chassisPunch  = (qcFormVal.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
+    const overallRating = (qcFormVal.overallRating || '').toUpperCase();
+    const engineCond    = (ins?.engineCondition     || '').toUpperCase();
+    const tyreCond      = (ins?.overallTyreCondition || '').toUpperCase();
+    const exteriorCond  = (ins?.exteriorCondition   || '').toUpperCase();
+    const bodyCondition = (ins?.bodyCondition       || '').toUpperCase();
+    const valuationAmt  = Number(qcFormVal.valuationAmount ?? 0);
+    const low           = Number(ve?.lowRange  ?? ve?.LowRange  ?? 0);
+    const high          = Number(ve?.highRange ?? ve?.HighRange ?? 0);
+
+    const condMap = (v: string): string | null =>
+      v === 'GOOD' ? 'good' : v === 'AVERAGE' ? 'average' : v === 'POOR' ? 'poor' : null;
+
+    // Document Verification
+    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
+    if (chassisPunch === 'ORIGINAL')   this.cl['docChassis'] = 'original';
+    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
+    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
+
+    // Data Accuracy
+    if (vd?.registrationNumber)            this.cl['accReg']          = 'pass';
+    if (vd?.chassisNumber || ins?.vinPlate) this.cl['accChassis']      = 'pass';
+    if ((ins?.odometer ?? 0) > 0)          this.cl['accOdo']          = 'pass';
+    if (vd?.fuel)                          this.cl['accFuel']         = 'pass';
+    if (vd?.make && vd?.model)             this.cl['accVahan']        = 'pass';
+    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner'] = 'pass';
+    if (vd?.ownerName)                     this.cl['accSerial']       = 'pass';
+    if (ins?.vehicleInspectedBy)           this.cl['accMandatory']    = 'pass';
+    if (ins?.remarks || ins?.vehicleInspectedBy) this.cl['accRemarks'] = 'pass';
+
+    // Valuation Quality
+    const photoCount = this.photoKeys?.length ?? 0;
+    if (photoCount >= 8)      this.cl['valMinPhotos'] = 'pass';
+    else if (photoCount > 0)  this.cl['valMinPhotos'] = 'fail';
+    if (low > 0 && high > 0)
+      this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
+    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
+      const age = new Date().getFullYear() - vd.yearOfMfg;
+      const avgKm = age > 0 ? ins!.odometer / age : 0;
+      this.cl['valAgeOdo'] = avgKm < 60000 ? 'pass' : 'fail';
+    }
+    if (overallRating === 'GOOD') this.cl['valScore'] = 'pass';
+    else if (overallRating === 'POOR') this.cl['valScore'] = 'fail';
+
+    // QC Recommendation
+    this.cl['recCondition'] = condMap(overallRating);
+    this.cl['recEngine']    = condMap(engineCond);
+    const extVal = exteriorCond || bodyCondition;
+    if (extVal === 'GOOD') this.cl['recExterior'] = 'good';
+    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
+    else if (extVal === 'POOR') this.cl['recExterior'] = 'major';
+    if (tyreCond === 'GOOD')     this.cl['recTyre'] = 'good';
+    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
+    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
+    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') this.cl['recFinal'] = 'not-recommended';
+    else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') this.cl['recFinal'] = 'recommended';
+    else this.cl['recFinal'] = 'conditional';
+  }
+
   // Load Data
   private loadQualityControl() {
     this.loading = true;
     this.error = null;
 
-    this.qcService
-      .getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
-      .subscribe({
-        next: (data: QualityControl) => {
-          this.patchForm(data);
-          // Store original data for change tracking
-          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
-          this.loading = false;
-        },
-        error: (err) => {
-          this.error = err.message || 'Failed to load quality control details.';
-          this.loading = false;
+    const qc$ = this.qcService.getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact);
+    const report$ = this.valuationSvc.getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact);
+
+    forkJoin({ qcData: qc$, reportData: report$ }).subscribe({
+      next: ({ qcData, reportData }) => {
+        this.report = reportData;
+        this.photoKeys = Object.keys(reportData.photoUrls || {}) as (keyof PhotoUrls)[];
+        this.patchForm(qcData);
+        this.prefillChecklist();
+        // Load previously saved checklist values (override prefilled)
+        if (qcData.qcChecklist) {
+          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) this.cl[k] = v;
+          });
         }
-      });
+        if (qcData.qcChecklistRemarks) {
+          Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
+            if (v) this.clRemarks[k] = v;
+          });
+        }
+        this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to load quality control details.';
+        this.loading = false;
+      }
+    });
   }
 
   // ✅ UPDATED: Patch Form with Payment Data
@@ -256,7 +347,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       paymentReference: v.paymentReference || null,
       paymentDate: this.toIsoUtc(v.paymentDate),
       paymentMethod: v.paymentMethod,
-      paymentAmount: v.paymentAmount 
+      paymentAmount: v.paymentAmount,
+
+      // Checklist
+      qcChecklist: this.cl,
+      qcChecklistRemarks: this.clRemarks
     };
     return payload;
   }
