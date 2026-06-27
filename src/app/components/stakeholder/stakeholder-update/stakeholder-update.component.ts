@@ -4,7 +4,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Observable, Subscription } from 'rxjs';
-import { switchMap, map, take } from 'rxjs/operators';
+import { switchMap, map, take, catchError } from 'rxjs/operators';
 
 import {
   PincodeService,
@@ -335,7 +335,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       this.applicantContact,
       payload
     ).pipe(
-      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+      switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 1, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
       switchMap(() =>
         this.workflowSvc.updateWorkflowTable(
           this.valuationId,

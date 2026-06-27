@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms'
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { switchMap, map, take } from 'rxjs/operators';
+import { switchMap, map, take, catchError } from 'rxjs/operators';
 import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
@@ -412,7 +412,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             4,
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
-          )
+          ).pipe(catchError(() => of(null)))
         ),
         // Update Workflow Table
         switchMap(() =>

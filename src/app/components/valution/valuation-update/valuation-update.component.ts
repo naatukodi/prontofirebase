@@ -7,7 +7,7 @@ import { ValuationService } from '../../../services/valuation.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { VehicleDetails } from '../../../models/VehicleDetails';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { switchMap, debounceTime, distinctUntilChanged, take, catchError } from 'rxjs/operators';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
@@ -671,7 +671,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,

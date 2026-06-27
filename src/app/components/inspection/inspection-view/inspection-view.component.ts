@@ -11,8 +11,11 @@ import { Inspection } from '../../../models/Inspection';
 // Services
 import { InspectionService } from '../../../services/inspection.service';
 import { AuthorizationService } from '../../../services/authorization.service';
-import { WorkflowService } from '../../../services/workflow.service'; 
-import { UsersService } from '../../../services/users.service';         
+import { WorkflowService } from '../../../services/workflow.service';
+import { UsersService } from '../../../services/users.service';
+
+// Registry
+import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../../../shared/inspection-field-registry';         
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -69,84 +72,11 @@ export class InspectionViewComponent implements OnInit {
   selectedOverrideUser: string = '';
   targetStep: string = 'Backend'; // AVO always returns to Backend
 
-  private visibilityMap: Record<ValuationType, string[]> = {
-    'four-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
-      'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
-      'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
-      'airBags','sunRoof','sideFenders','headLamps','batteryCondition'
-    ],
-    'cv': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
-      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
-      'upholstery','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
-      'hydraulicLift','sideUnderRunProtection','headLamps','batteryCondition','sunRoof','airBags'
-    ],
-    'two-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
-      'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'mainStand','sideStand','frontMudGuard','rearMudGuard','fuelTankCondition','chainSprocket',
-      'frontBrakeCondition','rearBrakeCondition','headLight','tailLight','indicators',
-      'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
-    ],
-    'three-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
-      'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
-      'frontForkAssy','mudguards','allGlasses','dashboard','seats','upholstery','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
-    ],
-    'tractor': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
-      'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
-      'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'rightIndividualBrakes','leftIndividualBrakes','threePointLinkage','powerTakeOff',
-      'hitchSystem','hydraulicLiftFe','frontWeights','rearWeights','ropsCanopy',
-      'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
-    ],
-    'ce': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
-      'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
-      'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashboard',
-      'seats','upholstery','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'retarder','differentialLock','pto','hydraulicSystem','boomArm','bucketCondition',
-      'bladeCondition','liftingCapacity','tyreConditionCe','underCarriage','crawlerTracks',
-      'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
-    ],
-    'bus': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
-      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
-      'upholstery','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
-      'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
-      'coachCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','sideMirrors'
-    ]
-  };
+  get registrySections(): InspectionSection[] {
+    const vk = normalizeVehicleType(this.valuationType);
+    if (!vk) return [];
+    return getFieldRegistry(vk);
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -397,13 +327,8 @@ export class InspectionViewComponent implements OnInit {
       });
   }
 
-  showField(key: string): boolean {
-    if (!this.valuationType) return false;
-    return this.visibilityMap[this.valuationType]?.includes(key) ?? false;
-  }
-
-  hv(keys: string[]): boolean {
-    return keys.some(k => this.showField(k));
+  getField(key: string): string {
+    return (this.inspection as any)?.[key] || '-';
   }
 
   displayBool(val: any, trueLabel: string = 'Yes', falseLabel: string = 'No'): string {

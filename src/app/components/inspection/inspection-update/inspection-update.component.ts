@@ -4,8 +4,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap, take } from 'rxjs/operators';
-import { Observable, Subscription } from 'rxjs';
+import { switchMap, take, catchError } from 'rxjs/operators';
+import { Observable, Subscription, of } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
 
@@ -18,6 +18,13 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
 
 // Models
 import { Inspection } from '../../../models/Inspection';
+
+// Field registry
+import {
+  getFieldRegistry, normalizeVehicleType,
+  CONDITION_OPTIONS, YES_NO_OPTIONS,
+  InspectionSection
+} from '../../../shared/inspection-field-registry';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -53,6 +60,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   inspection: Inspection | null = null;
   photoFiles: File[] = [];
 
+  readonly conditionOptions = CONDITION_OPTIONS;
+  readonly yesNoOptions = YES_NO_OPTIONS;
+
+  get registrySections(): InspectionSection[] {
+    if (!this.valuationType) return [];
+    const vk = normalizeVehicleType(this.valuationType);
+    if (!vk) return [];
+    return getFieldRegistry(vk);
+  }
+
   private assignedTo = '';
   private assignedToPhoneNumber = '';
   private assignedToEmail = '';
@@ -71,7 +88,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   private visibilityMap: Record<string, string[]> = {
     'four-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
@@ -80,7 +97,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'airBags','sunRoof','sideFenders','headLamps','batteryCondition'
     ],
     'cv': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
@@ -92,7 +109,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'hydraulicLift','sideUnderRunProtection','headLamps','batteryCondition','sunRoof','airBags'
     ],
     'two-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
@@ -102,7 +119,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
     ],
     'three-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
@@ -112,7 +129,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
     ],
     'tractor': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
@@ -123,7 +140,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
     ],
     'ce': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
@@ -135,7 +152,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
     ],
     'bus': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
@@ -406,6 +423,84 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       frontAxleFe: [''],
       rearDrawbar: [''],
 
+      // Excel-registry aligned fields
+      tyreCondition: [''],
+      electricalSystem: [''],
+      loadBodyAssy: [''],
+      bodyAssy: [''],
+      cabinAssy: [''],
+      frontBrakes: [''],
+      rearBrakes: [''],
+      headLights: [''],
+      frontSuspension: [''],
+      rearSuspension: [''],
+      rightSideGate: [''],
+      leftSideGate: [''],
+      frontScoop: [''],
+      rvMirrors: [''],
+      lockSet: [''],
+      sideCovers: [''],
+      bellyPanels: [''],
+      brakeLeversFluid: [''],
+      silencer: [''],
+      silencerCover: [''],
+      accelerator: [''],
+      handleBar: [''],
+      steeringStem: [''],
+      frontShockAbsorber: [''],
+      rearShockAbsorber: [''],
+      legGuard: [''],
+      sareeGuard: [''],
+      chainGuard: [''],
+      selfStart: [''],
+      horn: [''],
+      kickPedalFootRest: [''],
+      frontPanel: [''],
+      frontGlassFrame: [''],
+      switches: [''],
+      loadCarrier: [''],
+      steeringControlSystem: [''],
+      cabinStructure: [''],
+      dashboardControls: [''],
+      glassPanels: [''],
+      bucketBlade: [''],
+      pinsAndBushes: [''],
+      serviceBrake: [''],
+      emergencyStop: [''],
+      sensors: [''],
+      steeringControlLevers: [''],
+      hydraulicSteeringPump: [''],
+      swivelJoints: [''],
+      hydraulicOilCooler: [''],
+      hydraulicPump: [''],
+      hosesAndFittings: [''],
+      swingMechanism: [''],
+      trackChains: [''],
+      sprockets: [''],
+      rollers: [''],
+      hourMeter: [''],
+      bonnetGuard: [''],
+      torqueConverter: [''],
+      finalDrive: [''],
+      bodyStructure: [''],
+      driverCabin: [''],
+      bumpersAndGrilles: [''],
+      seatsAndBerths: [''],
+      sideBodyPanels: [''],
+      rearBodyPanels: [''],
+      operatorPlatform: [''],
+      operatorStation: [''],
+      canopy: [''],
+      frontGrilles: [''],
+      brakeEqualization: [''],
+      fanAssy: [''],
+      rearAxleFe: [''],
+      tieRodsJoints: [''],
+      muffler: [''],
+      airFilter: [''],
+      dropArm: [''],
+      attachmentHitch: [''],
+
       // ✅ ADDED PAYMENT FIELDS
       paymentStatus: ['Pending', Validators.required],
       paymentReference: [''],
@@ -463,6 +558,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const toBool = (v: any): boolean | null =>
       v === true || v === 'true' ? true : v === false || v === 'false' ? false : null;
 
+    // Normalize string dropdown values to UPPERCASE to match CONDITION_OPTIONS / YES_NO_OPTIONS
+    const nc = (v: any): string => typeof v === 'string' && v ? v.trim().toUpperCase() : '';
+
     const v = this.form;
     v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy || '',
@@ -473,145 +571,223 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       odometer: data.odometer || 0,
       vinPlate: toBool(data.vinPlate) ?? false,
       bodyType: data.bodyType || '',
-      overallTyreCondition: toBool(data.overallTyreCondition),
+      overallTyreCondition: nc(data.overallTyreCondition),
       otherAccessoryFitment: toBool(data.otherAccessoryFitment) ?? false,
       windshieldGlass: data.windshieldGlass || '',
       roadWorthyCondition: toBool(data.roadWorthyCondition) ?? false,
-      engineCondition: toBool(data.engineCondition),
-      suspensionSystem: toBool(data.suspensionSystem),
-      steeringSystem: toBool(data.steeringSystem ?? (data as any).steeringAssy),
-      brakeSystem: toBool(data.brakeSystem),
-      chassisCondition: toBool(data.chassisCondition),
-      bodyCondition: data.bodyCondition || '',
-      batteryCondition: data.batteryCondition || '',
-      paintWork: toBool(data.paintWork),
-      clutchSystem: toBool(data.clutchSystem),
-      gearBoxAssy: toBool(data.gearBoxAssy),
-      propellerShaft: toBool(data.propellerShaft),
-      differentialAssy: toBool(data.differentialAssy),
-      cabin: data.cabin || '',
-      dashboard: data.dashboard || '',
-      seats: data.seats || '',
-      headLamps: data.headLamps || '',
-      electricAssembly: data.electricAssembly || '',
-      radiator: data.radiator || '',
-      intercooler: data.intercooler || '',
-      allHosePipes: data.allHosePipes || '',
+      engineCondition: nc(data.engineCondition),
+      suspensionSystem: nc(data.suspensionSystem),
+      steeringSystem: nc(data.steeringSystem || (data as any).steeringAssy),
+      brakeSystem: nc(data.brakeSystem),
+      chassisCondition: nc(data.chassisCondition),
+      bodyCondition: nc(data.bodyCondition),
+      batteryCondition: nc(data.batteryCondition),
+      paintWork: nc(data.paintWork),
+      clutchSystem: nc(data.clutchSystem),
+      gearBoxAssy: nc(data.gearBoxAssy),
+      propellerShaft: nc(data.propellerShaft),
+      differentialAssy: nc(data.differentialAssy),
+      cabin: nc(data.cabin),
+      dashboard: nc(data.dashboard),
+      seats: nc(data.seats),
+      headLamps: nc(data.headLamps),
+      electricAssembly: nc(data.electricAssembly),
+      radiator: nc(data.radiator),
+      intercooler: nc(data.intercooler),
+      allHosePipes: nc(data.allHosePipes),
       remarks: data.remarks || '',
-      fuelSystem: data.fuelSystem || '',
-      exteriorCondition: data.exteriorCondition || '',
-      interiorCondition: data.interiorCondition || '',
-      steeringWheel: data.steeringWheel || '',
-      steeringColumn: data.steeringColumn || '',
-      steeringBox: data.steeringBox || '',
-      steeringLinkages: data.steeringLinkages || '',
-      bonnet: data.bonnet || '',
-      mudguards: data.mudguards || '',
+      fuelSystem: nc(data.fuelSystem),
+      exteriorCondition: nc(data.exteriorCondition),
+      interiorCondition: nc(data.interiorCondition),
+      steeringWheel: nc(data.steeringWheel),
+      steeringColumn: nc(data.steeringColumn),
+      steeringBox: nc(data.steeringBox),
+      steeringLinkages: nc(data.steeringLinkages),
+      bonnet: nc(data.bonnet),
+      mudguards: nc(data.mudguards),
       allGlasses: data.allGlasses || false,
-      boom: data.boom || '',
-      bucket: data.bucket || '',
-      chainTrack: data.chainTrack || '',
-      hydraulicCylinders: data.hydraulicCylinders || '',
-      swingUnit: data.swingUnit || '',
-      upholstery: (data as any).upholstery || (data as any).upholestry || '',
-      interiorTrims: data.interiorTrims || '',
-      front: data.front || '',
-      rear: data.rear || '',
-      axles: data.axles || '',
-      airConditioner: data.airConditioner || '',
-      audio: data.audio || '',
+      boom: nc(data.boom),
+      bucket: nc(data.bucket),
+      chainTrack: nc(data.chainTrack),
+      hydraulicCylinders: nc(data.hydraulicCylinders),
+      swingUnit: nc(data.swingUnit),
+      upholstery: nc((data as any).upholstery || (data as any).upholestry),
+      interiorTrims: nc(data.interiorTrims),
+      front: nc(data.front),
+      rear: nc(data.rear),
+      axles: nc(data.axles),
+      airConditioner: nc(data.airConditioner),
+      audio: nc(data.audio),
 
       // Body & Structure
-      speedoMeter: data.speedoMeter || '',
-      frontAxles: data.frontAxles || '',
-      rearAxles: data.rearAxles || '',
-      driveShafts: data.driveShafts || '',
-      steeringHandle: data.steeringHandle || '',
-      frontForkAssy: data.frontForkAssy || '',
-      frontFairing: data.frontFairing || '',
-      rearCowls: data.rearCowls || '',
-      bumpers: data.bumpers || '',
-      doors: data.doors || '',
-      fenders: data.fenders || '',
-      rightSideWing: data.rightSideWing || '',
-      leftSideWing: data.leftSideWing || '',
-      tailGate: data.tailGate || '',
-      loadFloor: data.loadFloor || '',
+      speedoMeter: nc(data.speedoMeter),
+      frontAxles: nc(data.frontAxles),
+      rearAxles: nc(data.rearAxles),
+      driveShafts: nc(data.driveShafts),
+      steeringHandle: nc(data.steeringHandle),
+      frontForkAssy: nc(data.frontForkAssy),
+      frontFairing: nc(data.frontFairing),
+      rearCowls: nc(data.rearCowls),
+      bumpers: nc(data.bumpers),
+      doors: nc(data.doors),
+      fenders: nc(data.fenders),
+      rightSideWing: nc(data.rightSideWing),
+      leftSideWing: nc(data.leftSideWing),
+      tailGate: nc(data.tailGate),
+      loadFloor: nc(data.loadFloor),
       // Brakes Additional
-      parkingBrake: data.parkingBrake || '',
-      abs: data.abs || '',
+      parkingBrake: nc(data.parkingBrake),
+      abs: nc(data.abs),
       // Electrical Additional
-      tailLightsIndicators: data.tailLightsIndicators || '',
-      wiringAssy: data.wiringAssy || '',
+      tailLightsIndicators: nc(data.tailLightsIndicators),
+      wiringAssy: nc(data.wiringAssy),
       // Crash Guards
-      frontCrashGuard: data.frontCrashGuard || '',
-      rearCrashGuard: data.rearCrashGuard || '',
+      frontCrashGuard: nc(data.frontCrashGuard),
+      rearCrashGuard: nc(data.rearCrashGuard),
       // 4W Specific
-      airBags: data.airBags || '',
-      sunRoof: data.sunRoof || '',
-      sideFenders: data.sideFenders || '',
+      airBags: nc(data.airBags),
+      sunRoof: nc(data.sunRoof),
+      sideFenders: nc(data.sideFenders),
       // CV Specific
-      hydraulicLift: data.hydraulicLift || '',
-      sideUnderRunProtection: data.sideUnderRunProtection || '',
+      hydraulicLift: nc(data.hydraulicLift),
+      sideUnderRunProtection: nc(data.sideUnderRunProtection),
       // 2W Specific
-      mainStand: data.mainStand || '',
-      sideStand: data.sideStand || '',
-      frontMudGuard: data.frontMudGuard || '',
-      rearMudGuard: data.rearMudGuard || '',
-      fuelTankCondition: data.fuelTankCondition || '',
-      chainSprocket: data.chainSprocket || '',
-      frontBrakeCondition: data.frontBrakeCondition || '',
-      rearBrakeCondition: data.rearBrakeCondition || '',
-      headLight: data.headLight || '',
-      tailLight: data.tailLight || '',
-      indicators: data.indicators || '',
-      hornCondition: data.hornCondition || '',
-      mirrorCondition: data.mirrorCondition || '',
-      seatCondition: data.seatCondition || '',
-      handleBarGrips: data.handleBarGrips || '',
-      footRest: data.footRest || '',
-      alloyWheelRim: data.alloyWheelRim || '',
+      mainStand: nc(data.mainStand),
+      sideStand: nc(data.sideStand),
+      frontMudGuard: nc(data.frontMudGuard),
+      rearMudGuard: nc(data.rearMudGuard),
+      fuelTankCondition: nc(data.fuelTankCondition),
+      chainSprocket: nc(data.chainSprocket),
+      frontBrakeCondition: nc(data.frontBrakeCondition),
+      rearBrakeCondition: nc(data.rearBrakeCondition),
+      headLight: nc(data.headLight),
+      tailLight: nc(data.tailLight),
+      indicators: nc(data.indicators),
+      hornCondition: nc(data.hornCondition),
+      mirrorCondition: nc(data.mirrorCondition),
+      seatCondition: nc(data.seatCondition),
+      handleBarGrips: nc(data.handleBarGrips),
+      footRest: nc(data.footRest),
+      alloyWheelRim: nc(data.alloyWheelRim),
       // CE Specific
-      retarder: data.retarder || '',
-      differentialLock: data.differentialLock || '',
-      pto: data.pto || '',
-      hydraulicSystem: data.hydraulicSystem || '',
-      boomArm: data.boomArm || '',
-      bucketCondition: data.bucketCondition || '',
-      bladeCondition: data.bladeCondition || '',
-      liftingCapacity: data.liftingCapacity || '',
-      tyreConditionCe: data.tyreConditionCe || '',
-      underCarriage: data.underCarriage || '',
-      crawlerTracks: data.crawlerTracks || '',
-      steelRims: data.steelRims || '',
-      attachmentCondition: data.attachmentCondition || '',
-      cabCondition: data.cabCondition || '',
-      counterWeight: data.counterWeight || '',
-      rockBreaker: data.rockBreaker || '',
+      retarder: nc(data.retarder),
+      differentialLock: nc(data.differentialLock),
+      pto: nc(data.pto),
+      hydraulicSystem: nc(data.hydraulicSystem),
+      boomArm: nc(data.boomArm),
+      bucketCondition: nc(data.bucketCondition),
+      bladeCondition: nc(data.bladeCondition),
+      liftingCapacity: nc(data.liftingCapacity),
+      tyreConditionCe: nc(data.tyreConditionCe),
+      underCarriage: nc(data.underCarriage),
+      crawlerTracks: nc(data.crawlerTracks),
+      steelRims: nc(data.steelRims),
+      attachmentCondition: nc(data.attachmentCondition),
+      cabCondition: nc(data.cabCondition),
+      counterWeight: nc(data.counterWeight),
+      rockBreaker: nc(data.rockBreaker),
       // BUS Specific
-      coachCondition: data.coachCondition || '',
-      passengerSeats: data.passengerSeats || '',
-      emergencyExits: data.emergencyExits || '',
-      luggageCompartment: data.luggageCompartment || '',
-      acSystem: data.acSystem || '',
-      destinationBoard: data.destinationBoard || '',
-      sideMirrors: data.sideMirrors || '',
+      coachCondition: nc(data.coachCondition),
+      passengerSeats: nc(data.passengerSeats),
+      emergencyExits: nc(data.emergencyExits),
+      luggageCompartment: nc(data.luggageCompartment),
+      acSystem: nc(data.acSystem),
+      destinationBoard: nc(data.destinationBoard),
+      sideMirrors: nc(data.sideMirrors),
       // FE / Tractor Specific
-      rightIndividualBrakes: data.rightIndividualBrakes || '',
-      leftIndividualBrakes: data.leftIndividualBrakes || '',
-      threePointLinkage: data.threePointLinkage || '',
-      powerTakeOff: data.powerTakeOff || '',
-      hitchSystem: data.hitchSystem || '',
-      hydraulicLiftFe: data.hydraulicLiftFe || '',
-      frontWeights: data.frontWeights || '',
-      rearWeights: data.rearWeights || '',
-      ropsCanopy: data.ropsCanopy || '',
-      frontTyreCondition: data.frontTyreCondition || '',
-      rearTyreCondition: data.rearTyreCondition || '',
-      implementAttachments: data.implementAttachments || '',
-      fuelTankFe: data.fuelTankFe || '',
-      frontAxleFe: data.frontAxleFe || '',
-      rearDrawbar: data.rearDrawbar || '',
+      rightIndividualBrakes: nc(data.rightIndividualBrakes),
+      leftIndividualBrakes: nc(data.leftIndividualBrakes),
+      threePointLinkage: nc(data.threePointLinkage),
+      powerTakeOff: nc(data.powerTakeOff),
+      hitchSystem: nc(data.hitchSystem),
+      hydraulicLiftFe: nc(data.hydraulicLiftFe),
+      frontWeights: nc(data.frontWeights),
+      rearWeights: nc(data.rearWeights),
+      ropsCanopy: nc(data.ropsCanopy),
+      frontTyreCondition: nc(data.frontTyreCondition),
+      rearTyreCondition: nc(data.rearTyreCondition),
+      implementAttachments: nc(data.implementAttachments),
+      fuelTankFe: nc(data.fuelTankFe),
+      frontAxleFe: nc(data.frontAxleFe),
+      rearDrawbar: nc(data.rearDrawbar),
+
+      // Excel-registry aligned fields
+      tyreCondition: nc((data as any).tyreCondition),
+      electricalSystem: nc((data as any).electricalSystem),
+      loadBodyAssy: nc((data as any).loadBodyAssy),
+      bodyAssy: nc((data as any).bodyAssy),
+      cabinAssy: nc((data as any).cabinAssy),
+      frontBrakes: nc((data as any).frontBrakes),
+      rearBrakes: nc((data as any).rearBrakes),
+      headLights: nc((data as any).headLights),
+      frontSuspension: nc((data as any).frontSuspension),
+      rearSuspension: nc((data as any).rearSuspension),
+      rightSideGate: nc((data as any).rightSideGate),
+      leftSideGate: nc((data as any).leftSideGate),
+      frontScoop: nc((data as any).frontScoop),
+      rvMirrors: nc((data as any).rvMirrors),
+      lockSet: nc((data as any).lockSet),
+      sideCovers: nc((data as any).sideCovers),
+      bellyPanels: nc((data as any).bellyPanels),
+      brakeLeversFluid: nc((data as any).brakeLeversFluid),
+      silencer: nc((data as any).silencer),
+      silencerCover: nc((data as any).silencerCover),
+      accelerator: nc((data as any).accelerator),
+      handleBar: nc((data as any).handleBar),
+      steeringStem: nc((data as any).steeringStem),
+      frontShockAbsorber: nc((data as any).frontShockAbsorber),
+      rearShockAbsorber: nc((data as any).rearShockAbsorber),
+      legGuard: nc((data as any).legGuard),
+      sareeGuard: nc((data as any).sareeGuard),
+      chainGuard: nc((data as any).chainGuard),
+      selfStart: nc((data as any).selfStart),
+      horn: nc((data as any).horn),
+      kickPedalFootRest: nc((data as any).kickPedalFootRest),
+      frontPanel: nc((data as any).frontPanel),
+      frontGlassFrame: nc((data as any).frontGlassFrame),
+      switches: nc((data as any).switches),
+      loadCarrier: nc((data as any).loadCarrier),
+      steeringControlSystem: nc((data as any).steeringControlSystem),
+      cabinStructure: nc((data as any).cabinStructure),
+      dashboardControls: nc((data as any).dashboardControls),
+      glassPanels: nc((data as any).glassPanels),
+      bucketBlade: nc((data as any).bucketBlade),
+      pinsAndBushes: nc((data as any).pinsAndBushes),
+      serviceBrake: nc((data as any).serviceBrake),
+      emergencyStop: nc((data as any).emergencyStop),
+      sensors: nc((data as any).sensors),
+      steeringControlLevers: nc((data as any).steeringControlLevers),
+      hydraulicSteeringPump: nc((data as any).hydraulicSteeringPump),
+      swivelJoints: nc((data as any).swivelJoints),
+      hydraulicOilCooler: nc((data as any).hydraulicOilCooler),
+      hydraulicPump: nc((data as any).hydraulicPump),
+      hosesAndFittings: nc((data as any).hosesAndFittings),
+      swingMechanism: nc((data as any).swingMechanism),
+      trackChains: nc((data as any).trackChains),
+      sprockets: nc((data as any).sprockets),
+      rollers: nc((data as any).rollers),
+      hourMeter: nc((data as any).hourMeter),
+      bonnetGuard: nc((data as any).bonnetGuard),
+      torqueConverter: nc((data as any).torqueConverter),
+      finalDrive: nc((data as any).finalDrive),
+      bodyStructure: nc((data as any).bodyStructure),
+      driverCabin: nc((data as any).driverCabin),
+      bumpersAndGrilles: nc((data as any).bumpersAndGrilles),
+      seatsAndBerths: nc((data as any).seatsAndBerths),
+      sideBodyPanels: nc((data as any).sideBodyPanels),
+      rearBodyPanels: nc((data as any).rearBodyPanels),
+      operatorPlatform: nc((data as any).operatorPlatform),
+      operatorStation: nc((data as any).operatorStation),
+      canopy: nc((data as any).canopy),
+      frontGrilles: nc((data as any).frontGrilles),
+      brakeEqualization: nc((data as any).brakeEqualization),
+      fanAssy: nc((data as any).fanAssy),
+      rearAxleFe: nc((data as any).rearAxleFe),
+      tieRodsJoints: nc((data as any).tieRodsJoints),
+      muffler: nc((data as any).muffler),
+      airFilter: nc((data as any).airFilter),
+      dropArm: nc((data as any).dropArm),
+      attachmentHitch: nc((data as any).attachmentHitch),
 
       // Payment Data
       paymentStatus: data.paymentStatus || 'Pending',
@@ -711,20 +887,28 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   public updateDefaultValues(): void {
-    // [ADDED FOR PDF READ-ONLY VIEW] Prevent default updates
     if (this.isViewOnly || !this.valuationType) { return; }
     const defaults: Record<string, any> = {};
+
+    // Old static fields via visibilityMap
     Object.keys(this.form.controls).forEach(key => {
       if (!this.showField(key)) { return; }
       const control = this.form.get(key)!;
       if (control.value === '' || control.value == null) {
-        if (control instanceof FormControl || typeof control.value === 'string') {
-          defaults[key] = 'Good';
-        }
-      } else if (typeof control.value === 'boolean') {
-        defaults[key] = true;
+        defaults[key] = typeof control.value === 'boolean' ? true : 'Good';
       }
     });
+
+    // Registry fields — use each field's declared default
+    for (const section of this.registrySections) {
+      for (const field of section.fields) {
+        const control = this.form.get(field.key);
+        if (control && (control.value === '' || control.value == null)) {
+          defaults[field.key] = field.default ?? (field.type === 'condition' ? 'GOOD' : 'YES');
+        }
+      }
+    }
+
     this.form.patchValue(defaults);
   }
 
@@ -806,6 +990,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.error = null;
     this.saving = true;
     this.saveInProgress = true;
     const payload = this.buildFormData();
@@ -814,7 +999,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
           workflow: 'AVO',
           workflowStepOrder: 3,
@@ -875,7 +1059,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
     this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-        switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
+        switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 4, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
         switchMap(() => this.qualityControlSvc.getValuationDetailsfromAI(this.valuationId, this.vehicleNumber, this.applicantContact)),
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
