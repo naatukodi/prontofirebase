@@ -257,9 +257,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.isCheckingDuplicate = true;
     
     this.valuationSvc.checkDuplicateVehicle(
-      vehicleNumber, 
-      engineNumber, 
-      chassisNumber
+      vehicleNumber,
+      engineNumber,
+      chassisNumber,
+      this.valuationId
     ).subscribe({
       next: (response) => {
         this.isCheckingDuplicate = false;

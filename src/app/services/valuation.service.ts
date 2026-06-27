@@ -121,10 +121,11 @@ export class ValuationService {
   checkDuplicateVehicle(
     vehicleNumber?: string,
     engineNumber?: string,
-    chassisNumber?: string
+    chassisNumber?: string,
+    excludeId?: string
   ): Observable<VehicleDuplicateCheckResponse> {
     let params = new HttpParams();
-    
+
     if (vehicleNumber?.trim()) {
       params = params.set('vehicleNumber', vehicleNumber.trim());
     }
@@ -133,6 +134,9 @@ export class ValuationService {
     }
     if (chassisNumber?.trim()) {
       params = params.set('chassisNumber', chassisNumber.trim());
+    }
+    if (excludeId?.trim()) {
+      params = params.set('excludeId', excludeId.trim());
     }
 
     // ✅ USE this.baseUrl (already includes /api/valuations)
