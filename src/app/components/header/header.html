@@ -36,12 +36,12 @@
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
         <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active">Dashboard</a>
+          <a class="nav-link" routerLink="/" routerLinkActive="active">Home</a>
         </li>
 
         <!-- Stakeholder only for CanEditStakeholder -->
         <li class="nav-item" *ngIf="canEditStakeholder$ | async">
-          <a class="nav-link" routerLink="/stakeholder" routerLinkActive="active">Stakeholder</a>
+          <a class="nav-link" routerLink="/stakeholder" routerLinkActive="active">New Case</a>
         </li>
 
         <!-- Users menu only for Admin -->
