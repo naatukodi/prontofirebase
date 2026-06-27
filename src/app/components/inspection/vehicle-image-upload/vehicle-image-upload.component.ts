@@ -19,10 +19,12 @@ type ImageKey =
   | 'frontLeftSide' | 'frontRightSide' | 'rearLeftSide' | 'rearRightSide'
   | 'frontViewGrille' | 'rearViewTailgate' | 'driverSideProfile' | 'passengerSideProfile'
   | 'dashboard' | 'instrumentCluster' | 'engineBay'
-  | 'chassisNumberPlate' | 'chassisImprint' | 'gearAndSeats'
+  | 'vinPlate' | 'chassisImprint'
+  | 'gearInterior' | 'frontSeat' | 'rearSeat'
   | 'dashboardCloseup' | 'odometer' | 'selfieWithVehicle'
-  | 'underbody' | 'tiresAndRims'
-  | 'chassisVerification' | 'chassisStencilTrace';
+  | 'underbody'
+  | 'tireFrontLeft' | 'tireFrontRight' | 'tireRearLeft' | 'tireRearRight'
+  | 'chassisVerification' | 'chassisStencilTrace' | 'workingOperationPhoto';
 
 type MediaKey = ImageKey | 'vehicleVideo';
 
@@ -65,20 +67,26 @@ export class VehicleImageUploadComponent implements OnInit {
     { key: 'rearViewTailgate',    label: 'Rear View (tailgate)',               type: 'image', optional: false },
     { key: 'driverSideProfile',   label: 'Driver\'s Side Profile',             type: 'image', optional: false },
     { key: 'passengerSideProfile',label: 'Passenger Side Profile',             type: 'image', optional: false },
-    { key: 'dashboard',           label: 'Dashboard',                          type: 'image', optional: false },
-    { key: 'instrumentCluster',   label: 'Instrument Cluster / Odometer',      type: 'image', optional: false },
-    { key: 'engineBay',           label: 'Engine Bay',                         type: 'image', optional: false },
-    { key: 'chassisNumberPlate',  label: 'Chassis Number Plate',               type: 'image', optional: false },
-    { key: 'chassisImprint',      label: 'Chassis Imprint (scratched on metal)',type: 'image', optional: false },
-    { key: 'gearAndSeats',        label: 'Gear and Seats (interior)',          type: 'image', optional: false },
-    { key: 'dashboardCloseup',    label: 'Dashboard Close-up (controls)',      type: 'image', optional: false },
-    { key: 'odometer',            label: 'Odometer',                           type: 'image', optional: false },
-    { key: 'selfieWithVehicle',   label: 'Selfie of Inspector with Vehicle',   type: 'image', optional: false },
-    { key: 'underbody',           label: 'Underbody',                          type: 'image', optional: true  },
-    { key: 'tiresAndRims',        label: 'Tires and Rims',                     type: 'image', optional: false },
-    { key: 'vehicleVideo',        label: 'Vehicle Video',                      type: 'video', optional: false },
-    { key: 'chassisVerification', label: 'Chassis Verification',                type: 'image', optional: false },
-    { key: 'chassisStencilTrace', label: 'Chassis Stencil Trace',               type: 'image', optional: false }
+    { key: 'dashboard',              label: 'Dashboard',                           type: 'image', optional: true  },
+    { key: 'instrumentCluster',      label: 'Instrument Cluster / Odometer',       type: 'image', optional: true  },
+    { key: 'engineBay',              label: 'Engine Bay',                          type: 'image', optional: false },
+    { key: 'vinPlate',               label: 'VIN Plate',                           type: 'image', optional: false },
+    { key: 'chassisImprint',         label: 'Chassis Imprint (scratched on metal)',type: 'image', optional: false },
+    { key: 'gearInterior',           label: 'Gear (Interior)',                     type: 'image', optional: true  },
+    { key: 'frontSeat',              label: 'Front Seat',                          type: 'image', optional: true  },
+    { key: 'rearSeat',               label: 'Rear Seat',                           type: 'image', optional: true  },
+    { key: 'dashboardCloseup',       label: 'Dashboard Close-up (controls)',       type: 'image', optional: true  },
+    { key: 'odometer',               label: 'Odometer',                            type: 'image', optional: false },
+    { key: 'selfieWithVehicle',      label: 'Selfie of Inspector with Vehicle',    type: 'image', optional: false },
+    { key: 'underbody',              label: 'Underbody',                           type: 'image', optional: true  },
+    { key: 'tireFrontLeft',          label: 'Tire - Front Left',                   type: 'image', optional: true  },
+    { key: 'tireFrontRight',         label: 'Tire - Front Right',                  type: 'image', optional: true  },
+    { key: 'tireRearLeft',           label: 'Tire - Rear Left',                    type: 'image', optional: true  },
+    { key: 'tireRearRight',          label: 'Tire - Rear Right',                   type: 'image', optional: true  },
+    { key: 'vehicleVideo',           label: 'Vehicle Video',                       type: 'video', optional: false },
+    { key: 'chassisVerification',    label: 'Chassis Verification',                type: 'image', optional: false },
+    { key: 'chassisStencilTrace',    label: 'Chassis Stencil Trace',               type: 'image', optional: false },
+    { key: 'workingOperationPhoto',  label: 'Working / Operation Photo',           type: 'image', optional: false }
   ];
 
   selectedFiles: Record<MediaKey, File | null> = this.initRecord(null);

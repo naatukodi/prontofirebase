@@ -1,5 +1,3 @@
-/* src/app/valuation-quality-control/quality-control-update.component.scss */
-
 :host {
   display: flex;
   flex-direction: column;
@@ -16,151 +14,177 @@ form {
   gap: 16px;
 }
 
-/* Loading & Error */
-.loading,
-.error {
-  font-size: 1rem;
-}
+.error { color: #f44336; margin: 8px 0; font-size: 1rem; }
 
-.error {
-  color: #f44336;
-  margin: 8px 0;
-}
-
-/* Fieldset styling */
-fieldset.nested-group {
+/* ── Section wrapper ── */
+.qc-section {
   border: 1px solid rgba(0,0,0,0.12);
-  padding: 16px;
-  border-radius: 4px;
+  border-radius: 8px;
+  overflow: hidden;
   background: #fff;
-  margin-bottom: 24px;
-
-  legend {
-    padding: 0 8px;
-    font-weight: 500;
-    font-size: 1.1rem;
-    color: rgba(0,0,0,0.87);
-  }
+  margin-bottom: 8px;
 }
 
-/* Grid layout */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-
-  mat-form-field {
-    width: 100%;
-    background: #f5f5f5;
-    border-radius: 4px;
-  }
+.qc-section-header {
+  background: linear-gradient(135deg, #037076 0%, #025054 100%);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
-/* Button group */
-.button-group {
-  display: flex;
-  gap: 16px;
-  margin-top: 8px;
-
-  button {
-    min-width: 100px;
-  }
-}
-
-/* Ensure consistency for mat-form-field outline */
-mat-form-field {
-  .mat-form-field-outline {
-    color: rgba(0,0,0,0.12);
-  }
-}
-
-/* ── Checklist ── */
-.cl-fieldset { padding: 20px 16px; }
-
-.cl-sub-title {
+.qc-sub-header {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #025054;
-  background: linear-gradient(135deg,#037076 0%,#025054 100%);
-  color: #fff;
-  border-radius: 5px;
-  padding: 5px 12px;
-  margin: 14px 0 8px;
+  padding: 10px 16px 2px;
 }
 
-.cl-row {
+/* ── Card grid ── */
+.qc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.qc-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fff;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
+  transition: background 0.15s, border-color 0.15s;
+
+  &.card-ok   { background: #f0fdf4; border-color: #86efac; }
+  &.card-warn { background: #fffbeb; border-color: #fde68a; }
+  &.card-flag { background: #fef2f2; border-color: #fca5a5; }
+
+  &.form-card { background: #fafafa; }
 }
 
-.cl-label {
-  flex: 1;
+.qc-card-title {
   font-size: 0.875rem;
+  font-weight: 500;
   color: #374151;
-  small { display: block; font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
-}
+  line-height: 1.35;
 
-.cl-btns { display: flex; gap: 6px; flex-shrink: 0; }
-
-.cl-btn {
-  padding: 4px 12px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 20px;
-  background: #f9fafb;
-  color: #6b7280;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  &:hover { border-color: #9ca3af; background: #f3f4f6; }
-  &.cl-ok   { background: #dcfce7; border-color: #4ade80; color: #15803d; }
-  &.cl-flag { background: #fee2e2; border-color: #f87171; color: #b91c1c; }
-}
-
-.cl-remarks {
-  margin-top: 12px;
-  label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 4px; }
-  textarea {
-    width: 100%;
-    border: 1.5px solid #d1d5db;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 0.875rem;
-    resize: vertical;
-    box-sizing: border-box;
-    &:focus { outline: none; border-color: #037076; }
+  small {
+    display: block;
+    font-size: 0.72rem;
+    color: #6b7280;
+    margin-top: 3px;
+    font-weight: 400;
   }
 }
 
-/* Recommendation tiles */
-.rec-section { margin-bottom: 16px; }
+.qc-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
 
+.qc-field {
+  width: 100%;
+}
+
+/* ── Pill buttons ── */
+.qc-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.qc-pill {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #6b7280;
+  transition: all 0.15s;
+
+  &:hover { border-color: #9ca3af; background: #f3f4f6; }
+
+  &.ok   { border-color: #4ade80; color: #15803d;
+            &.active { background: #dcfce7; } }
+  &.flag { border-color: #f87171; color: #b91c1c;
+            &.active { background: #fee2e2; } }
+  &.warn { border-color: #fbbf24; color: #a16207;
+            &.active { background: #fffbeb; } }
+}
+
+/* ── Remarks ── */
+.qc-remarks-wrap {
+  padding: 8px 14px 14px;
+}
+
+.qc-remarks-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.qc-remarks-ta {
+  width: 100%;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+
+  &:focus { outline: none; border-color: #037076; }
+}
+
+/* ── Recommendation tiles ── */
 .rec-opts {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  padding: 8px 14px 14px;
 }
 
 .rec-opt {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
   background: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #475569;
   transition: all 0.15s;
+
   &:hover { border-color: #94a3b8; background: #f1f5f9; }
-  .rec-icon { font-size: 1.1rem; }
-  .rec-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; color: #475569; }
-  &.rec-green { background: #f0fdf4; border-color: #4ade80; .rec-label { color: #15803d; } }
-  &.rec-amber { background: #fffbeb; border-color: #fbbf24; .rec-label { color: #a16207; } }
-  &.rec-red   { background: #fef2f2; border-color: #f87171; .rec-label { color: #b91c1c; } }
+  &.rec-green { background: #f0fdf4; border-color: #4ade80; color: #15803d; }
+  &.rec-amber { background: #fffbeb; border-color: #fbbf24; color: #a16207; }
+  &.rec-red   { background: #fef2f2; border-color: #f87171; color: #b91c1c; }
+}
+
+/* ── Action buttons ── */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 4px 0 8px;
+
+  button { min-width: 100px; }
 }

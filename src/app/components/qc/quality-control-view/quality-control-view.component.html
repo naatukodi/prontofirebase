@@ -146,7 +146,7 @@
           <div class="qcc">
             <div class="qcc-title">CHASSIS QUICK COMPARE</div>
             <div class="qcc-number">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
-            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisNumberPlate'))">↑ Chassis Photo</span>
+            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ VIN Plate Photo</span>
             <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || '—' }}</div>
             <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</span>
             <div class="qcc-match"
@@ -250,95 +250,297 @@
       </div>
 
       <!-- ══════════════════════════════════════
-           QC DETAILS (read-only)
+           QC DETAILS (read-only card grid)
       ═══════════════════════════════════════ -->
-      <div class="pg-card">
-        <div class="pg-card-title"><span class="pg-card-title-accent"></span>QC Details</div>
-        <div class="pg-card-body">
 
-          <div class="qc-sub-head">Document Verification</div>
-          <div class="cl-sub-title">DOCUMENT STATUS</div>
-          <div class="cl-row"><div class="cl-label">Registration Certificate (RC)</div><span class="cl-vbadge" [class.cvb-ok]="cl['docRC']==='ok'" [class.cvb-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Insurance Policy</div><span class="cl-vbadge" [class.cvb-ok]="cl['docIns']==='ok'" [class.cvb-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Permit</div><span class="cl-vbadge" [class.cvb-ok]="cl['docPermit']==='ok'" [class.cvb-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Fitness Certificate</div><span class="cl-vbadge" [class.cvb-ok]="cl['docFitness']==='ok'" [class.cvb-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Road Tax</div><span class="cl-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Chassis Punch</div><span class="cl-vbadge" [class.cvb-ok]="cl['docChassis']==='original'" [class.cvb-warn]="cl['docChassis']==='repunched'" [class.cvb-flag]="cl['docChassis']==='tampered'">{{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Hypothecation</div><span class="cl-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">PAN / Address Proof</div><span class="cl-vbadge" [class.cvb-ok]="cl['docPAN']==='ok'" [class.cvb-flag]="cl['docPAN']==='flag'">{{ cl['docPAN'] === 'ok' ? '✓ OK' : cl['docPAN'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="cl-vtext" *ngIf="clRemarks['doc']"><strong>Document Remarks:</strong> {{ clRemarks['doc'] }}</div>
-
-          <hr class="section-divider" />
-          <div class="qc-sub-head">Data Accuracy</div>
-          <div class="cl-sub-title">VEHICLE IDENTITY VERIFICATION</div>
-          <div class="cl-row"><div class="cl-label">Vehicle Registration Number matches photos and RC</div><span class="cl-vbadge" [class.cvb-ok]="cl['accReg']==='pass'" [class.cvb-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Chassis Number matches photos, RC and stencil trace</div><span class="cl-vbadge" [class.cvb-ok]="cl['accChassis']==='pass'" [class.cvb-flag]="cl['accChassis']==='fail'">{{ cl['accChassis'] === 'pass' ? '✓ Pass' : cl['accChassis'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Odometer reading in photo matches reported KM value</div><span class="cl-vbadge" [class.cvb-ok]="cl['accOdo']==='pass'" [class.cvb-flag]="cl['accOdo']==='fail'">{{ cl['accOdo'] === 'pass' ? '✓ Pass' : cl['accOdo'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">VIN plate in photos matches RC and inspection report</div><span class="cl-vbadge" [class.cvb-ok]="cl['accVIN']==='pass'" [class.cvb-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Manufacture year vs registration date gap is logical</div><span class="cl-vbadge" [class.cvb-ok]="cl['accMfgReg']==='pass'" [class.cvb-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">VAHAN data matches physical inspection findings</div><span class="cl-vbadge" [class.cvb-ok]="cl['accVahan']==='pass'" [class.cvb-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-sub-title">OWNER / APPLICANT VERIFICATION</div>
-          <div class="cl-row"><div class="cl-label">Owner and applicant identity verified</div><span class="cl-vbadge" [class.cvb-ok]="cl['accOwner']==='pass'" [class.cvb-flag]="cl['accOwner']==='fail'">{{ cl['accOwner'] === 'pass' ? '✓ Pass' : cl['accOwner'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Ownership serial number verified</div><span class="cl-vbadge" [class.cvb-ok]="cl['accSerial']==='pass'" [class.cvb-flag]="cl['accSerial']==='fail'">{{ cl['accSerial'] === 'pass' ? '✓ Pass' : cl['accSerial'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-sub-title">TECHNICAL SPECIFICATIONS</div>
-          <div class="cl-row"><div class="cl-label">Transmission type matches vehicle class and RC</div><span class="cl-vbadge" [class.cvb-ok]="cl['accTransmission']==='pass'" [class.cvb-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Fuel type matches engine specifications and RC</div><span class="cl-vbadge" [class.cvb-ok]="cl['accFuel']==='pass'" [class.cvb-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-sub-title">PHOTO QUALITY &amp; COMPLETENESS</div>
-          <div class="cl-row"><div class="cl-label">All photos taken at the same location</div><span class="cl-vbadge" [class.cvb-ok]="cl['accPhotoLoc']==='pass'" [class.cvb-flag]="cl['accPhotoLoc']==='fail'">{{ cl['accPhotoLoc'] === 'pass' ? '✓ Pass' : cl['accPhotoLoc'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Vehicle photos taken in clear daylight</div><span class="cl-vbadge" [class.cvb-ok]="cl['accDaylight']==='pass'" [class.cvb-flag]="cl['accDaylight']==='fail'">{{ cl['accDaylight'] === 'pass' ? '✓ Pass' : cl['accDaylight'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Number plate clearly visible in front and rear photos</div><span class="cl-vbadge" [class.cvb-ok]="cl['accPlate']==='pass'" [class.cvb-flag]="cl['accPlate']==='fail'">{{ cl['accPlate'] === 'pass' ? '✓ Pass' : cl['accPlate'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">GPS timestamp in photos matches inspection date</div><span class="cl-vbadge" [class.cvb-ok]="cl['accGPS']==='pass'" [class.cvb-flag]="cl['accGPS']==='fail'">{{ cl['accGPS'] === 'pass' ? '✓ Pass' : cl['accGPS'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-sub-title">INSPECTION FORM ACCURACY</div>
-          <div class="cl-row"><div class="cl-label">Report date is valid — not in the future</div><span class="cl-vbadge" [class.cvb-ok]="cl['accReportDate']==='pass'" [class.cvb-flag]="cl['accReportDate']==='fail'">{{ cl['accReportDate'] === 'pass' ? '✓ Pass' : cl['accReportDate'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">All mandatory fields filled</div><span class="cl-vbadge" [class.cvb-ok]="cl['accMandatory']==='pass'" [class.cvb-flag]="cl['accMandatory']==='fail'">{{ cl['accMandatory'] === 'pass' ? '✓ Pass' : cl['accMandatory'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Inspector remarks are complete and relevant</div><span class="cl-vbadge" [class.cvb-ok]="cl['accRemarks']==='pass'" [class.cvb-flag]="cl['accRemarks']==='fail'">{{ cl['accRemarks'] === 'pass' ? '✓ Pass' : cl['accRemarks'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-vtext" *ngIf="clRemarks['acc']"><strong>Data Accuracy Remarks:</strong> {{ clRemarks['acc'] }}</div>
-
-          <hr class="section-divider" />
-          <div class="qc-sub-head">Valuation Quality</div>
-          <div class="pg-grid" style="margin-bottom:16px">
-            <mat-form-field appearance="outline"><mat-label>Sided Valuation (₹)</mat-label><input matInput [value]="viewModel.valuationAmount | number" readonly /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Market Range — Low (₹)</mat-label><input matInput [value]="viewModel.lowRange | number" readonly /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Market Range — Mid (₹)</mat-label><input matInput [value]="viewModel.midRange | number" readonly /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Market Range — High (₹)</mat-label><input matInput [value]="viewModel.highRange | number" readonly /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Vehicle Score</mat-label><input matInput [value]="report.qualityControl?.overallRating || '—'" readonly /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Dedupe Verified</mat-label><input matInput [value]="cl['valDedupe']==='pass' ? 'Verified Clean' : cl['valDedupe']==='fail' ? 'Flagged' : 'Pending'" readonly /></mat-form-field>
+      <!-- Document Verification -->
+      <div class="qc-section">
+        <div class="qc-section-header">Document Verification</div>
+        <div class="qc-sub-header">DOCUMENT STATUS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['docRC']==='ok'" [class.card-flag]="cl['docRC']==='flag'">
+            <div class="qc-card-title">Registration Certificate (RC)</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docRC']==='ok'" [class.cvb-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span>
           </div>
-          <div class="cl-sub-title">VALUATION ACCURACY</div>
-          <div class="cl-row"><div class="cl-label">Minimum required photos uploaded</div><span class="cl-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Valuation amount is within acceptable market range</div><span class="cl-vbadge" [class.cvb-ok]="cl['valInRange']==='pass'" [class.cvb-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Dedupe check completed</div><span class="cl-vbadge" [class.cvb-ok]="cl['valDedupe']==='pass'" [class.cvb-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Vehicle age and odometer reading are consistent</div><span class="cl-vbadge" [class.cvb-ok]="cl['valAgeOdo']==='pass'" [class.cvb-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-row"><div class="cl-label">Checklist ratings support the overall vehicle score</div><span class="cl-vbadge" [class.cvb-ok]="cl['valScore']==='pass'" [class.cvb-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="cl-vtext" *ngIf="clRemarks['val']"><strong>Valuation Remarks:</strong> {{ clRemarks['val'] }}</div>
+          <div class="qc-card" [class.card-ok]="cl['docIns']==='ok'" [class.card-flag]="cl['docIns']==='flag'">
+            <div class="qc-card-title">Insurance Policy</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docIns']==='ok'" [class.cvb-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'">
+            <div class="qc-card-title">Permit</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docPermit']==='ok'" [class.cvb-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docFitness']==='ok'" [class.card-flag]="cl['docFitness']==='flag'">
+            <div class="qc-card-title">Fitness Certificate</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docFitness']==='ok'" [class.cvb-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docTax']==='ok'" [class.card-flag]="cl['docTax']==='flag'">
+            <div class="qc-card-title">Road Tax</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docChassis']==='original'" [class.card-flag]="cl['docChassis']==='repunched'||cl['docChassis']==='tampered'">
+            <div class="qc-card-title">Chassis Punch</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docChassis']==='original'" [class.cvb-warn]="cl['docChassis']==='repunched'" [class.cvb-flag]="cl['docChassis']==='tampered'">{{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docHypo']==='same'" [class.card-flag]="cl['docHypo']==='different'">
+            <div class="qc-card-title">Hypothecation</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docPAN']==='ok'" [class.card-flag]="cl['docPAN']==='flag'">
+            <div class="qc-card-title">PAN / Address Proof</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docPAN']==='ok'" [class.cvb-flag]="cl['docPAN']==='flag'">{{ cl['docPAN'] === 'ok' ? '✓ OK' : cl['docPAN'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+        </div>
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['doc']">
+          <strong>Document Remarks:</strong> {{ clRemarks['doc'] }}
+        </div>
+      </div>
 
-          <hr class="section-divider" />
-          <div class="qc-sub-head">QC Recommendation</div>
-          <div class="cl-sub-title">1. OVERALL VEHICLE CONDITION</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recCondition']==='good'" [class.cvr-amber]="cl['recCondition']==='average'" [class.cvr-red]="cl['recCondition']==='poor'">{{ cl['recCondition'] === 'good' ? '🟢 GOOD' : cl['recCondition'] === 'average' ? '🟡 AVERAGE' : cl['recCondition'] === 'poor' ? '🔴 POOR' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">2. EXTERIOR CONDITION</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recExterior']==='good'" [class.cvr-amber]="cl['recExterior']==='minor'" [class.cvr-red]="cl['recExterior']==='major'">{{ cl['recExterior'] === 'good' ? '✨ GOOD' : cl['recExterior'] === 'minor' ? '🔧 MINOR DAMAGE' : cl['recExterior'] === 'major' ? '💥 MAJOR DAMAGE' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">3. ENGINE / MECHANICAL CONDITION</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recEngine']==='good'" [class.cvr-amber]="cl['recEngine']==='average'" [class.cvr-red]="cl['recEngine']==='poor'">{{ cl['recEngine'] === 'good' ? '⚙️ GOOD' : cl['recEngine'] === 'average' ? '⚠️ AVERAGE' : cl['recEngine'] === 'poor' ? '❌ POOR' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">4. TYRE CONDITION</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recTyre']==='good'" [class.cvr-amber]="cl['recTyre']==='average'" [class.cvr-red]="cl['recTyre']==='replacement'">{{ cl['recTyre'] === 'good' ? '🟢 GOOD' : cl['recTyre'] === 'average' ? '🟡 AVERAGE' : cl['recTyre'] === 'replacement' ? '🔴 NEEDS REPLACEMENT' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">5. DAMAGE DETECTED</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recDamage']==='none'" [class.cvr-amber]="cl['recDamage']==='minor'" [class.cvr-red]="cl['recDamage']==='major'">{{ cl['recDamage'] === 'none' ? '✅ NONE' : cl['recDamage'] === 'minor' ? '⚠️ MINOR' : cl['recDamage'] === 'major' ? '💥 MAJOR' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">6. MISSING PARTS</div>
-          <div class="cl-vrec" [class.cvr-green]="cl['recMissingParts']==='none'" [class.cvr-red]="cl['recMissingParts']==='present'">{{ cl['recMissingParts'] === 'none' ? '✅ NONE' : cl['recMissingParts'] === 'present' ? '❌ PARTS MISSING' : '— Not assessed' }}</div>
-          <div class="cl-sub-title">7. FINAL QC RECOMMENDATION</div>
-          <div class="cl-vrec cvr-final" [class.cvr-green]="cl['recFinal']==='recommended'" [class.cvr-amber]="cl['recFinal']==='conditional'" [class.cvr-red]="cl['recFinal']==='not-recommended'">{{ cl['recFinal'] === 'recommended' ? '✅ RECOMMENDED' : cl['recFinal'] === 'conditional' ? '⚠️ RECOMMENDED WITH CONDITIONS' : cl['recFinal'] === 'not-recommended' ? '❌ NOT RECOMMENDED' : '— Not assessed' }}</div>
-          <div class="cl-vtext" *ngIf="clRemarks['rec']" style="margin-top:12px;"><strong>QC Summary Remarks:</strong> {{ clRemarks['rec'] }}</div>
+      <!-- Data Accuracy -->
+      <div class="qc-section">
+        <div class="qc-section-header">Data Accuracy</div>
 
-          <div style="margin-top:16px;">
-            <app-common-notes
-              [entityType]="'QC'"
-              [entityId]="valuationId"
-              [currentUser]="getCurrentUser()"
-              [collapsible]="true">
-            </app-common-notes>
+        <div class="qc-sub-header">VEHICLE IDENTITY VERIFICATION</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accReg']==='pass'" [class.card-flag]="cl['accReg']==='fail'">
+            <div class="qc-card-title">Registration Number matches photos &amp; RC</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accReg']==='pass'" [class.cvb-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accChassis']==='pass'" [class.card-flag]="cl['accChassis']==='fail'">
+            <div class="qc-card-title">Chassis Number matches photos, RC &amp; stencil</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accChassis']==='pass'" [class.cvb-flag]="cl['accChassis']==='fail'">{{ cl['accChassis'] === 'pass' ? '✓ Pass' : cl['accChassis'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accOdo']==='pass'" [class.card-flag]="cl['accOdo']==='fail'">
+            <div class="qc-card-title">Odometer in photo matches reported KM</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accOdo']==='pass'" [class.cvb-flag]="cl['accOdo']==='fail'">{{ cl['accOdo'] === 'pass' ? '✓ Pass' : cl['accOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accVIN']==='pass'" [class.card-flag]="cl['accVIN']==='fail'">
+            <div class="qc-card-title">VIN plate matches RC &amp; inspection report</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accVIN']==='pass'" [class.cvb-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accMfgReg']==='pass'" [class.card-flag]="cl['accMfgReg']==='fail'">
+            <div class="qc-card-title">Manufacture year vs registration gap is logical</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accMfgReg']==='pass'" [class.cvb-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accVahan']==='pass'" [class.card-flag]="cl['accVahan']==='fail'">
+            <div class="qc-card-title">VAHAN data matches physical inspection</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accVahan']==='pass'" [class.cvb-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">OWNER / APPLICANT VERIFICATION</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accOwner']==='pass'" [class.card-flag]="cl['accOwner']==='fail'">
+            <div class="qc-card-title">Owner &amp; applicant identity verified</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accOwner']==='pass'" [class.cvb-flag]="cl['accOwner']==='fail'">{{ cl['accOwner'] === 'pass' ? '✓ Pass' : cl['accOwner'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
+            <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accSerial']==='pass'" [class.cvb-flag]="cl['accSerial']==='fail'">{{ cl['accSerial'] === 'pass' ? '✓ Pass' : cl['accSerial'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">TECHNICAL SPECIFICATIONS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'">
+            <div class="qc-card-title">Transmission type matches RC &amp; vehicle class</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accTransmission']==='pass'" [class.cvb-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accFuel']==='pass'" [class.card-flag]="cl['accFuel']==='fail'">
+            <div class="qc-card-title">Fuel type matches engine specs &amp; RC</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accFuel']==='pass'" [class.cvb-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">PHOTO QUALITY &amp; COMPLETENESS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accPhotoLoc']==='pass'" [class.card-flag]="cl['accPhotoLoc']==='fail'">
+            <div class="qc-card-title">All photos taken at the same location</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accPhotoLoc']==='pass'" [class.cvb-flag]="cl['accPhotoLoc']==='fail'">{{ cl['accPhotoLoc'] === 'pass' ? '✓ Pass' : cl['accPhotoLoc'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accDaylight']==='pass'" [class.card-flag]="cl['accDaylight']==='fail'">
+            <div class="qc-card-title">Vehicle photos taken in clear daylight</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accDaylight']==='pass'" [class.cvb-flag]="cl['accDaylight']==='fail'">{{ cl['accDaylight'] === 'pass' ? '✓ Pass' : cl['accDaylight'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accPlate']==='pass'" [class.card-flag]="cl['accPlate']==='fail'">
+            <div class="qc-card-title">Number plate clearly visible front &amp; rear</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accPlate']==='pass'" [class.cvb-flag]="cl['accPlate']==='fail'">{{ cl['accPlate'] === 'pass' ? '✓ Pass' : cl['accPlate'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accGPS']==='pass'" [class.card-flag]="cl['accGPS']==='fail'">
+            <div class="qc-card-title">GPS timestamp matches inspection date</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accGPS']==='pass'" [class.cvb-flag]="cl['accGPS']==='fail'">{{ cl['accGPS'] === 'pass' ? '✓ Pass' : cl['accGPS'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">INSPECTION FORM ACCURACY</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accReportDate']==='pass'" [class.card-flag]="cl['accReportDate']==='fail'">
+            <div class="qc-card-title">Report date is valid — not in the future</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accReportDate']==='pass'" [class.cvb-flag]="cl['accReportDate']==='fail'">{{ cl['accReportDate'] === 'pass' ? '✓ Pass' : cl['accReportDate'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accMandatory']==='pass'" [class.card-flag]="cl['accMandatory']==='fail'">
+            <div class="qc-card-title">All mandatory fields filled</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accMandatory']==='pass'" [class.cvb-flag]="cl['accMandatory']==='fail'">{{ cl['accMandatory'] === 'pass' ? '✓ Pass' : cl['accMandatory'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accRemarks']==='pass'" [class.card-flag]="cl['accRemarks']==='fail'">
+            <div class="qc-card-title">Inspector remarks are complete and relevant</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accRemarks']==='pass'" [class.cvb-flag]="cl['accRemarks']==='fail'">{{ cl['accRemarks'] === 'pass' ? '✓ Pass' : cl['accRemarks'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['acc']">
+          <strong>Data Accuracy Remarks:</strong> {{ clRemarks['acc'] }}
+        </div>
+      </div>
+
+      <!-- Valuation Quality -->
+      <div class="qc-section">
+        <div class="qc-section-header">Valuation Quality</div>
+        <div class="qc-card-grid" style="padding-top:12px;">
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">VALUATION</div><div class="qc-vinfo-val">₹{{ viewModel.valuationAmount | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET LOW</div><div class="qc-vinfo-val qc-vinfo-low">₹{{ viewModel.lowRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET MID</div><div class="qc-vinfo-val qc-vinfo-mid">₹{{ viewModel.midRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET HIGH</div><div class="qc-vinfo-val qc-vinfo-high">₹{{ viewModel.highRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">VEHICLE SCORE</div><div class="qc-vinfo-val">{{ report.qualityControl?.overallRating || '—' }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">DEDUPE</div><div class="qc-vinfo-val" [class.qc-vinfo-ok]="cl['valDedupe']==='pass'" [class.qc-vinfo-fail]="cl['valDedupe']==='fail'">{{ cl['valDedupe']==='pass' ? 'Verified Clean' : cl['valDedupe']==='fail' ? 'Flagged' : 'Pending' }}</div></div>
+        </div>
+
+        <div class="qc-sub-header">VALUATION ACCURACY</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
+            <div class="qc-card-title">Minimum required photos uploaded</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
+            <div class="qc-card-title">Valuation within acceptable market range</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valInRange']==='pass'" [class.cvb-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
+            <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valDedupe']==='pass'" [class.cvb-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valAgeOdo']==='pass'" [class.card-flag]="cl['valAgeOdo']==='fail'">
+            <div class="qc-card-title">Age &amp; odometer consistent with condition rating</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valAgeOdo']==='pass'" [class.cvb-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valScore']==='pass'" [class.card-flag]="cl['valScore']==='fail'">
+            <div class="qc-card-title">Checklist supports overall vehicle score</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valScore']==='pass'" [class.cvb-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['val']">
+          <strong>Valuation Remarks:</strong> {{ clRemarks['val'] }}
+        </div>
+      </div>
+
+      <!-- QC Recommendation -->
+      <div class="qc-section">
+        <div class="qc-section-header">QC Recommendation</div>
+        <div class="qc-card-grid">
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recCondition']==='good'"
+            [class.card-warn]="cl['recCondition']==='average'"
+            [class.card-flag]="cl['recCondition']==='poor'">
+            <div class="qc-card-title">1. Overall Vehicle Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recCondition']==='good'"
+              [class.cvb-warn]="cl['recCondition']==='average'"
+              [class.cvb-flag]="cl['recCondition']==='poor'">
+              {{ cl['recCondition'] === 'good' ? '🟢 Good' : cl['recCondition'] === 'average' ? '🟡 Average' : cl['recCondition'] === 'poor' ? '🔴 Poor' : '— Not assessed' }}
+            </span>
           </div>
 
+          <div class="qc-card"
+            [class.card-ok]="cl['recExterior']==='good'"
+            [class.card-warn]="cl['recExterior']==='minor'"
+            [class.card-flag]="cl['recExterior']==='major'">
+            <div class="qc-card-title">2. Exterior Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recExterior']==='good'"
+              [class.cvb-warn]="cl['recExterior']==='minor'"
+              [class.cvb-flag]="cl['recExterior']==='major'">
+              {{ cl['recExterior'] === 'good' ? '✨ Good' : cl['recExterior'] === 'minor' ? '🔧 Minor Damage' : cl['recExterior'] === 'major' ? '💥 Major Damage' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recEngine']==='good'"
+            [class.card-warn]="cl['recEngine']==='average'"
+            [class.card-flag]="cl['recEngine']==='poor'">
+            <div class="qc-card-title">3. Engine / Mechanical Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recEngine']==='good'"
+              [class.cvb-warn]="cl['recEngine']==='average'"
+              [class.cvb-flag]="cl['recEngine']==='poor'">
+              {{ cl['recEngine'] === 'good' ? '⚙️ Good' : cl['recEngine'] === 'average' ? '⚠️ Average' : cl['recEngine'] === 'poor' ? '❌ Poor' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recTyre']==='good'"
+            [class.card-warn]="cl['recTyre']==='average'"
+            [class.card-flag]="cl['recTyre']==='replacement'">
+            <div class="qc-card-title">4. Tyre Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recTyre']==='good'"
+              [class.cvb-warn]="cl['recTyre']==='average'"
+              [class.cvb-flag]="cl['recTyre']==='replacement'">
+              {{ cl['recTyre'] === 'good' ? '🟢 Good' : cl['recTyre'] === 'average' ? '🟡 Average' : cl['recTyre'] === 'replacement' ? '🔴 Needs Replacement' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recDamage']==='none'"
+            [class.card-warn]="cl['recDamage']==='minor'"
+            [class.card-flag]="cl['recDamage']==='major'">
+            <div class="qc-card-title">5. Damage Detected</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recDamage']==='none'"
+              [class.cvb-warn]="cl['recDamage']==='minor'"
+              [class.cvb-flag]="cl['recDamage']==='major'">
+              {{ cl['recDamage'] === 'none' ? '✅ None' : cl['recDamage'] === 'minor' ? '⚠️ Minor' : cl['recDamage'] === 'major' ? '💥 Major' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recMissingParts']==='none'"
+            [class.card-flag]="cl['recMissingParts']==='present'">
+            <div class="qc-card-title">6. Missing Parts</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recMissingParts']==='none'"
+              [class.cvb-flag]="cl['recMissingParts']==='present'">
+              {{ cl['recMissingParts'] === 'none' ? '✅ None' : cl['recMissingParts'] === 'present' ? '❌ Parts Missing' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card rec-final-card"
+            [class.card-ok]="cl['recFinal']==='recommended'"
+            [class.card-warn]="cl['recFinal']==='conditional'"
+            [class.card-flag]="cl['recFinal']==='not-recommended'">
+            <div class="qc-card-title">7. Final QC Recommendation</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recFinal']==='recommended'"
+              [class.cvb-warn]="cl['recFinal']==='conditional'"
+              [class.cvb-flag]="cl['recFinal']==='not-recommended'">
+              {{ cl['recFinal'] === 'recommended' ? '✅ Recommended' : cl['recFinal'] === 'conditional' ? '⚠️ With Conditions' : cl['recFinal'] === 'not-recommended' ? '❌ Not Recommended' : '— Not assessed' }}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['rec']">
+          <strong>QC Summary Remarks:</strong> {{ clRemarks['rec'] }}
+        </div>
+
+        <div style="padding:0 14px 14px;">
+          <app-common-notes
+            [entityType]="'QC'"
+            [entityId]="valuationId"
+            [currentUser]="getCurrentUser()"
+            [collapsible]="true">
+          </app-common-notes>
         </div>
       </div>
 
