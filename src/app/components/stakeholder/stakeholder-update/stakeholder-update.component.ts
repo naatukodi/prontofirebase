@@ -62,7 +62,8 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     'Cholamandalam Investment and Finance Company',
     'Sundaram Finance',
     'Manappuram Finance',
-    'L&T Finance'
+    'L&T Finance',
+    'Equitas Small Finance Bank'
   ];
   locationOptions: PincodeModel[] = [];
 
