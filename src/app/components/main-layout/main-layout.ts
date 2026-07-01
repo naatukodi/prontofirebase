@@ -77,8 +77,7 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
       <section class="hero">
         <div class="hero-content">
           <h1 style="text-transform: uppercase;">
-            <span style="color: green;">Vehga</span>
-            <span style="color: red;">Inspections</span>
+            <span style="color: #ffffff; font-weight: 900;">VEHGA</span><span style="color: #99f6e4; font-weight: 900;">INSPECTIONS</span>
           </h1>
           <p>Your one-stop valuations dashboard</p>
         </div>

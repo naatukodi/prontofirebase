@@ -24,19 +24,17 @@
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
         <div class="pg-card-body pg-grid">
           <mat-form-field appearance="outline"><mat-label>Name of Stakeholder</mat-label><input matInput [value]="stakeholder.name" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Branch</mat-label><input matInput [value]="stakeholder.branch || '-'" readonly /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput [value]="stakeholder.executiveName" readonly /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput [value]="stakeholder.executiveContact" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>WhatsApp Number</mat-label><input matInput [value]="stakeholder.executiveWhatsapp" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput [value]="stakeholder.executiveEmail" readonly /></mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Valuation Type</mat-label>
-            <input matInput [value]="stakeholder.valuationType === 'cv' ? 'Commercial Vehicle' : stakeholder.valuationType === 'four-wheeler' ? 'Four Wheeler' : stakeholder.valuationType === 'two-wheeler' ? 'Two Wheeler' : stakeholder.valuationType === 'three-wheeler' ? 'Three Wheeler' : stakeholder.valuationType === 'tractor' ? 'Tractor' : stakeholder.valuationType === 'ce' ? 'Construction Equipment' : (stakeholder.valuationType || '-')" readonly />
-          </mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [value]="stakeholder.vehicleLocation.pincode || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Block</mat-label><input matInput [value]="stakeholder.vehicleLocation.block || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [value]="stakeholder.vehicleLocation.district || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput [value]="stakeholder.vehicleLocation.state || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput [value]="stakeholder.vehicleLocation.country || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>WhatsApp Number</mat-label><input matInput [value]="stakeholder.executiveWhatsapp || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput [value]="stakeholder.executiveEmail || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Valuation Type</mat-label><input matInput [value]="stakeholder.valuationType || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Block / City</mat-label><input matInput [value]="stakeholder.vehicleLocation?.block || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [value]="stakeholder.vehicleLocation?.district || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Division</mat-label><input matInput [value]="stakeholder.vehicleLocation?.division || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput [value]="stakeholder.vehicleLocation?.state || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput [value]="stakeholder.vehicleLocation?.country || '-'" readonly /></mat-form-field>
         </div>
       </div>
 
@@ -46,6 +44,7 @@
         <div class="pg-card-body pg-grid">
           <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput [value]="stakeholder.applicant.name" readonly /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput [value]="stakeholder.applicant.contact" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Alternative No</mat-label><input matInput [value]="stakeholder.applicant.alternativeContact || '-'" readonly /></mat-form-field>
         </div>
       </div>
 
@@ -54,7 +53,16 @@
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
         <div class="pg-card-body pg-grid">
           <mat-form-field appearance="outline"><mat-label>Vehicle Number</mat-label><input matInput [value]="stakeholder.vehicleNumber || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Vehicle Segment</mat-label><input matInput [value]="stakeholder.vehicleSegment || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Vehicle Segment</mat-label>
+            <input matInput [value]="
+              stakeholder.vehicleSegment === 'four-wheeler' ? 'Four Wheeler' :
+              stakeholder.vehicleSegment === 'cv' ? 'Commercial Vehicle' :
+              stakeholder.vehicleSegment === 'two-wheeler' ? 'Two Wheeler' :
+              stakeholder.vehicleSegment === 'three-wheeler' ? 'Three Wheeler' :
+              stakeholder.vehicleSegment === 'tractor' ? 'Tractor' :
+              stakeholder.vehicleSegment === 'ce' ? 'Construction Equipment' :
+              (stakeholder.vehicleSegment || '-')" readonly />
+          </mat-form-field>
         </div>
       </div>
 

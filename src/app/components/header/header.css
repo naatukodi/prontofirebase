@@ -1,4 +1,15 @@
 /* src/app/header.component.css */
+nav.navbar {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: 64px;
+}
+
+nav.navbar .navbar-brand {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-right: 12px;
+}
 .sidenav-container {
   height: 100vh;
 }
@@ -55,15 +66,30 @@ mat-sidenav {
   overflow-x: hidden;
 }
 
-.navbar-title {
-  font-weight: 700;
-  font-size: 1.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+.navbar-logo {
+  width: 130px;
+  height: 64px;
+  object-fit: fill;
+  display: block;
 }
 
-.navbar-text {
-  color: #fff;
+.navbar-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.brand-vehga {
+  color: #0d7c66;
+}
+
+.brand-inspections {
+  color: #0a5c4e;
+}
+
+.navbar-text-custom {
+  color: #374151;
   font-size: 0.85rem;
   white-space: nowrap;
   text-transform: uppercase;
@@ -75,5 +101,16 @@ mat-sidenav {
   text-transform: uppercase;
   letter-spacing: 0.4px;
   font-size: 0.85rem;
+  color: #374151 !important;
+}
+
+.nav-link:hover,
+.dropdown-item:hover {
+  color: #0d7c66 !important;
+}
+
+.nav-link.active {
+  color: #0d7c66 !important;
+  font-weight: 700;
 }
 

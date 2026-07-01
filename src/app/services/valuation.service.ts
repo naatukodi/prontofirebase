@@ -59,7 +59,7 @@ export class ValuationService {
       );
   } 
 
-  getValuationDetailsfromAttesterApi(
+  getVehicleDetailsWithRc(
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string

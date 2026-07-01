@@ -19,6 +19,7 @@ import { UsersService } from '../../../services/users.service';
 import { AssignableUser, UserModel } from '../../../models/user.model';
 import { ClaimService } from '../../../services/claim.service';
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
+import { AuthorizationService } from '../../../services/authorization.service';
 
 // ✅ USE EXISTING SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
@@ -39,6 +40,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
   private usersSvc = inject(UsersService);
   private historyLogger = inject(HistoryLoggerService);  // ✅ INJECT EXISTING SERVICE
+  private authz = inject(AuthorizationService);
 
   form!: FormGroup;
   loading = true;
@@ -209,11 +211,6 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       backlistStatus: [false],
       rcStatus: [false],
       manufacturedDate: [''],
-
-      // URLs
-      stencilTraceUrl: [''],
-      chassisNoPhotoUrl: [''],
-      stencilTrace: [''],
       remarks: ['']
     });
   }
@@ -447,7 +444,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.valuationSvc
-      .getValuationDetailsfromAttesterApi(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .getVehicleDetailsWithRc(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
         next: (data: VehicleDetails) => {
           this.patchForm(data);
@@ -520,9 +517,6 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       backlistStatus: data.backlistStatus,
       rcStatus: data.rcStatus,
       manufacturedDate: data.manufacturedDate?.slice(0, 10) || '',
-      stencilTraceUrl: data.stencilTraceUrl,
-      chassisNoPhotoUrl: data.chassisNoPhotoUrl,
-      stencilTrace: data.stencilTrace,
       remarks: data.remarks || ''
     });
   }
@@ -630,9 +624,6 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     fd.append('backlistStatus', v.backlistStatus ? 'true' : 'false');
     fd.append('rcStatus', v.rcStatus ? 'true' : 'false');
     fd.append('manufacturedDate', this.toIsoDate(v.manufacturedDate));
-    fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
-    fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
-    fd.append('stencilTrace', v.stencilTrace || '');
     fd.append('remarks', v.remarks || '');
     fd.append('AssignedTo', this.assignedTo);
     fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
@@ -847,6 +838,13 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  canSubmitWithoutAssign(): boolean {
+    return this.authz.hasAnyPermission([
+      'CanViewQualityControl', 'CanCreateQualityControl', 'CanEditQualityControl',
+      'CanViewFinalReport', 'CanCreateFinalReport', 'CanEditFinalReport'
+    ]);
+  }
 
   onCancel() {
     this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {

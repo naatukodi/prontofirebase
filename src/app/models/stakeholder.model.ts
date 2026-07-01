@@ -12,17 +12,19 @@ export interface VehicleLocation {
 export interface Stakeholder {
   id: string;
   name: string;
+  branch?: string | null;
   executiveName: string;
   executiveContact: string;
   executiveWhatsapp: string;
   executiveEmail: string;
   vehicleSegment: string;
+  vehicleNumber?: string | null;
   vehicleLocation: VehicleLocation;
   valuationType: string;
-  location: string;
   applicant: {
     name: string;
     contact: string;
+    alternativeContact?: string | null;
   };
   documents: Array<{
     type: string;

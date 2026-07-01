@@ -17,10 +17,6 @@ import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService }    from '../../../services/workflow.service';
 import { ValuationService }   from '../../../services/valuation.service';
 import { HistoryLoggerService } from '../../../services/history-logger.service';
-import {
-  PincodeService,
-  PincodeModel
-} from '../../../services/pincode.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -81,8 +77,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     'Equitas Small Finance Bank'
   ];
 
-  locationOptions: PincodeModel[] = [];
-
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
@@ -101,7 +95,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     private svc: StakeholderService,
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
-    private pincodeSvc: PincodeService,
     private historyLogger: HistoryLoggerService
   ) {}
 
@@ -115,34 +108,25 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       this.route.snapshot.queryParamMap.get('applicantContact') || '';
 
     this.form = this.fb.group({
-      pincode: [
-        '',
-        [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
-      ],
-      stakeholderName:            ['', Validators.required],
-      stakeholderExecutiveName:   ['', Validators.required],
-      stakeholderExecutiveContact:['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
-      stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
-      sameAsContact: [false],
-      stakeholderExecutiveEmail:  ['', Validators.email],
-      valuationType: ['', Validators.required],
-      location:  [null as PincodeModel|null, Validators.required],
-      block:     [''],
-      district:  [''],
-      division:  [''],
-      state:     [''],
-      country:   [''],
-      applicantName:    ['', Validators.required],
-      applicantContact: ['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
-      vehicleNumber:   [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^[a-zA-Z0-9]+$/)
-        ]
-      ],
-      vehicleSegment:  [''],
-      remarks: ['']
+      stakeholderName:              ['', Validators.required],
+      branch:                       [''],
+      stakeholderExecutiveName:     ['', Validators.required],
+      stakeholderExecutiveContact:  ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      stakeholderExecutiveWhatsapp: ['', Validators.pattern(/^[0-9]{10}$/)],
+      sameAsContact:                [false],
+      stakeholderExecutiveEmail:    ['', Validators.email],
+      valuationType:                ['', Validators.required],
+      block:                        [''],
+      district:                     [''],
+      division:                     [''],
+      state:                        [''],
+      country:                      [''],
+      applicantName:                ['', Validators.required],
+      applicantContact:             ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      applicantAlternativeContact:  ['', Validators.pattern(/^[0-9]{10}$/)],
+      vehicleNumber:                ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]+$/)]],
+      vehicleSegment:               [''],
+      remarks:                      ['']
     });
 
     this.setupWhatsappAutofill();
@@ -246,46 +230,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.showDuplicateWarning = false;
   }
 
-  onPincodeLookup() {
-    const pin = this.form.get('pincode')!.value;
-    if (!this.form.get('pincode')!.valid) {
-      this.locationOptions = [];
-      return;
-    }
-    this.pincodeSvc.lookup(pin).subscribe({
-      next: offices => {
-        this.locationOptions = offices;
-        this.form.patchValue({
-          location: null as unknown as PincodeModel | null,
-          block: '',
-          district: '',
-          division: '',
-          state: '',
-          country: ''
-        });
-      },
-      error: () => {
-        this.error = 'PIN lookup failed';
-        this.locationOptions = [];
-      }
-    });
-  }
-
-  onLocationChange(selected: PincodeModel) {
-    this.form.patchValue({
-      location: selected,
-      block:    selected.block,
-      district: selected.district,
-      division: selected.division,
-      state:    selected.state,
-      country:  selected.country
-    });
-  }
-
-  compareByName(a: PincodeModel, b: PincodeModel) {
-    return a && b ? a.name === b.name : a === b;
-  }
-
   onFileChange(event: Event, field: 'rcFile' | 'insuranceFile'): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -309,21 +253,21 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     const v = this.form.getRawValue();
 
     Object.entries({
-      pincode: v.pincode,
-      locationName: v.location!.name,
-      block: v.block,
-      district: v.district,
-      division: v.division,
-      state: v.state,
-      country: v.country,
       name: v.stakeholderName,
+      branch: v.branch || '',
       executiveName: v.stakeholderExecutiveName,
       executiveContact: v.stakeholderExecutiveContact,
       executiveWhatsapp: v.stakeholderExecutiveWhatsapp || '',
       executiveEmail: v.stakeholderExecutiveEmail || '',
       valuationType: v.valuationType,
+      block: v.block,
+      district: v.district,
+      division: v.division,
+      state: v.state,
+      country: v.country,
       applicantName: v.applicantName,
       applicantContact: v.applicantContact,
+      applicantAlternativeContact: v.applicantAlternativeContact || '',
       vehicleNumber: v.vehicleNumber,
       vehicleSegment: v.vehicleSegment,
       valuationId: this.valuationId,
@@ -432,7 +376,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
           )
         ),
         switchMap(() =>
-          this.valuationSvc.getValuationDetailsfromAttesterApi(
+          this.valuationSvc.getVehicleDetailsWithRc(
             this.valuationId,
             vn,
             ac

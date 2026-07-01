@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
   <div class="container-fluid">
 
     <!-- Brand -->
@@ -6,18 +6,16 @@
       <img
         src="assets/images/vehga-01.png"
         alt="Vehga Inspections"
-        width="42"
-        height="42"
-        class="me-2"
+        class="me-2 navbar-logo"
         style="object-fit: contain;"
       />
       <span class="navbar-title">
-        <span style="color: green;">Vehga</span> <span style="color: red;">Inspections</span>
+        <span class="brand-vehga">VEHGA</span><span class="brand-inspections">INSPECTIONS</span>
       </span>
     </a>
 
     <!-- User name before menu -->
-    <span class="navbar-text ms-3 me-auto" *ngIf="userName$ | async as uname"> Hello {{ uname }}</span>
+    <span class="navbar-text-custom ms-3 me-auto" *ngIf="userName$ | async as uname"> Hello {{ uname }}</span>
 
     <!-- Toggler -->
     <button

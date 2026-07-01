@@ -295,6 +295,11 @@
           <mat-datepicker #insurancePicker></mat-datepicker>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>IDV</mat-label>
+          <input matInput type="number" formControlName="idv"/>
+        </mat-form-field>
+
       </div>
     </fieldset>
 
@@ -389,11 +394,6 @@
       <div class="grid">
 
         <mat-form-field appearance="outline">
-          <mat-label>IDV</mat-label>
-          <input matInput type="number" formControlName="idv"/>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
           <mat-label>Ex-Showroom Price</mat-label>
           <input matInput type="number" formControlName="exShowroomPrice"/>
         </mat-form-field>
@@ -406,21 +406,6 @@
           <input matInput [matDatepicker]="mfgPicker" formControlName="manufacturedDate"/>
           <mat-datepicker-toggle matSuffix [for]="mfgPicker"></mat-datepicker-toggle>
           <mat-datepicker #mfgPicker></mat-datepicker>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Stencil Trace</mat-label>
-          <input matInput formControlName="stencilTrace" placeholder="Chassis number from stencil rubbing"/>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Stencil Trace URL</mat-label>
-          <input matInput formControlName="stencilTraceUrl"/>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Chassis No Photo URL</mat-label>
-          <input matInput formControlName="chassisNoPhotoUrl"/>
         </mat-form-field>
 
       </div>
@@ -517,7 +502,8 @@
           mat-raised-button
           [color]="duplicateInfo.isDuplicate ? 'warn' : 'primary'"
           type="submit"
-          [disabled]="!saved || saving">
+          [disabled]="!saved || saving || (!assignFrozen && !canSubmitWithoutAssign())"
+          [matTooltip]="!assignFrozen && !canSubmitWithoutAssign() ? 'Please assign the case before submitting' : ''">
           <span *ngIf="!submitInProgress && !duplicateInfo.isDuplicate">Submit</span>
           <span *ngIf="!submitInProgress && duplicateInfo.isDuplicate">⚠️ Submit Anyway</span>
           <span *ngIf="submitInProgress">Submitting…</span>

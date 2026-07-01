@@ -229,6 +229,11 @@
         <input matInput [value]="vehicleDetails.insuranceValidUpTo | date:'yyyy-MM-dd'" readonly />
       </mat-form-field>
 
+      <mat-form-field appearance="outline">
+        <mat-label>IDV</mat-label>
+        <input matInput [value]="vehicleDetails.idv" readonly />
+      </mat-form-field>
+
     </div>
   </fieldset>
 
@@ -306,11 +311,6 @@
     <div class="grid">
 
       <mat-form-field appearance="outline">
-        <mat-label>IDV</mat-label>
-        <input matInput [value]="vehicleDetails.idv" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>Ex Showroom Price</mat-label>
         <input matInput [value]="vehicleDetails.exShowroomPrice" readonly />
       </mat-form-field>
@@ -328,16 +328,6 @@
       <mat-form-field appearance="outline">
         <mat-label>Manufactured Date</mat-label>
         <input matInput [value]="vehicleDetails.manufacturedDate | date:'yyyy-MM-dd'" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Stencil Trace URL</mat-label>
-        <input matInput [value]="vehicleDetails.stencilTraceUrl" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis No Photo URL</mat-label>
-        <input matInput [value]="vehicleDetails.chassisNoPhotoUrl" readonly />
       </mat-form-field>
 
     </div>

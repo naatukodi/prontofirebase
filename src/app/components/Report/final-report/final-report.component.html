@@ -14,7 +14,9 @@
 
     <!-- Top action bar (outside the report) -->
     <div class="fr-toolbar">
-      <button mat-raised-button color="accent"   (click)="downloadPdf()">⬇ Download PDF</button>
+      <button mat-raised-button color="accent" (click)="downloadPdf()" [disabled]="downloadingPdf">
+        {{ downloadingPdf ? '⏳ Generating...' : '⬇ Download PDF' }}
+      </button>
       <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
       <button mat-raised-button (click)="onBack()">Back</button>
@@ -171,9 +173,7 @@
           <div class="rp-cl-row"><span class="rp-cl-label">Permit</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPermit']==='ok'" [class.cl-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Fitness Certificate</span><span class="rp-cl-badge" [class.cl-ok]="cl['docFitness']==='ok'" [class.cl-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Road Tax</span><span class="rp-cl-badge" [class.cl-ok]="cl['docTax']==='ok'" [class.cl-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Chassis Punch Status</span><span class="rp-cl-badge" [class.cl-ok]="cl['docChassis']==='original'" [class.cl-warn]="cl['docChassis']==='repunched'" [class.cl-flag]="cl['docChassis']==='tampered'">{{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Hypothecation</span><span class="rp-cl-badge" [class.cl-ok]="cl['docHypo']==='same'" [class.cl-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">PAN / Address Proof</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPAN']==='ok'" [class.cl-flag]="cl['docPAN']==='flag'">{{ cl['docPAN'] === 'ok' ? '✓ OK' : cl['docPAN'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
 
           <div class="rp-cl-sub">DATA ACCURACY</div>
           <div class="rp-cl-row"><span class="rp-cl-label">Registration No matches photos &amp; RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accReg']==='pass'" [class.cl-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
@@ -233,6 +233,12 @@
             <div class="rp-cond-label">Missing Parts</div>
             <div class="rp-cond-val" [class.cv-green]="cl['recMissingParts']==='none'" [class.cv-red]="cl['recMissingParts']==='present'">
               {{ cl['recMissingParts'] === 'none' ? 'NONE' : cl['recMissingParts'] === 'present' ? 'PARTS MISSING' : '—' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Chassis Punch</div>
+            <div class="rp-cond-val" [class.cv-green]="cl['docChassis']==='original'" [class.cv-amber]="cl['docChassis']==='repunched'" [class.cv-red]="cl['docChassis']==='tampered'">
+              {{ cl['docChassis'] === 'original' ? 'ORIGINAL' : cl['docChassis'] === 'repunched' ? 'RE-PUNCHED' : cl['docChassis'] === 'tampered' ? 'TAMPERED' : '—' }}
             </div>
           </div>
         </div>
@@ -314,7 +320,9 @@
 
     <!-- Bottom bar -->
     <div class="fr-toolbar">
-      <button mat-raised-button color="accent" (click)="downloadPdf()">⬇ Download PDF</button>
+      <button mat-raised-button color="accent" (click)="downloadPdf()" [disabled]="downloadingPdf">
+        {{ downloadingPdf ? '⏳ Generating...' : '⬇ Download PDF' }}
+      </button>
       <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
       <button mat-raised-button (click)="onBack()">Back</button>
