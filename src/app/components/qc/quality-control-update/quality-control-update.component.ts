@@ -126,7 +126,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       overallRating: ['', Validators.required],
       valuationAmount: [0, [Validators.required, Validators.min(0)]],
-      chassisPunch: ['', Validators.required],
+      chassisPunch: [''],
       remarks: [''],
 
       // Payment Fields

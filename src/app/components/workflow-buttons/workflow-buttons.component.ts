@@ -167,7 +167,8 @@ export class WorkflowButtonsComponent {
         valuationId: this.id,
         vehicleNumber: this.vehicleNumber,
         applicantContact: this.applicantContact,
-        table: this.table
+        table: this.table,
+        currentUserName: this.currentUserName
       }
     });
   }
@@ -211,6 +212,23 @@ export class WorkflowButtonsComponent {
       'CanViewFinalReport',
       'CanCreateFinalReport',
       'CanEditFinalReport'
+    ]);
+  }
+
+  canAccessPayment() {
+    return this.authz.hasAnyPermission([
+      'CanViewInspection', 'CanCreateInspection', 'CanEditInspection',
+      'CanViewQualityControl', 'CanCreateQualityControl', 'CanEditQualityControl',
+      'CanViewFinalReport', 'CanCreateFinalReport', 'CanEditFinalReport'
+    ]);
+  }
+
+  canViewCaseActions() {
+    return this.authz.hasAnyPermission([
+      'CanViewVehicleDetails', 'CanCreateVehicleDetails', 'CanEditVehicleDetails',
+      'CanViewInspection', 'CanCreateInspection', 'CanEditInspection',
+      'CanViewQualityControl', 'CanCreateQualityControl', 'CanEditQualityControl',
+      'CanViewFinalReport', 'CanCreateFinalReport', 'CanEditFinalReport'
     ]);
   }
 }

@@ -39,6 +39,7 @@ import { FormsModule } from '@angular/forms';
 export class DashboardComponent implements OnInit {
 
   claims: WFValuation[] = [];
+  completedCases: WFValuation[] = [];
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
@@ -58,6 +59,14 @@ export class DashboardComponent implements OnInit {
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
 
+  private readonly roleStepOrder: Record<string, number> = {
+    'Stakeholder': 1,
+    'BackEnd': 2,
+    'AVO': 3,
+    'QC': 4,
+    'FinalReport': 5
+  };
+
   selectedStep = '';
   stepCounts: Record<string, number> = {};
 
@@ -71,6 +80,11 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loading = true;
+
+    this.claimService.getCompletedCases().subscribe({
+      next: cases => this.completedCases = cases || [],
+      error: () => this.completedCases = []
+    });
 
     from(this.authService.getCurrentUser()).pipe(
       timeout(8000),
@@ -97,7 +111,15 @@ export class DashboardComponent implements OnInit {
     )
     .subscribe({
       next: (data: WFValuation[]) => {
-        this.claims = data || [];
+        const all = data || [];
+
+        const stepOrder = this.currentUser
+          ? this.roleStepOrder[this.currentUser.roleId]
+          : undefined;
+
+        this.claims = stepOrder !== undefined
+          ? all.filter(v => v.workflowStepOrder === stepOrder || v.status === 'Returned')
+          : all;
 
         this.claims.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -112,24 +134,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED ROLE LOGIC
   private fetchValuationsForUser(user: UserModel): Observable<WFValuation[]> {
-
-    const assignmentRoles = ['AVO', 'QC', 'BackEnd', 'FinalReport'];
-
-    // All operational roles fetch by AssignedToPhoneNumber
-    if (assignmentRoles.includes(user.roleId)) {
-      return this.claimService
-        .getValuationsByAdjusterPhone(user.userId)
-        .pipe(take(1));
-    }
-
-    // Admin roles fetch everything
     if (this.noAssignmentExemptRoles.includes(user.roleId)) {
       return this.claimService.getOpenValuations().pipe(take(1));
     }
 
-    // State/District roles
     const states = this.parseJsonArray((user as any).assignedStates);
     const districts = this.parseJsonArray((user as any).assignedDistricts);
 
@@ -139,7 +148,7 @@ export class DashboardComponent implements OnInit {
     if (states.length)
       return this.claimService.getByStates(states).pipe(take(1));
 
-    return of<WFValuation[]>([]);
+    return this.claimService.getOpenValuations().pipe(take(1));
   }
 
   private parseJsonArray(value: unknown): string[] {
@@ -168,6 +177,11 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilter(): void {
+    if (this.selectedStep === 'Complete') {
+      this.filteredClaims = this.completedCases;
+      return;
+    }
+
     this.filteredClaims = this.claims.filter(v => {
 
       const stepIndex = this.getStepIndex(v);
@@ -207,7 +221,20 @@ export class DashboardComponent implements OnInit {
   }
 
   openCase(v: WFValuation) {
-    this.navigateToCurrent(v);
+    if (this.selectedStep === 'Complete') {
+      this.router.navigate(
+        ['/valuation', v.valuationId, 'final-report'],
+        {
+          queryParams: {
+            vehicleNumber: v.vehicleNumber,
+            applicantContact: v.applicantContact,
+            valuationType: v.valuationType
+          }
+        }
+      );
+    } else {
+      this.navigateToCurrent(v);
+    }
   }
 
   navigateToCurrent(v: WFValuation): void {

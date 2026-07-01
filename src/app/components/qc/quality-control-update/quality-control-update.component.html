@@ -31,13 +31,6 @@
             <mat-error *ngIf="form.get('valuationAmount')?.hasError('required')">Required</mat-error>
           </mat-form-field>
         </div>
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Chassis Punch</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <input matInput formControlName="chassisPunch" placeholder="Original / Re-Punched / Tampered" />
-            <mat-error *ngIf="form.get('chassisPunch')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
       </div>
     </div>
 
@@ -51,7 +44,7 @@
             <mat-select formControlName="paymentStatus">
               <mat-option value="Pending">Pending</mat-option>
               <mat-option value="Completed">Completed</mat-option>
-              <mat-option value="Failed">Failed</mat-option>
+              <mat-option value="Credit">Credit</mat-option>
             </mat-select>
             <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Required</mat-error>
           </mat-form-field>
@@ -153,31 +146,12 @@
         </div>
 
         <div class="qc-card"
-          [class.card-ok]="cl['docChassis']==='original'"
-          [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
-          <div class="qc-card-title">Chassis Punch</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['docChassis']==='original'" (click)="setCl('docChassis','original')">✓ Original</button>
-            <button type="button" class="qc-pill warn" [class.active]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched')">~ Re-Punched</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered')">✗ Tampered</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
           [class.card-ok]="cl['docHypo']==='same'"
           [class.card-flag]="cl['docHypo']==='different'">
           <div class="qc-card-title">Hypothecation</div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docHypo']==='same'" (click)="setCl('docHypo','same')">✓ Same Bank</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docHypo']==='different'" (click)="setCl('docHypo','different')">✗ Different</button>
-          </div>
-        </div>
-
-        <div class="qc-card" [class.card-ok]="cl['docPAN']==='ok'" [class.card-flag]="cl['docPAN']==='flag'">
-          <div class="qc-card-title">PAN / Address Proof</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['docPAN']==='ok'" (click)="setCl('docPAN','ok')">✓ OK</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['docPAN']==='flag'" (click)="setCl('docPAN','flag')">✗ Flag</button>
           </div>
         </div>
 
@@ -496,11 +470,22 @@
           </div>
         </div>
 
+        <div class="qc-card"
+          [class.card-ok]="cl['docChassis']==='original'"
+          [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
+          <div class="qc-card-title">7. Chassis Punch</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docChassis']==='original'" (click)="setCl('docChassis','original'); form.patchValue({chassisPunch:'Original'})">✓ Original</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched'); form.patchValue({chassisPunch:'Re-Punched'})">~ Re-Punched</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered'); form.patchValue({chassisPunch:'Tampered'})">✗ Tampered</button>
+          </div>
+        </div>
+
         <div class="qc-card rec-final-card"
           [class.card-ok]="cl['recFinal']==='recommended'"
           [class.card-warn]="cl['recFinal']==='conditional'"
           [class.card-flag]="cl['recFinal']==='not-recommended'">
-          <div class="qc-card-title">7. Final QC Recommendation</div>
+          <div class="qc-card-title">8. Final QC Recommendation</div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recFinal']==='recommended'"     (click)="setCl('recFinal','recommended')">✅ Recommended</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recFinal']==='conditional'"     (click)="setCl('recFinal','conditional')">⚠️ With Conditions</button>

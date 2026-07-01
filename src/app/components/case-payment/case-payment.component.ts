@@ -25,6 +25,9 @@ export class CasePaymentComponent implements OnInit {
   paymentAmount: number | null = null;
   paymentNotes = '';
 
+  savedBy: string | null = null;
+  savedAt: Date | null = null;
+
   saving = false;
   loading = false;
 
@@ -35,9 +38,6 @@ export class CasePaymentComponent implements OnInit {
     private authz: AuthorizationService
   ) {}
 
-  // ===============================
-  // LOAD PAYMENT WHEN DIALOG OPENS
-  // ===============================
   ngOnInit(): void {
     this.loadPayment();
   }
@@ -54,11 +54,13 @@ export class CasePaymentComponent implements OnInit {
             return;
           }
 
-          this.paymentStatus = payment.paymentStatus ?? '';
+          this.paymentStatus    = payment.paymentStatus    ?? '';
           this.paymentReference = payment.paymentReference ?? '';
-          this.paymentMethod = payment.paymentMethod ?? '';
-          this.paymentAmount = payment.paymentAmount ?? null;
-          this.paymentNotes = payment.paymentNotes ?? '';
+          this.paymentMethod    = payment.paymentMethod    ?? '';
+          this.paymentAmount    = payment.paymentAmount    ?? null;
+          this.paymentNotes     = payment.paymentNotes     ?? '';
+          this.savedBy          = payment.savedBy          ?? null;
+          this.savedAt          = payment.savedAt ? new Date(payment.savedAt) : null;
 
           if (payment.paymentDate) {
             const d = new Date(payment.paymentDate);
@@ -68,15 +70,11 @@ export class CasePaymentComponent implements OnInit {
           this.loading = false;
         },
         error: () => {
-          // No payment saved yet — that’s fine
           this.loading = false;
         }
       });
   }
 
-  // ===============================
-  // PERMISSION CHECK
-  // ===============================
   canEdit(): boolean {
     return this.authz.hasAnyPermission([
       'CanCreateInspection',
@@ -88,32 +86,34 @@ export class CasePaymentComponent implements OnInit {
     ]);
   }
 
-  // ===============================
-  // SAVE PAYMENT
-  // ===============================
   save(): void {
     if (!this.canEdit()) return;
 
-    if (!this.paymentStatus ||
-        !this.paymentMethod ||
-        !this.paymentDate ||
-        !this.paymentAmount) {
+    const isPending = this.paymentStatus === 'Pending';
+
+    if (!this.paymentStatus || !this.paymentAmount) {
       alert('Please fill all required payment fields.');
+      return;
+    }
+
+    if (!isPending && (!this.paymentMethod || !this.paymentDate)) {
+      alert('Please fill Method and Date fields.');
       return;
     }
 
     this.saving = true;
 
     this.workflowService.savePayment({
-      valuationId: this.data.valuationId,
-      vehicleNumber: this.data.vehicleNumber,
+      valuationId:      this.data.valuationId,
+      vehicleNumber:    this.data.vehicleNumber,
       applicantContact: this.data.applicantContact,
-      paymentStatus: this.paymentStatus,
+      paymentStatus:    this.paymentStatus,
       paymentReference: this.paymentReference,
-      paymentDate: new Date(this.paymentDate).toISOString(),
-      paymentMethod: this.paymentMethod,
-      paymentAmount: this.paymentAmount!,
-      paymentNotes: this.paymentNotes
+      paymentDate:      this.paymentDate ? new Date(this.paymentDate).toISOString() : null,
+      paymentMethod:    this.paymentMethod,
+      paymentAmount:    this.paymentAmount!,
+      paymentNotes:     this.paymentNotes,
+      savedBy:          this.data.currentUserName ?? 'Unknown'
     }).subscribe({
       next: () => {
         this.saving = false;

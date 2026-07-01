@@ -1,69 +1,80 @@
 <h2>Payment Details</h2>
 
-<div class="form-group">
-  <label>Payment Status *</label>
-  <select [(ngModel)]="paymentStatus" [disabled]="!canEdit()">
-    <option value="">Select</option>
-    <option value="Completed">Completed</option>
-    <option value="Pending">Pending</option>
-    <option value="Failed">Failed</option>
-  </select>
-</div>
+<div *ngIf="loading" style="text-align:center; padding: 20px;">Loading…</div>
 
-<div class="form-group">
-  <label>Payment Method *</label>
-  <select [(ngModel)]="paymentMethod" [disabled]="!canEdit()">
-    <option value="">Select</option>
-    <option value="Online">Online</option>
-    <option value="Cash">Cash</option>
-    <option value="UPI">UPI</option>
-    <option value="Card">Card</option>
-  </select>
-</div>
+<ng-container *ngIf="!loading">
 
-<div class="form-group">
-  <label>Payment Reference</label>
-  <input type="text"
-         [(ngModel)]="paymentReference"
-         [readonly]="!canEdit()" />
-</div>
+  <div class="form-group">
+    <label>Payment Status *</label>
+    <select [(ngModel)]="paymentStatus" [disabled]="!canEdit()">
+      <option value="">Select</option>
+      <option value="Completed">Completed</option>
+      <option value="Pending">Pending</option>
+      <option value="Credit">Credit</option>
+    </select>
+  </div>
 
-<div class="form-group">
-  <label>Payment Date *</label>
-  <input type="datetime-local"
-         [(ngModel)]="paymentDate"
-         [readonly]="!canEdit()" />
-</div>
+  <div class="form-group">
+    <label>Payment Method <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
+    <select [(ngModel)]="paymentMethod" [disabled]="!canEdit()">
+      <option value="">Select</option>
+      <option value="Online">Online</option>
+      <option value="Cash">Cash</option>
+      <option value="UPI">UPI</option>
+      <option value="Card">Card</option>
+    </select>
+  </div>
 
-<div class="form-group">
-  <label>Payment Amount *</label>
-  <input type="number"
-         [(ngModel)]="paymentAmount"
-         [readonly]="!canEdit()" />
-</div>
+  <div class="form-group">
+    <label>Payment Reference <span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
+    <input type="text"
+           [(ngModel)]="paymentReference"
+           [readonly]="!canEdit()" />
+  </div>
 
-<!-- ✅ NEW PAYMENT NOTES FIELD -->
-<div class="form-group">
-  <label>Payment Notes</label>
-  <textarea rows="4"
-            [(ngModel)]="paymentNotes"
-            [readonly]="!canEdit()"
-            placeholder="Enter payment related notes here...">
-  </textarea>
-</div>
+  <div class="form-group">
+    <label>Payment Date <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
+    <input type="datetime-local"
+           [(ngModel)]="paymentDate"
+           [readonly]="!canEdit()" />
+  </div>
 
-<br>
+  <div class="form-group">
+    <label>Payment Amount *</label>
+    <input type="number"
+           [(ngModel)]="paymentAmount"
+           [readonly]="!canEdit()" />
+  </div>
 
-<div style="text-align:right;">
-  <button mat-raised-button
-          color="primary"
-          *ngIf="canEdit()"
-          (click)="save()"
-          [disabled]="saving">
-    Save
-  </button>
+  <div class="form-group">
+    <label>Payment Notes</label>
+    <textarea rows="4"
+              [(ngModel)]="paymentNotes"
+              [readonly]="!canEdit()"
+              placeholder="Enter payment related notes here...">
+    </textarea>
+  </div>
 
-  <button mat-button (click)="dialogRef.close()">
-    Close
-  </button>
-</div>
+  <!-- Saved-by summary -->
+  <div *ngIf="savedBy" style="margin-top:12px; padding:10px 12px; background:#f0f4f8; border-left:3px solid #1a8a6e; border-radius:4px; font-size:0.88em; color:#444;">
+    <strong>Last saved by:</strong> {{ savedBy }}
+    <span *ngIf="savedAt"> &nbsp;|&nbsp; {{ savedAt | date:'dd/MM/yyyy h:mm a' }}</span>
+  </div>
+
+  <br>
+
+  <div style="text-align:right;">
+    <button mat-raised-button
+            color="primary"
+            *ngIf="canEdit()"
+            (click)="save()"
+            [disabled]="saving">
+      {{ saving ? 'Saving…' : 'Save' }}
+    </button>
+
+    <button mat-button (click)="dialogRef.close()">
+      Close
+    </button>
+  </div>
+
+</ng-container>

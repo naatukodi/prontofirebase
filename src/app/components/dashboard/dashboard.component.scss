@@ -107,6 +107,7 @@
   &.qc-pill          { &.active, &:hover:not(:disabled) { background: #1565c0; color: white; } }
   &.finalreport-pill { &.active, &:hover:not(:disabled) { background: #2e7d32; color: white; } }
   &.returned-pill    { color: #c62828; &.active, &:hover:not(:disabled) { background: #c62828; color: white; } }
+  &.complete-pill    { color: #1b5e20; font-weight: 700; &.active, &:hover:not(:disabled) { background: #2e7d32; color: white; } }
 }
 
 /* ── Date field ────────────────────────────────────────────────── */
@@ -300,6 +301,7 @@ td.age-3plus .tat-badge { background: #ffcdd2; color: #b71c1c; }
   &.step-qc          { background: #e3f2fd; color: #1565c0; }
   &.step-finalreport { background: #e8f5e9; color: #2e7d32; }
   &.step-returned    { background: #ffebee; color: #c62828; }
+  &.step-complete    { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
 }
 
 /* Status badge */
@@ -312,7 +314,8 @@ td.age-3plus .tat-badge { background: #ffcdd2; color: #b71c1c; }
   background: #e0f4f5;
   color: #037076;
 
-  &.returned { background: #ffebee; color: #c62828; }
+  &.returned  { background: #ffebee; color: #c62828; }
+  &.completed { background: #e8f5e9; color: #1b5e20; }
 }
 
 /* Flag */

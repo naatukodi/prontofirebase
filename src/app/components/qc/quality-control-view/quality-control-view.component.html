@@ -146,7 +146,7 @@
           <div class="qcc">
             <div class="qcc-title">CHASSIS QUICK COMPARE</div>
             <div class="qcc-number">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
-            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ VIN Plate Photo</span>
+            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ Chassis Photo</span>
             <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || '—' }}</div>
             <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</span>
             <div class="qcc-match"
@@ -174,7 +174,7 @@
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Branch / Location</mat-label>
-            <input matInput [value]="report.stakeholder?.location || '—'" readonly />
+            <input matInput [value]="report.stakeholder?.branch || '—'" readonly />
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Applicant</mat-label>
@@ -278,17 +278,9 @@
             <div class="qc-card-title">Road Tax</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span>
           </div>
-          <div class="qc-card" [class.card-ok]="cl['docChassis']==='original'" [class.card-flag]="cl['docChassis']==='repunched'||cl['docChassis']==='tampered'">
-            <div class="qc-card-title">Chassis Punch</div>
-            <span class="qc-vbadge" [class.cvb-ok]="cl['docChassis']==='original'" [class.cvb-warn]="cl['docChassis']==='repunched'" [class.cvb-flag]="cl['docChassis']==='tampered'">{{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '—' }}</span>
-          </div>
           <div class="qc-card" [class.card-ok]="cl['docHypo']==='same'" [class.card-flag]="cl['docHypo']==='different'">
             <div class="qc-card-title">Hypothecation</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span>
-          </div>
-          <div class="qc-card" [class.card-ok]="cl['docPAN']==='ok'" [class.card-flag]="cl['docPAN']==='flag'">
-            <div class="qc-card-title">PAN / Address Proof</div>
-            <span class="qc-vbadge" [class.cvb-ok]="cl['docPAN']==='ok'" [class.cvb-flag]="cl['docPAN']==='flag'">{{ cl['docPAN'] === 'ok' ? '✓ OK' : cl['docPAN'] === 'flag' ? '✗ Flag' : '—' }}</span>
           </div>
         </div>
         <div class="qc-vtext-wrap" *ngIf="clRemarks['doc']">
@@ -515,11 +507,23 @@
             </span>
           </div>
 
+          <div class="qc-card"
+            [class.card-ok]="cl['docChassis']==='original'"
+            [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
+            <div class="qc-card-title">7. Chassis Punch</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['docChassis']==='original'"
+              [class.cvb-warn]="cl['docChassis']==='repunched'"
+              [class.cvb-flag]="cl['docChassis']==='tampered'">
+              {{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '— Not assessed' }}
+            </span>
+          </div>
+
           <div class="qc-card rec-final-card"
             [class.card-ok]="cl['recFinal']==='recommended'"
             [class.card-warn]="cl['recFinal']==='conditional'"
             [class.card-flag]="cl['recFinal']==='not-recommended'">
-            <div class="qc-card-title">7. Final QC Recommendation</div>
+            <div class="qc-card-title">8. Final QC Recommendation</div>
             <span class="qc-vbadge"
               [class.cvb-ok]="cl['recFinal']==='recommended'"
               [class.cvb-warn]="cl['recFinal']==='conditional'"

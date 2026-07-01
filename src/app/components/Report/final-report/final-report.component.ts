@@ -2,7 +2,7 @@
 
 import { Component, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -33,6 +33,7 @@ export class FinalReportComponent implements OnInit {
 
   loading = true;
   error: string | null = null;
+  downloadingPdf = false;
 
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
@@ -177,8 +178,9 @@ export class FinalReportComponent implements OnInit {
   onApprove(): void { this.approveRemarks = ''; this.showApproveModal = true; }
 
   confirmApprove(): void {
+    const approvedBy = this.getCurrentUser();
     this.workflowService.completeWorkflow(
-      this.valuationId, 5, this.vehicleNumber, encodeURIComponent(this.applicantContact)
+      this.valuationId, 5, this.vehicleNumber, encodeURIComponent(this.applicantContact), approvedBy
     ).subscribe({
       next: () => {
         alert('✅ Case approved. Final report has been dispatched.');
@@ -215,6 +217,7 @@ export class FinalReportComponent implements OnInit {
   targetStep = 'QualityControl';
 
   constructor(
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private valuationService: ValuationService,
@@ -281,11 +284,34 @@ export class FinalReportComponent implements OnInit {
   }
 
   downloadPdf(): void {
-    const url = `${environment.apiBaseUrl}/Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
+    if (this.downloadingPdf) return;
+    this.downloadingPdf = true;
+
     const params = new HttpParams()
+      .set('id', this.valuationId)
       .set('vehicleNumber', this.vehicleNumber)
       .set('applicantContact', this.applicantContact);
-    window.open(`${url}?${params.toString()}`, '_blank');
+
+    this.http
+      .get(`${environment.pdfApiBaseUrl}/api/Valuation/FinalReport/pdf`, {
+        params,
+        responseType: 'blob',
+      })
+      .subscribe({
+        next: (blob) => {
+          const objectUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = objectUrl;
+          a.download = `${this.vehicleNumber}_report.pdf`;
+          a.click();
+          URL.revokeObjectURL(objectUrl);
+          this.downloadingPdf = false;
+        },
+        error: () => {
+          this.error = 'PDF generation failed. Please try again.';
+          this.downloadingPdf = false;
+        },
+      });
   }
 
   onBack(): void {
