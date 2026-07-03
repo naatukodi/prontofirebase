@@ -4,8 +4,8 @@
   <div class="page-heading">
     <div class="heading-row">
       <div>
-        <h1>Valuations Dashboard</h1>
-        <p>Manage and track all vehicle inspection cases</p>
+        <h1>{{ isAdmin ? 'Valuations Dashboard' : 'My Dashboard' }}</h1>
+        <p>{{ isAdmin ? 'Manage and track all vehicle inspection cases' : 'Your assigned cases and performance' }}</p>
       </div>
       <div class="user-info" *ngIf="currentUser">
         👤 Welcome, {{ currentUser.name }}
@@ -14,6 +14,33 @@
   </div>
 
   <div class="content-area">
+
+    <!-- ── User stats tiles (non-admin only) ── -->
+    <div class="user-stats-tiles" *ngIf="!isAdmin && userStats">
+      <div class="stat-tile tile-open">
+        <div class="tile-label">Open</div>
+        <div class="tile-value">{{ userStats.openCount }}</div>
+        <div class="tile-sub">Assigned to you</div>
+      </div>
+      <div class="stat-tile tile-aged">
+        <div class="tile-label">Aged</div>
+        <div class="tile-value">{{ userStats.agedCount }}</div>
+        <div class="tile-sub">Pending &gt; 24 hrs</div>
+      </div>
+      <div class="stat-tile tile-completed">
+        <div class="tile-label">Completed</div>
+        <div class="tile-value">{{ userStats.completedCount }}</div>
+        <div class="tile-sub">Forwarded by you</div>
+      </div>
+      <div class="stat-tile tile-tat">
+        <div class="tile-label">Avg TAT</div>
+        <div class="tile-value">
+          {{ userStats.avgTatHours || 0 }}
+          <span class="tile-unit">hrs</span>
+        </div>
+        <div class="tile-sub">Per case you handled</div>
+      </div>
+    </div>
 
     <!-- Filter row: tabs + date -->
     <div class="filter-row">
@@ -31,11 +58,20 @@
             {{ s }} ({{ stepCounts[s] || 0 }})
           </button>
         </ng-container>
-        <!-- Complete pill beside Returned -->
-        <button [class.active]="selectedStep === 'Complete'"
+        <!-- COMPLETE pill: admin = global approvals; non-admin = always 0, disabled -->
+        <button [class.active]="selectedStep === 'Complete' && isAdmin"
                 class="pill complete-pill"
+                [disabled]="!isAdmin"
                 (click)="selectedStep='Complete'; applyFilter()">
-          ✅ Complete ({{ completedCases.length }})
+          ✅ Complete ({{ isAdmin ? completedCases.length : 0 }})
+        </button>
+
+        <!-- MY COMPLETED pill: non-admin only — cases forwarded by this user -->
+        <button *ngIf="!isAdmin"
+                [class.active]="selectedStep === 'MyComplete'"
+                class="pill complete-pill"
+                (click)="selectedStep='MyComplete'; applyFilter()">
+          ✅ My Completed ({{ completedCases.length }})
         </button>
       </div>
 
@@ -60,7 +96,7 @@
       <div *ngIf="filteredClaims.length > 0" class="table-card">
         <div class="table-title">
           <span class="title-accent"></span>
-          {{ selectedStep === 'Complete' ? 'Completed Cases' : 'Valuation Cases' }}
+          {{ selectedStep === 'Complete' ? (isAdmin ? 'Completed Cases' : 'Cases Completed by Me') : 'Valuation Cases' }}
           <span class="record-count">{{ filteredClaims.length }} records</span>
         </div>
 
@@ -93,9 +129,8 @@
 
           <ng-container matColumnDef="age">
             <th mat-header-cell *matHeaderCellDef>TAT</th>
-            <td mat-cell *matCellDef="let v"
-                [ngClass]="{'age-1': ageInDays(v)===1, 'age-2': ageInDays(v)===2, 'age-3plus': ageInDays(v)>=3}">
-              <span class="tat-badge">{{ ageInDays(v) }}d</span>
+            <td mat-cell *matCellDef="let v" [ngClass]="ageClass(v)">
+              <span class="tat-badge">{{ tatLabel(v) }}</span>
             </td>
           </ng-container>
 

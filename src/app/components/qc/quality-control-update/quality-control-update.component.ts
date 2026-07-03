@@ -537,27 +537,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             {
               workflow: 'FinalReport',
               workflowStepOrder: 5,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
               qualityControlAssignedTo: this.assignedTo,
               qualityControlAssignedToPhoneNumber: this.assignedToPhoneNumber,
               qualityControlAssignedToEmail: this.assignedToEmail,
               qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
             }
-          )
-        ),
-        // Assign Valuation
-        switchMap(() =>
-          this.valuationSvc.assignValuation(
-            this.valuationId,
-            this.vehicleNumber,
-            this.applicantContact,
-            this.assignedTo,
-            this.assignedToPhoneNumber,
-            this.assignedToEmail,
-            this.assignedToWhatsapp
           )
         ),
         // Assign QC

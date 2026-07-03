@@ -1066,10 +1066,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
           workflow: 'QC',
           workflowStepOrder: 4,
-          assignedTo: this.assignedTo,
-          assignedToPhoneNumber: this.assignedToPhoneNumber,
-          assignedToEmail: this.assignedToEmail,
-          assignedToWhatsapp: this.assignedToWhatsapp,
           avoAssignedTo: this.assignedTo,
           avoAssignedToPhoneNumber: this.assignedToPhoneNumber,
           avoAssignedToEmail: this.assignedToEmail,

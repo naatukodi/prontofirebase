@@ -59,6 +59,58 @@
   padding: 20px 24px 0;
 }
 
+/* ── User stats tiles (non-admin) ──────────────────────────────── */
+.user-stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-tile {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  border-top: 4px solid #ccc;
+
+  .tile-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 6px;
+  }
+
+  .tile-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #222;
+  }
+
+  .tile-unit {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: #666;
+    margin-left: 3px;
+  }
+
+  .tile-sub {
+    font-size: 0.72rem;
+    color: #aaa;
+    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &.tile-open      { border-top-color: #037076; .tile-value { color: #037076; } }
+  &.tile-aged      { border-top-color: #e65100; .tile-value { color: #e65100; } }
+  &.tile-completed { border-top-color: #2e7d32; .tile-value { color: #2e7d32; } }
+  &.tile-tat       { border-top-color: #1565c0; .tile-value { color: #1565c0; } }
+}
+
 /* ── Filter row ────────────────────────────────────────────────── */
 .filter-row {
   display: flex;
@@ -284,6 +336,11 @@
 td.age-1  .tat-badge { background: #fff9c4; color: #f57f17; }
 td.age-2  .tat-badge { background: #ffe0b2; color: #e65100; }
 td.age-3plus .tat-badge { background: #ffcdd2; color: #b71c1c; }
+
+/* Hours-based TAT (non-admin users) */
+td.age-ok       .tat-badge { background: #e8f5e9; color: #2e7d32; }
+td.age-warn     .tat-badge { background: #fff9c4; color: #e65100; }
+td.age-critical .tat-badge { background: #ffcdd2; color: #b71c1c; }
 
 /* Step badge */
 .step-badge {

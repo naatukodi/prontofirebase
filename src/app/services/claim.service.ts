@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Claim } from '../models/claim.model';
-import { Valuation, WFValuation } from '../models/valuation.model';
+import { Valuation, WFValuation, UserDashboardStats } from '../models/valuation.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -41,6 +41,12 @@ export class ClaimService {
 
   getCompletedCases(): Observable<WFValuation[]> {
     return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open/completed`);
+  }
+
+  getUserDashboardStats(phone: string, role: string): Observable<UserDashboardStats> {
+    return this.http.get<UserDashboardStats>(
+      `${this.apiUrl}/workflows/open/user-dashboard?phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}`
+    );
   }
 
   create(v: Valuation): Observable<Valuation> {

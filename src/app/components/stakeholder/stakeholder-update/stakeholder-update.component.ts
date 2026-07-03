@@ -387,26 +387,11 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
           {
             workflow: 'Backend',
             workflowStepOrder: 2,
-            assignedTo: this.assignedTo,
-            assignedToPhoneNumber: this.assignedToPhoneNumber,
-            assignedToEmail: this.assignedToEmail,
-            assignedToWhatsapp: this.assignedToWhatsapp,
             stakeholderAssignedTo: this.assignedTo,
             stakeholderAssignedToEmail: this.assignedToEmail,
             stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
             stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
           }
-        )
-      ),
-      switchMap(() =>
-        this.valuationSvc.assignValuation(
-          this.valuationId,
-          this.vehicleNumber,
-          this.applicantContact,
-          this.assignedTo,
-          this.assignedToPhoneNumber,
-          this.assignedToEmail,
-          this.assignedToWhatsapp
         )
       ),
       switchMap(() =>
