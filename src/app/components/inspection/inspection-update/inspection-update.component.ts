@@ -15,6 +15,7 @@ import { VehicleInspectionService } from '../../../services/vehicle-inspection.s
 import { WorkflowService } from '../../../services/workflow.service';
 import { QualityControlService } from '../../../services/quality-control.service';
 import { HistoryLoggerService } from '../../../services/history-logger.service';
+import { StakeholderService } from '../../../services/stakeholder.service';
 
 // Models
 import { Inspection } from '../../../models/Inspection';
@@ -63,9 +64,28 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   readonly conditionOptions = CONDITION_OPTIONS;
   readonly yesNoOptions = YES_NO_OPTIONS;
 
+  // Resolved vehicle type: falls back to the stakeholder's vehicleSegment when
+  // valuationType (e.g. "Retail") doesn't map to a vehicle type.
+  effectiveVehicleType: string | null = null;
+
+  // Maps normalized registry keys to visibilityMap keys
+  private static readonly VISIBILITY_KEY: Record<string, string> = {
+    '4w': 'four-wheeler',
+    'cv': 'cv',
+    '2w': 'two-wheeler',
+    '3w': 'three-wheeler',
+    'fe': 'tractor',
+    'ce': 'ce',
+    'bus': 'bus'
+  };
+
+  private get visibilityKey(): string | null {
+    const vk = normalizeVehicleType(this.effectiveVehicleType ?? this.valuationType);
+    return vk ? (InspectionUpdateComponent.VISIBILITY_KEY[vk] ?? null) : null;
+  }
+
   get registrySections(): InspectionSection[] {
-    if (!this.valuationType) return [];
-    const vk = normalizeVehicleType(this.valuationType);
+    const vk = normalizeVehicleType(this.effectiveVehicleType ?? this.valuationType);
     if (!vk) return [];
     return getFieldRegistry(vk);
   }
@@ -175,8 +195,24 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     private qualityControlSvc: QualityControlService,
     private _snackBar: MatSnackBar,
     private auth: Auth,
-    private historyLogger: HistoryLoggerService
+    private historyLogger: HistoryLoggerService,
+    private stakeholderSvc: StakeholderService
   ) {}
+
+  private resolveVehicleType(): void {
+    this.effectiveVehicleType = this.valuationType;
+    if (normalizeVehicleType(this.valuationType)) return;
+
+    this.stakeholderSvc
+      .getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .pipe(take(1), catchError(() => of(null)))
+      .subscribe(s => {
+        const seg = (s as any)?.vehicleSegment;
+        if (seg && normalizeVehicleType(seg)) {
+          this.effectiveVehicleType = seg;
+        }
+      });
+  }
 
   ngOnInit(): void {
     const today = new Date();
@@ -208,6 +244,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
+        this.resolveVehicleType();
         this.initForm();
         this.loadInspection();
       } else {
@@ -222,7 +259,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   showField(key: string): boolean {
-    return !!(this.valuationType && this.visibilityMap[this.valuationType]?.includes(key));
+    const k = this.visibilityKey;
+    return !!(k && this.visibilityMap[k]?.includes(key));
   }
 
   /** Returns true if at least one key in the list is visible for the current vehicle type. */
@@ -1062,7 +1100,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 4, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
-        switchMap(() => this.qualityControlSvc.getValuationDetailsfromAI(this.valuationId, this.vehicleNumber, this.applicantContact)),
+        // AI market-value estimate is best-effort — never block the submit if it fails
+        switchMap(() => this.qualityControlSvc.getValuationDetailsfromAI(this.valuationId, this.vehicleNumber, this.applicantContact).pipe(catchError(() => of(null)))),
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
           workflow: 'QC',
           workflowStepOrder: 4,

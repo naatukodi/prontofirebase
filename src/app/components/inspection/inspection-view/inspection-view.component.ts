@@ -13,6 +13,7 @@ import { InspectionService } from '../../../services/inspection.service';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
+import { StakeholderService } from '../../../services/stakeholder.service';
 
 // Registry
 import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../../../shared/inspection-field-registry';         
@@ -72,8 +73,12 @@ export class InspectionViewComponent implements OnInit {
   selectedOverrideUser: string = '';
   targetStep: string = 'Backend'; // AVO always returns to Backend
 
+  // Resolved vehicle type: falls back to the stakeholder's vehicleSegment when
+  // valuationType (e.g. "Retail") doesn't map to a vehicle type.
+  effectiveVehicleType: string | null = null;
+
   get registrySections(): InspectionSection[] {
-    const vk = normalizeVehicleType(this.valuationType);
+    const vk = normalizeVehicleType(this.effectiveVehicleType ?? this.valuationType);
     if (!vk) return [];
     return getFieldRegistry(vk);
   }
@@ -84,9 +89,27 @@ export class InspectionViewComponent implements OnInit {
     private router: Router,
     private inspectionService: InspectionService,
     private authz: AuthorizationService,
-    private workflowService: WorkflowService, 
-    private userService: UsersService         
+    private workflowService: WorkflowService,
+    private userService: UsersService,
+    private stakeholderService: StakeholderService
   ) {}
+
+  private resolveVehicleType(): void {
+    this.effectiveVehicleType = this.valuationType;
+    if (normalizeVehicleType(this.valuationType)) return;
+
+    this.stakeholderService
+      .getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: s => {
+          const seg = (s as any)?.vehicleSegment;
+          if (seg && normalizeVehicleType(seg)) {
+            this.effectiveVehicleType = seg;
+          }
+        },
+        error: () => { /* keep valuationType; sections stay generic */ }
+      });
+  }
 
   ngOnInit(): void {
     // 1. build form with all fields you use in template
@@ -170,7 +193,10 @@ export class InspectionViewComponent implements OnInit {
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
-        
+
+        // Resolve vehicle type (falls back to stakeholder vehicleSegment)
+        this.resolveVehicleType();
+
         // 1. Fetch Inspection Data
         this.fetchInspection();
 
