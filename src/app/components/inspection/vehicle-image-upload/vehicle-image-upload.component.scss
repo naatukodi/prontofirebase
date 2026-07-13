@@ -2,7 +2,7 @@
 
 /* Overall container */
 .upload-container {
-  max-width: 1000px;
+  max-width: none;
   margin: 24px auto;
   padding: 16px;
   background: #fafafa;
@@ -28,6 +28,40 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
+}
+
+.custom-photos-section {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+
+  h3 {
+    margin-bottom: 16px;
+    font-size: 1.1rem;
+    color: #333;
+  }
+}
+
+.custom-photo-card {
+  cursor: default;
+
+  .selected-file-name {
+    font-size: 0.8rem;
+    color: #1976d2;
+    word-break: break-all;
+    text-align: center;
+  }
+}
+
+.custom-photo-name-input {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  border-radius: 4px;
+  font-size: 0.85rem;
 }
 
 .image-card {
@@ -75,6 +109,7 @@
 
 /* Preview area */
 .preview {
+  position: relative;
   width: 180px;
   height: 120px;
   margin-bottom: 8px;
@@ -143,6 +178,150 @@ button[mat-raised-button] {
   font-size: 0.85rem;
   pointer-events: all;
   cursor: pointer;
+}
+
+/* Pencil icon overlaid on the photo thumbnail itself */
+.annotate-pencil-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #037076;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  cursor: pointer;
+  z-index: 20;
+
+  &:hover { background: #fff; }
+}
+
+/* ── Annotate modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 8px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #037076;
+  color: #fff;
+
+  h3 { margin: 0; font-size: 1rem; }
+}
+
+.close-btn {
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: rgba(255,255,255,0.8);
+  &:hover { color: #fff; }
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label { font-size: 0.75rem; font-weight: 700; color: rgba(0,0,0,0.55); text-transform: uppercase; }
+}
+
+.modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.annotate-warning {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.55);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(0,0,0,0.2);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.btn-confirm {
+  padding: 8px 18px;
+  border-radius: 5px;
+  border: none;
+  background: #037076;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.annotate-preview {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f0f0f0;
+  margin-bottom: 8px;
+
+  img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    display: block;
+  }
+}
+
+.annotate-note-overlay {
+  position: absolute;
+  right: 12px;
+  bottom: 17%;
+  max-width: 80%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: right;
+  text-shadow:
+    -1.5px -1.5px 2px rgba(0,0,0,0.85),
+    1.5px -1.5px 2px rgba(0,0,0,0.85),
+    -1.5px  1.5px 2px rgba(0,0,0,0.85),
+    1.5px  1.5px 2px rgba(0,0,0,0.85);
 }
 
 /* Progress bar container */

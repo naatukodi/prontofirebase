@@ -4,7 +4,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
-import { VehicleInspectionService, PhotoMetadata } from '../../../services/vehicle-inspection.service';
+import { VehicleInspectionService, PhotoMetadata, SavedCustomPhoto } from '../../../services/vehicle-inspection.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { AuthorizationService } from '../../../services/authorization.service';
@@ -95,6 +95,18 @@ export class VehicleImageUploadComponent implements OnInit {
   isUploading:    Partial<Record<MediaKey, boolean>> = {};
   uploadError:    Partial<Record<MediaKey, string>> = {};
 
+  // ── Additional (custom-named) photos ──
+  customPhotoEntries: { file: File | null; name: string }[] = [];
+  savedCustomPhotos: SavedCustomPhoto[] = [];
+  customUploading = false;
+  customUploadError: string | undefined;
+
+  // ── Photo annotation (burn a note onto an already-uploaded photo) ──
+  annotating: { photoKey: string; url: string; label: string } | null = null;
+  annotationNote = '';
+  annotationSaving = false;
+  annotationError: string | undefined;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -138,6 +150,7 @@ export class VehicleImageUploadComponent implements OnInit {
         this.applicantContact = ac;
         this.loadExistingMedia();
         this.loadExistingMetadata();
+        this.loadSavedCustomPhotos();
       } else {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
@@ -178,7 +191,8 @@ export class VehicleImageUploadComponent implements OnInit {
                         }
                         this.mediaMetadata[normalizedKey] = {
                             capturedDate: dateVal,
-                            locationText: data[key].locationText
+                            locationText: data[key].locationText,
+                            annotationNote: data[key].annotationNote
                         };
                     }
                 });
@@ -362,6 +376,163 @@ export class VehicleImageUploadComponent implements OnInit {
         this.mediaMetadata[key].locationText = 'No GPS Support';
         this.saveMetadata(key);
     }
+  }
+
+  // ── Additional (custom-named) photos ──
+
+  private loadSavedCustomPhotos(): void {
+    this.vehicleInspectionService
+      .getCustomPhotos(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: (photos) => { this.savedCustomPhotos = photos || []; this.cdr.detectChanges(); },
+        error: (err) => console.warn('Failed to load custom photos', err)
+      });
+  }
+
+  addCustomPhotoRow(): void {
+    this.customPhotoEntries.push({ file: null, name: '' });
+  }
+
+  removeCustomPhotoRow(index: number): void {
+    this.customPhotoEntries.splice(index, 1);
+  }
+
+  onCustomFileSelected(event: Event, index: number): void {
+    const inputEl = event.target as HTMLInputElement;
+    if (inputEl.files && inputEl.files.length > 0) {
+      this.customPhotoEntries[index].file = inputEl.files[0];
+    }
+  }
+
+  private getCurrentLocationText(): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve(undefined); return; }
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await response.json();
+            const address = data.address;
+            const parts = [
+              address.suburb || address.neighbourhood || address.road,
+              address.city || address.town || address.village,
+              address.state
+            ].filter(Boolean);
+            resolve(parts.length > 0 ? parts.join(', ') : `${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+          } catch {
+            resolve(`${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+          }
+        },
+        () => resolve(undefined),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  }
+
+  async uploadCustomPhotos(): Promise<void> {
+    const validEntries = this.customPhotoEntries.filter(e => e.file && e.name.trim());
+    if (validEntries.length === 0) {
+      this.customUploadError = 'Add at least one photo with a name before uploading.';
+      return;
+    }
+
+    this.customUploading = true;
+    this.customUploadError = undefined;
+
+    const now = new Date().toISOString();
+    const locationText = await this.getCurrentLocationText();
+
+    const formData = new FormData();
+    const metadata = validEntries.map((entry, i) => {
+      formData.append('CustomImageFiles', entry.file!, entry.file!.name);
+      return { Index: i, Name: entry.name.trim(), Date: now, Location: locationText };
+    });
+    formData.append('CustomImagesMetadata', JSON.stringify(metadata));
+
+    try {
+      const observable = await this.vehicleInspectionService.uploadPhotos(
+        this.valuationId,
+        this.vehicleNumber,
+        this.applicantContact,
+        formData,
+        { observe: 'events' }
+      );
+
+      observable.pipe(finalize(() => { this.customUploading = false; })).subscribe({
+        next: (event: HttpEvent<any>) => {
+          if (event.type === HttpEventType.Response) {
+            this.customPhotoEntries = [];
+            this.loadSavedCustomPhotos();
+          }
+        },
+        error: (err: HttpErrorResponse) => {
+          this.customUploadError = err.error?.message || 'Upload failed.';
+        }
+      });
+    } catch (err: any) {
+      this.customUploading = false;
+      this.customUploadError = err?.message || 'Upload failed.';
+    }
+  }
+
+  // ── Photo annotation ──
+
+  openAnnotateFixed(field: MediaField): void {
+    const url = this.uploadedUrls[field.key];
+    if (!url) return;
+    const photoKey = field.key.charAt(0).toUpperCase() + field.key.slice(1);
+    this.annotating = { photoKey, url, label: field.label };
+    this.annotationNote = this.mediaMetadata[field.key]?.annotationNote || '';
+    this.annotationError = undefined;
+  }
+
+  openAnnotateCustom(photo: SavedCustomPhoto): void {
+    this.annotating = { photoKey: photo.id, url: photo.photoUrl, label: photo.name };
+    this.annotationNote = photo.annotationNote || '';
+    this.annotationError = undefined;
+  }
+
+  closeAnnotate(): void {
+    if (this.annotationSaving) return;
+    this.annotating = null;
+  }
+
+  saveAnnotation(): void {
+    if (!this.annotating) return;
+
+    this.annotationSaving = true;
+    this.annotationError = undefined;
+    const { photoKey } = this.annotating;
+
+    this.vehicleInspectionService
+      .annotatePhoto(this.valuationId, this.vehicleNumber, this.applicantContact, photoKey, this.annotationNote.trim())
+      .subscribe({
+        next: ({ photoUrl, note }) => {
+          const busted = `${photoUrl}?t=${new Date().getTime()}`;
+
+          const field = this.mediaFields.find(f => f.key.charAt(0).toUpperCase() + f.key.slice(1) === photoKey);
+          if (field) {
+            (this.uploadedUrls as any)[field.key] = busted;
+            if (this.mediaMetadata[field.key]) this.mediaMetadata[field.key].annotationNote = note;
+          } else {
+            const customPhoto = this.savedCustomPhotos.find(p => p.id === photoKey);
+            if (customPhoto) {
+              customPhoto.photoUrl = busted;
+              customPhoto.annotationNote = note;
+            }
+          }
+
+          this.annotationSaving = false;
+          this.annotating = null;
+          this.cdr.detectChanges();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.annotationSaving = false;
+          this.annotationError = err.error?.message || 'Failed to save annotation.';
+        }
+      });
   }
 
   getLabel(fieldKey: MediaKey): string {

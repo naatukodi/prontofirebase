@@ -9,6 +9,18 @@ import { environment } from '../../environments/environment';
 export interface PhotoMetadata {
   capturedDate?: string; // ISO string
   locationText?: string;
+  annotationNote?: string;
+  originalPhotoUrl?: string;
+}
+
+export interface SavedCustomPhoto {
+  id: string;
+  name: string;
+  photoUrl: string;
+  dateCaptured?: string;
+  location?: string;
+  annotationNote?: string;
+  originalPhotoUrl?: string;
 }
 
 @Injectable({
@@ -119,6 +131,37 @@ export class VehicleInspectionService {
     ).pipe(
       catchError(this.handleError)
     );
+  }
+
+  getCustomPhotos(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<SavedCustomPhoto[]> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return this.http.get<SavedCustomPhoto[]>(
+      `${this.baseUrl}/${valuationId}/photos/custom`,
+      { params }
+    ).pipe(catchError(this.handleError));
+  }
+
+  annotatePhoto(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    photoKey: string,
+    note: string
+  ): Observable<{ photoUrl: string; note: string }> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return this.http.put<{ photoUrl: string; note: string }>(
+      `${this.baseUrl}/${valuationId}/photos/${photoKey}/annotate`,
+      { note },
+      { params }
+    ).pipe(catchError(this.handleError));
   }
 
   deleteVehicleImage(
