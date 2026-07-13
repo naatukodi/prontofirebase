@@ -42,7 +42,7 @@ export class AuthorizationService {
     }
 
     const phoneId = encodeURIComponent(user.phoneNumber);
-    const url     = `${environment.apiBaseUrl}/users/${phoneId}/roles`;
+    const url     = `${environment.apiBaseUrl}users/${phoneId}/roles`;
 
     try {
       const roles = (await this.http.get<string[]>(url).toPromise()) || [];

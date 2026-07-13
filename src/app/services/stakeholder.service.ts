@@ -7,7 +7,7 @@ import { UserModel } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class StakeholderService {
-private base = `${environment.apiBaseUrl}/Valuations`;
+private base = `${environment.apiBaseUrl}Valuations`;
 
   constructor(private http: HttpClient) {}
 

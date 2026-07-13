@@ -257,7 +257,7 @@ export class QualityControlViewComponent implements OnInit {
 
 
   downloadPdf(): void {
-    const url = `${environment.apiBaseUrl}/Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
+    const url = `${environment.apiBaseUrl}Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
     const params = new HttpParams()
       .set('vehicleNumber', this.vehicleNumber)
       .set('applicantContact', this.applicantContact);
