@@ -1,11 +1,8 @@
 :host {
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  margin: auto;
-  padding: 16px;
+  padding: 16px 20px 32px;
   gap: 16px;
-  background: #fafafa;
 }
 
 form {
@@ -40,6 +37,61 @@ form {
   letter-spacing: 0.08em;
   color: #025054;
   padding: 10px 16px 2px;
+}
+
+/* ── Report photo selection grid ── */
+.qc-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+
+.qc-photo-item {
+  position: relative;
+  border: 2px solid #86efac;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0fdf4;
+  cursor: pointer;
+  transition: opacity 0.15s, border-color 0.15s;
+
+  img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.qc-photo-item--off {
+    border-color: #e5e7eb;
+    background: #fff;
+
+    img { opacity: 0.35; }
+  }
+}
+
+.qc-photo-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+}
+
+.qc-photo-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 5px 8px;
+  background: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* ── Card grid ── */

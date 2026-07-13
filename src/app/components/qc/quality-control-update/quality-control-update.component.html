@@ -394,6 +394,24 @@
     </div>
 
     <!-- ══════════════════════════════════════
+         REPORT PHOTO SELECTION
+    ═══════════════════════════════════════ -->
+    <div class="qc-section" *ngIf="gallerySlots.length">
+      <div class="qc-section-header">Report Photo Selection</div>
+      <div class="qc-sub-header">CHOOSE WHICH PHOTOS APPEAR IN THE FINAL PDF GALLERY — LEAVE EVERYTHING CHECKED FOR THE STANDARD REPORT</div>
+
+      <div class="qc-photo-grid">
+        <div class="qc-photo-item" *ngFor="let slot of gallerySlots" (click)="toggleGallerySlot(slot)" [class.qc-photo-item--off]="!slot.selected">
+          <img [src]="slot.url" [alt]="slot.label" />
+          <div class="qc-photo-check">
+            <input type="checkbox" [checked]="slot.selected" (click)="$event.stopPropagation(); toggleGallerySlot(slot)" />
+          </div>
+          <div class="qc-photo-label">{{ slot.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
          QC RECOMMENDATION
     ═══════════════════════════════════════ -->
     <div class="qc-section">

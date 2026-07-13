@@ -37,12 +37,14 @@ export class FinalReportComponent implements OnInit {
 
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
+  // Photos QC chose for the PDF gallery page (falls back to all photoKeys if QC never set one)
+  selectedPhotoKeys: (keyof PhotoUrls)[] = [];
 
   viewModel: QualityControlViewModel | null = null;
   cl: Record<string, string | null> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
 
-  // ── Lightbox ──
+  // ── Hero lightbox (browses ALL photos, unaffected by QC's gallery selection) ──
   lightboxOpen = false;
   lightboxIndex = 0;
 
@@ -51,12 +53,26 @@ export class FinalReportComponent implements OnInit {
   nextPhoto(): void { this.lightboxIndex = (this.lightboxIndex + 1) % this.photoKeys.length; }
   prevPhoto(): void { this.lightboxIndex = (this.lightboxIndex - 1 + this.photoKeys.length) % this.photoKeys.length; }
 
+  // ── "Vehicle Photographs" card lightbox (browses only the QC-selected photos) ──
+  galleryLightboxOpen = false;
+  galleryLightboxIndex = 0;
+
+  openGalleryLightbox(index: number = 0): void { this.galleryLightboxIndex = index; this.galleryLightboxOpen = true; }
+  closeGalleryLightbox(): void { this.galleryLightboxOpen = false; }
+  nextGalleryPhoto(): void { this.galleryLightboxIndex = (this.galleryLightboxIndex + 1) % this.selectedPhotoKeys.length; }
+  prevGalleryPhoto(): void { this.galleryLightboxIndex = (this.galleryLightboxIndex - 1 + this.selectedPhotoKeys.length) % this.selectedPhotoKeys.length; }
+
   @HostListener('document:keydown', ['$event'])
   onKeyDown(e: KeyboardEvent): void {
-    if (!this.lightboxOpen) return;
-    if (e.key === 'ArrowLeft')  this.prevPhoto();
-    if (e.key === 'ArrowRight') this.nextPhoto();
-    if (e.key === 'Escape')     this.closeLightbox();
+    if (this.lightboxOpen) {
+      if (e.key === 'ArrowLeft')  this.prevPhoto();
+      if (e.key === 'ArrowRight') this.nextPhoto();
+      if (e.key === 'Escape')     this.closeLightbox();
+    } else if (this.galleryLightboxOpen) {
+      if (e.key === 'ArrowLeft')  this.prevGalleryPhoto();
+      if (e.key === 'ArrowRight') this.nextGalleryPhoto();
+      if (e.key === 'Escape')     this.closeGalleryLightbox();
+    }
   }
 
   // ── Helpers ──
@@ -247,6 +263,15 @@ export class FinalReportComponent implements OnInit {
         next: (data: FinalReport) => {
           this.report    = data;
           this.photoKeys = Object.keys(this.report.photoUrls || {}) as (keyof PhotoUrls)[];
+          this.selectedPhotoKeys = this.photoKeys;
+
+          this.valuationService
+            .getGalleryPhotoSelection(this.valuationId, this.vehicleNumber, this.applicantContact)
+            .subscribe((selection) => {
+              this.selectedPhotoKeys = (!selection || selection.length === 0)
+                ? this.photoKeys
+                : this.photoKeys.filter(k => selection.includes(k as string));
+            });
 
           const qc = data.qualityControl;
           const ve = data.valuationResponse;

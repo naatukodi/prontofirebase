@@ -249,9 +249,9 @@
 
       <!-- ── SECTION: PHOTOS ── -->
       <div class="rp-section">
-        <div class="rps-heading">6. VEHICLE PHOTOGRAPHS ({{ photoKeys.length }})</div>
+        <div class="rps-heading">6. VEHICLE PHOTOGRAPHS ({{ selectedPhotoKeys.length }})</div>
         <div class="rp-photo-grid">
-          <div class="rp-photo-item" *ngFor="let key of photoKeys; let i = index" (click)="openLightbox(i)">
+          <div class="rp-photo-item" *ngFor="let key of selectedPhotoKeys; let i = index" (click)="openGalleryLightbox(i)">
             <img [src]="report.photoUrls[key]" [alt]="key" />
             <div class="rp-photo-label">{{ key }}</div>
           </div>
@@ -330,7 +330,7 @@
 
   </ng-container>
 
-  <!-- LIGHTBOX -->
+  <!-- LIGHTBOX (hero photo — browses all photos) -->
   <div class="lb-overlay" *ngIf="lightboxOpen" (click)="closeLightbox()">
     <div class="lb-box" (click)="$event.stopPropagation()">
       <button class="lb-close" (click)="closeLightbox()">×</button>
@@ -340,6 +340,19 @@
         <div class="lb-caption">{{ photoKeys[lightboxIndex] }} &nbsp;·&nbsp; {{ lightboxIndex + 1 }} / {{ photoKeys.length }}</div>
       </div>
       <button class="lb-arrow" (click)="nextPhoto()">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX (Vehicle Photographs card — browses only the QC-selected gallery photos) -->
+  <div class="lb-overlay" *ngIf="galleryLightboxOpen" (click)="closeGalleryLightbox()">
+    <div class="lb-box" (click)="$event.stopPropagation()">
+      <button class="lb-close" (click)="closeGalleryLightbox()">×</button>
+      <button class="lb-arrow" (click)="prevGalleryPhoto()">&#8249;</button>
+      <div class="lb-img-wrap">
+        <img [src]="report.photoUrls[selectedPhotoKeys[galleryLightboxIndex]]" [alt]="selectedPhotoKeys[galleryLightboxIndex]" />
+        <div class="lb-caption">{{ selectedPhotoKeys[galleryLightboxIndex] }} &nbsp;·&nbsp; {{ galleryLightboxIndex + 1 }} / {{ selectedPhotoKeys.length }}</div>
+      </div>
+      <button class="lb-arrow" (click)="nextGalleryPhoto()">&#8250;</button>
     </div>
   </div>
 

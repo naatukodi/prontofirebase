@@ -24,6 +24,36 @@ import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
+// Mirrors the gallery-page slot definitions in ProntoPDFGeneration's
+// PdfReportService.ComposePhotoGalleryAndDisclaimer — keep in sync.
+const GALLERY_SLOT_DEFS: { label: string; keys: string[] }[] = [
+  { label: 'Front View',      keys: ['FrontViewGrille', 'FrontView'] },
+  { label: 'Rear View',       keys: ['RearViewTailgate', 'RearView'] },
+  { label: 'Front Right',     keys: ['FrontRightSide', 'FrontRight'] },
+  { label: 'Front Left',      keys: ['FrontLeftSide', 'FrontLeft'] },
+  { label: 'Rear Right',      keys: ['RearRightSide', 'RearRight'] },
+  { label: 'Rear Left',       keys: ['RearLeftSide', 'RearLeft'] },
+  { label: 'Right Side',      keys: ['DriverSideProfile', 'RightSideView'] },
+  { label: 'Left Side',       keys: ['PassengerSideProfile', 'LeftSideView'] },
+  { label: 'Odo Meter',       keys: ['Odometer', 'OdoMeter', 'InstrumentCluster'] },
+  { label: 'Engine Bay',      keys: ['EngineBay', 'Engine'] },
+  { label: 'Dashboard',       keys: ['Dashboard', 'DashboardCloseup'] },
+  { label: 'Selfie',          keys: ['SelfieWithVehicle', 'Selfie'] },
+  { label: 'Chassis Number',  keys: ['ChassisNumberPlate', 'ChassisNumber', 'Chassis', 'ChassisImprint'] },
+  { label: 'VIN Plate',       keys: ['VinPlate', 'VIN'] },
+  { label: 'Tyre - Front Left',  keys: ['TireFrontLeft'] },
+  { label: 'Tyre - Front Right', keys: ['TireFrontRight'] },
+  { label: 'Tyre - Rear Left',   keys: ['TireRearLeft'] },
+  { label: 'Tyre - Rear Right',  keys: ['TireRearRight'] },
+];
+
+interface GallerySlot {
+  label: string;
+  key: string;
+  url: string;
+  selected: boolean;
+}
+
 @Component({
   selector: 'app-valuation-quality-control-update',
   standalone: true,
@@ -62,8 +92,38 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
 
+  // Gallery page photo selection
+  gallerySlots: GallerySlot[] = [];
+
   setCl(key: string, val: string): void {
     this.cl[key] = this.cl[key] === val ? null : val;
+  }
+
+  toggleGallerySlot(slot: GallerySlot): void {
+    slot.selected = !slot.selected;
+  }
+
+  private buildGallerySlots(photoUrls: PhotoUrls, savedSelection: string[]): GallerySlot[] {
+    const slots: GallerySlot[] = [];
+    for (const def of GALLERY_SLOT_DEFS) {
+      const resolvedKey = def.keys.find(k => !!(photoUrls as any)?.[k]);
+      if (!resolvedKey) continue;
+      slots.push({
+        label: def.label,
+        key: resolvedKey,
+        url: (photoUrls as any)[resolvedKey],
+        selected: savedSelection.length === 0 || savedSelection.includes(resolvedKey)
+      });
+    }
+    return slots;
+  }
+
+  private getGallerySelectionToSave(): string[] {
+    if (this.gallerySlots.length === 0) return [];
+    // If everything is checked, save an empty list so it behaves as "standard" —
+    // future photos added later stay included automatically.
+    if (this.gallerySlots.every(s => s.selected)) return [];
+    return this.gallerySlots.filter(s => s.selected).map(s => s.key);
   }
 
   private subscriptions = new Subscription();
@@ -210,11 +270,13 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
 
     const qc$ = this.qcService.getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact);
     const report$ = this.valuationSvc.getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact);
+    const gallerySelection$ = this.valuationSvc.getGalleryPhotoSelection(this.valuationId, this.vehicleNumber, this.applicantContact);
 
-    forkJoin({ qcData: qc$, reportData: report$ }).subscribe({
-      next: ({ qcData, reportData }) => {
+    forkJoin({ qcData: qc$, reportData: report$, gallerySelection: gallerySelection$ }).subscribe({
+      next: ({ qcData, reportData, gallerySelection }) => {
         this.report = reportData;
         this.photoKeys = Object.keys(reportData.photoUrls || {}) as (keyof PhotoUrls)[];
+        this.gallerySlots = this.buildGallerySlots(reportData.photoUrls, gallerySelection || []);
         this.patchForm(qcData);
         this.prefillChecklist();
         // Load previously saved checklist values (override prefilled)
@@ -405,6 +467,15 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Save gallery photo selection
+        switchMap(() =>
+          this.valuationSvc.updateGalleryPhotoSelection(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.getGallerySelectionToSave()
+          ).pipe(catchError(() => of(null)))
+        ),
         // Start Workflow Step 4 (QC)
         switchMap(() =>
           this.workflowSvc.startWorkflow(
@@ -510,6 +581,15 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Save gallery photo selection
+        switchMap(() =>
+          this.valuationSvc.updateGalleryPhotoSelection(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.getGallerySelectionToSave()
+          ).pipe(catchError(() => of(null)))
+        ),
         // Complete QC Workflow (Step 4)
         switchMap(() =>
           this.workflowSvc.completeWorkflow(

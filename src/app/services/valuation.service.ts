@@ -164,4 +164,35 @@ export class ValuationService {
     const url = `${this.baseUrl}/${valuationId}/assign`;
     return this.http.post(url, { userId });
   }
+
+  // Gallery page photo selection (chosen by QC, consumed by the PDF generator)
+  getGalleryPhotoSelection(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<string[]> {
+    const url = `${this.baseUrl}/${valuationId}/photos/gallery-selection`;
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.get<string[]>(url, { params })
+      .pipe(
+        catchError(() => of([]))
+      );
+  }
+
+  updateGalleryPhotoSelection(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    selectedKeys: string[]
+  ): Observable<string[]> {
+    const url = `${this.baseUrl}/${valuationId}/photos/gallery-selection`;
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.put<string[]>(url, selectedKeys, { params });
+  }
 }
