@@ -1,138 +1,199 @@
-<div class="header-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
-  <nav class="navigation-links"></nav>
-  <div class="user-info" *ngIf="currentUser">
-    Welcome, {{ currentUser.name }}
+<div class="dashboard-wrapper">
+
+  <!-- Header -->
+  <div class="page-heading">
+    <div class="heading-row">
+      <div>
+        <h1>{{ isAdmin ? 'Valuations Dashboard' : 'My Dashboard' }}</h1>
+        <p>{{ isAdmin ? 'Manage and track all vehicle inspection cases' : 'Your assigned cases and performance' }}</p>
+      </div>
+      <div class="user-info" *ngIf="currentUser">
+        👤 Welcome, {{ currentUser.name }}
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ── User stats tiles (non-admin only) ── -->
+    <div class="user-stats-tiles" *ngIf="!isAdmin && userStats">
+      <div class="stat-tile tile-open">
+        <div class="tile-label">Open</div>
+        <div class="tile-value">{{ userStats.openCount }}</div>
+        <div class="tile-sub">Assigned to you</div>
+      </div>
+      <div class="stat-tile tile-aged">
+        <div class="tile-label">Aged</div>
+        <div class="tile-value">{{ userStats.agedCount }}</div>
+        <div class="tile-sub">Pending &gt; 24 hrs</div>
+      </div>
+      <div class="stat-tile tile-completed">
+        <div class="tile-label">Completed</div>
+        <div class="tile-value">{{ userStats.completedCount }}</div>
+        <div class="tile-sub">Forwarded by you</div>
+      </div>
+      <div class="stat-tile tile-tat">
+        <div class="tile-label">Avg TAT</div>
+        <div class="tile-value">
+          {{ userStats.avgTatHours || 0 }}
+          <span class="tile-unit">hrs</span>
+        </div>
+        <div class="tile-sub">Per case you handled</div>
+      </div>
+    </div>
+
+    <!-- Filter row: tabs + date -->
+    <div class="filter-row">
+      <div class="step-filter">
+        <button [class.active]="selectedStep === ''"
+                class="pill all-pill"
+                (click)="selectedStep=''; applyFilter()">
+          All ({{ claims.length - (stepCounts['Returned'] || 0) }})
+        </button>
+        <ng-container *ngFor="let s of steps">
+          <button [class.active]="selectedStep === s"
+                  [class]="'pill ' + s.toLowerCase() + '-pill'"
+                  [disabled]="s !== 'Returned' && (stepCounts[s] || 0) === 0"
+                  (click)="selectedStep=s; applyFilter()">
+            {{ s }} ({{ stepCounts[s] || 0 }})
+          </button>
+        </ng-container>
+        <!-- COMPLETE pill: admin = global approvals; non-admin = always 0, disabled -->
+        <button [class.active]="selectedStep === 'Complete' && isAdmin"
+                class="pill complete-pill"
+                [disabled]="!isAdmin"
+                (click)="selectedStep='Complete'; applyFilter()">
+          ✅ Complete ({{ isAdmin ? completedCases.length : 0 }})
+        </button>
+
+        <!-- MY COMPLETED pill: non-admin only — cases forwarded by this user -->
+        <button *ngIf="!isAdmin"
+                [class.active]="selectedStep === 'MyComplete'"
+                class="pill complete-pill"
+                (click)="selectedStep='MyComplete'; applyFilter()">
+          ✅ My Completed ({{ completedCases.length }})
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="date-field">
+        <mat-label>Filter by Date</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+          <input matStartDate placeholder="Start" [(ngModel)]="fromDate" (dateChange)="applyFilter()">
+          <input matEndDate placeholder="End" [(ngModel)]="toDate" (dateChange)="applyFilter()">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+    </div>
+
+    <!-- Loading / error -->
+    <div *ngIf="loading" class="loading">Loading valuations…</div>
+    <div *ngIf="!loading && error" class="error">{{ error }}</div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div *ngIf="filteredClaims.length === 0" class="empty">No valuations to display.</div>
+
+      <div *ngIf="filteredClaims.length > 0" class="table-card">
+        <div class="table-title">
+          <span class="title-accent"></span>
+          {{ selectedStep === 'Complete' ? (isAdmin ? 'Completed Cases' : 'Cases Completed by Me') : 'Valuation Cases' }}
+          <span class="record-count">{{ filteredClaims.length }} records</span>
+        </div>
+
+        <table mat-table [dataSource]="filteredClaims" class="dashboard-table">
+
+          <ng-container matColumnDef="vehicleNumber">
+            <th mat-header-cell *matHeaderCellDef>Vehicle No.</th>
+            <td mat-cell *matCellDef="let v"><strong>{{ v.vehicleNumber }}</strong></td>
+          </ng-container>
+
+          <ng-container matColumnDef="assignedTo">
+            <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+            <td mat-cell *matCellDef="let v">{{ v.assignedTo }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <td mat-cell *matCellDef="let v">{{ v.assignedToPhoneNumber }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef>Location</th>
+            <td mat-cell *matCellDef="let v">{{ v.location }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Created</th>
+            <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'dd/MM/yy' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="age">
+            <th mat-header-cell *matHeaderCellDef>TAT</th>
+            <td mat-cell *matCellDef="let v" [ngClass]="ageClass(v)">
+              <span class="tat-badge">{{ tatLabel(v) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="redFlag">
+            <th mat-header-cell *matHeaderCellDef>Flag</th>
+            <td mat-cell *matCellDef="let v">
+              <span *ngIf="v.redFlag" class="flag-icon">🚩</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="applicant">
+            <th mat-header-cell *matHeaderCellDef>Applicant</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="applicant-name">{{ v.applicantName }}</span>
+              <span class="applicant-phone">· {{ v.applicantContact }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="info">
+            <th mat-header-cell *matHeaderCellDef>Valuation</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="valuation-type">{{ v.valuationType }}</span>
+              <span class="valuation-name"> — {{ v.name }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="currentStep">
+            <th mat-header-cell *matHeaderCellDef>Current Step</th>
+            <td mat-cell *matCellDef="let v">
+              <span *ngIf="selectedStep === 'Complete'" class="step-badge step-complete">
+                COMPLETED
+              </span>
+              <span *ngIf="selectedStep !== 'Complete'" class="step-badge" [ngClass]="'step-' + (steps[getStepIndex(v)] || '').toLowerCase()">
+                {{ steps[getStepIndex(v)] }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="status-badge" [class.returned]="v.status === 'Returned'" [class.completed]="selectedStep === 'Complete'">
+                {{ selectedStep === 'Complete' ? 'Completed' : v.status }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef>Action</th>
+            <td mat-cell *matCellDef="let v">
+              <button class="enter-btn"
+                      (click)="openCase(v); $event.stopPropagation()">
+                ENTER →
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let v; columns: displayedColumns;"></tr>
+
+        </table>
+      </div>
+    </ng-container>
+
   </div>
 </div>
-
-<mat-form-field appearance="fill" style="margin: 12px 16px;">
-  <mat-label>Filter by Created Date</mat-label>
-  <mat-date-range-input [rangePicker]="picker">
-    <input matStartDate placeholder="Start date" [(ngModel)]="fromDate" (dateChange)="applyFilter()">
-    <input matEndDate placeholder="End date" [(ngModel)]="toDate" (dateChange)="applyFilter()">
-  </mat-date-range-input>
-  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-  <mat-date-range-picker #picker></mat-date-range-picker>
-</mat-form-field>
-
-<div class="step-filter" style="padding: 0 16px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap;">
-  <button
-    mat-button
-    [class.active]="selectedStep === ''"
-    (click)="selectedStep=''; applyFilter()">
-    All ({{ claims.length - (stepCounts['Returned'] || 0) }})
-  </button>
-
-  <ng-container *ngFor="let s of steps">
-    <button
-      mat-button
-      [class.active]="selectedStep === s"
-      
-      [disabled]="s !== 'Returned' && (stepCounts[s] || 0) === 0"
-      
-      (click)="selectedStep=s; applyFilter()"
-      [style.color]="s === 'Returned' ? '#d32f2f' : 'inherit'"
-      [style.fontWeight]="s === 'Returned' ? 'bold' : 'normal'">
-      {{ s }} ({{ stepCounts[s] || 0 }})
-    </button>
-  </ng-container>
-</div>
-
-<div *ngIf="loading" class="loading">Loading valuations…</div>
-<div *ngIf="!loading && error" class="error">{{ error }}</div>
-
-<ng-container *ngIf="!loading && !error">
-  <div *ngIf="filteredClaims.length === 0" class="empty">No valuations to display.</div>
-
-  <table *ngIf="filteredClaims.length > 0"
-         mat-table
-         [dataSource]="filteredClaims"
-         class="dashboard-table">
-
-    <ng-container matColumnDef="vehicleNumber">
-      <th mat-header-cell *matHeaderCellDef>VEHICLE NO.</th>
-      <td mat-cell *matCellDef="let v">{{ v.vehicleNumber }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="assignedTo">
-      <th mat-header-cell *matHeaderCellDef>ASSIGNED TO</th>
-      <td mat-cell *matCellDef="let v">{{ v.assignedTo }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="phone">
-      <th mat-header-cell *matHeaderCellDef>PHONE</th>
-      <td mat-cell *matCellDef="let v">{{ v.assignedToPhoneNumber }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="location">
-      <th mat-header-cell *matHeaderCellDef>LOCATION</th>
-      <td mat-cell *matCellDef="let v">{{ v.location }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="createdAt">
-      <th mat-header-cell *matHeaderCellDef>CREATED</th>
-      <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'short' }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="age">
-      <th mat-header-cell *matHeaderCellDef>TAT</th>
-      <td mat-cell *matCellDef="let v"
-          [ngClass]="{
-            'age-1': ageInDays(v) === 1,
-            'age-2': ageInDays(v) === 2,
-            'age-3plus': ageInDays(v) >= 3
-          }">
-        {{ ageInDays(v) }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="redFlag">
-      <th mat-header-cell *matHeaderCellDef>FLAG</th>
-      <td mat-cell *matCellDef="let v">
-        <span [class.red]="v.redFlag">{{ v.redFlag ? '⚑' : '' }}</span>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="applicant">
-      <th mat-header-cell *matHeaderCellDef>APPLICANT</th>
-      <td mat-cell *matCellDef="let v">
-        {{ v.applicantName }} ({{ v.applicantContact }})
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="info">
-      <th mat-header-cell *matHeaderCellDef>VALUATION</th>
-      <td mat-cell *matCellDef="let v">
-        {{ v.valuationType }} — {{ v.name }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="currentStep">
-      <th mat-header-cell *matHeaderCellDef>CURRENT STEP</th>
-      <td mat-cell *matCellDef="let v">{{ steps[getStepIndex(v)] }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef>STATUS</th>
-      <td mat-cell *matCellDef="let v">
-        <span [style.color]="v.status === 'Returned' ? '#d32f2f' : 'inherit'"
-              [style.fontWeight]="v.status === 'Returned' ? 'bold' : 'normal'">
-          {{ v.status }}
-        </span>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="action">
-      <th mat-header-cell *matHeaderCellDef>ACTION</th>
-      <td mat-cell *matCellDef="let v">
-        <button mat-raised-button color="primary" (click)="openCase(v); $event.stopPropagation()">
-          ENTER
-        </button>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let v; columns: displayedColumns;"></tr>
-
-  </table>
-</ng-container>

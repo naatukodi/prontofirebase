@@ -7,7 +7,7 @@ import { Component } from '@angular/core';
   template: `
     <footer class="app-footer">
       <div class="footer-content">
-        Pronto 2025 — All rights reserved
+        Vehga Inspections Private Limited 2025 — All rights reserved
       </div>
     </footer>
   `

@@ -14,7 +14,7 @@ interface ApiResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
-  private readonly base = `${environment.apiBaseUrl}/users`;
+  private readonly base = `${environment.apiBaseUrl}users`;
 
   constructor(private http: HttpClient) {}
 
@@ -75,16 +75,16 @@ getRoles(userId: string): Observable<string[]> {
   }
 
 getStates(): Observable<{ key: string; name: string; districtCount: number }[]> {
-  return this.http.get<any[]>(`${environment.apiBaseUrl}/states`);
+  return this.http.get<any[]>(`${environment.apiBaseUrl}states`);
 }
 
 getUserStates(userId: string): Observable<string[]> {
-  return this.http.get<string[]>(`${environment.apiBaseUrl}/users/${userId}/States`);
+  return this.http.get<string[]>(`${environment.apiBaseUrl}users/${userId}/States`);
 }
 
 addState(userId: string, state: string): Observable<void> {
   return this.http.post<void>(
-    `${environment.apiBaseUrl}/users/${userId}/States`,
+    `${environment.apiBaseUrl}users/${userId}/States`,
     JSON.stringify(state),
     { headers: { 'Content-Type': 'application/json' } }
   );
@@ -92,21 +92,21 @@ addState(userId: string, state: string): Observable<void> {
 
 removeState(userId: string, state: string): Observable<void> {
   return this.http.delete<void>(
-    `${environment.apiBaseUrl}/users/${userId}/States/${encodeURIComponent(state)}`
+    `${environment.apiBaseUrl}users/${userId}/States/${encodeURIComponent(state)}`
   );
 }
 
 getDistricts(stateKey: string): Observable<string[]> {
-  return this.http.get<string[]>(`${environment.apiBaseUrl}/states/${stateKey}/districts`);
+  return this.http.get<string[]>(`${environment.apiBaseUrl}states/${stateKey}/districts`);
 }
 
 getUserDistricts(userId: string): Observable<string[]> {
-  return this.http.get<string[]>(`${environment.apiBaseUrl}/users/${userId}/Districts`);
+  return this.http.get<string[]>(`${environment.apiBaseUrl}users/${userId}/Districts`);
 }
 
 addDistrict(userId: string, district: string): Observable<void> {
   return this.http.post<void>(
-    `${environment.apiBaseUrl}/users/${userId}/Districts`,
+    `${environment.apiBaseUrl}users/${userId}/Districts`,
     JSON.stringify(district),
     { headers: { 'Content-Type': 'application/json' } }
   );
@@ -114,7 +114,7 @@ addDistrict(userId: string, district: string): Observable<void> {
 
 removeDistrict(userId: string, district: string): Observable<void> {
   return this.http.delete<void>(
-    `${environment.apiBaseUrl}/users/${userId}/Districts/${encodeURIComponent(district)}`
+    `${environment.apiBaseUrl}users/${userId}/Districts/${encodeURIComponent(district)}`
   );
 }
 
@@ -128,7 +128,7 @@ getAssignedUser(
         .set('vehicleNumber', vehicleNumber)
         .set('applicantContact', applicantContact);
 
-    const url = `${environment.apiBaseUrl}/valuations/workflows/open/assignedto`;
+    const url = `${environment.apiBaseUrl}valuations/workflows/open/assignedto`;
     return this.http.get<UserModel>(url, { params });
 }
 
@@ -151,7 +151,7 @@ assignInspection(params: {
     .set('assignedToWhatsapp', params.assignedToWhatsapp);
 
   return this.http.post<void>(
-    `${environment.apiBaseUrl}/valuations/${encodeURIComponent(params.valuationId)}/inspection/assignment`,
+    `${environment.apiBaseUrl}valuations/${encodeURIComponent(params.valuationId)}/inspection/assignment`,
     '',
     { params: httpParams }
   );

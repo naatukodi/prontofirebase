@@ -34,5 +34,14 @@ export interface WFValuation {
   location: string | null;       // e.g. “Mumbai, India”
   valuationType: string | null; // e.g. Car, Bike, Truck
   name: string;            // e.g. "SBI"
-  // …and any of the other fields you care about
+  updatedAt: string | null;
+}
+
+export interface UserDashboardStats {
+  openCount: number;
+  agedCount: number;
+  completedCount: number;
+  avgTatHours: number;
+  openCases: WFValuation[];
+  completedCases: WFValuation[];
 }

@@ -9,6 +9,18 @@ import { environment } from '../../environments/environment';
 export interface PhotoMetadata {
   capturedDate?: string; // ISO string
   locationText?: string;
+  annotationNote?: string;
+  originalPhotoUrl?: string;
+}
+
+export interface SavedCustomPhoto {
+  id: string;
+  name: string;
+  photoUrl: string;
+  dateCaptured?: string;
+  location?: string;
+  annotationNote?: string;
+  originalPhotoUrl?: string;
 }
 
 @Injectable({
@@ -121,6 +133,37 @@ export class VehicleInspectionService {
     );
   }
 
+  getCustomPhotos(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<SavedCustomPhoto[]> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return this.http.get<SavedCustomPhoto[]>(
+      `${this.baseUrl}/${valuationId}/photos/custom`,
+      { params }
+    ).pipe(catchError(this.handleError));
+  }
+
+  annotatePhoto(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    photoKey: string,
+    note: string
+  ): Observable<{ photoUrl: string; note: string }> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return this.http.put<{ photoUrl: string; note: string }>(
+      `${this.baseUrl}/${valuationId}/photos/${photoKey}/annotate`,
+      { note },
+      { params }
+    ).pipe(catchError(this.handleError));
+  }
+
   deleteVehicleImage(
     valuationId: string,
     imageName: string
@@ -137,17 +180,31 @@ export class VehicleInspectionService {
   updatePhotoMetadata(
     valuationId: string,
     photoType: string,
-    metadata: PhotoMetadata
+    metadata: PhotoMetadata,
+    vehicleNumber: string,
+    applicantContact: string
   ): Observable<any> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
     return this.http.put<any>(
       `${this.baseUrl}/${valuationId}/photos/${photoType}/metadata`,
-      metadata
+      metadata,
+      { params }
     ).pipe(catchError(this.handleError));
   }
 
-  getPhotoMetadata(valuationId: string): Observable<Record<string, PhotoMetadata>> {
+  getPhotoMetadata(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<Record<string, PhotoMetadata>> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
     return this.http.get<Record<string, PhotoMetadata>>(
-      `${this.baseUrl}/${valuationId}/photos/metadata`
+      `${this.baseUrl}/${valuationId}/photos/metadata`,
+      { params }
     ).pipe(catchError(this.handleError));
   }
 

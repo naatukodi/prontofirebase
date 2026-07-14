@@ -1,78 +1,79 @@
-<div class="value-container">
-  <h2>Instant AI Market Value</h2>
-  <p>Get a quick market value estimate for a vehicle before registering a case.</p>
+<div class="pg-wrap">
+  <div class="pg-head">
+    <div class="pg-head-row">
+      <div>
+        <h1>Instant AI Market Value</h1>
+        <p>Get a quick market value estimate for a vehicle</p>
+      </div>
+    </div>
+  </div>
 
-  <form [formGroup]="valueForm" (ngSubmit)="onSubmit()">
-    <div class="form-grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Vehicle Type</mat-label>
-        <mat-select formControlName="vehicleType">
-          <mat-option value="Four Wheeler">Four Wheeler</mat-option>
-          <mat-option value="Two Wheeler">Two Wheeler</mat-option>
-          <mat-option value="Commercial Vehicle">Commercial Vehicle</mat-option>
-          <mat-option value="Tractor">Tractor</mat-option>
-          <mat-option value="Construction Equipment">Construction Equipment</mat-option>
-        </mat-select>
-      </mat-form-field>
+  <div class="pg-content">
+    <div class="pg-card">
+      <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
+      <div class="pg-card-body">
+        <form [formGroup]="valueForm" (ngSubmit)="onSubmit()">
+          <div class="pg-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Vehicle Type</mat-label>
+              <mat-select formControlName="vehicleType">
+                <mat-option value="Four Wheeler">Four Wheeler</mat-option>
+                <mat-option value="Two Wheeler">Two Wheeler</mat-option>
+                <mat-option value="Commercial Vehicle">Commercial Vehicle</mat-option>
+                <mat-option value="Tractor">Tractor</mat-option>
+                <mat-option value="Construction Equipment">Construction Equipment</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Make (e.g., Maruti Suzuki)</mat-label>
-        <input matInput formControlName="make">
-        <mat-error *ngIf="valueForm.get('make')?.hasError('required')">Make is required</mat-error>
-      </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Make (e.g., Maruti Suzuki)</mat-label>
+              <input matInput formControlName="make">
+              <mat-error *ngIf="valueForm.get('make')?.hasError('required')">Make is required</mat-error>
+            </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Model (e.g., Swift)</mat-label>
-        <input matInput formControlName="model">
-        <mat-error *ngIf="valueForm.get('model')?.hasError('required')">Model is required</mat-error>
-      </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Model (e.g., Swift)</mat-label>
+              <input matInput formControlName="model">
+              <mat-error *ngIf="valueForm.get('model')?.hasError('required')">Model is required</mat-error>
+            </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Year (e.g., 2019)</mat-label>
-        <input matInput formControlName="year" type="number" maxlength="4" placeholder="YYYY">
-        <mat-error *ngIf="valueForm.get('year')?.hasError('required')">Year is required</mat-error>
-        <mat-error *ngIf="valueForm.get('year')?.hasError('pattern')">Enter a valid year</mat-error>
-      </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Year (e.g., 2019)</mat-label>
+              <input matInput formControlName="year" type="number" placeholder="YYYY">
+              <mat-error *ngIf="valueForm.get('year')?.hasError('required')">Year is required</mat-error>
+              <mat-error *ngIf="valueForm.get('year')?.hasError('pattern')">Enter a valid year</mat-error>
+            </mat-form-field>
 
-      <mat-form-field appearance="fill">
-        <mat-label>KMs Driven (e.g., 45000)</mat-label>
-        <input matInput formControlName="kms" type="number">
-        <mat-error *ngIf="valueForm.get('kms')?.hasError('required')">KMs are required</mat-error>
-      </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>KMs Driven (e.g., 45000)</mat-label>
+              <input matInput formControlName="kms" type="number">
+              <mat-error *ngIf="valueForm.get('kms')?.hasError('required')">KMs are required</mat-error>
+            </mat-form-field>
 
-      <!-- --- CHANGE: Updated label to be more general --- -->
-      <mat-form-field appearance="fill">
-        <mat-label>City, State (e.g., Mumbai, MH)</mat-label>
-        <input matInput formControlName="location">
-        <mat-error *ngIf="valueForm.get('location')?.hasError('required')">Location is required</mat-error>
-      </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>City, State (e.g., Mumbai, MH)</mat-label>
+              <input matInput formControlName="location">
+              <mat-error *ngIf="valueForm.get('location')?.hasError('required')">Location is required</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="pg-btn-group">
+            <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+              <span *ngIf="!loading">Get AI Value</span>
+              <span *ngIf="loading">Checking...</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <button mat-raised-button color="primary" [disabled]="loading" class="submit-button">
-      <span *ngIf="!loading">Get AI Value</span>
-      <span *ngIf="loading">Checking...</span>
-    </button>
-  </form>
+    <div *ngIf="loading" class="pg-loading"><mat-spinner diameter="40"></mat-spinner></div>
 
-  <div class="results-container">
-    <mat-spinner *ngIf="loading"></mat-spinner>
+    <div *ngIf="aiResult" class="pg-card">
+      <div class="pg-card-title"><span class="pg-card-title-accent"></span>AI Valuation Result</div>
+      <div class="pg-card-body">{{ aiResult }}</div>
+    </div>
 
-    <mat-card *ngIf="aiResult" class="result-card" appearance="outlined">
-      <mat-card-header>
-        <mat-card-title>AI Valuation Result</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ aiResult }}</p>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card *ngIf="error" class="error-card" appearance="outlined">
-      <mat-card-header>
-        <mat-card-title>Error</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ error }}</p>
-      </mat-card-content>
-    </mat-card>
+    <div *ngIf="error" class="pg-error">{{ error }}</div>
   </div>
 </div>

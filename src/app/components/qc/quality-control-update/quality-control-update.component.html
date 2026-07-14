@@ -12,132 +12,525 @@
   <div *ngIf="error" class="error">{{ error }}</div>
 
   <ng-container *ngIf="!loading && !error">
-    
-    <fieldset class="nested-group">
-      <legend>Quality Control</legend>
-      <div class="grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Overall Rating</mat-label>
-          <input matInput formControlName="overallRating" />
-          <mat-error *ngIf="form.get('overallRating')?.hasError('required')">Required</mat-error>
-        </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Valuation Amount</mat-label>
-          <input matInput type="number" formControlName="valuationAmount" />
-          <mat-error *ngIf="form.get('valuationAmount')?.hasError('required')">Required</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Chassis Punch</mat-label>
-          <input matInput formControlName="chassisPunch" />
-          <mat-error *ngIf="form.get('chassisPunch')?.hasError('required')">Required</mat-error>
-        </mat-form-field>
+    <!-- ── Core QC Fields ── -->
+    <div class="qc-section">
+      <div class="qc-section-header">Quality Control</div>
+      <div class="qc-card-grid">
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Overall Rating</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <input matInput formControlName="overallRating" placeholder="Good / Average / Poor" />
+            <mat-error *ngIf="form.get('overallRating')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Valuation Amount</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <input matInput type="number" formControlName="valuationAmount" placeholder="₹" />
+            <mat-error *ngIf="form.get('valuationAmount')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
       </div>
-    </fieldset>
+    </div>
 
-    <fieldset class="nested-group">
-      <legend>Payment Details</legend>
-      <div class="grid">
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Status</mat-label>
-          <mat-select formControlName="paymentStatus" required>
-            <mat-option value="Pending">Pending</mat-option>
-            <mat-option value="Completed">Completed</mat-option>
-            <mat-option value="Failed">Failed</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">
-            Payment Status is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Reference</mat-label>
-          <input matInput formControlName="paymentReference" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Date</mat-label>
-          <input matInput type="datetime-local" formControlName="paymentDate" />
-          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">
-            Payment Date is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Method</mat-label>
-          <mat-select formControlName="paymentMethod" required>
-            <mat-option value="Online">Online</mat-option>
-            <mat-option value="Cash">Cash</mat-option>
-            <mat-option value="UPI">UPI</mat-option>
-            <mat-option value="Card">Card</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">
-            Payment Method is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Amount</mat-label>
-          <input matInput type="number" formControlName="paymentAmount" />
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">
-            Amount is required
-          </mat-error>
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">
-            Amount must be ≥ 0
-          </mat-error>
-        </mat-form-field>
-
+    <!-- ── Payment Details ── -->
+    <div class="qc-section">
+      <div class="qc-section-header">Payment Details</div>
+      <div class="qc-card-grid">
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Payment Status</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <mat-select formControlName="paymentStatus">
+              <mat-option value="Pending">Pending</mat-option>
+              <mat-option value="Completed">Completed</mat-option>
+              <mat-option value="Credit">Credit</mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Payment Method</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <mat-select formControlName="paymentMethod">
+              <mat-option value="Online">Online</mat-option>
+              <mat-option value="Cash">Cash</mat-option>
+              <mat-option value="UPI">UPI</mat-option>
+              <mat-option value="Card">Card</mat-option>
+            </mat-select>
+            <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Payment Amount</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <input matInput type="number" formControlName="paymentAmount" placeholder="₹" />
+            <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">Required</mat-error>
+            <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">Must be ≥ 0</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Payment Reference</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <input matInput formControlName="paymentReference" placeholder="Ref / TXN ID" />
+          </mat-form-field>
+        </div>
+        <div class="qc-card form-card">
+          <div class="qc-card-label">Payment Date</div>
+          <mat-form-field appearance="outline" class="qc-field">
+            <input matInput type="datetime-local" formControlName="paymentDate" />
+            <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">Required</mat-error>
+          </mat-form-field>
+        </div>
       </div>
-    </fieldset>
+    </div>
 
-    <fieldset class="nested-group">
-      <legend>Remarks</legend>
-      <div class="grid">
-        <mat-form-field appearance="outline" style="width: 100%;">
+    <!-- ── Remarks ── -->
+    <div class="qc-section">
+      <div class="qc-section-header">Remarks</div>
+      <div class="qc-remarks-wrap">
+        <mat-form-field appearance="outline" class="qc-field" style="width:100%">
           <mat-label>General Remarks</mat-label>
-          <textarea
-            matInput
-            formControlName="remarks"
-            rows="3"
-          ></textarea>
+          <textarea matInput formControlName="remarks" rows="3"></textarea>
         </mat-form-field>
       </div>
-    </fieldset>
+    </div>
 
-    <fieldset>
-      <div class="button-group" style="margin-top: 1rem; display: flex; gap: 1rem;">
-        <button
-          mat-raised-button
-          color="accent"
-          type="button"
-          [disabled]="saving"
-          (click)="onSave()"
-        >
-          {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
-        </button>
+    <!-- ══════════════════════════════════════
+         DOCUMENT VERIFICATION
+    ═══════════════════════════════════════ -->
+    <div class="qc-section">
+      <div class="qc-section-header">Document Verification</div>
 
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="!saved || saving"
-        >
-          {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
-        </button>
+      <div class="qc-sub-header">DOCUMENT STATUS</div>
+      <div class="qc-card-grid">
 
-        <button
-          mat-raised-button
-          color="warn"
-          type="button"
-          [disabled]="saving"
-          (click)="onCancel()"
-        >
-          Cancel
-        </button>
+        <div class="qc-card" [class.card-ok]="cl['docRC']==='ok'" [class.card-flag]="cl['docRC']==='flag'">
+          <div class="qc-card-title">Registration Certificate (RC)</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docRC']==='ok'" (click)="setCl('docRC','ok')">✓ OK</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docRC']==='flag'" (click)="setCl('docRC','flag')">✗ Flag</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['docIns']==='ok'" [class.card-flag]="cl['docIns']==='flag'">
+          <div class="qc-card-title">Insurance Policy</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docIns']==='ok'" (click)="setCl('docIns','ok')">✓ OK</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docIns']==='flag'" (click)="setCl('docIns','flag')">✗ Flag</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'">
+          <div class="qc-card-title">Permit</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docPermit']==='ok'" (click)="setCl('docPermit','ok')">✓ OK</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docPermit']==='flag'" (click)="setCl('docPermit','flag')">✗ Flag</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['docFitness']==='ok'" [class.card-flag]="cl['docFitness']==='flag'">
+          <div class="qc-card-title">Fitness Certificate</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docFitness']==='ok'" (click)="setCl('docFitness','ok')">✓ OK</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docFitness']==='flag'" (click)="setCl('docFitness','flag')">✗ Flag</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['docTax']==='ok'" [class.card-flag]="cl['docTax']==='flag'">
+          <div class="qc-card-title">Road Tax</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docTax']==='ok'" (click)="setCl('docTax','ok')">✓ OK</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docTax']==='flag'" (click)="setCl('docTax','flag')">✗ Flag</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['docHypo']==='same'"
+          [class.card-flag]="cl['docHypo']==='different'">
+          <div class="qc-card-title">Hypothecation</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docHypo']==='same'" (click)="setCl('docHypo','same')">✓ Same Bank</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docHypo']==='different'" (click)="setCl('docHypo','different')">✗ Different</button>
+          </div>
+        </div>
+
       </div>
-    </fieldset>
+
+      <div class="qc-remarks-wrap">
+        <label class="qc-remarks-label">Document Remarks</label>
+        <textarea class="qc-remarks-ta" [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['doc']" rows="3" placeholder="Note any document issues or expiry concerns…"></textarea>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         DATA ACCURACY
+    ═══════════════════════════════════════ -->
+    <div class="qc-section">
+      <div class="qc-section-header">Data Accuracy</div>
+
+      <div class="qc-sub-header">VEHICLE IDENTITY VERIFICATION</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['accReg']==='pass'" [class.card-flag]="cl['accReg']==='fail'">
+          <div class="qc-card-title">Registration Number matches photos & RC<small>Verify plate visible in front &amp; rear photos</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accReg']==='pass'" (click)="setCl('accReg','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accReg']==='fail'" (click)="setCl('accReg','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accChassis']==='pass'" [class.card-flag]="cl['accChassis']==='fail'">
+          <div class="qc-card-title">Chassis Number matches photos, RC & stencil<small>Compare across all 3 sources</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accChassis']==='pass'" (click)="setCl('accChassis','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accChassis']==='fail'" (click)="setCl('accChassis','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accOdo']==='pass'" [class.card-flag]="cl['accOdo']==='fail'">
+          <div class="qc-card-title">Odometer in photo matches reported KM<small>Compare dashboard photo vs report KM</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accOdo']==='pass'" (click)="setCl('accOdo','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accOdo']==='fail'" (click)="setCl('accOdo','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accVIN']==='pass'" [class.card-flag]="cl['accVIN']==='fail'">
+          <div class="qc-card-title">VIN plate matches RC & inspection report<small>Check VIN plate photo matches report exactly</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accVIN']==='pass'" (click)="setCl('accVIN','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accVIN']==='fail'" (click)="setCl('accVIN','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accMfgReg']==='pass'" [class.card-flag]="cl['accMfgReg']==='fail'">
+          <div class="qc-card-title">Manufacture year vs registration gap is logical<small>Registration typically within 12 months of manufacture</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accMfgReg']==='pass'" (click)="setCl('accMfgReg','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accMfgReg']==='fail'" (click)="setCl('accMfgReg','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accVahan']==='pass'" [class.card-flag]="cl['accVahan']==='fail'">
+          <div class="qc-card-title">VAHAN data matches physical inspection<small>Make, model, colour, engine CC, body type</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accVahan']==='pass'" (click)="setCl('accVahan','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accVahan']==='fail'" (click)="setCl('accVahan','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-sub-header">OWNER / APPLICANT VERIFICATION</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['accOwner']==='pass'" [class.card-flag]="cl['accOwner']==='fail'">
+          <div class="qc-card-title">Owner & applicant identity verified from docs</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accOwner']==='pass'" (click)="setCl('accOwner','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accOwner']==='fail'" (click)="setCl('accOwner','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
+          <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accSerial']==='pass'" (click)="setCl('accSerial','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accSerial']==='fail'" (click)="setCl('accSerial','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-sub-header">TECHNICAL SPECIFICATIONS</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'">
+          <div class="qc-card-title">Transmission type matches RC & vehicle class<small>Manual / Automatic declared matches RC and photos</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accTransmission']==='pass'" (click)="setCl('accTransmission','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accTransmission']==='fail'" (click)="setCl('accTransmission','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accFuel']==='pass'" [class.card-flag]="cl['accFuel']==='fail'">
+          <div class="qc-card-title">Fuel type matches engine specs & RC<small>Petrol / Diesel / CNG must match engine type on RC</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accFuel']==='pass'" (click)="setCl('accFuel','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accFuel']==='fail'" (click)="setCl('accFuel','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-sub-header">PHOTO QUALITY &amp; COMPLETENESS</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['accPhotoLoc']==='pass'" [class.card-flag]="cl['accPhotoLoc']==='fail'">
+          <div class="qc-card-title">All photos taken at the same location<small>Background, GPS tags and timestamp consistent</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accPhotoLoc']==='pass'" (click)="setCl('accPhotoLoc','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accPhotoLoc']==='fail'" (click)="setCl('accPhotoLoc','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accDaylight']==='pass'" [class.card-flag]="cl['accDaylight']==='fail'">
+          <div class="qc-card-title">Vehicle photos taken in clear daylight<small>No dark, blurry or indoors photos</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accDaylight']==='pass'" (click)="setCl('accDaylight','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accDaylight']==='fail'" (click)="setCl('accDaylight','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accPlate']==='pass'" [class.card-flag]="cl['accPlate']==='fail'">
+          <div class="qc-card-title">Number plate clearly visible in front & rear<small>Plate must be legible — not covered, dirty or angled</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accPlate']==='pass'" (click)="setCl('accPlate','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accPlate']==='fail'" (click)="setCl('accPlate','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accGPS']==='pass'" [class.card-flag]="cl['accGPS']==='fail'">
+          <div class="qc-card-title">GPS timestamp matches declared inspection date</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accGPS']==='pass'" (click)="setCl('accGPS','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accGPS']==='fail'" (click)="setCl('accGPS','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-sub-header">INSPECTION FORM ACCURACY</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['accReportDate']==='pass'" [class.card-flag]="cl['accReportDate']==='fail'">
+          <div class="qc-card-title">Report date is valid — not in the future<small>Report creation date must be on or before today</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accReportDate']==='pass'" (click)="setCl('accReportDate','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accReportDate']==='fail'" (click)="setCl('accReportDate','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accMandatory']==='pass'" [class.card-flag]="cl['accMandatory']==='fail'">
+          <div class="qc-card-title">All mandatory fields filled — no blanks</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accMandatory']==='pass'" (click)="setCl('accMandatory','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accMandatory']==='fail'" (click)="setCl('accMandatory','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['accRemarks']==='pass'" [class.card-flag]="cl['accRemarks']==='fail'">
+          <div class="qc-card-title">Inspector remarks are complete and relevant</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accRemarks']==='pass'" (click)="setCl('accRemarks','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accRemarks']==='fail'" (click)="setCl('accRemarks','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-remarks-wrap">
+        <label class="qc-remarks-label">Data Accuracy Remarks</label>
+        <textarea class="qc-remarks-ta" [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['acc']" rows="3" placeholder="Note any discrepancies found during data verification…"></textarea>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         VALUATION QUALITY
+    ═══════════════════════════════════════ -->
+    <div class="qc-section">
+      <div class="qc-section-header">Valuation Quality</div>
+
+      <div class="qc-sub-header">VALUATION ACCURACY</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
+          <div class="qc-card-title">Minimum required photos uploaded<small>Front, Rear, Left, Right, Odometer, Engine, Chassis, Stencil</small></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['valMinPhotos']==='pass'" (click)="setCl('valMinPhotos','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['valMinPhotos']==='fail'" (click)="setCl('valMinPhotos','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
+          <div class="qc-card-title">Valuation amount within acceptable market range</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['valInRange']==='pass'" (click)="setCl('valInRange','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['valInRange']==='fail'" (click)="setCl('valInRange','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
+          <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['valDedupe']==='pass'" (click)="setCl('valDedupe','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['valDedupe']==='fail'" (click)="setCl('valDedupe','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['valAgeOdo']==='pass'" [class.card-flag]="cl['valAgeOdo']==='fail'">
+          <div class="qc-card-title">Age & odometer consistent with condition rating</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['valAgeOdo']==='pass'" (click)="setCl('valAgeOdo','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['valAgeOdo']==='fail'" (click)="setCl('valAgeOdo','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+        <div class="qc-card" [class.card-ok]="cl['valScore']==='pass'" [class.card-flag]="cl['valScore']==='fail'">
+          <div class="qc-card-title">Inspection checklist supports overall vehicle score</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['valScore']==='pass'" (click)="setCl('valScore','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['valScore']==='fail'" (click)="setCl('valScore','fail')">✗ Fail</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-remarks-wrap">
+        <label class="qc-remarks-label">Valuation Quality Remarks</label>
+        <textarea class="qc-remarks-ta" [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['val']" rows="3" placeholder="Note any concerns about valuation quality or market range discrepancies…"></textarea>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         REPORT PHOTO SELECTION
+    ═══════════════════════════════════════ -->
+    <div class="qc-section" *ngIf="gallerySlots.length">
+      <div class="qc-section-header">Report Photo Selection</div>
+      <div class="qc-sub-header">CHOOSE WHICH PHOTOS APPEAR IN THE FINAL PDF GALLERY — LEAVE EVERYTHING CHECKED FOR THE STANDARD REPORT</div>
+
+      <div class="qc-photo-grid">
+        <div class="qc-photo-item" *ngFor="let slot of gallerySlots" (click)="toggleGallerySlot(slot)" [class.qc-photo-item--off]="!slot.selected">
+          <img [src]="slot.url" [alt]="slot.label" />
+          <div class="qc-photo-check">
+            <input type="checkbox" [checked]="slot.selected" (click)="$event.stopPropagation(); toggleGallerySlot(slot)" />
+          </div>
+          <div class="qc-photo-label">{{ slot.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         QC RECOMMENDATION
+    ═══════════════════════════════════════ -->
+    <div class="qc-section">
+      <div class="qc-section-header">QC Recommendation</div>
+      <div class="qc-card-grid">
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recCondition']==='good'"
+          [class.card-warn]="cl['recCondition']==='average'"
+          [class.card-flag]="cl['recCondition']==='poor'">
+          <div class="qc-card-title">1. Overall Vehicle Condition</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recCondition']==='good'"    (click)="setCl('recCondition','good')">🟢 Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recCondition']==='average'" (click)="setCl('recCondition','average')">🟡 Average</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recCondition']==='poor'"    (click)="setCl('recCondition','poor')">🔴 Poor</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recExterior']==='good'"
+          [class.card-warn]="cl['recExterior']==='minor'"
+          [class.card-flag]="cl['recExterior']==='major'">
+          <div class="qc-card-title">2. Exterior Condition</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recExterior']==='good'"  (click)="setCl('recExterior','good')">✨ Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')">🔧 Minor Damage</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recExterior']==='major'" (click)="setCl('recExterior','major')">💥 Major Damage</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recEngine']==='good'"
+          [class.card-warn]="cl['recEngine']==='average'"
+          [class.card-flag]="cl['recEngine']==='poor'">
+          <div class="qc-card-title">3. Engine / Mechanical Condition</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recEngine']==='good'"    (click)="setCl('recEngine','good')">⚙️ Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')">⚠️ Average</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recEngine']==='poor'"    (click)="setCl('recEngine','poor')">❌ Poor</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recTyre']==='good'"
+          [class.card-warn]="cl['recTyre']==='average'"
+          [class.card-flag]="cl['recTyre']==='replacement'">
+          <div class="qc-card-title">4. Tyre Condition</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recTyre']==='good'"        (click)="setCl('recTyre','good')">🟢 Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recTyre']==='average'"     (click)="setCl('recTyre','average')">🟡 Average</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recTyre']==='replacement'" (click)="setCl('recTyre','replacement')">🔴 Needs Replacement</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recDamage']==='none'"
+          [class.card-warn]="cl['recDamage']==='minor'"
+          [class.card-flag]="cl['recDamage']==='major'">
+          <div class="qc-card-title">5. Damage Detected</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recDamage']==='none'"  (click)="setCl('recDamage','none')">✅ None</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recDamage']==='minor'" (click)="setCl('recDamage','minor')">⚠️ Minor</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recDamage']==='major'" (click)="setCl('recDamage','major')">💥 Major</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recMissingParts']==='none'"
+          [class.card-flag]="cl['recMissingParts']==='present'">
+          <div class="qc-card-title">6. Missing Parts</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recMissingParts']==='none'"    (click)="setCl('recMissingParts','none')">✅ None</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recMissingParts']==='present'" (click)="setCl('recMissingParts','present')">❌ Parts Missing</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['docChassis']==='original'"
+          [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
+          <div class="qc-card-title">7. Chassis Punch</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['docChassis']==='original'" (click)="setCl('docChassis','original'); form.patchValue({chassisPunch:'Original'})">✓ Original</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched'); form.patchValue({chassisPunch:'Re-Punched'})">~ Re-Punched</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered'); form.patchValue({chassisPunch:'Tampered'})">✗ Tampered</button>
+          </div>
+        </div>
+
+        <div class="qc-card rec-final-card"
+          [class.card-ok]="cl['recFinal']==='recommended'"
+          [class.card-warn]="cl['recFinal']==='conditional'"
+          [class.card-flag]="cl['recFinal']==='not-recommended'">
+          <div class="qc-card-title">8. Final QC Recommendation</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recFinal']==='recommended'"     (click)="setCl('recFinal','recommended')">✅ Recommended</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recFinal']==='conditional'"     (click)="setCl('recFinal','conditional')">⚠️ With Conditions</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recFinal']==='not-recommended'" (click)="setCl('recFinal','not-recommended')">❌ Not Recommended</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qc-remarks-wrap">
+        <label class="qc-remarks-label">QC Summary Remarks</label>
+        <textarea class="qc-remarks-ta" [ngModelOptions]="{standalone:true}" [(ngModel)]="clRemarks['rec']" rows="4" placeholder="Summarise the overall QC findings for the Approver…"></textarea>
+      </div>
+    </div>
+
+    <!-- ── Action Buttons ── -->
+    <div class="button-group">
+      <button mat-raised-button color="accent" type="button" [disabled]="saving" (click)="onSave()">
+        {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!saved || saving">
+        {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
+      </button>
+      <button mat-raised-button color="warn" type="button" [disabled]="saving" (click)="onCancel()">
+        Cancel
+      </button>
+    </div>
 
   </ng-container>
 </form>

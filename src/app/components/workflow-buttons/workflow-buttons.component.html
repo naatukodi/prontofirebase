@@ -57,17 +57,16 @@
       📝 Notes
     </button>
 
-    <button mat-raised-button color="accent" (click)="openHistoryPopup()">
-    📜 History
-    </button>
-    
-    <button mat-raised-button color="warn" (click)="openPaymentPopup()">
-    💳 Payment
+    <button *ngIf="canViewCaseActions()" mat-raised-button color="accent" (click)="openHistoryPopup()">
+      📜 History
     </button>
 
-    <!-- Duplicate Button Visible in ALL Steps -->
-    <button mat-raised-button color="primary" (click)="checkDuplicates()">
-      🔎 Check Duplicates
+    <button mat-raised-button color="warn" (click)="openPaymentPopup()" [disabled]="!canAccessPayment()">
+      💳 Payment
+    </button>
+
+    <button *ngIf="canViewCaseActions()" mat-raised-button color="primary" (click)="checkDuplicates()">
+      🔎 Dedupe
     </button>
   </div>
 

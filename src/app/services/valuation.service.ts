@@ -59,7 +59,7 @@ export class ValuationService {
       );
   } 
 
-  getValuationDetailsfromAttesterApi(
+  getVehicleDetailsWithRc(
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string
@@ -121,10 +121,11 @@ export class ValuationService {
   checkDuplicateVehicle(
     vehicleNumber?: string,
     engineNumber?: string,
-    chassisNumber?: string
+    chassisNumber?: string,
+    excludeId?: string
   ): Observable<VehicleDuplicateCheckResponse> {
     let params = new HttpParams();
-    
+
     if (vehicleNumber?.trim()) {
       params = params.set('vehicleNumber', vehicleNumber.trim());
     }
@@ -133,6 +134,9 @@ export class ValuationService {
     }
     if (chassisNumber?.trim()) {
       params = params.set('chassisNumber', chassisNumber.trim());
+    }
+    if (excludeId?.trim()) {
+      params = params.set('excludeId', excludeId.trim());
     }
 
     // ✅ USE this.baseUrl (already includes /api/valuations)
@@ -159,5 +163,36 @@ export class ValuationService {
   assignUser(valuationId: string, userId: string): Observable<any> {
     const url = `${this.baseUrl}/${valuationId}/assign`;
     return this.http.post(url, { userId });
+  }
+
+  // Gallery page photo selection (chosen by QC, consumed by the PDF generator)
+  getGalleryPhotoSelection(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<string[]> {
+    const url = `${this.baseUrl}/${valuationId}/photos/gallery-selection`;
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.get<string[]>(url, { params })
+      .pipe(
+        catchError(() => of([]))
+      );
+  }
+
+  updateGalleryPhotoSelection(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    selectedKeys: string[]
+  ): Observable<string[]> {
+    const url = `${this.baseUrl}/${valuationId}/photos/gallery-selection`;
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.put<string[]>(url, selectedKeys, { params });
   }
 }

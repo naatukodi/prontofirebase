@@ -1,3 +1,4 @@
+<div class="pg-wrap">
 <app-workflow-buttons
   [id]="valuationId"
   [vehicleNumber]="vehicleNumber"
@@ -5,10 +6,10 @@
   [valuationType]="valuationType">
 </app-workflow-buttons>
 
+<div class="pg-content">
 <div class="upload-container">
-  <h2>Vehicle Media Upload (Photos + Video)</h2>
 
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="error" class="pg-error">{{ error }}</div>
 
   <ng-container *ngIf="!error">
     <div class="grid">
@@ -29,6 +30,15 @@
             <ng-container *ngIf="uploadedUrls[field.key]; else placeholder">
               <img *ngIf="field.type === 'image'" [src]="uploadedUrls[field.key]" [alt]="field.label" class="thumbnail"/>
               <video *ngIf="field.type === 'video'" [src]="uploadedUrls[field.key]" controls class="video-preview"></video>
+              <button
+                *ngIf="field.type === 'image'"
+                type="button"
+                class="annotate-pencil-btn"
+                aria-label="Annotate photo"
+                (click)="openAnnotateFixed(field); $event.stopPropagation()"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
             </ng-container>
             <ng-template #placeholder>
               <div class="placeholder">
@@ -101,9 +111,114 @@
     </div>
   </ng-container>
 
-  <div class="actions">
-    <button mat-raised-button color="primary" (click)="onBack()">Back</button>
+  <!-- ══════════════════════════════════════
+       ADDITIONAL (CUSTOM-NAMED) PHOTOS
+  ═══════════════════════════════════════ -->
+  <div class="custom-photos-section">
+    <h3>Additional Photos</h3>
+
+    <div class="grid" *ngIf="savedCustomPhotos.length">
+      <div class="image-card" *ngFor="let photo of savedCustomPhotos">
+        <div class="preview">
+          <img [src]="photo.photoUrl" [alt]="photo.name" class="thumbnail"/>
+          <button
+            type="button"
+            class="annotate-pencil-btn"
+            aria-label="Annotate photo"
+            (click)="openAnnotateCustom(photo); $event.stopPropagation()"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+        </div>
+        <div class="label">{{ photo.name }}</div>
+        <div class="button-group" style="margin-top: 5px; display: flex; gap: 5px; justify-content: center;">
+          <button type="button" class="open-image-btn" (click)="openMedia(photo.photoUrl)">Open Image</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" *ngIf="customPhotoEntries.length">
+      <div class="image-card custom-photo-card" *ngFor="let entry of customPhotoEntries; let i = index">
+        <input
+          #customFileInput
+          type="file"
+          accept="image/*"
+          style="display: none;"
+          (change)="onCustomFileSelected($event, i)"
+        />
+
+        <div class="preview">
+          <div class="placeholder" *ngIf="!entry.file">
+            <span>No Image</span>
+          </div>
+          <span *ngIf="entry.file" class="selected-file-name">{{ entry.file.name }}</span>
+        </div>
+
+        <input
+          type="text"
+          class="custom-photo-name-input"
+          placeholder="Photo name (e.g. Rear Bumper Dent)"
+          [(ngModel)]="entry.name"
+          [ngModelOptions]="{standalone: true}"
+        />
+
+        <div class="button-group" style="margin-top: 5px; display: flex; gap: 5px; justify-content: center;">
+          <button mat-stroked-button type="button" (click)="customFileInput.click()">Browse</button>
+          <button mat-stroked-button type="button" color="warn" (click)="removeCustomPhotoRow(i)">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-btn-group" style="margin-top: 10px;">
+      <button mat-stroked-button type="button" (click)="addCustomPhotoRow()">+ Add Photo</button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        *ngIf="customPhotoEntries.length"
+        [disabled]="customUploading"
+        (click)="uploadCustomPhotos()">
+        {{ customUploading ? 'Uploading…' : 'Upload Additional Photos' }}
+      </button>
+    </div>
+
+    <div class="field-error" *ngIf="customUploadError">{{ customUploadError }}</div>
+  </div>
+
+  <div class="pg-btn-group">
+    <button mat-raised-button color="accent" (click)="onBack()">Back</button>
+  </div>
+</div><!-- /upload-container -->
+</div><!-- /pg-content -->
+
+<!-- ANNOTATE MODAL -->
+<div class="modal-overlay" *ngIf="annotating">
+  <div class="modal-box annotate-modal">
+    <div class="modal-header"><h3>Annotate photo</h3><span class="close-btn" (click)="closeAnnotate()">×</span></div>
+    <div class="modal-body">
+      <div class="annotate-preview">
+        <img [src]="annotating.url" [alt]="annotating.label" />
+        <div class="annotate-note-overlay" *ngIf="annotationNote">{{ annotationNote }}</div>
+      </div>
+      <label>Note to add to this photo:</label>
+      <input
+        type="text"
+        class="modal-input"
+        placeholder="Chipped paint near the fender"
+        [(ngModel)]="annotationNote"
+        [ngModelOptions]="{standalone: true}"
+      />
+      <div class="field-error" *ngIf="annotationError">{{ annotationError }}</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" [disabled]="annotationSaving" (click)="closeAnnotate()">Cancel</button>
+      <button class="btn-confirm" [disabled]="annotationSaving" (click)="saveAnnotation()">
+        {{ annotationSaving ? 'Saving…' : 'Save' }}
+      </button>
+    </div>
   </div>
 </div>
+
+</div><!-- /pg-wrap -->
 
 <router-outlet></router-outlet>

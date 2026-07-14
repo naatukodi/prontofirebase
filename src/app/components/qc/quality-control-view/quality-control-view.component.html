@@ -1,380 +1,615 @@
-<div *ngIf="loading" class="loading">Loading quality control details…</div>
-<div *ngIf="error" class="error">{{ error }}</div>
+<div class="pg-wrap">
 
-<ng-container *ngIf="!loading && !error && viewModel">
-  
-  <app-workflow-buttons
-    [id]="valuationId"
-    [vehicleNumber]="vehicleNumber"
-    [applicantContact]="applicantContact"
-    [valuationType]="valuationType">
-  </app-workflow-buttons>
+  <div *ngIf="loading" class="pg-loading">Loading quality control details…</div>
+  <div *ngIf="error" class="pg-error">{{ error }}</div>
 
-  <div *ngIf="returnMessage" class="rejection-banner" 
-       style="background-color: #ffebee; color: #c62828; padding: 15px; margin: 15px 0 20px 0; border: 1px solid #ef9a9a; border-left: 5px solid #d32f2f; border-radius: 4px; display: flex; align-items: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    
-    <div style="font-size: 1.5rem; margin-right: 15px;">⚠️</div>
-    
-    <div style="width: 100%;">
-      <h4 style="margin: 0 0 8px 0; font-weight: bold; text-transform: uppercase; color: #b71c1c; font-size: 1.1rem;">
-        CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span>
-      </h4>
-      
-      <div style="background-color: rgba(255,255,255,0.6); padding: 10px 12px; border-radius: 4px; border: 1px solid #e57373;">
-        <span style="font-size: 1.05rem; white-space: pre-wrap; font-weight: 500; color: #b71c1c; display: block;">
-          {{ returnMessage }}
-        </span>
+  <ng-container *ngIf="!loading && !error && viewModel">
+
+    <app-workflow-buttons
+      [id]="valuationId"
+      [vehicleNumber]="vehicleNumber"
+      [applicantContact]="applicantContact"
+      [valuationType]="valuationType">
+    </app-workflow-buttons>
+
+    <div class="pg-content">
+
+      <!-- Return Banner -->
+      <div *ngIf="returnMessage" class="rejection-banner">
+        <div class="rb-icon">⚠️</div>
+        <div class="rb-body">
+          <div class="rb-title">CASE RETURNED <span *ngIf="returnedBy">BY {{ returnedBy }}</span></div>
+          <div class="rb-msg">{{ returnMessage }}</div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <fieldset>
-    <div class="actions">
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">
-        Edit
-      </button>
-      
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
-        Return
-      </button>
-
-      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">
-        Delete
-      </button>
-      <button mat-raised-button color="accent" (click)="onBack()">
-        Back
-      </button>
-    </div>
-  </fieldset>
-
-  <div class="actions">
-    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">
-      Back
-    </button>
-
-    <button mat-raised-button color="accent" (click)="downloadPdf()">
-      Download PDF
-    </button>
-  </div>
-
-  <fieldset class="nested-group">
-    <legend>Stakeholder</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Stakeholder Name</mat-label>
-        <input matInput [value]="report.stakeholder.name" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Executive Name</mat-label>
-        <input matInput [value]="report.stakeholder.executiveName" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Contact Number</mat-label>
-        <input matInput [value]="report.stakeholder.executiveContact" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>WhatsApp Number</mat-label>
-        <input matInput [value]="report.stakeholder.executiveWhatsapp" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Email ID</mat-label>
-        <input matInput [value]="report.stakeholder.executiveEmail" readonly />
-      </mat-form-field>
-    </div>
-
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Name</mat-label>
-        <input matInput [value]="report.stakeholder.applicant.name" readonly />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Applicant Contact</mat-label>
-        <input matInput [value]="report.stakeholder.applicant.contact" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Vehicle Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Registration Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.registrationNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Make</mat-label>
-        <input matInput [value]="report.vehicleDetails.make" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Model</mat-label>
-        <input matInput [value]="report.vehicleDetails.model" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Year of Mfg</mat-label>
-        <input matInput [value]="report.vehicleDetails.yearOfMfg" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Body Type</mat-label>
-        <input matInput [value]="report.vehicleDetails.bodyType" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.chassisNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Number</mat-label>
-        <input matInput [value]="report.vehicleDetails.engineNumber" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Color</mat-label>
-        <input matInput [value]="report.vehicleDetails.colour" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Fuel Type</mat-label>
-        <input matInput [value]="report.vehicleDetails.fuel" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Owner Name</mat-label>
-        <input matInput [value]="report.vehicleDetails.ownerName" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>RTO</mat-label>
-        <input matInput [value]="report.vehicleDetails.rto" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Inspection Details</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Inspected By</mat-label>
-        <input matInput [value]="report.inspectionDetails.vehicleInspectedBy" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Date of Inspection</mat-label>
-        <input matInput [value]="report.inspectionDetails.dateOfInspection | date:'mediumDate'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Location</mat-label>
-        <input matInput [value]="report.inspectionDetails.inspectionLocation" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Odometer Reading</mat-label>
-        <input matInput [value]="report.inspectionDetails.odometer" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Started</mat-label>
-        <input matInput [value]="report.inspectionDetails.engineStarted ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Road Worthy Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.roadWorthyCondition ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Tyre Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.overallTyreCondition" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Engine Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.engineCondition" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Brake System Condition</mat-label>
-        <input matInput [value]="report.inspectionDetails.brakeSystem" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Quality Control</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Rating</mat-label>
-        <input matInput [value]="report.qualityControl.overallRating" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Amount (₹)</mat-label>
-        <input matInput [value]="report.qualityControl.valuationAmount" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Punch</mat-label>
-        <input matInput [value]="report.qualityControl.chassisPunch" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="report.qualityControl.remarks" readonly></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Valuation Response</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline" style="grid-column: span 2;">
-        <mat-label>Raw Response</mat-label>
-        <textarea matInput [value]="report.valuationResponse.rawResponse" rows="5" readonly></textarea>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Low Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.lowRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Mid Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.midRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>High Range (Lacs)</mat-label>
-        <input matInput [value]="report.valuationResponse.highRange" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Photos</legend>
-    <div class="photo-grid">
-      <div class="photo-item" *ngFor="let key of photoKeys">
-        <div>{{ key }}</div>
-        <a [href]="report.photoUrls[key]" target="_blank">
-          <img class="thumb" [src]="report.photoUrls[key]" alt="{{ key }}" />
-        </a>
+      <!-- ══════════════════════════════════════
+           VEHICLE SUMMARY HERO (top)
+      ═══════════════════════════════════════ -->
+      <div class="qc-hero-card">
+        <div class="qc-hero">
+          <div class="qch-photo" (click)="openLightbox(0)">
+            <img [src]="report.photoUrls[photoKeys[0]]" alt="Vehicle" *ngIf="photoKeys.length > 0" />
+            <div *ngIf="!photoKeys.length" class="qch-no-img">NO IMAGE</div>
+            <div class="qch-photo-badge">🔍 {{ photoKeys.length }} photos</div>
+          </div>
+          <div class="qch-identity">
+            <div class="qch-title">{{ report.vehicleDetails?.make }} {{ report.vehicleDetails?.model }}</div>
+            <div class="qch-reg">{{ report.vehicleDetails?.registrationNumber }}</div>
+            <div class="qch-tags">
+              <span class="qch-tag" *ngFor="let tag of getVehicleTags()">{{ tag }}</span>
+            </div>
+          </div>
+          <div class="qch-valuation">
+            <div class="qchv-label">VALUATION</div>
+            <div class="qchv-amount">₹{{ viewModel.valuationAmount | number }}</div>
+            <div class="qchv-range" [class.qchv-range--out]="!isInRange()">
+              {{ isInRange() ? '✓ Within market range' : '⚠ Outside market range' }}
+            </div>
+            <div class="qchv-market-row">
+              <div class="qchv-mr-item qchv-mr-low">
+                <div class="qchv-mr-label">LOW</div>
+                <div class="qchv-mr-val">₹{{ viewModel.lowRange | number }}</div>
+              </div>
+              <div class="qchv-mr-sep"></div>
+              <div class="qchv-mr-item qchv-mr-mid">
+                <div class="qchv-mr-label">MID</div>
+                <div class="qchv-mr-val">₹{{ viewModel.midRange | number }}</div>
+              </div>
+              <div class="qchv-mr-sep"></div>
+              <div class="qchv-mr-item qchv-mr-high">
+                <div class="qchv-mr-label">HIGH</div>
+                <div class="qchv-mr-val">₹{{ viewModel.highRange | number }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="qch-score-bar">
+          <div class="qch-score">
+            {{ getRatingDisplay() }} / 10
+          </div>
+        </div>
+        <div class="qc-data-section">
+          <div class="qc-data-grid">
+            <div class="qc-data-row">
+              <div class="qcd-cell">
+                <div class="qcd-label">CHASSIS NO</div>
+                <div class="qcd-value">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">ENGINE NO</div>
+                <div class="qcd-value">{{ report.vehicleDetails?.engineNumber || '—' }}</div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">YEAR OF MFG</div>
+                <div class="qcd-value">
+                  {{ report.vehicleDetails?.manufacturedDate | date:'dd-MM-yyyy' }}
+                  <span class="qcd-age" *ngIf="report.vehicleDetails?.yearOfMfg">({{ getVehicleAge() }} yrs)</span>
+                </div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">ODO METER</div>
+                <div class="qcd-value">{{ report.inspectionDetails?.odometer | number }} km</div>
+              </div>
+            </div>
+            <div class="qc-data-row">
+              <div class="qcd-cell">
+                <div class="qcd-label">OWNER SERIAL NO</div>
+                <div class="qcd-value">
+                  <span class="qcd-badge">{{ report.vehicleDetails?.ownerSerialNo || '—' }}</span>
+                </div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">REGISTERED OWNER</div>
+                <div class="qcd-value qcd-ok">
+                  {{ report.vehicleDetails?.ownerName ? '✓ ' + report.vehicleDetails.ownerName : '—' }}
+                </div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">APPLICANT</div>
+                <div class="qcd-value qcd-ok">
+                  {{ report.stakeholder?.applicant?.name ? '✓ ' + report.stakeholder.applicant.name : '—' }}
+                </div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">HYPOTHECATION</div>
+                <div class="qcd-value" [class.qcd-ok]="report.vehicleDetails?.hypothecation">
+                  {{ report.vehicleDetails?.hypothecation
+                      ? '✓ ' + (report.vehicleDetails.lender || 'Yes')
+                      : 'NIL' }}
+                </div>
+              </div>
+            </div>
+            <div class="qc-data-row qc-data-row--last">
+              <div class="qcd-cell">
+                <div class="qcd-label">RC VALIDITY</div>
+                <div class="qcd-value"
+                     [class.qcd-ok]="report.vehicleDetails?.rcStatus"
+                     [class.qcd-warn]="!report.vehicleDetails?.rcStatus">
+                  {{ report.vehicleDetails?.insuranceValidUpTo | date:'dd-MM-yyyy' }}
+                </div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">CLASS OF VEHICLE</div>
+                <div class="qcd-value">{{ report.vehicleDetails?.classOfVehicle || '—' }}</div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">REGISTRATION DATE</div>
+                <div class="qcd-value">{{ report.vehicleDetails?.dateOfRegistration | date:'dd-MM-yyyy' }}</div>
+              </div>
+              <div class="qcd-cell">
+                <div class="qcd-label">BODY TYPE</div>
+                <div class="qcd-value">{{ report.vehicleDetails?.bodyType || '—' }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="qcc">
+            <div class="qcc-title">CHASSIS QUICK COMPARE</div>
+            <div class="qcc-number">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
+            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ Chassis Photo</span>
+            <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || '—' }}</div>
+            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</span>
+            <div class="qcc-match"
+                 [class.qcc-match--ok]="chassisNumbersMatch()"
+                 [class.qcc-match--fail]="!chassisNumbersMatch() && !!report.vehicleDetails?.stencilTrace">
+              {{ chassisNumbersMatch() ? '✓ Numbers Match'
+                 : report.vehicleDetails?.stencilTrace ? '✗ Mismatch'
+                 : '— Stencil Pending' }}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </fieldset>
 
-  <div class="actions">
-    <button mat-raised-button color="primary" class="back-button" (click)="onBack()">Back</button>
-    <button mat-raised-button color="accent" (click)="downloadPdf()">Download PDF</button>
-  </div>
 
-  <fieldset class="nested-group">
-    <legend>Quality Control & Valuation Estimate</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Overall Rating</mat-label>
-        <input matInput [value]="viewModel.overallRating" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Valuation Amount (₹)</mat-label>
-        <input matInput [value]="viewModel.valuationAmount" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Chassis Punch</mat-label>
-        <input matInput [value]="viewModel.chassisPunch" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Remarks</mat-label>
-        <textarea matInput [value]="viewModel.remarks" rows="2" readonly></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
 
-  <fieldset class="nested-group">
-    <legend>Valuation Ranges</legend>
-    <div class="grid">
-      <mat-form-field appearance="outline">
-        <mat-label>Low Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.lowRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Mid Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.midRange" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>High Range (₹ Lacs)</mat-label>
-        <input matInput [value]="viewModel.highRange" readonly />
-      </mat-form-field>
-    </div>
-  </fieldset>
+      <!-- ══════════════════════════════════════
+           STAKEHOLDER
+      ═══════════════════════════════════════ -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Company</mat-label>
+            <input matInput [value]="report.stakeholder?.name || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Branch / Location</mat-label>
+            <input matInput [value]="report.stakeholder?.branch || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Applicant</mat-label>
+            <input matInput [value]="report.stakeholder?.applicant?.name || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Contact</mat-label>
+            <input matInput [value]="report.stakeholder?.applicant?.contact || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [value]="report.createdAt | date:'dd-MM-yyyy'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Location</mat-label>
+            <input matInput [value]="report.stakeholder?.vehicleLocation?.district || report.stakeholder?.vehicleLocation?.state || '—'" readonly />
+          </mat-form-field>
+        </div>
+      </div>
 
-  <fieldset class="nested-group">
-    <legend>AI Analysis</legend>
-    <div style="width: 100%;">
-      <mat-form-field appearance="outline" class="full-width" style="width: 100%;">
-        <mat-label>Raw Response</mat-label>
-        <textarea matInput [value]="viewModel.rawResponse" rows="6" readonly style="font-family: monospace; white-space: pre-wrap; word-break: break-word; width: 100%; min-width: 100%; max-width: 100%;"></textarea>
-      </mat-form-field>
-    </div>
-  </fieldset>
+      <!-- ══════════════════════════════════════
+           VEHICLE DETAILS
+      ═══════════════════════════════════════ -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Registration No</mat-label>
+            <input matInput [value]="report.vehicleDetails?.registrationNumber || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Make</mat-label>
+            <input matInput [value]="report.vehicleDetails?.make || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Model</mat-label>
+            <input matInput [value]="report.vehicleDetails?.model || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Year / Mfg</mat-label>
+            <input matInput [value]="report.vehicleDetails?.yearOfMfg || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>RTO</mat-label>
+            <input matInput [value]="report.vehicleDetails?.rto || '—'" readonly />
+          </mat-form-field>
+        </div>
+      </div>
 
-  <fieldset class="nested-group">
-    <legend>Quality Control Notes</legend>
-    <div class="notes-container">
-      <app-common-notes
-        [entityType]="'QC'"
-        [entityId]="valuationId"
-        [currentUser]="getCurrentUser()"
-        [collapsible]="true">
-      </app-common-notes>
-    </div>
-  </fieldset>
+      <!-- ══════════════════════════════════════
+           INSPECTION DETAILS
+      ═══════════════════════════════════════ -->
+      <div class="pg-card">
+        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Inspection Details</div>
+        <div class="pg-card-body pg-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Inspected By</mat-label>
+            <input matInput [value]="report.inspectionDetails?.vehicleInspectedBy || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date of Inspection</mat-label>
+            <input matInput [value]="report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy':'+0530'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Inspection Location</mat-label>
+            <input matInput [value]="report.inspectionDetails?.inspectionLocation || '—'" readonly />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Odometer (km)</mat-label>
+            <input matInput [value]="(report.inspectionDetails?.odometer | number) || '—'" readonly />
+          </mat-form-field>
+        </div>
+      </div>
 
-  <fieldset>
-    <div class="actions">
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-      
-      <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">Return</button>
-      
-      <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
-      <button mat-raised-button color="accent" (click)="onBack()">Back</button>
-    </div>
-  </fieldset>
-</ng-container>
+      <!-- ══════════════════════════════════════
+           QC DETAILS (read-only card grid)
+      ═══════════════════════════════════════ -->
 
-<router-outlet></router-outlet>
+      <!-- Document Verification -->
+      <div class="qc-section">
+        <div class="qc-section-header">Document Verification</div>
+        <div class="qc-sub-header">DOCUMENT STATUS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['docRC']==='ok'" [class.card-flag]="cl['docRC']==='flag'">
+            <div class="qc-card-title">Registration Certificate (RC)</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docRC']==='ok'" [class.cvb-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docIns']==='ok'" [class.card-flag]="cl['docIns']==='flag'">
+            <div class="qc-card-title">Insurance Policy</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docIns']==='ok'" [class.cvb-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'">
+            <div class="qc-card-title">Permit</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docPermit']==='ok'" [class.cvb-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docFitness']==='ok'" [class.card-flag]="cl['docFitness']==='flag'">
+            <div class="qc-card-title">Fitness Certificate</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docFitness']==='ok'" [class.cvb-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docTax']==='ok'" [class.card-flag]="cl['docTax']==='flag'">
+            <div class="qc-card-title">Road Tax</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['docHypo']==='same'" [class.card-flag]="cl['docHypo']==='different'">
+            <div class="qc-card-title">Hypothecation</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span>
+          </div>
+        </div>
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['doc']">
+          <strong>Document Remarks:</strong> {{ clRemarks['doc'] }}
+        </div>
+      </div>
 
+      <!-- Data Accuracy -->
+      <div class="qc-section">
+        <div class="qc-section-header">Data Accuracy</div>
+
+        <div class="qc-sub-header">VEHICLE IDENTITY VERIFICATION</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accReg']==='pass'" [class.card-flag]="cl['accReg']==='fail'">
+            <div class="qc-card-title">Registration Number matches photos &amp; RC</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accReg']==='pass'" [class.cvb-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accChassis']==='pass'" [class.card-flag]="cl['accChassis']==='fail'">
+            <div class="qc-card-title">Chassis Number matches photos, RC &amp; stencil</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accChassis']==='pass'" [class.cvb-flag]="cl['accChassis']==='fail'">{{ cl['accChassis'] === 'pass' ? '✓ Pass' : cl['accChassis'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accOdo']==='pass'" [class.card-flag]="cl['accOdo']==='fail'">
+            <div class="qc-card-title">Odometer in photo matches reported KM</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accOdo']==='pass'" [class.cvb-flag]="cl['accOdo']==='fail'">{{ cl['accOdo'] === 'pass' ? '✓ Pass' : cl['accOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accVIN']==='pass'" [class.card-flag]="cl['accVIN']==='fail'">
+            <div class="qc-card-title">VIN plate matches RC &amp; inspection report</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accVIN']==='pass'" [class.cvb-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accMfgReg']==='pass'" [class.card-flag]="cl['accMfgReg']==='fail'">
+            <div class="qc-card-title">Manufacture year vs registration gap is logical</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accMfgReg']==='pass'" [class.cvb-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accVahan']==='pass'" [class.card-flag]="cl['accVahan']==='fail'">
+            <div class="qc-card-title">VAHAN data matches physical inspection</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accVahan']==='pass'" [class.cvb-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">OWNER / APPLICANT VERIFICATION</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accOwner']==='pass'" [class.card-flag]="cl['accOwner']==='fail'">
+            <div class="qc-card-title">Owner &amp; applicant identity verified</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accOwner']==='pass'" [class.cvb-flag]="cl['accOwner']==='fail'">{{ cl['accOwner'] === 'pass' ? '✓ Pass' : cl['accOwner'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
+            <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accSerial']==='pass'" [class.cvb-flag]="cl['accSerial']==='fail'">{{ cl['accSerial'] === 'pass' ? '✓ Pass' : cl['accSerial'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">TECHNICAL SPECIFICATIONS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'">
+            <div class="qc-card-title">Transmission type matches RC &amp; vehicle class</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accTransmission']==='pass'" [class.cvb-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accFuel']==='pass'" [class.card-flag]="cl['accFuel']==='fail'">
+            <div class="qc-card-title">Fuel type matches engine specs &amp; RC</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accFuel']==='pass'" [class.cvb-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">PHOTO QUALITY &amp; COMPLETENESS</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accPhotoLoc']==='pass'" [class.card-flag]="cl['accPhotoLoc']==='fail'">
+            <div class="qc-card-title">All photos taken at the same location</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accPhotoLoc']==='pass'" [class.cvb-flag]="cl['accPhotoLoc']==='fail'">{{ cl['accPhotoLoc'] === 'pass' ? '✓ Pass' : cl['accPhotoLoc'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accDaylight']==='pass'" [class.card-flag]="cl['accDaylight']==='fail'">
+            <div class="qc-card-title">Vehicle photos taken in clear daylight</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accDaylight']==='pass'" [class.cvb-flag]="cl['accDaylight']==='fail'">{{ cl['accDaylight'] === 'pass' ? '✓ Pass' : cl['accDaylight'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accPlate']==='pass'" [class.card-flag]="cl['accPlate']==='fail'">
+            <div class="qc-card-title">Number plate clearly visible front &amp; rear</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accPlate']==='pass'" [class.cvb-flag]="cl['accPlate']==='fail'">{{ cl['accPlate'] === 'pass' ? '✓ Pass' : cl['accPlate'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accGPS']==='pass'" [class.card-flag]="cl['accGPS']==='fail'">
+            <div class="qc-card-title">GPS timestamp matches inspection date</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accGPS']==='pass'" [class.cvb-flag]="cl['accGPS']==='fail'">{{ cl['accGPS'] === 'pass' ? '✓ Pass' : cl['accGPS'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-sub-header">INSPECTION FORM ACCURACY</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['accReportDate']==='pass'" [class.card-flag]="cl['accReportDate']==='fail'">
+            <div class="qc-card-title">Report date is valid — not in the future</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accReportDate']==='pass'" [class.cvb-flag]="cl['accReportDate']==='fail'">{{ cl['accReportDate'] === 'pass' ? '✓ Pass' : cl['accReportDate'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accMandatory']==='pass'" [class.card-flag]="cl['accMandatory']==='fail'">
+            <div class="qc-card-title">All mandatory fields filled</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accMandatory']==='pass'" [class.cvb-flag]="cl['accMandatory']==='fail'">{{ cl['accMandatory'] === 'pass' ? '✓ Pass' : cl['accMandatory'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['accRemarks']==='pass'" [class.card-flag]="cl['accRemarks']==='fail'">
+            <div class="qc-card-title">Inspector remarks are complete and relevant</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['accRemarks']==='pass'" [class.cvb-flag]="cl['accRemarks']==='fail'">{{ cl['accRemarks'] === 'pass' ? '✓ Pass' : cl['accRemarks'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['acc']">
+          <strong>Data Accuracy Remarks:</strong> {{ clRemarks['acc'] }}
+        </div>
+      </div>
+
+      <!-- Valuation Quality -->
+      <div class="qc-section">
+        <div class="qc-section-header">Valuation Quality</div>
+        <div class="qc-card-grid" style="padding-top:12px;">
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">VALUATION</div><div class="qc-vinfo-val">₹{{ viewModel.valuationAmount | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET LOW</div><div class="qc-vinfo-val qc-vinfo-low">₹{{ viewModel.lowRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET MID</div><div class="qc-vinfo-val qc-vinfo-mid">₹{{ viewModel.midRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET HIGH</div><div class="qc-vinfo-val qc-vinfo-high">₹{{ viewModel.highRange | number }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">VEHICLE SCORE</div><div class="qc-vinfo-val">{{ report.qualityControl?.overallRating || '—' }}</div></div>
+          <div class="qc-vinfo-card"><div class="qc-vinfo-label">DEDUPE</div><div class="qc-vinfo-val" [class.qc-vinfo-ok]="cl['valDedupe']==='pass'" [class.qc-vinfo-fail]="cl['valDedupe']==='fail'">{{ cl['valDedupe']==='pass' ? 'Verified Clean' : cl['valDedupe']==='fail' ? 'Flagged' : 'Pending' }}</div></div>
+        </div>
+
+        <div class="qc-sub-header">VALUATION ACCURACY</div>
+        <div class="qc-card-grid">
+          <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
+            <div class="qc-card-title">Minimum required photos uploaded</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
+            <div class="qc-card-title">Valuation within acceptable market range</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valInRange']==='pass'" [class.cvb-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
+            <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valDedupe']==='pass'" [class.cvb-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valAgeOdo']==='pass'" [class.card-flag]="cl['valAgeOdo']==='fail'">
+            <div class="qc-card-title">Age &amp; odometer consistent with condition rating</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valAgeOdo']==='pass'" [class.cvb-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+          <div class="qc-card" [class.card-ok]="cl['valScore']==='pass'" [class.card-flag]="cl['valScore']==='fail'">
+            <div class="qc-card-title">Checklist supports overall vehicle score</div>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['valScore']==='pass'" [class.cvb-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['val']">
+          <strong>Valuation Remarks:</strong> {{ clRemarks['val'] }}
+        </div>
+      </div>
+
+      <!-- QC Recommendation -->
+      <div class="qc-section">
+        <div class="qc-section-header">QC Recommendation</div>
+        <div class="qc-card-grid">
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recCondition']==='good'"
+            [class.card-warn]="cl['recCondition']==='average'"
+            [class.card-flag]="cl['recCondition']==='poor'">
+            <div class="qc-card-title">1. Overall Vehicle Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recCondition']==='good'"
+              [class.cvb-warn]="cl['recCondition']==='average'"
+              [class.cvb-flag]="cl['recCondition']==='poor'">
+              {{ cl['recCondition'] === 'good' ? '🟢 Good' : cl['recCondition'] === 'average' ? '🟡 Average' : cl['recCondition'] === 'poor' ? '🔴 Poor' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recExterior']==='good'"
+            [class.card-warn]="cl['recExterior']==='minor'"
+            [class.card-flag]="cl['recExterior']==='major'">
+            <div class="qc-card-title">2. Exterior Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recExterior']==='good'"
+              [class.cvb-warn]="cl['recExterior']==='minor'"
+              [class.cvb-flag]="cl['recExterior']==='major'">
+              {{ cl['recExterior'] === 'good' ? '✨ Good' : cl['recExterior'] === 'minor' ? '🔧 Minor Damage' : cl['recExterior'] === 'major' ? '💥 Major Damage' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recEngine']==='good'"
+            [class.card-warn]="cl['recEngine']==='average'"
+            [class.card-flag]="cl['recEngine']==='poor'">
+            <div class="qc-card-title">3. Engine / Mechanical Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recEngine']==='good'"
+              [class.cvb-warn]="cl['recEngine']==='average'"
+              [class.cvb-flag]="cl['recEngine']==='poor'">
+              {{ cl['recEngine'] === 'good' ? '⚙️ Good' : cl['recEngine'] === 'average' ? '⚠️ Average' : cl['recEngine'] === 'poor' ? '❌ Poor' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recTyre']==='good'"
+            [class.card-warn]="cl['recTyre']==='average'"
+            [class.card-flag]="cl['recTyre']==='replacement'">
+            <div class="qc-card-title">4. Tyre Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recTyre']==='good'"
+              [class.cvb-warn]="cl['recTyre']==='average'"
+              [class.cvb-flag]="cl['recTyre']==='replacement'">
+              {{ cl['recTyre'] === 'good' ? '🟢 Good' : cl['recTyre'] === 'average' ? '🟡 Average' : cl['recTyre'] === 'replacement' ? '🔴 Needs Replacement' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recDamage']==='none'"
+            [class.card-warn]="cl['recDamage']==='minor'"
+            [class.card-flag]="cl['recDamage']==='major'">
+            <div class="qc-card-title">5. Damage Detected</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recDamage']==='none'"
+              [class.cvb-warn]="cl['recDamage']==='minor'"
+              [class.cvb-flag]="cl['recDamage']==='major'">
+              {{ cl['recDamage'] === 'none' ? '✅ None' : cl['recDamage'] === 'minor' ? '⚠️ Minor' : cl['recDamage'] === 'major' ? '💥 Major' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recMissingParts']==='none'"
+            [class.card-flag]="cl['recMissingParts']==='present'">
+            <div class="qc-card-title">6. Missing Parts</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recMissingParts']==='none'"
+              [class.cvb-flag]="cl['recMissingParts']==='present'">
+              {{ cl['recMissingParts'] === 'none' ? '✅ None' : cl['recMissingParts'] === 'present' ? '❌ Parts Missing' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['docChassis']==='original'"
+            [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
+            <div class="qc-card-title">7. Chassis Punch</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['docChassis']==='original'"
+              [class.cvb-warn]="cl['docChassis']==='repunched'"
+              [class.cvb-flag]="cl['docChassis']==='tampered'">
+              {{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '— Not assessed' }}
+            </span>
+          </div>
+
+          <div class="qc-card rec-final-card"
+            [class.card-ok]="cl['recFinal']==='recommended'"
+            [class.card-warn]="cl['recFinal']==='conditional'"
+            [class.card-flag]="cl['recFinal']==='not-recommended'">
+            <div class="qc-card-title">8. Final QC Recommendation</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recFinal']==='recommended'"
+              [class.cvb-warn]="cl['recFinal']==='conditional'"
+              [class.cvb-flag]="cl['recFinal']==='not-recommended'">
+              {{ cl['recFinal'] === 'recommended' ? '✅ Recommended' : cl['recFinal'] === 'conditional' ? '⚠️ With Conditions' : cl['recFinal'] === 'not-recommended' ? '❌ Not Recommended' : '— Not assessed' }}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="qc-vtext-wrap" *ngIf="clRemarks['rec']">
+          <strong>QC Summary Remarks:</strong> {{ clRemarks['rec'] }}
+        </div>
+
+        <div style="padding:0 14px 14px;">
+          <app-common-notes
+            [entityType]="'QC'"
+            [entityId]="valuationId"
+            [currentUser]="getCurrentUser()"
+            [collapsible]="true">
+          </app-common-notes>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="pg-btn-group">
+        <button *ngIf="canEditQualityControl()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
+        <button *ngIf="canEditQualityControl()" mat-raised-button color="warn" (click)="openReturnModal()">Return</button>
+        <button *ngIf="canDeleteQualityControl()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
+        <button mat-raised-button (click)="onBack()">Back</button>
+      </div>
+
+    </div><!-- /.pg-content -->
+  </ng-container>
+
+</div><!-- /.pg-wrap -->
+
+<!-- Return Modal -->
 <div class="modal-overlay" *ngIf="showReturnModal">
   <div class="modal-box">
-    <div class="modal-header">
-      <h3>Return Quality Control</h3>
-      <span class="close-btn" (click)="closeModals()">×</span>
-    </div>
-    
+    <div class="modal-header"><h3>Return Quality Control</h3><span class="close-btn" (click)="closeModals()">×</span></div>
     <div class="modal-body">
       <label>Send Back To:</label>
       <select [(ngModel)]="selectedTargetStep" class="modal-input">
         <option value="AVO">AVO (Inspection)</option>
         <option value="Backend">Backend</option>
       </select>
-
       <label>Reason for Returning:</label>
       <textarea [(ngModel)]="returnReason" class="modal-input" rows="3" placeholder="Enter reason..."></textarea>
     </div>
-
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+      <button class="btn-confirm" (click)="submitReturn()">Submit Return</button>
     </div>
   </div>
 </div>
 
+<!-- Override Modal -->
 <div class="modal-overlay" *ngIf="showOverrideModal">
   <div class="modal-box">
-    <div class="modal-header warning">
-      <h3>⚠️ User Not Found</h3>
-    </div>
+    <div class="modal-header"><h3>Select Override Assignee</h3><span class="close-btn" (click)="closeModals()">×</span></div>
     <div class="modal-body">
-      <p>The original user for <b>{{selectedTargetStep}}</b> could not be found.</p>
-      <p>Please manually select a user to assign this case to:</p>
-      
-      <label>Assign To:</label>
+      <label>Select a User to Override:</label>
       <select [(ngModel)]="selectedOverrideUser" class="modal-input">
-        <option value="" disabled selected>-- Select User --</option>
-        <option *ngFor="let user of availableUsers" [value]="user.phoneNumber">
-          {{ user.name }} ({{ user.phoneNumber }})
-        </option>
+        <option value="">-- Select User --</option>
+        <option *ngFor="let user of availableUsers" [value]="user.userId">{{ user.name }}</option>
       </select>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModals()">Cancel</button>
-      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">
-        Assign & Return
-      </button>
+      <button class="btn-confirm" (click)="confirmOverride()" [disabled]="!selectedOverrideUser">Confirm Override</button>
     </div>
   </div>
 </div>
+
+<!-- Lightbox -->
+<div class="lb-overlay" *ngIf="lightboxOpen" (click)="closeLightbox()">
+  <div class="lb-box" (click)="$event.stopPropagation()">
+    <button class="lb-close" (click)="closeLightbox()">×</button>
+    <button class="lb-arrow lb-prev" (click)="prevPhoto()">&#8249;</button>
+    <div class="lb-img-wrap">
+      <img [src]="report.photoUrls[photoKeys[lightboxIndex]]" [alt]="photoKeys[lightboxIndex]" />
+    </div>
+    <button class="lb-arrow lb-next" (click)="nextPhoto()">&#8250;</button>
+    <div class="lb-caption">{{ photoKeys[lightboxIndex] }} &nbsp;·&nbsp; {{ lightboxIndex + 1 }} / {{ photoKeys.length }}</div>
+  </div>
+</div>
+
+<router-outlet></router-outlet>

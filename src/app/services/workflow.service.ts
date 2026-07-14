@@ -38,12 +38,12 @@ export class WorkflowService {
     valuationId: string,
     stepOrder: number,
     vehicleNumber: string,
-    applicantContact: string
+    applicantContact: string,
+    approvedBy?: string
   ): Observable<void> {
-    return this.http.post<void>(
-      `${this.baseUrl}/${valuationId}/workflow/${stepOrder}/complete?vehicleNumber=${vehicleNumber}&applicantContact=${applicantContact}`,
-      null
-    );
+    let url = `${this.baseUrl}/${valuationId}/workflow/${stepOrder}/complete?vehicleNumber=${vehicleNumber}&applicantContact=${applicantContact}`;
+    if (approvedBy) url += `&approvedBy=${encodeURIComponent(approvedBy)}`;
+    return this.http.post<void>(url, null);
   }
 
   // ===============================
@@ -125,10 +125,11 @@ export class WorkflowService {
     applicantContact: string;
     paymentStatus: string;
     paymentReference?: string;
-    paymentDate: string;
+    paymentDate: string | null;
     paymentMethod: string;
     paymentAmount: number;
     paymentNotes?: string;
+    savedBy?: string;
   }): Observable<any> {
 
     return this.http.put<any>(

@@ -1,12 +1,13 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Auth, User, authState } from '@angular/fire/auth';
-import { switchMap, map, take } from 'rxjs/operators';
-import { of, Observable, Subscription } from 'rxjs';
+import { switchMap, map, take, catchError } from 'rxjs/operators';
+import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
 import { QualityControlService } from '../../../services/quality-control.service';
@@ -17,15 +18,46 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
 
 // Models
 import { QualityControl } from '../../../models/QualityControl';
+import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
+// Mirrors the gallery-page slot definitions in ProntoPDFGeneration's
+// PdfReportService.ComposePhotoGalleryAndDisclaimer — keep in sync.
+const GALLERY_SLOT_DEFS: { label: string; keys: string[] }[] = [
+  { label: 'Front View',      keys: ['FrontViewGrille', 'FrontView'] },
+  { label: 'Rear View',       keys: ['RearViewTailgate', 'RearView'] },
+  { label: 'Front Right',     keys: ['FrontRightSide', 'FrontRight'] },
+  { label: 'Front Left',      keys: ['FrontLeftSide', 'FrontLeft'] },
+  { label: 'Rear Right',      keys: ['RearRightSide', 'RearRight'] },
+  { label: 'Rear Left',       keys: ['RearLeftSide', 'RearLeft'] },
+  { label: 'Right Side',      keys: ['DriverSideProfile', 'RightSideView'] },
+  { label: 'Left Side',       keys: ['PassengerSideProfile', 'LeftSideView'] },
+  { label: 'Odo Meter',       keys: ['Odometer', 'OdoMeter', 'InstrumentCluster'] },
+  { label: 'Engine Bay',      keys: ['EngineBay', 'Engine'] },
+  { label: 'Dashboard',       keys: ['Dashboard', 'DashboardCloseup'] },
+  { label: 'Selfie',          keys: ['SelfieWithVehicle', 'Selfie'] },
+  { label: 'Chassis Number',  keys: ['ChassisNumberPlate', 'ChassisNumber', 'Chassis', 'ChassisImprint'] },
+  { label: 'VIN Plate',       keys: ['VinPlate', 'VIN'] },
+  { label: 'Tyre - Front Left',  keys: ['TireFrontLeft'] },
+  { label: 'Tyre - Front Right', keys: ['TireFrontRight'] },
+  { label: 'Tyre - Rear Left',   keys: ['TireRearLeft'] },
+  { label: 'Tyre - Rear Right',  keys: ['TireRearRight'] },
+];
+
+interface GallerySlot {
+  label: string;
+  key: string;
+  url: string;
+  selected: boolean;
+}
+
 @Component({
   selector: 'app-valuation-quality-control-update',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent],
+  imports: [SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule],
   templateUrl: './quality-control-update.component.html',
   styleUrls: ['./quality-control-update.component.scss']
 })
@@ -53,6 +85,46 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   saveInProgress = false;
   submitInProgress = false;
   saved = false;
+
+  // Checklist state
+  cl: Record<string, string | null> = {};
+  clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
+  report!: FinalReport;
+  photoKeys: (keyof PhotoUrls)[] = [];
+
+  // Gallery page photo selection
+  gallerySlots: GallerySlot[] = [];
+
+  setCl(key: string, val: string): void {
+    this.cl[key] = this.cl[key] === val ? null : val;
+  }
+
+  toggleGallerySlot(slot: GallerySlot): void {
+    slot.selected = !slot.selected;
+  }
+
+  private buildGallerySlots(photoUrls: PhotoUrls, savedSelection: string[]): GallerySlot[] {
+    const slots: GallerySlot[] = [];
+    for (const def of GALLERY_SLOT_DEFS) {
+      const resolvedKey = def.keys.find(k => !!(photoUrls as any)?.[k]);
+      if (!resolvedKey) continue;
+      slots.push({
+        label: def.label,
+        key: resolvedKey,
+        url: (photoUrls as any)[resolvedKey],
+        selected: savedSelection.length === 0 || savedSelection.includes(resolvedKey)
+      });
+    }
+    return slots;
+  }
+
+  private getGallerySelectionToSave(): string[] {
+    if (this.gallerySlots.length === 0) return [];
+    // If everything is checked, save an empty list so it behaves as "standard" —
+    // future photos added later stay included automatically.
+    if (this.gallerySlots.every(s => s.selected)) return [];
+    return this.gallerySlots.filter(s => s.selected).map(s => s.key);
+  }
 
   private subscriptions = new Subscription();
 
@@ -114,7 +186,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       overallRating: ['', Validators.required],
       valuationAmount: [0, [Validators.required, Validators.min(0)]],
-      chassisPunch: ['', Validators.required],
+      chassisPunch: [''],
       remarks: [''],
 
       // Payment Fields
@@ -126,25 +198,106 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  private prefillChecklist(): void {
+    const vd  = this.report?.vehicleDetails;
+    const ins = this.report?.inspectionDetails;
+    const ve  = this.report?.valuationResponse as any;
+    const qcFormVal = this.form.getRawValue();
+
+    const chassisPunch  = (qcFormVal.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
+    const overallRating = (qcFormVal.overallRating || '').toUpperCase();
+    const engineCond    = (ins?.engineCondition     || '').toUpperCase();
+    const tyreCond      = (ins?.overallTyreCondition || '').toUpperCase();
+    const exteriorCond  = (ins?.exteriorCondition   || '').toUpperCase();
+    const bodyCondition = (ins?.bodyCondition       || '').toUpperCase();
+    const valuationAmt  = Number(qcFormVal.valuationAmount ?? 0);
+    const low           = Number(ve?.lowRange  ?? ve?.LowRange  ?? 0);
+    const high          = Number(ve?.highRange ?? ve?.HighRange ?? 0);
+
+    const condMap = (v: string): string | null =>
+      v === 'GOOD' ? 'good' : v === 'AVERAGE' ? 'average' : v === 'POOR' ? 'poor' : null;
+
+    // Document Verification
+    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
+    if (chassisPunch === 'ORIGINAL')   this.cl['docChassis'] = 'original';
+    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
+    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
+
+    // Data Accuracy
+    if (vd?.registrationNumber)            this.cl['accReg']          = 'pass';
+    if (vd?.chassisNumber || ins?.vinPlate) this.cl['accChassis']      = 'pass';
+    if ((ins?.odometer ?? 0) > 0)          this.cl['accOdo']          = 'pass';
+    if (vd?.fuel)                          this.cl['accFuel']         = 'pass';
+    if (vd?.make && vd?.model)             this.cl['accVahan']        = 'pass';
+    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner'] = 'pass';
+    if (vd?.ownerName)                     this.cl['accSerial']       = 'pass';
+    if (ins?.vehicleInspectedBy)           this.cl['accMandatory']    = 'pass';
+    if (ins?.remarks || ins?.vehicleInspectedBy) this.cl['accRemarks'] = 'pass';
+
+    // Valuation Quality
+    const photoCount = this.photoKeys?.length ?? 0;
+    if (photoCount >= 8)      this.cl['valMinPhotos'] = 'pass';
+    else if (photoCount > 0)  this.cl['valMinPhotos'] = 'fail';
+    if (low > 0 && high > 0)
+      this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
+    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
+      const age = new Date().getFullYear() - vd.yearOfMfg;
+      const avgKm = age > 0 ? ins!.odometer / age : 0;
+      this.cl['valAgeOdo'] = avgKm < 60000 ? 'pass' : 'fail';
+    }
+    if (overallRating === 'GOOD') this.cl['valScore'] = 'pass';
+    else if (overallRating === 'POOR') this.cl['valScore'] = 'fail';
+
+    // QC Recommendation
+    this.cl['recCondition'] = condMap(overallRating);
+    this.cl['recEngine']    = condMap(engineCond);
+    const extVal = exteriorCond || bodyCondition;
+    if (extVal === 'GOOD') this.cl['recExterior'] = 'good';
+    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
+    else if (extVal === 'POOR') this.cl['recExterior'] = 'major';
+    if (tyreCond === 'GOOD')     this.cl['recTyre'] = 'good';
+    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
+    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
+    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') this.cl['recFinal'] = 'not-recommended';
+    else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') this.cl['recFinal'] = 'recommended';
+    else this.cl['recFinal'] = 'conditional';
+  }
+
   // Load Data
   private loadQualityControl() {
     this.loading = true;
     this.error = null;
 
-    this.qcService
-      .getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
-      .subscribe({
-        next: (data: QualityControl) => {
-          this.patchForm(data);
-          // Store original data for change tracking
-          this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
-          this.loading = false;
-        },
-        error: (err) => {
-          this.error = err.message || 'Failed to load quality control details.';
-          this.loading = false;
+    const qc$ = this.qcService.getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact);
+    const report$ = this.valuationSvc.getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact);
+    const gallerySelection$ = this.valuationSvc.getGalleryPhotoSelection(this.valuationId, this.vehicleNumber, this.applicantContact);
+
+    forkJoin({ qcData: qc$, reportData: report$, gallerySelection: gallerySelection$ }).subscribe({
+      next: ({ qcData, reportData, gallerySelection }) => {
+        this.report = reportData;
+        this.photoKeys = Object.keys(reportData.photoUrls || {}) as (keyof PhotoUrls)[];
+        this.gallerySlots = this.buildGallerySlots(reportData.photoUrls, gallerySelection || []);
+        this.patchForm(qcData);
+        this.prefillChecklist();
+        // Load previously saved checklist values (override prefilled)
+        if (qcData.qcChecklist) {
+          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) this.cl[k] = v;
+          });
         }
-      });
+        if (qcData.qcChecklistRemarks) {
+          Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
+            if (v) this.clRemarks[k] = v;
+          });
+        }
+        this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Failed to load quality control details.';
+        this.loading = false;
+      }
+    });
   }
 
   // ✅ UPDATED: Patch Form with Payment Data
@@ -256,7 +409,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       paymentReference: v.paymentReference || null,
       paymentDate: this.toIsoUtc(v.paymentDate),
       paymentMethod: v.paymentMethod,
-      paymentAmount: v.paymentAmount 
+      paymentAmount: v.paymentAmount,
+
+      // Checklist
+      qcChecklist: this.cl,
+      qcChecklistRemarks: this.clRemarks
     };
     return payload;
   }
@@ -310,6 +467,15 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Save gallery photo selection
+        switchMap(() =>
+          this.valuationSvc.updateGalleryPhotoSelection(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.getGallerySelectionToSave()
+          ).pipe(catchError(() => of(null)))
+        ),
         // Start Workflow Step 4 (QC)
         switchMap(() =>
           this.workflowSvc.startWorkflow(
@@ -317,7 +483,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             4,
             this.vehicleNumber,
             encodeURIComponent(this.applicantContact)
-          )
+          ).pipe(catchError(() => of(null)))
         ),
         // Update Workflow Table
         switchMap(() =>
@@ -415,6 +581,15 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         payload
       )
       .pipe(
+        // Save gallery photo selection
+        switchMap(() =>
+          this.valuationSvc.updateGalleryPhotoSelection(
+            this.valuationId,
+            this.vehicleNumber,
+            this.applicantContact,
+            this.getGallerySelectionToSave()
+          ).pipe(catchError(() => of(null)))
+        ),
         // Complete QC Workflow (Step 4)
         switchMap(() =>
           this.workflowSvc.completeWorkflow(
@@ -442,27 +617,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             {
               workflow: 'FinalReport',
               workflowStepOrder: 5,
-              assignedTo: this.assignedTo,
-              assignedToPhoneNumber: this.assignedToPhoneNumber,
-              assignedToEmail: this.assignedToEmail,
-              assignedToWhatsapp: this.assignedToWhatsapp,
               qualityControlAssignedTo: this.assignedTo,
               qualityControlAssignedToPhoneNumber: this.assignedToPhoneNumber,
               qualityControlAssignedToEmail: this.assignedToEmail,
               qualityControlAssignedToWhatsapp: this.assignedToWhatsapp
             }
-          )
-        ),
-        // Assign Valuation
-        switchMap(() =>
-          this.valuationSvc.assignValuation(
-            this.valuationId,
-            this.vehicleNumber,
-            this.applicantContact,
-            this.assignedTo,
-            this.assignedToPhoneNumber,
-            this.assignedToEmail,
-            this.assignedToWhatsapp
           )
         ),
         // Assign QC

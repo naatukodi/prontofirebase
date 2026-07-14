@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class RolesService {
-  private base = `${environment.apiBaseUrl}/users`;
+  private base = `${environment.apiBaseUrl}users`;
 
   constructor(private http: HttpClient) {}
 

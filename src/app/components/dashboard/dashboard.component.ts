@@ -2,14 +2,14 @@
 
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { from, of, EMPTY, Observable } from 'rxjs';
-import { catchError, finalize, switchMap, take, timeout } from 'rxjs/operators';
+import { forkJoin, from, of, EMPTY, Observable } from 'rxjs';
+import { catchError, finalize, map, switchMap, take, timeout } from 'rxjs/operators';
 
 import { ClaimService } from '../../services/claim.service';
 import { UsersService } from '../../services/users.service';
 import { AuthorizationService } from '../../services/authorization.service';
 import { AuthService } from '../../services/auth.service';
-import { WFValuation } from '../../models/valuation.model';
+import { WFValuation, UserDashboardStats } from '../../models/valuation.model';
 import { UserModel } from '../../models/user.model';
 import { SharedModule } from '../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
@@ -39,6 +39,7 @@ import { FormsModule } from '@angular/forms';
 export class DashboardComponent implements OnInit {
 
   claims: WFValuation[] = [];
+  completedCases: WFValuation[] = [];
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
@@ -47,6 +48,9 @@ export class DashboardComponent implements OnInit {
   toDate: Date | null = null;
 
   currentUser: UserModel | null = null;
+  isAdmin = false;
+  userStats: UserDashboardStats | null = null;
+  private fbPhone = '';
 
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport', 'Returned'];
 
@@ -57,6 +61,14 @@ export class DashboardComponent implements OnInit {
   ];
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
+
+  private readonly roleStepOrder: Record<string, number> = {
+    'Stakeholder': 1,
+    'BackEnd': 2,
+    'AVO': 3,
+    'QC': 4,
+    'FinalReport': 5
+  };
 
   selectedStep = '';
   stepCounts: Record<string, number> = {};
@@ -80,7 +92,7 @@ export class DashboardComponent implements OnInit {
           this.error = 'Please sign in to view valuations.';
           return EMPTY;
         }
-
+        this.fbPhone = fbUser.phoneNumber;
         return this.userService.getById(fbUser.phoneNumber).pipe(
           take(1),
           catchError(() => {
@@ -91,17 +103,72 @@ export class DashboardComponent implements OnInit {
       }),
       switchMap((user: UserModel) => {
         this.currentUser = user;
-        return this.fetchValuationsForUser(user);
+        this.isAdmin = this.noAssignmentExemptRoles.includes(user.roleId);
+
+        if (this.isAdmin) {
+          return forkJoin({
+            open: this.fetchValuationsForUser(user).pipe(take(1)),
+            completed: this.claimService.getCompletedCases().pipe(
+              take(1), catchError(() => of([] as WFValuation[]))
+            )
+          }).pipe(map(r => ({ admin: true as const, ...r })));
+        } else {
+          const phone = this.fbPhone || user.phoneNumber || user.userId || '';
+          return this.claimService.getUserDashboardStats(phone, user.roleId).pipe(
+            take(1),
+            catchError(() =>
+              this.fetchValuationsForUser(user).pipe(
+                take(1),
+                catchError(() => of([] as WFValuation[])),
+                map(all => {
+                  const stepOrder = this.roleStepOrder[user.roleId];
+                  const openCases = stepOrder !== undefined
+                    ? all.filter(v => v.workflowStepOrder === stepOrder || v.status === 'Returned')
+                    : all;
+                  return {
+                    openCount: openCases.length,
+                    agedCount: 0,
+                    completedCount: 0,
+                    avgTatHours: 0,
+                    openCases,
+                    completedCases: [] as WFValuation[]
+                  } as UserDashboardStats;
+                })
+              )
+            ),
+            map(stats => ({ admin: false as const, stats }))
+          );
+        }
       }),
       finalize(() => { this.loading = false; })
     )
     .subscribe({
-      next: (data: WFValuation[]) => {
-        this.claims = data || [];
+      next: (result) => {
+        if (result.admin) {
+          const all = result.open || [];
+          this.completedCases = result.completed || [];
 
-        this.claims.sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+          const stepOrder = this.currentUser
+            ? this.roleStepOrder[this.currentUser.roleId]
+            : undefined;
+
+          this.claims = stepOrder !== undefined
+            ? all.filter(v => v.workflowStepOrder === stepOrder || v.status === 'Returned')
+            : all;
+
+          this.claims.sort((a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        } else {
+          const stats = result.stats;
+          this.userStats = stats;
+          this.claims = stats.openCases || [];
+          this.completedCases = stats.completedCases || [];
+
+          this.claims.sort((a, b) =>
+            new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
+          );
+        }
 
         this.computeStepCounts();
         this.applyFilter();
@@ -112,24 +179,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED ROLE LOGIC
   private fetchValuationsForUser(user: UserModel): Observable<WFValuation[]> {
-
-    const assignmentRoles = ['AVO', 'QC', 'BackEnd', 'FinalReport'];
-
-    // All operational roles fetch by AssignedToPhoneNumber
-    if (assignmentRoles.includes(user.roleId)) {
-      return this.claimService
-        .getValuationsByAdjusterPhone(user.userId)
-        .pipe(take(1));
-    }
-
-    // Admin roles fetch everything
     if (this.noAssignmentExemptRoles.includes(user.roleId)) {
       return this.claimService.getOpenValuations().pipe(take(1));
     }
 
-    // State/District roles
     const states = this.parseJsonArray((user as any).assignedStates);
     const districts = this.parseJsonArray((user as any).assignedDistricts);
 
@@ -139,7 +193,7 @@ export class DashboardComponent implements OnInit {
     if (states.length)
       return this.claimService.getByStates(states).pipe(take(1));
 
-    return of<WFValuation[]>([]);
+    return this.claimService.getOpenValuations().pipe(take(1));
   }
 
   private parseJsonArray(value: unknown): string[] {
@@ -168,13 +222,16 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilter(): void {
-    this.filteredClaims = this.claims.filter(v => {
+    if (this.selectedStep === 'Complete' || this.selectedStep === 'MyComplete') {
+      this.filteredClaims = this.completedCases;
+      return;
+    }
 
+    this.filteredClaims = this.claims.filter(v => {
       const stepIndex = this.getStepIndex(v);
       const currentStepName = this.steps[stepIndex];
 
       let matchesStep = true;
-
       if (this.selectedStep) {
         if (this.selectedStep === 'Returned') {
           matchesStep = v.status === 'Returned';
@@ -207,7 +264,20 @@ export class DashboardComponent implements OnInit {
   }
 
   openCase(v: WFValuation) {
-    this.navigateToCurrent(v);
+    if (this.selectedStep === 'Complete' || this.selectedStep === 'MyComplete') {
+      this.router.navigate(
+        ['/valuation', v.valuationId, 'final-report'],
+        {
+          queryParams: {
+            vehicleNumber: v.vehicleNumber,
+            applicantContact: v.applicantContact,
+            valuationType: v.valuationType
+          }
+        }
+      );
+    } else {
+      this.navigateToCurrent(v);
+    }
   }
 
   navigateToCurrent(v: WFValuation): void {
@@ -239,6 +309,28 @@ export class DashboardComponent implements OnInit {
       ? new Date(v.createdAt).getTime()
       : Date.now();
     return Math.floor((Date.now() - t) / (1000 * 60 * 60 * 24));
+  }
+
+  ageInHours(v: WFValuation): number {
+    const t = v?.updatedAt || v?.createdAt;
+    if (!t) return 0;
+    return Math.floor((Date.now() - new Date(t).getTime()) / (1000 * 60 * 60));
+  }
+
+  ageClass(v: WFValuation): Record<string, boolean> {
+    if (this.isAdmin) {
+      const d = this.ageInDays(v);
+      return { 'age-1': d === 1, 'age-2': d === 2, 'age-3plus': d >= 3 };
+    }
+    const h = this.ageInHours(v);
+    return { 'age-ok': h < 24, 'age-warn': h >= 24 && h < 48, 'age-critical': h >= 48 };
+  }
+
+  tatLabel(v: WFValuation): string {
+    if (this.isAdmin) {
+      return this.ageInDays(v) + 'd';
+    }
+    return this.ageInHours(v) + 'h';
   }
 
   trackByValuation = (_: number, v: WFValuation) =>

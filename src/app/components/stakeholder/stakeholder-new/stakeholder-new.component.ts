@@ -1,6 +1,6 @@
 // src/app/components/stakeholder/stakeholder-new/stakeholder-new.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -8,19 +8,17 @@ import {
   ReactiveFormsModule
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map, take } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
-import { Subscription, of } from 'rxjs';
+import { Subscription, of, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Auth, User, authState } from '@angular/fire/auth';
 
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { WorkflowService }    from '../../../services/workflow.service';
 import { ValuationService }   from '../../../services/valuation.service';
 import { HistoryLoggerService } from '../../../services/history-logger.service';
-import {
-  PincodeService,
-  PincodeModel
-} from '../../../services/pincode.service';
+import { UsersService } from '../../../services/users.service';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -77,10 +75,9 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     'Cholamandalam Investment and Finance Company',
     'Sundaram Finance',
     'Manappuram Finance',
-    'L&T Finance'
+    'L&T Finance',
+    'Equitas Small Finance Bank'
   ];
-
-  locationOptions: PincodeModel[] = [];
 
   saving = false;
   saveInProgress = false;
@@ -93,6 +90,13 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
   insuranceFile?: File;
   otherFiles: File[] = [];
 
+  private assignedTo: string = '';
+  private assignedToPhoneNumber: string = '';
+  private assignedToEmail: string = '';
+  private assignedToWhatsapp: string = '';
+
+  private usersSvc = inject(UsersService);
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -100,11 +104,12 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     private svc: StakeholderService,
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
-    private pincodeSvc: PincodeService,
-    private historyLogger: HistoryLoggerService
+    private historyLogger: HistoryLoggerService,
+    private auth: Auth
   ) {}
 
   ngOnInit(): void {
+    authState(this.auth).pipe(take(1)).subscribe(u => this.applyAssignedFromUser(u));
     this.valuationId =
       this.route.snapshot.queryParamMap.get('valuationId') ||
       uuidv4();
@@ -114,34 +119,25 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       this.route.snapshot.queryParamMap.get('applicantContact') || '';
 
     this.form = this.fb.group({
-      pincode: [
-        '',
-        [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
-      ],
-      stakeholderName:            ['', Validators.required],
-      stakeholderExecutiveName:   ['', Validators.required],
-      stakeholderExecutiveContact:['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
-      stakeholderExecutiveWhatsapp:['', Validators.pattern(/^[0-9]{10}$/)],
-      sameAsContact: [false],
-      stakeholderExecutiveEmail:  ['', Validators.email],
-      valuationType: ['', Validators.required],
-      location:  [null as PincodeModel|null, Validators.required],
-      block:     [''],
-      district:  [''],
-      division:  [''],
-      state:     [''],
-      country:   [''],
-      applicantName:    ['', Validators.required],
-      applicantContact: ['',Validators.required, Validators.pattern(/^[0-9]{10}$/)],
-      vehicleNumber:   [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^[a-zA-Z0-9]+$/)
-        ]
-      ],
-      vehicleSegment:  [''],
-      remarks: ['']
+      stakeholderName:              ['', Validators.required],
+      branch:                       [''],
+      stakeholderExecutiveName:     ['', Validators.required],
+      stakeholderExecutiveContact:  ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      stakeholderExecutiveWhatsapp: ['', Validators.pattern(/^[0-9]{10}$/)],
+      sameAsContact:                [false],
+      stakeholderExecutiveEmail:    ['', Validators.email],
+      valuationType:                ['', Validators.required],
+      block:                        [''],
+      district:                     [''],
+      division:                     [''],
+      state:                        [''],
+      country:                      [''],
+      applicantName:                ['', Validators.required],
+      applicantContact:             ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      applicantAlternativeContact:  ['', Validators.pattern(/^[0-9]{10}$/)],
+      vehicleNumber:                ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]+$/)]],
+      vehicleSegment:               [''],
+      remarks:                      ['']
     });
 
     this.setupWhatsappAutofill();
@@ -245,46 +241,6 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     this.showDuplicateWarning = false;
   }
 
-  onPincodeLookup() {
-    const pin = this.form.get('pincode')!.value;
-    if (!this.form.get('pincode')!.valid) {
-      this.locationOptions = [];
-      return;
-    }
-    this.pincodeSvc.lookup(pin).subscribe({
-      next: offices => {
-        this.locationOptions = offices;
-        this.form.patchValue({
-          location: null as unknown as PincodeModel | null,
-          block: '',
-          district: '',
-          division: '',
-          state: '',
-          country: ''
-        });
-      },
-      error: () => {
-        this.error = 'PIN lookup failed';
-        this.locationOptions = [];
-      }
-    });
-  }
-
-  onLocationChange(selected: PincodeModel) {
-    this.form.patchValue({
-      location: selected,
-      block:    selected.block,
-      district: selected.district,
-      division: selected.division,
-      state:    selected.state,
-      country:  selected.country
-    });
-  }
-
-  compareByName(a: PincodeModel, b: PincodeModel) {
-    return a && b ? a.name === b.name : a === b;
-  }
-
   onFileChange(event: Event, field: 'rcFile' | 'insuranceFile'): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -308,21 +264,21 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     const v = this.form.getRawValue();
 
     Object.entries({
-      pincode: v.pincode,
-      locationName: v.location!.name,
-      block: v.block,
-      district: v.district,
-      division: v.division,
-      state: v.state,
-      country: v.country,
       name: v.stakeholderName,
+      branch: v.branch || '',
       executiveName: v.stakeholderExecutiveName,
       executiveContact: v.stakeholderExecutiveContact,
       executiveWhatsapp: v.stakeholderExecutiveWhatsapp || '',
       executiveEmail: v.stakeholderExecutiveEmail || '',
       valuationType: v.valuationType,
+      block: v.block,
+      district: v.district,
+      division: v.division,
+      state: v.state,
+      country: v.country,
       applicantName: v.applicantName,
       applicantContact: v.applicantContact,
+      applicantAlternativeContact: v.applicantAlternativeContact || '',
       vehicleNumber: v.vehicleNumber,
       vehicleSegment: v.vehicleSegment,
       valuationId: this.valuationId,
@@ -396,6 +352,38 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       });
   }
 
+  private resolveDisplayName(u: User | null): Observable<string> {
+    return of(u).pipe(
+      switchMap(user => {
+        if (!user) return of('');
+        const id = user.phoneNumber ?? user.uid ?? user.email ?? null;
+        if (!id) return of(this.fallbackName(user));
+        return this.usersSvc.getById(id).pipe(
+          map(m => (m?.name?.trim() || this.fallbackName(user)))
+        );
+      })
+    );
+  }
+
+  private fallbackName(u: User): string {
+    return u.displayName || u.email || u.phoneNumber || '';
+  }
+
+  private applyAssignedFromUser(u: User | null): void {
+    this.resolveDisplayName(u).pipe(take(1)).subscribe(name => {
+      const safeName =
+        (name?.trim() || '') ||
+        (u?.email ? u.email.split('@')[0] : '') ||
+        (u?.phoneNumber || '') ||
+        'User';
+
+      this.assignedTo = safeName;
+      this.assignedToPhoneNumber = u?.phoneNumber || '';
+      this.assignedToEmail = u?.email || '';
+      this.assignedToWhatsapp = u?.phoneNumber || '';
+    });
+  }
+
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -403,7 +391,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     }
 
     if (this.duplicateInfo.isDuplicate) {
-      const confirmMessage = 
+      const confirmMessage =
         '⚠️ DUPLICATE VEHICLE DETECTED!\n\n' +
         this.duplicateInfo.messages.join('\n') +
         '\n\nFound ' + this.duplicateInfo.totalDuplicatesFound + ' existing record(s).\n\n' +
@@ -423,7 +411,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       .updateStakeholder(this.valuationId, vn, ac, payload)
       .pipe(
         switchMap(() =>
-          this.workflowSvc.startWorkflow(
+          this.workflowSvc.completeWorkflow(
             this.valuationId,
             1,
             vn,
@@ -431,7 +419,15 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
           )
         ),
         switchMap(() =>
-          this.valuationSvc.getValuationDetailsfromAttesterApi(
+          this.workflowSvc.startWorkflow(
+            this.valuationId,
+            2,
+            vn,
+            encodeURIComponent(ac)
+          )
+        ),
+        switchMap(() =>
+          this.valuationSvc.getVehicleDetailsWithRc(
             this.valuationId,
             vn,
             ac
@@ -443,20 +439,35 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
             vn,
             ac,
             {
-              workflow: 'Stakeholder',
-              workflowStepOrder: 1
+              workflow: 'Backend',
+              workflowStepOrder: 2,
+              stakeholderAssignedTo: this.assignedTo,
+              stakeholderAssignedToEmail: this.assignedToEmail,
+              stakeholderAssignedToPhoneNumber: this.assignedToPhoneNumber,
+              stakeholderAssignedToWhatsapp: this.assignedToWhatsapp
             }
+          )
+        ),
+        switchMap(() =>
+          this.svc.assignStakeholder(
+            this.valuationId,
+            vn,
+            ac,
+            this.assignedTo,
+            this.assignedToPhoneNumber,
+            this.assignedToEmail,
+            this.assignedToWhatsapp
           )
         ),
         switchMap(async () => {
           await this.historyLogger.logAction(
             this.valuationId,
             'Stakeholder Submitted',
-            'Stakeholder details submitted for next step',
-            'unknown',
-            'Unknown User',
-            'In Progress',
-            'Stakeholder Complete'
+            'Stakeholder details submitted to Backend team',
+            this.assignedTo,
+            this.assignedTo,
+            'Stakeholder In Progress',
+            'Backend In Progress'
           );
           return of(null);
         })

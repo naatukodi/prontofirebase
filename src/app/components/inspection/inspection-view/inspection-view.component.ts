@@ -11,8 +11,12 @@ import { Inspection } from '../../../models/Inspection';
 // Services
 import { InspectionService } from '../../../services/inspection.service';
 import { AuthorizationService } from '../../../services/authorization.service';
-import { WorkflowService } from '../../../services/workflow.service'; 
-import { UsersService } from '../../../services/users.service';         
+import { WorkflowService } from '../../../services/workflow.service';
+import { UsersService } from '../../../services/users.service';
+import { StakeholderService } from '../../../services/stakeholder.service';
+
+// Registry
+import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../../../shared/inspection-field-registry';         
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -25,7 +29,8 @@ type ValuationType =
   | 'two-wheeler'
   | 'three-wheeler'
   | 'tractor'
-  | 'ce';
+  | 'ce'
+  | 'bus';
 
 @Component({
   selector: 'app-valuation-inspection',
@@ -68,58 +73,15 @@ export class InspectionViewComponent implements OnInit {
   selectedOverrideUser: string = '';
   targetStep: string = 'Backend'; // AVO always returns to Backend
 
-  private visibilityMap: Record<ValuationType, string[]> = {
-   'four-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
-      'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
-      'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ],
-    'cv': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
-      'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashBoard','seats',
-      'upholestry','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ],
-    'two-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
-      'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ],
-    'three-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
-      'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
-      'frontForkAssy','mudguards','allGlasses','dashBoard','seats','upholestry','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ],
-    'tractor': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
-      'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
-      'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ],
-    'ce': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
-      'chassisCondition','steeringSystem','brakeSystem','electricalSystem','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
-      'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
-      'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
-      'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashBoard',
-      'seats','upholestry','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment'
-    ]
-  };
+  // Resolved vehicle type: falls back to the stakeholder's vehicleSegment when
+  // valuationType (e.g. "Retail") doesn't map to a vehicle type.
+  effectiveVehicleType: string | null = null;
+
+  get registrySections(): InspectionSection[] {
+    const vk = normalizeVehicleType(this.effectiveVehicleType ?? this.valuationType);
+    if (!vk) return [];
+    return getFieldRegistry(vk);
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -127,9 +89,27 @@ export class InspectionViewComponent implements OnInit {
     private router: Router,
     private inspectionService: InspectionService,
     private authz: AuthorizationService,
-    private workflowService: WorkflowService, 
-    private userService: UsersService         
+    private workflowService: WorkflowService,
+    private userService: UsersService,
+    private stakeholderService: StakeholderService
   ) {}
+
+  private resolveVehicleType(): void {
+    this.effectiveVehicleType = this.valuationType;
+    if (normalizeVehicleType(this.valuationType)) return;
+
+    this.stakeholderService
+      .getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: s => {
+          const seg = (s as any)?.vehicleSegment;
+          if (seg && normalizeVehicleType(seg)) {
+            this.effectiveVehicleType = seg;
+          }
+        },
+        error: () => { /* keep valuationType; sections stay generic */ }
+      });
+  }
 
   ngOnInit(): void {
     // 1. build form with all fields you use in template
@@ -148,7 +128,7 @@ export class InspectionViewComponent implements OnInit {
       roadWorthyCondition: [null],
       engineCondition: [''],
       suspensionSystem: [''],
-      steeringAssy: [''],
+      steeringSystem: [''],
       steeringWheel: [''],
       steeringColumn: [''],
       steeringBox: [''],
@@ -177,7 +157,7 @@ export class InspectionViewComponent implements OnInit {
       cabin: [''],
       dashboard: [''],
       seats: [''],
-      upholestry: [''],
+      upholstery: [''],
       interiorTrims: [''],
       headLamps: [''],
       front: [''],
@@ -213,7 +193,10 @@ export class InspectionViewComponent implements OnInit {
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
-        
+
+        // Resolve vehicle type (falls back to stakeholder vehicleSegment)
+        this.resolveVehicleType();
+
         // 1. Fetch Inspection Data
         this.fetchInspection();
 
@@ -319,7 +302,7 @@ export class InspectionViewComponent implements OnInit {
             roadWorthyCondition: data.roadWorthyCondition,
             engineCondition: data.engineCondition,
             suspensionSystem: data.suspensionSystem,
-            steeringAssy: data.steeringAssy,
+            steeringSystem: data.steeringSystem || (data as any).steeringAssy,
             steeringWheel: (data as any).steeringWheel,
             steeringColumn: (data as any).steeringColumn,
             steeringBox: (data as any).steeringBox,
@@ -348,7 +331,7 @@ export class InspectionViewComponent implements OnInit {
             cabin: (data as any).cabin,
             dashboard: (data as any).dashboard,
             seats: (data as any).seats,
-            upholestry: (data as any).upholestry,
+            upholstery: (data as any).upholstery || (data as any).upholestry,
             interiorTrims: (data as any).interiorTrims,
             headLamps: (data as any).headLamps,
             front: (data as any).front,
@@ -370,9 +353,14 @@ export class InspectionViewComponent implements OnInit {
       });
   }
 
-  showField(key: string): boolean {
-    if (!this.valuationType) return false;
-    return this.visibilityMap[this.valuationType]?.includes(key) ?? false;
+  getField(key: string): string {
+    return (this.inspection as any)?.[key] || '-';
+  }
+
+  displayBool(val: any, trueLabel: string = 'Yes', falseLabel: string = 'No'): string {
+    if (val === true || val === 'true') return trueLabel;
+    if (val === false || val === 'false') return falseLabel;
+    return val ?? '';
   }
 
   onClick() {

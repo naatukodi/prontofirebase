@@ -4,7 +4,7 @@
 /* Layout scoping: only inside <app-main-layout class="main-layout"> */
 /* ------------------------------ */
 
-/* 1) Import Angular Material’s prebuilt theme */
+/* 1) Import Angular Material's prebuilt theme */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css';
@@ -20,6 +20,287 @@ input, textarea {
     text-transform: uppercase !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL PAGE THEME  |  Brand teal: #037076  darker: #025054
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page wrapper */
+.pg-wrap {
+    min-height: 100vh;
+    background: #f0f4f5;
+    padding-bottom: 40px;
+    font-family: 'Segoe UI', sans-serif;
+    text-transform: uppercase;
+}
+
+/* Teal page heading */
+.pg-head {
+    background: linear-gradient(135deg, #037076 0%, #025054 100%);
+    color: white;
+    padding: 18px 28px 16px;
+    box-shadow: 0 3px 10px rgba(3,112,118,0.4);
+}
+.pg-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.pg-head h1 {
+    margin: 0 0 3px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: white;
+}
+.pg-head p {
+    margin: 0;
+    font-size: 0.82rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    color: white;
+}
+
+/* Content area */
+.pg-content {
+    padding: 20px 24px;
+}
+
+/* White card */
+.pg-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.pg-card-title {
+    background: linear-gradient(135deg, #037076 0%, #025054 100%);
+    color: white;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.pg-card-title-accent {
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: #ffcc02;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.pg-card-body {
+    padding: 20px 24px;
+}
+
+/* Form sections */
+.pg-section {
+    border: 1.5px solid #b2cdd0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    background: #fafcfc;
+}
+.pg-section-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: #037076;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #037076;
+}
+
+/* Form grid */
+.pg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+.pg-grid-full { grid-column: 1 / -1; }
+
+/* Buttons */
+.pg-btn {
+    background: linear-gradient(135deg, #037076, #025054);
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    text-transform: uppercase !important;
+    transition: all 0.18s ease;
+}
+.pg-btn:hover {
+    background: linear-gradient(135deg, #025054, #013a3d);
+    box-shadow: 0 3px 8px rgba(3,112,118,0.4);
+    transform: translateY(-1px);
+}
+.pg-btn-outline {
+    background: #fff;
+    color: #037076 !important;
+    border: 2px solid #037076;
+    border-radius: 8px;
+    padding: 7px 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase !important;
+    transition: all 0.18s ease;
+}
+.pg-btn-danger {
+    background: linear-gradient(135deg, #c62828, #b71c1c);
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase !important;
+}
+.pg-btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Override Material raised buttons globally to teal */
+.pg-wrap .mat-mdc-raised-button.mat-primary,
+.pg-wrap button[mat-raised-button][color="primary"] {
+    background: linear-gradient(135deg, #037076, #025054) !important;
+    color: white !important;
+}
+.pg-wrap .mat-mdc-raised-button.mat-accent,
+.pg-wrap button[mat-raised-button][color="accent"] {
+    background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+    color: white !important;
+}
+.pg-wrap .mat-mdc-raised-button.mat-warn,
+.pg-wrap button[mat-raised-button][color="warn"] {
+    background: linear-gradient(135deg, #c62828, #b71c1c) !important;
+    color: white !important;
+}
+
+/* Table with grid lines */
+.pg-table { width: 100%; }
+.pg-table th.mat-mdc-header-cell,
+.pg-table th.mat-header-cell {
+    background: #037076 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #025054 !important;
+    white-space: nowrap;
+    padding: 10px 12px !important;
+    border-right: 1px solid rgba(255,255,255,0.2) !important;
+}
+.pg-table th.mat-mdc-header-cell:first-child,
+.pg-table th.mat-header-cell:first-child {
+    border-left: 1px solid rgba(255,255,255,0.2) !important;
+}
+.pg-table td.mat-mdc-cell,
+.pg-table td.mat-cell {
+    padding: 0 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    vertical-align: middle;
+    border-right: 1px solid #b2cdd0 !important;
+    border-bottom: 1px solid #b2cdd0 !important;
+    text-transform: uppercase !important;
+}
+.pg-table td.mat-mdc-cell:first-child,
+.pg-table td.mat-cell:first-child {
+    border-left: 1px solid #b2cdd0 !important;
+}
+.pg-table tr.mat-mdc-row,
+.pg-table tr.mat-row {
+    height: 48px !important;
+    transition: background 0.15s ease;
+}
+.pg-table tr.mat-mdc-row:nth-child(even),
+.pg-table tr.mat-row:nth-child(even) { background: #f7fbfb; }
+.pg-table tr.mat-mdc-row:nth-child(odd),
+.pg-table tr.mat-row:nth-child(odd)  { background: #ffffff; }
+.pg-table tr.mat-mdc-row:hover,
+.pg-table tr.mat-row:hover {
+    background: #e6f4f5 !important;
+    cursor: pointer;
+}
+
+/* Fieldset.nested-group → styled as pg-card with teal gradient legend */
+.pg-wrap fieldset.nested-group {
+    border: none !important;
+    border-radius: 12px;
+    padding: 0 !important;
+    margin-bottom: 16px;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: block;
+}
+
+.pg-wrap fieldset.nested-group legend {
+    float: left;
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #037076 0%, #025054 100%) !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    letter-spacing: 0.5px;
+    text-transform: uppercase !important;
+    padding: 12px 20px !important;
+    margin: 0 !important;
+    line-height: 1.4;
+}
+
+/* Clear the legend float so content sits below */
+.pg-wrap fieldset.nested-group > *:not(legend) { clear: both; }
+
+/* Padding wrapper for content inside nested-group — do NOT set display so grid/flex layouts are preserved */
+.pg-wrap fieldset.nested-group .grid,
+.pg-wrap fieldset.nested-group > div,
+.pg-wrap fieldset.nested-group > mat-form-field,
+.pg-wrap fieldset.nested-group > app-common-notes {
+    padding: 16px 20px;
+    box-sizing: border-box;
+}
+
+/* Plain fieldset (action buttons, no legend) — just strip border */
+.pg-wrap fieldset:not(.nested-group) {
+    border: none !important;
+    padding: 8px 0 !important;
+    background: transparent;
+}
+
+.pg-wrap fieldset:not(.nested-group) .actions,
+.pg-wrap fieldset:not(.nested-group) .button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+}
+
+/* Loading / error */
+.pg-loading { text-align: center; padding: 50px; color: #888; font-size: 0.95rem; }
+.pg-error   { text-align: center; padding: 20px; color: #c62828; background: #ffebee; border-radius: 8px; font-weight: 600; font-size: 0.88rem; }
+
 
 
 
@@ -27,7 +308,7 @@ input, textarea {
 html, body {
     margin: 0;
     padding: 0;
-} 
+}
 
 /* toolbar */
 .main-layout .app-toolbar {
@@ -36,69 +317,71 @@ html, body {
     padding: 0 16px;
     position: fixed;
     top: 0;
-    left: 0;        
-    right: 0;      
-    width: auto;    
+    left: 0;
+    right: 0;
+    width: auto;
     z-index: 1000;
-} 
+}
 .main-layout .app-toolbar .app-title {
     font-size: 1.5rem;
     font-weight: bold;
-} 
+}
 .main-layout .app-toolbar .spacer {
     flex: 1 1 auto;
-} 
+}
 .main-layout .app-toolbar button {
     margin: 8px 4px;
-} 
+}
 
 .main-layout .mat-toolbar.mat-primary {
     background: #3f51b5;
     color: #fff;
-} 
+}
 
 .main-layout .mdc-text-field--filled:not(.mdc-text-field--disabled) {
     background-color: whitesmoke;
-} 
+}
 
 /* host padding removed—will instead push specific sections down */
 .main-layout {
     display: block;
-} 
+}
 
 /* push hero down by toolbar height so it sits directly underneath */
 .main-layout .hero {
-    background: linear-gradient(135deg, #f5f5dc 0%, #fff8e1 100%);
-    color: #333;
+    background: linear-gradient(135deg, #037076 0%, #025054 60%, #013a3d 100%);
+    color: #fff;
     text-align: center;
-    padding: 20px 16px; /* reduced padding */
+    padding: 20px 16px;
     transition: all 0.3s ease;
     overflow: hidden;
-} 
+    box-shadow: 0 3px 12px rgba(3, 112, 118, 0.35);
+}
 .main-layout .hero .hero-content h1 {
     margin: 0;
-    font-size: 2rem; /* reduced font size */
-    letter-spacing: 1px;
+    font-size: 2rem;
+    letter-spacing: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-} 
+}
 .main-layout .hero .hero-content p {
-    margin-top: 4px; /* reduced margin */
-    font-size: 1rem; /* reduced font size */
-    opacity: 0.9;
+    margin-top: 4px;
+    font-size: 1rem;
+    opacity: 0.75;
+    color: #b2e8e2;
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* limits text to 2 lines */
+    -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-} 
+}
 
 /* routed pages: also start immediately under toolbar */
 .main-layout router-outlet,
 .main-layout .app-footer {
     margin-top: 64px;
-} 
+}
 
 /* footer */
 .main-layout .app-footer {
@@ -106,12 +389,12 @@ html, body {
     color: rgba(0, 0, 0, 0.6);
     text-align: center;
     padding: 16px;
-} 
+}
 .main-layout .app-footer .footer-content {
     max-width: 1200px;
     margin: 0 auto;
     font-size: 0.9rem;
-} 
+}
 
 /* responsive tweaks */
 @media (max-width: 600px) {
@@ -165,4 +448,4 @@ html, body {
     .main-layout .app-footer .footer-content {
         font-size: 0.8rem;
     }
-} 
+}

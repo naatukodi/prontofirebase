@@ -10,9 +10,65 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
 @Component({
   standalone: true,
   selector: 'app-main-layout',
-  host: { class: 'main-layout' }, 
-  // 4. Added CommonModule to imports
+  host: { class: 'main-layout' },
   imports: [CommonModule, HeaderComponent, RouterOutlet, RouterModule, FooterComponent, MatTabsModule],
+  styles: [`
+    ::ng-deep .main-nav-tabs {
+      background: transparent !important;
+      border-bottom: none !important;
+      padding: 12px 0 8px;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-links {
+      display: flex !important;
+      justify-content: center !important;
+      gap: 12px !important;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-link,
+    ::ng-deep .main-nav-tabs a[mat-tab-link] {
+      border: 2px solid #037076 !important;
+      border-radius: 8px !important;
+      padding: 7px 24px !important;
+      font-weight: 700 !important;
+      font-size: 0.8rem !important;
+      letter-spacing: 0.6px !important;
+      text-transform: uppercase !important;
+      color: #037076 !important;
+      background: #fff !important;
+      min-width: unset !important;
+      width: auto !important;
+      flex-grow: 0 !important;
+      height: 36px !important;
+      line-height: 1 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      opacity: 1 !important;
+      transition: all 0.18s ease !important;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-link .mdc-tab__content,
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-link .mdc-tab__text-label {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-link:hover {
+      background: #037076 !important;
+      color: #fff !important;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-link.mdc-tab--active {
+      background: #037076 !important;
+      color: #fff !important;
+    }
+    ::ng-deep .main-nav-tabs .mdc-tab-indicator,
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-ripple {
+      display: none !important;
+    }
+    ::ng-deep .main-nav-tabs .mat-mdc-tab-header-pagination {
+      display: none !important;
+    }
+  `],
   template: `
     <app-header></app-header>
 
@@ -20,9 +76,8 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
       
       <section class="hero">
         <div class="hero-content">
-          <h1>
-            <span style="color: green;">Pronto</span>
-            <span style="color: red;">Moto</span>
+          <h1 style="text-transform: uppercase;">
+            <span style="color: #ffffff; font-weight: 900;">VEHGA</span><span style="color: #99f6e4; font-weight: 900;">INSPECTIONS</span>
           </h1>
           <p>Your one-stop valuations dashboard</p>
         </div>

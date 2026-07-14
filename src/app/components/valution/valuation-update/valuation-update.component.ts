@@ -7,7 +7,7 @@ import { ValuationService } from '../../../services/valuation.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { VehicleDetails } from '../../../models/VehicleDetails';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { switchMap, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
+import { switchMap, debounceTime, distinctUntilChanged, take, catchError } from 'rxjs/operators';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { RouterModule } from '@angular/router';
@@ -19,6 +19,7 @@ import { UsersService } from '../../../services/users.service';
 import { AssignableUser, UserModel } from '../../../models/user.model';
 import { ClaimService } from '../../../services/claim.service';
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
+import { AuthorizationService } from '../../../services/authorization.service';
 
 // ✅ USE EXISTING SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
@@ -39,6 +40,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
   private usersSvc = inject(UsersService);
   private historyLogger = inject(HistoryLoggerService);  // ✅ INJECT EXISTING SERVICE
+  private authz = inject(AuthorizationService);
 
   form!: FormGroup;
   loading = true;
@@ -157,6 +159,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       bodyType: ['', Validators.required],
       yearOfMfg: [null, [Validators.required, Validators.min(1900)]],
       monthOfMfg: [null, [Validators.required, Validators.min(1), Validators.max(12)]],
+      colour: [''],
+      fuel: [''],
 
       // Engine & Specs
       engineNumber: ['', Validators.required],
@@ -175,6 +179,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
       // Owner & Address
       ownerName: ['', Validators.required],
+      ownerSerialNo: [''],
       presentAddress: ['', Validators.required],
       permanentAddress: ['', Validators.required],
       hypothecation: [false],
@@ -206,10 +211,6 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       backlistStatus: [false],
       rcStatus: [false],
       manufacturedDate: [''],
-
-      // URLs
-      stencilTraceUrl: [''],
-      chassisNoPhotoUrl: [''],
       remarks: ['']
     });
   }
@@ -253,9 +254,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.isCheckingDuplicate = true;
     
     this.valuationSvc.checkDuplicateVehicle(
-      vehicleNumber, 
-      engineNumber, 
-      chassisNumber
+      vehicleNumber,
+      engineNumber,
+      chassisNumber,
+      this.valuationId
     ).subscribe({
       next: (response) => {
         this.isCheckingDuplicate = false;
@@ -442,7 +444,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.valuationSvc
-      .getVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .getVehicleDetailsWithRc(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
         next: (data: VehicleDetails) => {
           this.patchForm(data);
@@ -451,8 +453,20 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (err) => {
-          this.error = err.message || 'Failed to load vehicle details.';
-          this.loading = false;
+          // Fall back to stored data if RC check fails
+          this.valuationSvc
+            .getVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact)
+            .subscribe({
+              next: (data: VehicleDetails) => {
+                this.patchForm(data);
+                this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
+                this.loading = false;
+              },
+              error: (fallbackErr) => {
+                this.error = fallbackErr.message || 'Failed to load vehicle details.';
+                this.loading = false;
+              }
+            });
         }
       });
   }
@@ -477,7 +491,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       categoryCode: data.categoryCode,
       normsType: data.normsType,
       makerVariant: data.makerVariant,
+      colour: data.colour,
+      fuel: data.fuel,
       ownerName: data.ownerName,
+      ownerSerialNo: data.ownerSerialNo,
       presentAddress: data.presentAddress,
       permanentAddress: data.permanentAddress,
       hypothecation: data.hypothecation,
@@ -500,8 +517,6 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       backlistStatus: data.backlistStatus,
       rcStatus: data.rcStatus,
       manufacturedDate: data.manufacturedDate?.slice(0, 10) || '',
-      stencilTraceUrl: data.stencilTraceUrl,
-      chassisNoPhotoUrl: data.chassisNoPhotoUrl,
       remarks: data.remarks || ''
     });
   }
@@ -546,6 +561,13 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   }
 
 
+  private toIsoDate(val: any): string {
+    if (!val) return '';
+    if (val instanceof Date) return val.toISOString().slice(0, 10);
+    if (typeof val === 'string') return val.slice(0, 10);
+    return '';
+  }
+
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();
@@ -565,31 +587,34 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     if (v.seatingCapacity !== null) {
       fd.append('seatingCapacity', v.seatingCapacity.toString());
     }
-    fd.append('dateOfRegistration', v.dateOfRegistration);
+    fd.append('dateOfRegistration', this.toIsoDate(v.dateOfRegistration));
     fd.append('rto', v.rto);
     fd.append('classOfVehicle', v.classOfVehicle);
     fd.append('categoryCode', v.categoryCode || '');
     fd.append('normsType', v.normsType || '');
     fd.append('makerVariant', v.makerVariant || '');
+    fd.append('colour', v.colour || '');
+    fd.append('fuel', v.fuel || '');
     fd.append('ownerName', v.ownerName);
+    fd.append('ownerSerialNo', v.ownerSerialNo || '');
     fd.append('presentAddress', v.presentAddress);
     fd.append('permanentAddress', v.permanentAddress);
     fd.append('hypothecation', v.hypothecation ? 'true' : 'false');
     fd.append('lender', v.lender || '');
     fd.append('insurer', v.insurer || '');
     fd.append('insurancePolicyNo', v.insurancePolicyNo || '');
-    fd.append('insuranceValidUpTo', v.insuranceValidUpTo || '');
+    fd.append('insuranceValidUpTo', this.toIsoDate(v.insuranceValidUpTo));
     fd.append('permitNo', v.permitNo || '');
-    fd.append('permitValidUpTo', v.permitValidUpTo || '');
+    fd.append('permitValidUpTo', this.toIsoDate(v.permitValidUpTo));
     fd.append('permitType', v.permitType || '');
-    fd.append('permitIssued', v.permitIssued || '');
-    fd.append('permitFrom', v.permitFrom || '');
+    fd.append('permitIssued', this.toIsoDate(v.permitIssued));
+    fd.append('permitFrom', this.toIsoDate(v.permitFrom));
     fd.append('fitnessNo', v.fitnessNo || '');
-    fd.append('fitnessValidTo', v.fitnessValidTo || '');
+    fd.append('fitnessValidTo', this.toIsoDate(v.fitnessValidTo));
     fd.append('pollutionCertificateNumber', v.pollutionCertificateNumber || '');
-    fd.append('pollutionCertificateUpto', v.pollutionCertificateUpto || '');
-    fd.append('taxUpto', v.taxUpto || '');
-    fd.append('taxPaidUpTo', v.taxPaidUpTo || '');
+    fd.append('pollutionCertificateUpto', this.toIsoDate(v.pollutionCertificateUpto));
+    fd.append('taxUpto', this.toIsoDate(v.taxUpto));
+    fd.append('taxPaidUpTo', this.toIsoDate(v.taxPaidUpTo));
     if (v.idv !== null) {
       fd.append('idv', v.idv.toString());
     }
@@ -598,9 +623,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     }
     fd.append('backlistStatus', v.backlistStatus ? 'true' : 'false');
     fd.append('rcStatus', v.rcStatus ? 'true' : 'false');
-    fd.append('manufacturedDate', v.manufacturedDate || '');
-    fd.append('stencilTraceUrl', v.stencilTraceUrl || '');
-    fd.append('chassisNoPhotoUrl', v.chassisNoPhotoUrl || '');
+    fd.append('manufacturedDate', this.toIsoDate(v.manufacturedDate));
     fd.append('remarks', v.remarks || '');
     fd.append('AssignedTo', this.assignedTo);
     fd.append('AssignedToPhoneNumber', this.assignedToPhoneNumber);
@@ -640,7 +663,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     this.valuationSvc
       .updateVehicleDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
       .pipe(
-        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
+        switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 2, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
@@ -815,6 +838,13 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  canSubmitWithoutAssign(): boolean {
+    return this.authz.hasAnyPermission([
+      'CanViewQualityControl', 'CanCreateQualityControl', 'CanEditQualityControl',
+      'CanViewFinalReport', 'CanCreateFinalReport', 'CanEditFinalReport'
+    ]);
+  }
 
   onCancel() {
     this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {

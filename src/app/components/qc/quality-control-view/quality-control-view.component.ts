@@ -1,6 +1,6 @@
 // src/app/components/qc/quality-control-view/quality-control-view.component.ts
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -52,6 +52,173 @@ export class QualityControlViewComponent implements OnInit {
   returnMessage: string | null = null;
   returnedBy: string | null = null;
 
+  // Checklist state (read-only on view page — editing happens on update page)
+  cl: Record<string, string | null> = {};
+  clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
+
+  // ── Lightbox ──
+  lightboxOpen = false;
+  lightboxIndex = 0;
+
+  openLightbox(index: number): void {
+    this.lightboxIndex = index;
+    this.lightboxOpen = true;
+  }
+
+  closeLightbox(): void { this.lightboxOpen = false; }
+
+  prevPhoto(): void {
+    this.lightboxIndex = (this.lightboxIndex - 1 + this.photoKeys.length) % this.photoKeys.length;
+  }
+
+  nextPhoto(): void {
+    this.lightboxIndex = (this.lightboxIndex + 1) % this.photoKeys.length;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent): void {
+    if (!this.lightboxOpen) return;
+    if (e.key === 'ArrowLeft')  this.prevPhoto();
+    if (e.key === 'ArrowRight') this.nextPhoto();
+    if (e.key === 'Escape')     this.closeLightbox();
+  }
+
+  // ── Helpers ──
+  getVehicleAge(): number {
+    return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
+  }
+
+  getRatingDisplay(): string {
+    const raw = (this.report?.qualityControl?.overallRating || this.viewModel?.overallRating || '').trim();
+    if (!raw) return '—';
+    const num = Number(raw);
+    if (!isNaN(num)) return num.toFixed(1);
+    const map: Record<string, string> = {
+      'EXCELLENT': '9.5', 'VERY GOOD': '8.5', 'GOOD': '7.5',
+      'AVERAGE': '5.0', 'BELOW AVERAGE': '3.5', 'POOR': '2.5', 'VERY POOR': '1.5'
+    };
+    return map[raw.toUpperCase()] ?? raw;
+  }
+
+  isInRange(): boolean {
+    const amt  = Number(this.viewModel?.valuationAmount ?? 0);
+    const low  = Number(this.viewModel?.lowRange  ?? 0);
+    const high = Number(this.viewModel?.highRange ?? 0);
+    return low > 0 && high > 0 && amt >= low && amt <= high;
+  }
+
+  chassisNumbersMatch(): boolean {
+    const chassis = (this.report?.vehicleDetails?.chassisNumber || '').toUpperCase().trim();
+    const stencil = (this.report?.vehicleDetails?.stencilTrace  || '').toUpperCase().trim();
+    return chassis.length > 0 && stencil.length > 0 && chassis === stencil;
+  }
+
+  getVehicleTags(): string[] {
+    const vd = this.report?.vehicleDetails;
+    if (!vd) return [];
+    return [
+      vd.classOfVehicle,
+      vd.fuel,
+      vd.bodyType,
+      vd.normsType,
+      vd.makerVariant
+    ].filter(Boolean) as string[];
+  }
+
+  private prefillChecklist(): void {
+    const vd  = this.report?.vehicleDetails;
+    const ins = this.report?.inspectionDetails;
+    const qc  = this.report?.qualityControl;
+
+    const chassisPunch   = (this.viewModel?.chassisPunch  || qc?.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
+    const overallRating  = (this.viewModel?.overallRating || qc?.overallRating || '').toUpperCase();
+    const engineCond     = (ins?.engineCondition     || '').toUpperCase();
+    const tyreCond       = (ins?.overallTyreCondition || '').toUpperCase();
+    const exteriorCond   = (ins?.exteriorCondition   || '').toUpperCase();
+    const bodyCondition  = (ins?.bodyCondition       || '').toUpperCase();
+    const valuationAmt   = this.viewModel?.valuationAmount ?? 0;
+    const low            = Number(this.viewModel?.lowRange  ?? 0);
+    const high           = Number(this.viewModel?.highRange ?? 0);
+
+    const condMap = (val: string): string | null => {
+      if (val === 'GOOD') return 'good';
+      if (val === 'AVERAGE') return 'average';
+      if (val === 'POOR') return 'poor';
+      return null;
+    };
+
+    // ── Document Verification ──
+    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
+    // Insurance / Permit / Fitness / RoadTax — no data in model, left for manual entry
+
+    if (chassisPunch === 'ORIGINAL')  this.cl['docChassis'] = 'original';
+    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
+    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
+
+    // ── Data Accuracy ──
+    if (vd?.registrationNumber) this.cl['accReg']    = 'pass';
+    if (vd?.chassisNumber || ins?.vinPlate) this.cl['accChassis'] = 'pass';
+    if ((ins?.odometer ?? 0) > 0) this.cl['accOdo']  = 'pass';
+    if (vd?.make && vd?.model)    this.cl['accVahan'] = 'pass';
+    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner']  = 'pass';
+    if (vd?.ownerName)  this.cl['accSerial'] = 'pass';
+    if (ins?.vehicleInspectedBy)  this.cl['accMandatory'] = 'pass';
+    if (ins?.remarks || ins?.vehicleInspectedBy) this.cl['accRemarks'] = 'pass';
+    // Photo quality (loc/daylight/plate/GPS) require human visual check — left null
+
+    // ── Valuation Quality ──
+    const photoCount = this.photoKeys?.length ?? 0;
+    if (photoCount >= 8) {
+      this.cl['valPhotoLoc']   = 'pass';
+      this.cl['valDaylight']   = 'pass';
+      this.cl['valPlate']      = 'pass';
+      this.cl['valMinPhotos']  = 'pass';
+    } else if (photoCount > 0) {
+      this.cl['valMinPhotos'] = 'fail';
+    }
+    if (low > 0 && high > 0) {
+      this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
+    }
+    // Dedupe — no data available, left for manual entry
+    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
+      const age = new Date().getFullYear() - vd.yearOfMfg;
+      const avgKmPerYear = age > 0 ? ins!.odometer / age : 0;
+      this.cl['valAgeOdo'] = avgKmPerYear < 60000 ? 'pass' : 'fail';
+    }
+    if (overallRating === 'GOOD')    this.cl['valScore'] = 'pass';
+    else if (overallRating === 'POOR') this.cl['valScore'] = 'fail';
+
+    // ── QC Recommendation ──
+    if (chassisPunch === 'ORIGINAL')   this.cl['recChassis'] = 'original';
+    else if (chassisPunch === 'REPUNCHED') this.cl['recChassis'] = 'repunched';
+    else if (chassisPunch === 'TAMPERED')  this.cl['recChassis'] = 'tampered';
+
+    this.cl['recCondition'] = condMap(overallRating);
+    this.cl['recEngine']    = condMap(engineCond);
+
+    const extVal = exteriorCond || bodyCondition;
+    if (extVal === 'GOOD')    this.cl['recExterior'] = 'good';
+    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
+    else if (extVal === 'POOR')   this.cl['recExterior'] = 'major';
+
+    if (tyreCond === 'GOOD')    this.cl['recTyre'] = 'good';
+    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
+    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
+
+    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') {
+      this.cl['recFinal'] = 'not-recommended';
+    } else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') {
+      this.cl['recFinal'] = 'recommended';
+    } else {
+      this.cl['recFinal'] = 'conditional';
+    }
+
+    // Pre-fill summary remarks with QC remarks if available
+    if (this.viewModel?.remarks && !this.clRemarks['rec']) {
+      this.clRemarks['rec'] = this.viewModel.remarks;
+    }
+  }
+
   // --- RETURN VARIABLES (Renamed from Rejection) ---
   showReturnModal: boolean = false;
   showOverrideModal: boolean = false;
@@ -86,25 +253,11 @@ export class QualityControlViewComponent implements OnInit {
       }
     });
 
-    this.loadFinalReport();
   }
 
-  private loadFinalReport(): void {
-    this.valuationService
-      .getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact)
-      .subscribe({
-        next: (data: FinalReport) => {
-          this.report = data;
-          this.photoKeys = Object.keys(this.report.photoUrls) as (keyof PhotoUrls)[];
-        },
-        error: (err) => {
-          console.warn('Final report data load failed (optional):', err);
-        },
-      });
-  }
 
   downloadPdf(): void {
-    const url = `${environment.apiBaseUrl}/Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
+    const url = `${environment.apiBaseUrl}Valuations/${this.valuationId}/valuationresponse/FinalReport/pdf`;
     const params = new HttpParams()
       .set('vehicleNumber', this.vehicleNumber)
       .set('applicantContact', this.applicantContact);
@@ -202,25 +355,43 @@ export class QualityControlViewComponent implements OnInit {
       this.applicantContact
     );
 
-    const ve$ = this.qcService.getValuationEstimate(
+    const report$ = this.valuationService.getFinalReport(
       this.valuationId,
       this.vehicleNumber,
       this.applicantContact
     );
 
-    forkJoin({ qcData: qc$, veData: ve$ }).subscribe({
-      next: ({ qcData, veData }) => {
-        this.viewModel = {
-          overallRating:  qcData.overallRating,
-          valuationAmount: qcData.valuationAmount,
-          chassisPunch:     qcData.chassisPunch,
-          remarks:          qcData.remarks,
+    forkJoin({ qcData: qc$, reportData: report$ }).subscribe({
+      next: ({ qcData, reportData }) => {
+        this.report = reportData;
+        this.photoKeys = Object.keys(this.report.photoUrls || {}) as (keyof PhotoUrls)[];
 
-          lowRange:    veData.lowRange,
-          midRange:    veData.midRange,
-          highRange:   veData.highRange,
-          rawResponse: veData.rawResponse
+        const ve = reportData.valuationResponse;
+        this.viewModel = {
+          overallRating:   qcData.overallRating,
+          valuationAmount: qcData.valuationAmount,
+          chassisPunch:    qcData.chassisPunch,
+          remarks:         qcData.remarks,
+
+          lowRange:    ve?.lowRange    ?? (ve as any)?.LowRange,
+          midRange:    ve?.midRange    ?? (ve as any)?.MidRange,
+          highRange:   ve?.highRange   ?? (ve as any)?.HighRange,
+          rawResponse: ve?.rawResponse ?? (ve as any)?.RawResponse
         };
+        this.prefillChecklist();
+
+        // Override prefilled values with whatever was previously saved by the QC officer
+        if (qcData.qcChecklist) {
+          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) this.cl[k] = v;
+          });
+        }
+        if (qcData.qcChecklistRemarks) {
+          Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
+            if (v) this.clRemarks[k] = v;
+          });
+        }
+
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {

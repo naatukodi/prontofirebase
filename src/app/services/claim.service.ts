@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Claim } from '../models/claim.model';
-import { Valuation, WFValuation } from '../models/valuation.model';
+import { Valuation, WFValuation, UserDashboardStats } from '../models/valuation.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ClaimService {
-  private apiUrl = `${environment.apiBaseUrl}/Valuations`;
+  private apiUrl = `${environment.apiBaseUrl}Valuations`;
 
   constructor(private http: HttpClient) {}
 
@@ -31,6 +32,21 @@ export class ClaimService {
 
   getOpenValuations(): Observable<WFValuation[]> {
     return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open`);
+  }
+
+  getCompletedCount(): Observable<number> {
+    return this.http.get<{ count: number }>(`${this.apiUrl}/workflows/open/completed/count`)
+      .pipe(map(r => r.count));
+  }
+
+  getCompletedCases(): Observable<WFValuation[]> {
+    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open/completed`);
+  }
+
+  getUserDashboardStats(phone: string, role: string): Observable<UserDashboardStats> {
+    return this.http.get<UserDashboardStats>(
+      `${this.apiUrl}/workflows/open/user-dashboard?phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}`
+    );
   }
 
   create(v: Valuation): Observable<Valuation> {

@@ -17,14 +17,22 @@ export interface PhotoUrls {
   Dashboard: string;
   InstrumentCluster: string;
   EngineBay: string;
-  ChassisNumberPlate: string;
+  VinPlate: string;
   ChassisImprint: string;
-  GearAndSeats: string;
+  GearInterior: string;
+  FrontSeat: string;
+  RearSeat: string;
   DashboardCloseup: string;
   Odometer: string;
   SelfieWithVehicle: string;
   Underbody: string;
-  TiresAndRims: string;
+  TireFrontLeft: string;
+  TireFrontRight: string;
+  TireRearLeft: string;
+  TireRearRight: string;
+  ChassisVerification: string;
+  ChassisStencilTrace: string;
+  WorkingOperationPhoto: string;
 }
 
 export interface WorkflowStep {

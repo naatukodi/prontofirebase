@@ -34,6 +34,7 @@ export class StakeholderViewComponent implements OnInit {
     id: string;
     Id: string;
     name: string;
+    branch?: string | null;
     executiveName: string;
     executiveContact: string;
     executiveWhatsapp: string;
@@ -42,15 +43,15 @@ export class StakeholderViewComponent implements OnInit {
     vehicleNumber: string | null;
     vehicleSegment: string | null;
     vehicleLocation: {
-      pincode: string | null;
-      block: string | null;
-      district: string | null;
-      state: string | null;
-      country: string | null;
+      pincode?: string | null;
+      block?: string | null;
+      district?: string | null;
+      state?: string | null;
+      country?: string | null;
       name?: string | null;
       division?: string | null;
     };
-    applicant: { name: string; contact: string };
+    applicant: { name: string; contact: string; alternativeContact?: string | null };
     documents: Array<{ type: string; filePath: string; uploadedAt: string }>;
     remarks?: string | null;
   };
