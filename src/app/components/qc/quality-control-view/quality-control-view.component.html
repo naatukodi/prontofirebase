@@ -147,14 +147,14 @@
             <div class="qcc-title">CHASSIS QUICK COMPARE</div>
             <div class="qcc-number">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
             <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ Chassis Photo</span>
-            <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || '—' }}</div>
+            <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || report.vehicleDetails?.chassisNumber || '—' }}</div>
             <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</span>
             <div class="qcc-match"
-                 [class.qcc-match--ok]="chassisNumbersMatch()"
-                 [class.qcc-match--fail]="!chassisNumbersMatch() && !!report.vehicleDetails?.stencilTrace">
-              {{ chassisNumbersMatch() ? '✓ Numbers Match'
-                 : report.vehicleDetails?.stencilTrace ? '✗ Mismatch'
-                 : '— Stencil Pending' }}
+                 [class.qcc-match--ok]="chassisCompareState() === 'match'"
+                 [class.qcc-match--fail]="chassisCompareState() === 'mismatch'">
+              {{ chassisCompareState() === 'match' ? '✓ Numbers Match'
+                 : chassisCompareState() === 'mismatch' ? '✗ Mismatch'
+                 : '— Waiting for Approval' }}
             </div>
           </div>
         </div>
