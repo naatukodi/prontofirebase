@@ -9,5 +9,5 @@ export const environment = {
   appId: "1:1045526546178:web:534e7bfb27b3fa5e5d641b"
   },
   apiBaseUrl: 'https://prontobackend-bhdnbec2fvd3ecfk.eastus2-01.azurewebsites.net/api/',
-  pdfApiBaseUrl: 'http://localhost:5297'
+  pdfApiBaseUrl: 'https://prontopdf-cxgxbvcjhcg6hdfz.eastus2-01.azurewebsites.net'
 };
