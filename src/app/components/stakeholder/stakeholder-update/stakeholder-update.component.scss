@@ -22,15 +22,7 @@
 }
 
 /* --- (Your existing styles) --- */
-form {
-    max-width: 1200px;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .nested-group {
+.nested-group {
     border: 1px solid rgba(0, 0, 0, 0.12);
     padding: 16px;
     border-radius: 4px;

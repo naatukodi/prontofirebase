@@ -1,7 +1,7 @@
 // src/app/login/login.component.ts
 import { Component, OnInit, inject, NgZone } from '@angular/core';
+import { Auth } from '@angular/fire/auth';
 import {
-  getAuth,
   signInWithPhoneNumber,
   RecaptchaVerifier,
   ConfirmationResult,
@@ -24,13 +24,16 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./login.css']
 })
 export class LoginComponent implements OnInit {
-  private auth = getAuth();
+  /* DI-managed Auth: ensures the Firebase app is initialized even when
+     /login is the first page loaded (raw getAuth() crashed here) */
+  private auth = inject(Auth);
   private authSvc = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private zone = inject(NgZone);
 
   phone = '+91';
+  year = new Date().getFullYear();
 
   // Ensure phone is always 13 characters including '+91'
   setPhone(value: string) {

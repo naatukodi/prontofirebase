@@ -14,7 +14,7 @@
       <div class="pg-card-body">
         <form [formGroup]="valueForm" (ngSubmit)="onSubmit()">
           <div class="pg-grid">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>Vehicle Type</mat-label>
               <mat-select formControlName="vehicleType">
                 <mat-option value="Four Wheeler">Four Wheeler</mat-option>
@@ -25,32 +25,32 @@
               </mat-select>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>Make (e.g., Maruti Suzuki)</mat-label>
               <input matInput formControlName="make">
               <mat-error *ngIf="valueForm.get('make')?.hasError('required')">Make is required</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>Model (e.g., Swift)</mat-label>
               <input matInput formControlName="model">
               <mat-error *ngIf="valueForm.get('model')?.hasError('required')">Model is required</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>Year (e.g., 2019)</mat-label>
               <input matInput formControlName="year" type="number" placeholder="YYYY">
               <mat-error *ngIf="valueForm.get('year')?.hasError('required')">Year is required</mat-error>
               <mat-error *ngIf="valueForm.get('year')?.hasError('pattern')">Enter a valid year</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>KMs Driven (e.g., 45000)</mat-label>
               <input matInput formControlName="kms" type="number">
               <mat-error *ngIf="valueForm.get('kms')?.hasError('required')">KMs are required</mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="fill">
               <mat-label>City, State (e.g., Mumbai, MH)</mat-label>
               <input matInput formControlName="location">
               <mat-error *ngIf="valueForm.get('location')?.hasError('required')">Location is required</mat-error>

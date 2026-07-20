@@ -16,35 +16,40 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
     ::ng-deep .main-nav-tabs {
       background: transparent !important;
       border-bottom: none !important;
-      padding: 12px 0 8px;
+      padding: 16px 0 4px;
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-links {
       display: flex !important;
       justify-content: center !important;
-      gap: 12px !important;
+      gap: 0 !important;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px;
+      width: fit-content;
+      margin: 0 auto;
+      box-shadow: var(--shadow-sm);
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-link,
     ::ng-deep .main-nav-tabs a[mat-tab-link] {
-      border: 2px solid #037076 !important;
-      border-radius: 8px !important;
-      padding: 7px 24px !important;
-      font-weight: 700 !important;
-      font-size: 0.8rem !important;
-      letter-spacing: 0.6px !important;
-      text-transform: uppercase !important;
-      color: #037076 !important;
-      background: #fff !important;
+      border: none !important;
+      border-radius: 999px !important;
+      padding: 8px 26px !important;
+      font-weight: 600 !important;
+      font-size: 0.85rem !important;
+      color: var(--ink-700) !important;
+      background: transparent !important;
       min-width: unset !important;
       width: auto !important;
       flex-grow: 0 !important;
-      height: 36px !important;
+      height: 38px !important;
       line-height: 1 !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
       text-align: center !important;
       opacity: 1 !important;
-      transition: all 0.18s ease !important;
+      transition: background 0.15s ease, color 0.15s ease !important;
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-link .mdc-tab__content,
     ::ng-deep .main-nav-tabs .mat-mdc-tab-link .mdc-tab__text-label {
@@ -54,12 +59,13 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
       width: 100% !important;
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-link:hover {
-      background: #037076 !important;
-      color: #fff !important;
+      background: var(--brand-50) !important;
+      color: var(--brand-700) !important;
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-link.mdc-tab--active {
-      background: #037076 !important;
+      background: var(--grad-brand) !important;
       color: #fff !important;
+      box-shadow: var(--shadow-brand);
     }
     ::ng-deep .main-nav-tabs .mdc-tab-indicator,
     ::ng-deep .main-nav-tabs .mat-mdc-tab-ripple {
@@ -76,10 +82,10 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
       
       <section class="hero">
         <div class="hero-content">
-          <h1 style="text-transform: uppercase;">
-            <span style="color: #ffffff; font-weight: 900;">VEHGA</span><span style="color: #99f6e4; font-weight: 900;">INSPECTIONS</span>
+          <h1>
+            <span style="color: #ffffff;">VEHGA</span><span style="color: var(--accent);">INSPECTIONS</span>
           </h1>
-          <p>Your one-stop valuations dashboard</p>
+          <p>Your one-stop vehicle inspection &amp; valuation dashboard</p>
         </div>
       </section>
 

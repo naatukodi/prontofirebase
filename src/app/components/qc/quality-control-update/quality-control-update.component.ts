@@ -179,22 +179,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // ✅ UPDATED: Initialize Form with Payment Fields
   private initForm() {
-    const nowLocal = this.toLocalDateTimeInput(new Date());
-
     this.form = this.fb.group({
       overallRating: ['', Validators.required],
       valuationAmount: [0, [Validators.required, Validators.min(0)]],
       chassisPunch: [''],
-      remarks: [''],
-
-      // Payment Fields
-      paymentStatus: ['Pending', Validators.required],
-      paymentReference: [''],
-      paymentDate: [nowLocal, Validators.required],
-      paymentMethod: ['Online', Validators.required],
-      paymentAmount: [800, [Validators.required, Validators.min(0)]]
+      remarks: ['']
     });
   }
 
@@ -300,25 +290,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ UPDATED: Patch Form with Payment Data
   private patchForm(data: QualityControl | any) {
-    // Handle date conversion safely
-    const existingDate = data.paymentDate 
-      ? this.toLocalDateTimeInput(new Date(data.paymentDate)) 
-      : this.toLocalDateTimeInput(new Date());
-
     this.form.patchValue({
       overallRating: data.overallRating,
       valuationAmount: data.valuationAmount,
       chassisPunch: data.chassisPunch,
-      remarks: data.remarks || '',
-      
-      // Payment Fields
-      paymentStatus: data.paymentStatus || 'Pending',
-      paymentReference: data.paymentReference || '',
-      paymentDate: existingDate,
-      paymentMethod: data.paymentMethod || 'Online',
-      paymentAmount: data.paymentAmount || 800
+      remarks: data.remarks || ''
     });
   }
 
@@ -389,10 +366,9 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     return changedFields;
   }
 
-  // ✅ UPDATED: Build Payload with Payment Data
   private buildPayload(): Partial<QualityControl> {
     const v = this.form.getRawValue();
-    
+
     // Explicitly casting payload to include new fields if the interface isn't updated yet
     const payload: Partial<QualityControl> | any = {
       overallRating: v.overallRating,
@@ -403,13 +379,6 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       assignedToPhoneNumber: this.assignedToPhoneNumber,
       assignedToEmail: this.assignedToEmail,
       assignedToWhatsapp: this.assignedToWhatsapp,
-
-      // Payment Data
-      paymentStatus: v.paymentStatus,
-      paymentReference: v.paymentReference || null,
-      paymentDate: this.toIsoUtc(v.paymentDate),
-      paymentMethod: v.paymentMethod,
-      paymentAmount: v.paymentAmount,
 
       // Checklist
       qcChecklist: this.cl,

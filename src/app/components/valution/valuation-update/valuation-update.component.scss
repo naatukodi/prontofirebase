@@ -3,16 +3,7 @@
 :host {
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
-  margin: auto;
-  padding: 16px;
-  gap: 16px;
-  background: #fafafa;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
+  padding: 16px 20px 32px;
   gap: 16px;
 }
 

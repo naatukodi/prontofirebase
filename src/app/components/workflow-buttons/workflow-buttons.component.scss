@@ -1,95 +1,133 @@
-/* src/app/shared/workflow-buttons/workflow-buttons.component.scss */
+/* Workflow buttons — Vehga design system (brand teal #037076) */
 
-/* Container for all tab buttons */
-.button-group {
+/* Single-line bar: workflow steps + case actions side by side.
+   Wraps to two lines only when the screen is too narrow. */
+.action-bar {
   display: flex;
-  gap: 12px;
-  margin: 1rem 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px 28px;
+  flex-wrap: wrap;
+  margin: 8px 0 22px;
 }
 
-/* Case action buttons (Notes, History, Payment) */
+/* Case actions (Notes, History, Payment, Dedupe) — one pill box,
+   sitting beside the workflow box */
 .case-actions {
-  display: flex;
-  gap: 15px;              // 🔥 Adds space between buttons
-  margin-bottom: 20px;
-  flex-wrap: wrap;        // prevents overflow on small screens
+  display: inline-flex;
+  gap: 10px;
+  margin: 0;
+  flex-wrap: wrap;
+  order: 2;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 10px;
+  box-shadow: var(--shadow-sm);
 }
 
 .case-actions button {
-  border-radius: 6px;
+  border-radius: 999px !important;
+  box-shadow: none !important;
 }
 
-/* Base styling for every button */
+/* Step navigation — segmented pill group — left side */
+.button-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 10px;
+  box-shadow: var(--shadow-sm);
+  order: 1;
+}
+
 .button-group button {
-  background-color: #e0e0e0;
-  color: #000;
+  background: transparent;
+  color: var(--ink-700);
   border: none;
-  border-radius: 4px;
-  padding: 25px 16px; // Increased vertical padding
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 999px !important;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  text-transform: none;
-  transition: background-color 0.2s ease;
+  min-width: unset;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .button-group button:hover {
-  background-color: #d5d5d5;
+  background: var(--brand-50);
+  color: var(--brand-700);
 }
 
-/* Active‐step: solid green background, white text */
+/* Active step — brand gradient with glow */
 .button-group button.active-step {
-  background-color: #008000;
-  color: #fff;
+  background: var(--grad-brand) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-brand);
 }
 
 .button-group button.active-step:hover {
-  background-color: #007300;
+  filter: brightness(1.1);
 }
 
-/* (Optional) Loading & error states—if you ever add them back later */
-.loading,
-.error {
-  text-align: center;
-  padding: 16px;
-}
-
-.error {
-  color: #f44336;
-}
-
-/* src/app/shared/workflow-buttons/workflow-buttons.component.scss */
-
+/* Status / loading / error lines */
 .table-loading,
 .table-error {
   margin: 8px 0;
-  font-size: 0.9rem;
-  color: rgba(0,0,0,0.6);
+  font-size: 0.88rem;
+  color: var(--ink-500);
 }
 
 .table-error {
-  color: #f44336;
+  color: var(--danger);
 }
 
-.workflow-table-card {
-  margin: 16px 0;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.12);
-
-  mat-card-header {
-    background: #f5f5f5;
-  }
-
-  mat-card-content p {
-    margin: 8px 0;
-  }
-
-  .workflow-accordion {
-  width: 800px;
-  margin: 16px auto;
-}
-
-.panel-content p {
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-500);
+  font-size: 0.88rem;
   margin: 8px 0;
 }
+
+/* Workflow status accordion */
+.workflow-accordion {
+  display: block;
+  margin: 0 0 16px;
+
+  ::ng-deep .mat-expansion-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  ::ng-deep .mat-expansion-panel-header {
+    background: var(--brand-50) !important;
+  }
+
+  ::ng-deep .mat-expansion-panel-header-title {
+    color: var(--brand-800);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  ::ng-deep .mat-expansion-panel-header-description {
+    color: var(--ink-500);
+    font-size: 0.84rem;
+  }
+}
+
+.panel-content {
+  font-size: 0.88rem;
+  color: var(--ink-700);
+  line-height: 1.7;
+}
+
+.panel-content strong {
+  color: var(--ink-900);
 }

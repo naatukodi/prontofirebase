@@ -299,10 +299,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
   }
 
-  // ✅ UPDATED: Init Form with Payment Fields
   private initForm() {
-    const nowLocal = this.toLocalDateTimeInput(new Date());
-
     this.form = this.fb.group({
       vehicleInspectedBy: ['', Validators.required],
       dateOfInspection: ['', [Validators.required, this.pastOrTodayValidator()]],
@@ -537,14 +534,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       muffler: [''],
       airFilter: [''],
       dropArm: [''],
-      attachmentHitch: [''],
-
-      // ✅ ADDED PAYMENT FIELDS
-      paymentStatus: ['Pending', Validators.required],
-      paymentReference: [''],
-      paymentDate: [nowLocal, Validators.required],
-      paymentMethod: ['Online', Validators.required],
-      paymentAmount: [800, [Validators.required, Validators.min(0)]]
+      attachmentHitch: ['']
     });
   }
 
@@ -585,13 +575,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ UPDATED: Patch Form with Payment Data
   private patchForm(data: Inspection | any) {
-    // Handle payment date
-    const existingPaymentDate = data.paymentDate
-      ? this.toLocalDateTimeInput(new Date(data.paymentDate))
-      : this.toLocalDateTimeInput(new Date());
-
     // FormData serializes booleans as "true"/"false" strings — convert back to boolean for mat-select
     const toBool = (v: any): boolean | null =>
       v === true || v === 'true' ? true : v === false || v === 'false' ? false : null;
@@ -825,14 +809,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       muffler: nc((data as any).muffler),
       airFilter: nc((data as any).airFilter),
       dropArm: nc((data as any).dropArm),
-      attachmentHitch: nc((data as any).attachmentHitch),
-
-      // Payment Data
-      paymentStatus: data.paymentStatus || 'Pending',
-      paymentReference: data.paymentReference || '',
-      paymentDate: existingPaymentDate,
-      paymentMethod: data.paymentMethod || 'Online',
-      paymentAmount: data.paymentAmount || 800
+      attachmentHitch: nc((data as any).attachmentHitch)
     });
   }
 
@@ -886,14 +863,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       }
       return typeof value === 'string' ? value.slice(0, 10) : value;
     }
-    // Handle Payment Date (ISO String)
-    if (key === 'paymentDate' && value) {
-      return this.toIsoUtc(value);
-    }
     return value;
   }
 
-  // ✅ UPDATED: Build FormData to include payment fields properly
   private buildFormData(): FormData {
     const fd = new FormData();
     const v = this.form.getRawValue();

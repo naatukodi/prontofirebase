@@ -75,7 +75,7 @@
         </button>
       </div>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="date-field">
+      <mat-form-field appearance="fill" subscriptSizing="dynamic" class="date-field">
         <mat-label>Filter by Date</mat-label>
         <mat-date-range-input [rangePicker]="picker">
           <input matStartDate placeholder="Start" [(ngModel)]="fromDate" (dateChange)="applyFilter()">

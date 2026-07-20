@@ -1,21 +1,14 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light app-navbar">
   <div class="container-fluid">
 
-    <!-- Brand -->
+    <!-- Brand — logo only -->
     <a class="navbar-brand d-flex align-items-center" routerLink="/">
       <img
         src="assets/images/vehga-01.png"
         alt="Vehga Inspections"
-        class="me-2 navbar-logo"
-        style="object-fit: contain;"
+        class="navbar-logo"
       />
-      <span class="navbar-title">
-        <span class="brand-vehga">VEHGA</span><span class="brand-inspections">INSPECTIONS</span>
-      </span>
     </a>
-
-    <!-- User name before menu -->
-    <span class="navbar-text-custom ms-3 me-auto" *ngIf="userName$ | async as uname"> Hello {{ uname }}</span>
 
     <!-- Toggler -->
     <button

@@ -1,44 +1,166 @@
-/* styles.css */
-
-/* ------------------------------ */
-/* Layout scoping: only inside <app-main-layout class="main-layout"> */
-/* ------------------------------ */
-
-/* 1) Import Angular Material's prebuilt theme */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
-@import 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css';
-
-
-/* Apply common font to all elements */
-* {
-    font-family: 'Roboto', sans-serif !important;
-}
-
-/* Make all input and textarea fields UPPERCASE */
-input, textarea {
-    text-transform: uppercase !important;
-}
-
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL PAGE THEME  |  Brand teal: #037076  darker: #025054
+   VEHGA INSPECTIONS — Global Design System
+   Brand teal #037076 (extracted from vehga-01.png logo)
+   Palette: "Tropical Cream Dream" — teal #37827c · orange #de7b33
+   cream #efdecd · Font: Inter
    ═══════════════════════════════════════════════════════════════ */
 
-/* Page wrapper */
-.pg-wrap {
-    min-height: 100vh;
-    background: #f0f4f5;
-    padding-bottom: 40px;
-    font-family: 'Segoe UI', sans-serif;
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* ── Design tokens ─────────────────────────────────────────────── */
+:root {
+    /* Brand (logo teal) */
+    --brand:      #037076;
+    --brand-600:  #025e63;
+    --brand-700:  #025054;
+    --brand-800:  #013a3d;
+    --brand-50:   #eef7f7;
+    --brand-100:  #d9eeee;
+    --brand-200:  #b0dcdd;
+
+    /* Accent — palette orange */
+    --accent:     #de7b33;
+    --accent-600: #c9691f;
+    --accent-bg:  #fbeadb;
+
+    /* Palette teal — softer companion to the logo teal */
+    --teal-soft:  #37827c;
+
+    /* Gradients — three distinct depths so surfaces read as layers */
+    --grad-brand:  linear-gradient(120deg, #037076 0%, #025054 100%);
+    --grad-deep:   linear-gradient(120deg, #037076 0%, #025054 55%, #013a3d 100%);
+    --grad-bright: linear-gradient(120deg, #3a8d86 0%, #37827c 45%, #037076 100%);
+
+    /* Neutrals */
+    --ink-900: #10282a;
+    --ink-700: #33484a;
+    --ink-500: #5f7476;
+    --ink-300: #9db0b1;
+    --bg:      #d2dae0;   /* darker grey — makes white & tinted cards pop */
+    --surface: #ffffff;
+    --line:    #bcc7cf;
+
+    /* Semantic */
+    --success: #12805c;
+    --success-bg: #e3f6ee;
+    --warning: #b54708;
+    --warning-bg: #ffefe2;
+    --danger:  #d92d20;
+    --danger-bg: #fdecea;
+    --info:    #1256b0;
+    --info-bg: #e7f0fd;
+
+    /* Shape & elevation */
+    --radius:    14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 3px rgba(2, 80, 84, 0.10), 0 1px 2px rgba(2, 80, 84, 0.06);
+    --shadow-md: 0 8px 22px rgba(2, 80, 84, 0.14);
+    --shadow-brand: 0 6px 16px rgba(3, 112, 118, 0.35);
+
+    --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+    /* Angular Material token overrides → brand teal */
+    --mdc-theme-primary: var(--brand);
+    --mdc-checkbox-selected-icon-color: var(--brand);
+    --mdc-checkbox-selected-hover-icon-color: var(--brand-700);
+    --mdc-checkbox-selected-focus-icon-color: var(--brand-700);
+    --mdc-checkbox-selected-pressed-icon-color: var(--brand-700);
+    --mdc-circular-progress-active-indicator-color: var(--brand);
+    --mdc-dialog-container-shape: 16px;
+    --mat-datepicker-calendar-date-selected-state-background-color: var(--brand);
+    --mat-datepicker-calendar-date-today-outline-color: var(--brand);
+    --mdc-outlined-text-field-focus-outline-color: var(--brand);
+    --mdc-outlined-text-field-focus-label-text-color: var(--brand-700);
+    --mdc-filled-text-field-focus-active-indicator-color: var(--brand);
+    --mdc-filled-text-field-focus-label-text-color: var(--brand-700);
+    --mdc-filled-text-field-caret-color: var(--brand);
+    --mdc-outlined-text-field-caret-color: var(--brand);
+    --mat-tab-header-active-label-text-color: var(--brand);
+    --mat-tab-header-active-focus-label-text-color: var(--brand);
+    --mdc-tab-indicator-active-indicator-color: var(--brand);
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+html, body {
+    margin: 0;
+    padding: 0;
+    color: var(--ink-900);
+    background: var(--bg);
+}
+
+/* Soft aurora page background — teal, orange & cream washes */
+body {
+    background:
+        radial-gradient(900px 480px at 108% -8%, rgba(222, 123, 51, 0.10), transparent 60%),
+        radial-gradient(1000px 560px at -12% 14%, rgba(3, 112, 118, 0.10), transparent 60%),
+        radial-gradient(800px 480px at 96% 92%, rgba(3, 112, 118, 0.07), transparent 55%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+/* Uniform font — icon fonts excluded so <mat-icon> ligatures render */
+*:not(mat-icon):not(.mat-icon):not(.material-icons):not(.material-symbols-outlined) {
+    font-family: var(--font) !important;
+}
+
+/* ── Everything in CAPITALS ────────────────────────────────────── */
+/* While entering: all inputs, textareas and selects */
+input, textarea, select {
+    text-transform: uppercase !important;
+}
+input::placeholder, textarea::placeholder {
     text-transform: uppercase;
 }
 
-/* Teal page heading */
+/* While viewing/updating: all case-page content */
+.pg-wrap { text-transform: uppercase; }
+
+/* Material overlays render outside .pg-wrap — cover them too:
+   select values, dropdown options, dialogs (Notes/History/Payment) */
+.mat-mdc-select-value,
+.mat-mdc-select-panel .mat-mdc-option,
+.mat-mdc-autocomplete-panel .mat-mdc-option,
+.mat-mdc-dialog-container {
+    text-transform: uppercase;
+}
+
+::selection { background: var(--brand-100); color: var(--brand-800); }
+
+:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* Branded scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--brand-200);
+    border-radius: 999px;
+    border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE SCAFFOLD  (.pg-* classes — used by all workflow pages)
+   ═══════════════════════════════════════════════════════════════ */
+
+.pg-wrap {
+    min-height: 100vh;
+    padding-bottom: 48px;
+}
+
+/* Page heading band — brighter mid-teal, a step lighter than the hero */
 .pg-head {
-    background: linear-gradient(135deg, #037076 0%, #025054 100%);
-    color: white;
-    padding: 18px 28px 16px;
-    box-shadow: 0 3px 10px rgba(3,112,118,0.4);
+    background:
+        radial-gradient(700px 240px at 92% -30%, rgba(222, 123, 51, 0.18), transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        var(--grad-bright);
+    background-size: auto, 22px 22px, auto;
+    color: #fff;
+    padding: 22px 28px;
+    border-bottom: 3px solid var(--accent);
+    box-shadow: var(--shadow-brand);
 }
 .pg-head-row {
     display: flex;
@@ -47,51 +169,49 @@ input, textarea {
     gap: 16px;
 }
 .pg-head h1 {
-    margin: 0 0 3px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    color: white;
+    margin: 0 0 4px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #fff;
 }
 .pg-head p {
     margin: 0;
-    font-size: 0.82rem;
-    opacity: 0.8;
-    text-transform: uppercase;
-    color: white;
+    font-size: 0.85rem;
+    color: var(--brand-200);
 }
 
-/* Content area */
+/* Full width on every page — same padding as the dashboard */
 .pg-content {
-    padding: 20px 24px;
+    padding: 20px;
 }
 
-/* White card */
+/* ── Cards ─────────────────────────────────────────────────────── */
 .pg-card {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 .pg-card-title {
-    background: linear-gradient(135deg, #037076 0%, #025054 100%);
-    color: white;
-    padding: 12px 20px;
+    background: transparent;
+    color: var(--brand-700);
+    padding: 14px 20px 10px;
     font-size: 0.95rem;
-    font-weight: 700;
+    font-weight: 800;
     display: flex;
     align-items: center;
     gap: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(16, 40, 42, 0.08);
 }
 .pg-card-title-accent {
     display: inline-block;
     width: 4px;
-    height: 16px;
-    background: #ffcc02;
+    height: 18px;
+    background: var(--accent);
     border-radius: 3px;
     flex-shrink: 0;
 }
@@ -99,196 +219,269 @@ input, textarea {
     padding: 20px 24px;
 }
 
-/* Form sections */
+/* ── Form sections ─────────────────────────────────────────────── */
 .pg-section {
-    border: 1.5px solid #b2cdd0;
-    border-radius: 8px;
-    padding: 16px 20px;
+    border: 1px solid var(--brand-100);
+    border-radius: 12px;
+    padding: 18px 20px;
     margin-bottom: 16px;
-    background: #fafcfc;
+    background: linear-gradient(180deg, #f2fafa 0%, #ffffff 70%);
 }
 .pg-section-title {
     display: block;
-    font-weight: 700;
-    font-size: 0.78rem;
-    color: #037076;
-    letter-spacing: 0.8px;
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: var(--brand-700);
+    letter-spacing: 0.09em;
     text-transform: uppercase;
     margin-bottom: 14px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #037076;
+    padding-bottom: 8px;
+    background:
+        linear-gradient(90deg, var(--brand) 0%, var(--brand-200) 45%, transparent 100%)
+        bottom / 100% 2px no-repeat;
 }
 
-/* Form grid */
+/* ── Form grid ─────────────────────────────────────────────────── */
 .pg-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
+    gap: 14px;
 }
 .pg-grid-full { grid-column: 1 / -1; }
 
-/* Buttons */
+/* ── Buttons ───────────────────────────────────────────────────── */
 .pg-btn {
-    background: linear-gradient(135deg, #037076, #025054);
-    color: white !important;
+    background: var(--grad-brand);
+    color: #fff !important;
     border: none;
-    border-radius: 8px;
-    padding: 8px 20px;
-    font-size: 0.82rem;
+    border-radius: var(--radius-sm);
+    padding: 10px 22px;
+    font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.4px;
-    text-transform: uppercase !important;
-    transition: all 0.18s ease;
+    letter-spacing: 0.01em;
+    box-shadow: var(--shadow-brand);
+    transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .pg-btn:hover {
-    background: linear-gradient(135deg, #025054, #013a3d);
-    box-shadow: 0 3px 8px rgba(3,112,118,0.4);
+    filter: brightness(1.12);
+    box-shadow: 0 8px 20px rgba(3, 112, 118, 0.45);
     transform: translateY(-1px);
 }
+.pg-btn:disabled {
+    background: var(--ink-300);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    filter: none;
+}
 .pg-btn-outline {
-    background: #fff;
-    color: #037076 !important;
-    border: 2px solid #037076;
-    border-radius: 8px;
-    padding: 7px 20px;
-    font-size: 0.82rem;
+    background: var(--surface);
+    color: var(--brand-700) !important;
+    border: 1.5px solid var(--brand-200);
+    border-radius: var(--radius-sm);
+    padding: 9px 22px;
+    font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
-    text-transform: uppercase !important;
-    transition: all 0.18s ease;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pg-btn-outline:hover {
+    background: var(--brand-50);
+    border-color: var(--brand);
 }
 .pg-btn-danger {
-    background: linear-gradient(135deg, #c62828, #b71c1c);
-    color: white !important;
+    background: linear-gradient(120deg, #e53a2d, #b42318);
+    color: #fff !important;
     border: none;
-    border-radius: 8px;
-    padding: 8px 20px;
-    font-size: 0.82rem;
+    border-radius: var(--radius-sm);
+    padding: 10px 22px;
+    font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
-    text-transform: uppercase !important;
+    box-shadow: 0 6px 16px rgba(217, 45, 32, 0.3);
+    transition: filter 0.15s ease;
 }
+.pg-btn-danger:hover { filter: brightness(1.1); }
 .pg-btn-group {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-top: 20px;
     flex-wrap: wrap;
 }
 
-/* Override Material raised buttons globally to teal */
-.pg-wrap .mat-mdc-raised-button.mat-primary,
-.pg-wrap button[mat-raised-button][color="primary"] {
-    background: linear-gradient(135deg, #037076, #025054) !important;
-    color: white !important;
+/* Material raised buttons → brand system (app-wide) */
+.mat-mdc-raised-button.mat-primary,
+button[mat-raised-button][color="primary"] {
+    background: var(--grad-brand) !important;
+    color: #fff !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-brand) !important;
 }
-.pg-wrap .mat-mdc-raised-button.mat-accent,
-.pg-wrap button[mat-raised-button][color="accent"] {
-    background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
-    color: white !important;
+.mat-mdc-raised-button.mat-primary:hover,
+button[mat-raised-button][color="primary"]:hover {
+    filter: brightness(1.12);
 }
-.pg-wrap .mat-mdc-raised-button.mat-warn,
-.pg-wrap button[mat-raised-button][color="warn"] {
-    background: linear-gradient(135deg, #c62828, #b71c1c) !important;
-    color: white !important;
+/* Accent → palette orange */
+.mat-mdc-raised-button.mat-accent,
+button[mat-raised-button][color="accent"] {
+    background: linear-gradient(120deg, #e8934f, var(--accent-600)) !important;
+    color: #fff !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: 0 6px 16px rgba(222, 123, 51, 0.35) !important;
+}
+.mat-mdc-raised-button.mat-accent:hover,
+button[mat-raised-button][color="accent"]:hover {
+    filter: brightness(1.05);
+}
+.mat-mdc-raised-button.mat-warn,
+button[mat-raised-button][color="warn"] {
+    background: linear-gradient(120deg, #e53a2d, #b42318) !important;
+    color: #fff !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: 0 6px 16px rgba(217, 45, 32, 0.3) !important;
 }
 
-/* Table with grid lines */
-.pg-table { width: 100%; }
+/* ── Tables — branded teal header, zebra rows ──────────────────── */
+.pg-table { width: 100%; border-collapse: collapse; }
 .pg-table th.mat-mdc-header-cell,
 .pg-table th.mat-header-cell {
-    background: #037076 !important;
-    color: #ffffff !important;
+    background: var(--grad-brand) !important;
+    color: #fff !important;
     font-weight: 700 !important;
     font-size: 0.72rem !important;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    border-bottom: 3px solid #025054 !important;
+    border-bottom: 3px solid var(--accent) !important;
     white-space: nowrap;
-    padding: 10px 12px !important;
-    border-right: 1px solid rgba(255,255,255,0.2) !important;
-}
-.pg-table th.mat-mdc-header-cell:first-child,
-.pg-table th.mat-header-cell:first-child {
-    border-left: 1px solid rgba(255,255,255,0.2) !important;
+    padding: 12px 14px !important;
 }
 .pg-table td.mat-mdc-cell,
 .pg-table td.mat-cell {
-    padding: 0 12px !important;
+    padding: 0 14px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    max-width: 220px;
     vertical-align: middle;
-    border-right: 1px solid #b2cdd0 !important;
-    border-bottom: 1px solid #b2cdd0 !important;
-    text-transform: uppercase !important;
-}
-.pg-table td.mat-mdc-cell:first-child,
-.pg-table td.mat-cell:first-child {
-    border-left: 1px solid #b2cdd0 !important;
+    font-size: 0.85rem;
+    color: var(--ink-700);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line) !important;
 }
 .pg-table tr.mat-mdc-row,
 .pg-table tr.mat-row {
-    height: 48px !important;
-    transition: background 0.15s ease;
+    height: 52px !important;
+    transition: background 0.12s ease;
 }
 .pg-table tr.mat-mdc-row:nth-child(even),
-.pg-table tr.mat-row:nth-child(even) { background: #f7fbfb; }
+.pg-table tr.mat-row:nth-child(even) { background: var(--brand-50); }
 .pg-table tr.mat-mdc-row:nth-child(odd),
-.pg-table tr.mat-row:nth-child(odd)  { background: #ffffff; }
+.pg-table tr.mat-row:nth-child(odd)  { background: var(--surface); }
 .pg-table tr.mat-mdc-row:hover,
 .pg-table tr.mat-row:hover {
-    background: #e6f4f5 !important;
+    background: var(--brand-100) !important;
     cursor: pointer;
 }
 
-/* Fieldset.nested-group → styled as pg-card with teal gradient legend */
+/* ── Fieldset.nested-group → card with teal gradient legend ────── */
 .pg-wrap fieldset.nested-group {
-    border: none !important;
-    border-radius: 12px;
+    border: 1px solid var(--line) !important;
+    border-radius: var(--radius);
     padding: 0 !important;
-    margin-bottom: 16px;
-    background: #ffffff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
     display: block;
 }
-
 .pg-wrap fieldset.nested-group legend {
     float: left;
     width: 100%;
     box-sizing: border-box;
-    background: linear-gradient(135deg, #037076 0%, #025054 100%) !important;
-    color: #fff !important;
-    font-weight: 700 !important;
-    font-size: 0.88rem !important;
-    letter-spacing: 0.5px;
-    text-transform: uppercase !important;
-    padding: 12px 20px !important;
+    background: transparent !important;
+    color: var(--brand-700) !important;
+    font-weight: 800 !important;
+    font-size: 0.9rem !important;
+    padding: 13px 20px 9px !important;
     margin: 0 !important;
     line-height: 1.4;
+    letter-spacing: 0.02em;
+    border-left: 4px solid var(--brand);
+    border-bottom: 1px solid rgba(16, 40, 42, 0.08);
 }
-
-/* Clear the legend float so content sits below */
 .pg-wrap fieldset.nested-group > *:not(legend) { clear: both; }
-
-/* Padding wrapper for content inside nested-group — do NOT set display so grid/flex layouts are preserved */
 .pg-wrap fieldset.nested-group .grid,
 .pg-wrap fieldset.nested-group > div,
 .pg-wrap fieldset.nested-group > mat-form-field,
 .pg-wrap fieldset.nested-group > app-common-notes {
-    padding: 16px 20px;
+    padding: 18px 20px;
     box-sizing: border-box;
 }
 
-/* Plain fieldset (action buttons, no legend) — just strip border */
+/* ═══════════════════════════════════════════════════════════════
+   TWO-UP SECTION LAYOUT — sections sit side by side to cut scrolling.
+   Applies to any .pg-content or form that directly holds section
+   cards (fieldset.nested-group / .pg-card) on view & update pages.
+   ═══════════════════════════════════════════════════════════════ */
+.pg-content:has(> fieldset.nested-group),
+.pg-content:has(> .pg-card),
+form:has(> fieldset.nested-group),
+form:has(> .pg-card) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    align-items: start;
+}
+
+/* Anything that is not a section card spans the full row
+   (workflow buttons, banners, action rows, nested wrappers) */
+.pg-content:has(> fieldset.nested-group) > *:not(fieldset.nested-group):not(.pg-card),
+.pg-content:has(> .pg-card) > *:not(fieldset.nested-group):not(.pg-card),
+form:has(> fieldset.nested-group) > *:not(fieldset.nested-group):not(.pg-card),
+form:has(> .pg-card) > *:not(fieldset.nested-group):not(.pg-card) {
+    grid-column: 1 / -1;
+}
+
+/* Long-content sections read better across the full width:
+   remarks (textarea), notes, and sections holding tables */
+.pg-content > fieldset.nested-group:has(textarea),
+.pg-content > .pg-card:has(textarea),
+.pg-content > fieldset.nested-group:has(app-common-notes),
+.pg-content > .pg-card:has(app-common-notes),
+.pg-content > .pg-card:has(.pg-table),
+form > fieldset.nested-group:has(textarea),
+form > .pg-card:has(textarea),
+form > fieldset.nested-group:has(app-common-notes),
+form > .pg-card:has(app-common-notes),
+form > .pg-card:has(.pg-table) {
+    grid-column: 1 / -1;
+}
+
+/* Grid gap replaces the cards' own bottom margins */
+.pg-content:has(> fieldset.nested-group) > fieldset.nested-group,
+.pg-content:has(> .pg-card) > .pg-card,
+form:has(> fieldset.nested-group) > fieldset.nested-group,
+form:has(> .pg-card) > .pg-card {
+    margin-bottom: 0;
+}
+
+/* Narrow screens: back to a single column */
+@media (max-width: 1100px) {
+    .pg-content:has(> fieldset.nested-group),
+    .pg-content:has(> .pg-card),
+    form:has(> fieldset.nested-group),
+    form:has(> .pg-card) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Plain fieldset (action rows) */
 .pg-wrap fieldset:not(.nested-group) {
     border: none !important;
     padding: 8px 0 !important;
     background: transparent;
 }
-
 .pg-wrap fieldset:not(.nested-group) .actions,
 .pg-wrap fieldset:not(.nested-group) .button-group {
     display: flex;
@@ -297,79 +490,256 @@ input, textarea {
     padding: 4px 0;
 }
 
-/* Loading / error */
-.pg-loading { text-align: center; padding: 50px; color: #888; font-size: 0.95rem; }
-.pg-error   { text-align: center; padding: 20px; color: #c62828; background: #ffebee; border-radius: 8px; font-weight: 600; font-size: 0.88rem; }
+/* ═══════════════════════════════════════════════════════════════
+   UNIFORM FIELD BOXES — equal width & height, aligned to the grid
+   ═══════════════════════════════════════════════════════════════ */
 
-
-
-
-/* remove default page margins so toolbar is flush to window edges */
-html, body {
-    margin: 0;
-    padding: 0;
+/* Standard field grid inside every section card */
+.pg-wrap fieldset.nested-group .grid,
+.pg-wrap .pg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 14px;
+    align-items: start;
 }
 
-/* toolbar */
-.main-layout .app-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0 16px;
-    position: fixed;
-    top: 0;
-    left: 0;
+/* Every field fills its cell — no ragged widths */
+.pg-wrap mat-form-field,
+.pg-wrap .mat-mdc-form-field {
+    width: 100%;
+}
+
+/* Long text fields (remarks etc.) take the full row */
+.pg-wrap fieldset.nested-group .grid > mat-form-field:has(textarea),
+.pg-wrap .pg-grid > mat-form-field:has(textarea) {
+    grid-column: 1 / -1;
+}
+
+/* Duplicate flag sits INLINE at the right edge of the value line */
+.pg-wrap .mat-mdc-form-field {
+    position: relative;
+}
+.pg-wrap .mat-mdc-form-field .duplicate-indicator {
+    position: absolute;
     right: 0;
-    width: auto;
-    z-index: 1000;
-}
-.main-layout .app-toolbar .app-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-.main-layout .app-toolbar .spacer {
-    flex: 1 1 auto;
-}
-.main-layout .app-toolbar button {
-    margin: 8px 4px;
+    top: 26px;
+    font-size: 0.95rem;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 1;
 }
 
-.main-layout .mat-toolbar.mat-primary {
-    background: #3f51b5;
-    color: #fff;
+/* ═══════════════════════════════════════════════════════════════
+   BORDERLESS FIELDS — label above value, no box around each field
+   (AI Studio reference: small caps label, bold value, no outline)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Strip the Material outline box entirely */
+.pg-wrap .mat-mdc-text-field-wrapper {
+    background: transparent !important;
+    padding: 0 !important;
+}
+.pg-wrap .mdc-notched-outline > * {
+    border: none !important;
+}
+.pg-wrap .mat-mdc-form-field-flex {
+    padding: 0 !important;
+    align-items: baseline !important;
+}
+.pg-wrap .mat-mdc-form-field-infix {
+    min-height: unset;
+    padding: 0 0 9px !important;
+    border-top: none !important;
 }
 
-.main-layout .mdc-text-field--filled:not(.mdc-text-field--disabled) {
-    background-color: whitesmoke;
-}
-
-/* host padding removed—will instead push specific sections down */
-.main-layout {
+/* Label — static, small, muted caps, always above the value
+   (never the Material mid-box floating position) */
+.pg-wrap .mdc-floating-label {
+    position: static !important;
+    transform: none !important;
+    max-width: none !important;
+    font-size: 0.66rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.07em;
+    color: var(--ink-500) !important;
+    text-transform: uppercase;
+    margin-bottom: 5px;
     display: block;
 }
+.pg-wrap .mat-mdc-floating-label.mdc-floating-label { position: static !important; }
 
-/* push hero down by toolbar height so it sits directly underneath */
+/* Value — bold and prominent, the actual data */
+.pg-wrap input.mat-mdc-input-element,
+.pg-wrap textarea.mat-mdc-input-element,
+.pg-wrap .mat-mdc-select-value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ink-900);
+    padding: 0;
+}
+.pg-wrap input[readonly].mat-mdc-input-element {
+    cursor: default;
+}
+
+/* Editable fields keep a faint underline for affordance; readonly
+   view fields stay fully bare like the reference */
+.pg-wrap .mat-mdc-form-field:not(:has(input[readonly])) .mat-mdc-form-field-infix {
+    border-bottom: 1px solid var(--line);
+    transition: border-color 0.15s ease;
+}
+.pg-wrap .mat-mdc-form-field.mat-focused:not(:has(input[readonly])) .mat-mdc-form-field-infix {
+    border-bottom-color: var(--brand);
+}
+
+/* Trim the hint/error row so it doesn't add box-like weight */
+.pg-wrap .mat-mdc-form-field-subscript-wrapper {
+    padding: 0 !important;
+    margin-top: 2px;
+}
+.pg-wrap .mat-mdc-form-field-hint-wrapper,
+.pg-wrap .mat-mdc-form-field-error-wrapper {
+    padding: 0 !important;
+}
+
+/* "fill" appearance draws an animated underline (line-ripple) and
+   reserves top padding for the label to float over the value —
+   neither applies to our static-label layout, so both are removed */
+.pg-wrap .mdc-line-ripple {
+    display: none !important;
+}
+.pg-wrap .mdc-text-field--filled .mat-mdc-form-field-infix {
+    padding-top: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COLOR-CODED SECTION CARDS — each card gets its own tinted
+   background, border and header color so sections are easy to
+   tell apart (rotates: teal → blue → orange → purple → green)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1 · TEAL */
+.pg-wrap fieldset.nested-group:nth-of-type(5n+1),
+.pg-wrap .pg-card:nth-of-type(5n+1) {
+    background: #f0f8f8;
+    border: 1.5px solid #b9dedf !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+1) legend,
+.pg-wrap .pg-card:nth-of-type(5n+1) .pg-card-title {
+    color: #025054 !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+1) legend { border-left-color: #037076; }
+.pg-wrap .pg-card:nth-of-type(5n+1) .pg-card-title-accent { background: #037076; }
+
+/* 2 · BLUE */
+.pg-wrap fieldset.nested-group:nth-of-type(5n+2),
+.pg-wrap .pg-card:nth-of-type(5n+2) {
+    background: #eff5fd;
+    border: 1.5px solid #bcd4f2 !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+2) legend,
+.pg-wrap .pg-card:nth-of-type(5n+2) .pg-card-title {
+    color: #0d47a1 !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+2) legend { border-left-color: #1565c0; }
+.pg-wrap .pg-card:nth-of-type(5n+2) .pg-card-title-accent { background: #1565c0; }
+
+/* 3 · ORANGE */
+.pg-wrap fieldset.nested-group:nth-of-type(5n+3),
+.pg-wrap .pg-card:nth-of-type(5n+3) {
+    background: #fdf3ea;
+    border: 1.5px solid #f2cfae !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+3) legend,
+.pg-wrap .pg-card:nth-of-type(5n+3) .pg-card-title {
+    color: #b85e15 !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+3) legend { border-left-color: #de7b33; }
+.pg-wrap .pg-card:nth-of-type(5n+3) .pg-card-title-accent { background: #de7b33; }
+
+/* 4 · PURPLE */
+.pg-wrap fieldset.nested-group:nth-of-type(5n+4),
+.pg-wrap .pg-card:nth-of-type(5n+4) {
+    background: #f7f1fb;
+    border: 1.5px solid #d9c2ec !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+4) legend,
+.pg-wrap .pg-card:nth-of-type(5n+4) .pg-card-title {
+    color: #6a1b9a !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+4) legend { border-left-color: #7b1fa2; }
+.pg-wrap .pg-card:nth-of-type(5n+4) .pg-card-title-accent { background: #7b1fa2; }
+
+/* 5 · GREEN */
+.pg-wrap fieldset.nested-group:nth-of-type(5n+5),
+.pg-wrap .pg-card:nth-of-type(5n+5) {
+    background: #eef8f2;
+    border: 1.5px solid #bfe3cf !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+5) legend,
+.pg-wrap .pg-card:nth-of-type(5n+5) .pg-card-title {
+    color: #1b5e20 !important;
+}
+.pg-wrap fieldset.nested-group:nth-of-type(5n+5) legend { border-left-color: #2e7d32; }
+.pg-wrap .pg-card:nth-of-type(5n+5) .pg-card-title-accent { background: #2e7d32; }
+
+/* ── States ────────────────────────────────────────────────────── */
+.pg-loading {
+    text-align: center;
+    padding: 56px 20px;
+    color: var(--ink-500);
+    font-size: 0.95rem;
+}
+.pg-error {
+    text-align: center;
+    padding: 18px 20px;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border: 1px solid #f5c6c0;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APP SHELL (main-layout: hero, footer)
+   ═══════════════════════════════════════════════════════════════ */
+
+.main-layout { display: block; }
+
+/* Hero band (dashboard only) */
 .main-layout .hero {
-    background: linear-gradient(135deg, #037076 0%, #025054 60%, #013a3d 100%);
+    background:
+        radial-gradient(1100px 320px at 85% -40%, rgba(222, 123, 51, 0.20), transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        var(--grad-deep);
+    background-size: auto, 24px 24px, auto;
     color: #fff;
     text-align: center;
-    padding: 20px 16px;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    box-shadow: 0 3px 12px rgba(3, 112, 118, 0.35);
+    padding: 36px 16px 30px;
+    box-shadow: var(--shadow-brand);
 }
 .main-layout .hero .hero-content h1 {
     margin: 0;
     font-size: 2rem;
-    letter-spacing: 2px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.main-layout .hero .hero-content h1::after {
+    content: "";
+    display: block;
+    width: 64px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--accent);
+    margin: 12px auto 0;
+}
 .main-layout .hero .hero-content p {
-    margin-top: 4px;
-    font-size: 1rem;
-    opacity: 0.75;
-    color: #b2e8e2;
+    margin-top: 10px;
+    font-size: 0.92rem;
+    color: var(--brand-200);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -377,75 +747,26 @@ html, body {
     overflow: hidden;
 }
 
-/* routed pages: also start immediately under toolbar */
-.main-layout router-outlet,
-.main-layout .app-footer {
-    margin-top: 64px;
-}
-
-/* footer */
-.main-layout .app-footer {
-    background: #f5f5f5;
-    color: rgba(0, 0, 0, 0.6);
+/* Footer — deep teal with orange accent line */
+.main-layout .app-footer,
+.app-footer {
+    background: var(--grad-deep);
+    border-top: 3px solid var(--accent);
+    color: var(--brand-200);
     text-align: center;
-    padding: 16px;
+    padding: 18px 16px;
+    margin-top: 32px;
 }
-.main-layout .app-footer .footer-content {
+.app-footer .footer-content {
     max-width: 1200px;
     margin: 0 auto;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
 }
 
-/* responsive tweaks */
+/* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-    .main-layout .app-toolbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 8px;
-    }
-    .main-layout .app-toolbar .app-title {
-        margin-bottom: 8px;
-    }
-    .main-layout .app-toolbar button {
-        width: 100%;
-        margin: 4px 0;
-    }
-
-    .main-layout .hero {
-        padding: 40px 8px;
-    }
-    .main-layout .hero .hero-content h1 {
-        font-size: 2rem;
-    }
-    .main-layout .hero .hero-content p {
-        font-size: 1rem;
-    }
-
-    .main-layout router-outlet,
-    .main-layout .app-footer {
-        margin-top: 64px;
-    }
-
-    .main-layout .mat-toolbar.mat-primary {
-        background-color: #3f51b5 !important;
-        color: white !important;
-    }
-
-    .main-layout .app-toolbar {
-        padding: 0 16px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: auto;
-        z-index: 1000;
-        background: #3f51b5;
-    }
-
-    .main-layout .app-footer {
-        padding: 12px;
-    }
-    .main-layout .app-footer .footer-content {
-        font-size: 0.8rem;
-    }
+    .pg-head { padding: 16px 18px; }
+    .pg-content { padding: 16px; }
+    .main-layout .hero { padding: 26px 12px 22px; }
+    .main-layout .hero .hero-content h1 { font-size: 1.4rem; }
 }

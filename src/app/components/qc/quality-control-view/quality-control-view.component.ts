@@ -23,12 +23,11 @@ import { environment } from '../../../../environments/environment';
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 @Component({
   selector: 'app-valuation-quality-control',
   standalone: true,
-  imports: [RouterModule, SharedModule, WorkflowButtonsComponent, CommonNotesComponent, CommonModule, FormsModule],
+  imports: [RouterModule, SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule],
   templateUrl: './quality-control-view.component.html',
   styleUrls: ['./quality-control-view.component.scss']
 })

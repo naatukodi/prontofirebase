@@ -168,27 +168,27 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Company</mat-label>
             <input matInput [value]="report.stakeholder?.name || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Branch / Location</mat-label>
             <input matInput [value]="report.stakeholder?.branch || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Applicant</mat-label>
             <input matInput [value]="report.stakeholder?.applicant?.name || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Contact</mat-label>
             <input matInput [value]="report.stakeholder?.applicant?.contact || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Date</mat-label>
             <input matInput [value]="report.createdAt | date:'dd-MM-yyyy'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Location</mat-label>
             <input matInput [value]="report.stakeholder?.vehicleLocation?.district || report.stakeholder?.vehicleLocation?.state || '—'" readonly />
           </mat-form-field>
@@ -201,23 +201,23 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Registration No</mat-label>
             <input matInput [value]="report.vehicleDetails?.registrationNumber || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Make</mat-label>
             <input matInput [value]="report.vehicleDetails?.make || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Model</mat-label>
             <input matInput [value]="report.vehicleDetails?.model || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Year / Mfg</mat-label>
             <input matInput [value]="report.vehicleDetails?.yearOfMfg || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>RTO</mat-label>
             <input matInput [value]="report.vehicleDetails?.rto || '—'" readonly />
           </mat-form-field>
@@ -230,19 +230,19 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Inspection Details</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Inspected By</mat-label>
             <input matInput [value]="report.inspectionDetails?.vehicleInspectedBy || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Date of Inspection</mat-label>
             <input matInput [value]="report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy':'+0530'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Inspection Location</mat-label>
             <input matInput [value]="report.inspectionDetails?.inspectionLocation || '—'" readonly />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Odometer (km)</mat-label>
             <input matInput [value]="(report.inspectionDetails?.odometer | number) || '—'" readonly />
           </mat-form-field>
@@ -536,15 +536,6 @@
 
         <div class="qc-vtext-wrap" *ngIf="clRemarks['rec']">
           <strong>QC Summary Remarks:</strong> {{ clRemarks['rec'] }}
-        </div>
-
-        <div style="padding:0 14px 14px;">
-          <app-common-notes
-            [entityType]="'QC'"
-            [entityId]="valuationId"
-            [currentUser]="getCurrentUser()"
-            [collapsible]="true">
-          </app-common-notes>
         </div>
       </div>
 

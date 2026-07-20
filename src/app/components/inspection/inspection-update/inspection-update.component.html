@@ -51,12 +51,12 @@
     <fieldset class="nested-group">
       <legend>Inspection Info</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('vehicleInspectedBy')" appearance="outline">
+        <mat-form-field *ngIf="showField('vehicleInspectedBy')" appearance="fill">
           <mat-label>Vehicle Inspected By</mat-label>
           <input matInput formControlName="vehicleInspectedBy" />
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('inspectionDate')" appearance="outline">
+        <mat-form-field *ngIf="showField('inspectionDate')" appearance="fill">
           <mat-label>Date of Inspection</mat-label>
           <input
             matInput
@@ -74,7 +74,7 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field *ngIf="showField('inspectionLocation')" appearance="outline">
+        <mat-form-field *ngIf="showField('inspectionLocation')" appearance="fill">
           <mat-label>Inspection Location</mat-label>
           <input matInput formControlName="inspectionLocation" />
         </mat-form-field>
@@ -85,50 +85,50 @@
     <fieldset class="nested-group" *ngIf="hv(['vehicleMoved','engineStarted','odometer','vinPlate','bodyType','tyreCondition','otherAccessoryFitment','roadWorthyCondition'])">
       <legend>General Condition</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('vehicleMoved')" appearance="outline">
+        <mat-form-field *ngIf="showField('vehicleMoved')" appearance="fill">
           <mat-label>Vehicle Moved</mat-label>
           <mat-select formControlName="vehicleMoved">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="showField('engineStarted')" appearance="outline">
+        <mat-form-field *ngIf="showField('engineStarted')" appearance="fill">
           <mat-label>Engine Started</mat-label>
           <mat-select formControlName="engineStarted">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="showField('odometer')" appearance="outline">
+        <mat-form-field *ngIf="showField('odometer')" appearance="fill">
           <mat-label>Odometer (km)</mat-label>
           <input matInput type="number" formControlName="odometer" />
         </mat-form-field>
-        <mat-form-field *ngIf="showField('vinPlate')" appearance="outline">
+        <mat-form-field *ngIf="showField('vinPlate')" appearance="fill">
           <mat-label>VIN Plate Present</mat-label>
           <mat-select formControlName="vinPlate">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="showField('bodyType')" appearance="outline">
+        <mat-form-field *ngIf="showField('bodyType')" appearance="fill">
           <mat-label>Body Type</mat-label>
           <input matInput formControlName="bodyType" />
         </mat-form-field>
-        <mat-form-field *ngIf="showField('tyreCondition')" appearance="outline">
+        <mat-form-field *ngIf="showField('tyreCondition')" appearance="fill">
           <mat-label>Overall Tyre Condition</mat-label>
           <mat-select formControlName="overallTyreCondition">
             <mat-option [value]="true">Good</mat-option>
             <mat-option [value]="false">Not Good</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="outline">
+        <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="fill">
           <mat-label>Other Accessories Fitted</mat-label>
           <mat-select formControlName="otherAccessoryFitment">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>
           </mat-select>
         </mat-form-field>
-        <mat-form-field *ngIf="showField('roadWorthyCondition')" appearance="outline">
+        <mat-form-field *ngIf="showField('roadWorthyCondition')" appearance="fill">
           <mat-label>Road Worthy Condition</mat-label>
           <mat-select formControlName="roadWorthyCondition">
             <mat-option [value]="true">OK</mat-option>
@@ -144,13 +144,13 @@
         <legend>{{ section.section }}</legend>
         <div class="grid">
           <ng-container *ngFor="let field of section.fields">
-            <mat-form-field *ngIf="field.type === 'condition'" appearance="outline">
+            <mat-form-field *ngIf="field.type === 'condition'" appearance="fill">
               <mat-label>{{ field.label }}</mat-label>
               <mat-select [formControlName]="field.key">
                 <mat-option *ngFor="let opt of conditionOptions" [value]="opt">{{ opt }}</mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-form-field *ngIf="field.type === 'yes-no'" appearance="outline">
+            <mat-form-field *ngIf="field.type === 'yes-no'" appearance="fill">
               <mat-label>{{ field.label }}</mat-label>
               <mat-select [formControlName]="field.key">
                 <mat-option *ngFor="let opt of yesNoOptions" [value]="opt">{{ opt }}</mat-option>
@@ -162,62 +162,8 @@
     </ng-container>
 
     <fieldset class="nested-group">
-      <legend>Payment Details</legend>
-      <div class="grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Status</mat-label>
-          <mat-select formControlName="paymentStatus" required>
-            <mat-option value="Pending">Pending</mat-option>
-            <mat-option value="Completed">Completed</mat-option>
-            <mat-option value="Failed">Failed</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">
-            Payment Status is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Reference</mat-label>
-          <input matInput formControlName="paymentReference" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Date</mat-label>
-          <input matInput type="datetime-local" formControlName="paymentDate" />
-          <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">
-            Payment Date is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Method</mat-label>
-          <mat-select formControlName="paymentMethod" required>
-            <mat-option value="Online">Online</mat-option>
-            <mat-option value="Cash">Cash</mat-option>
-            <mat-option value="UPI">UPI</mat-option>
-            <mat-option value="Card">Card</mat-option>
-          </mat-select>
-          <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">
-            Payment Method is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Payment Amount</mat-label>
-          <input matInput type="number" formControlName="paymentAmount" />
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">
-            Amount is required
-          </mat-error>
-          <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">
-            Amount must be ≥ 0
-          </mat-error>
-        </mat-form-field>
-      </div>
-    </fieldset>
-
-    <fieldset class="nested-group">
       <legend>Remarks</legend>
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Remarks</mat-label>
         <textarea matInput rows="3" formControlName="remarks"></textarea>
       </mat-form-field>

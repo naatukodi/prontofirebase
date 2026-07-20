@@ -21,7 +21,6 @@ import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../..
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 type ValuationType =
   | 'four-wheeler'
@@ -40,7 +39,6 @@ type ValuationType =
     WorkflowButtonsComponent,
     RouterModule,
     ReactiveFormsModule,
-    CommonNotesComponent,
     CommonModule, 
     FormsModule   
   ],

@@ -1,116 +1,77 @@
-/* src/app/header.component.css */
-nav.navbar {
+/* Vehga header — white bar, logo in its real teal (#037076) */
+
+nav.app-navbar {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   min-height: 64px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
 
-nav.navbar .navbar-brand {
+nav.app-navbar .navbar-brand {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   margin-right: 12px;
 }
-.sidenav-container {
-  height: 100vh;
-}
 
-.app-toolbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-}
-
-mat-sidenav-content,
-mat-sidenav {
-  padding-top: 64px;
-}
-
-.spacer {
-  flex: 1 1 auto;
-}
-
-/* hide nav-buttons container if no `<div>` so wrap in <div.nav-buttons> */
-.nav-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-/* ensure the drawer only exists (and is toggled) on mobile */
-/* Prevent title from being clipped or wrapped */
-.app-toolbar .app-title {
-  flex: 0 0 auto;           /* don’t shrink or grow */
-  white-space: nowrap;      /* stay on one line */
-  overflow: visible;        /* allow full text */
-}
-
-/* Force toolbar text to be white on primary */
-.main-layout .mat-toolbar.mat-primary {
-  color: #fff !important;
-}
-
-/* Ensure the drawer background/text contrast */
-.main-layout mat-sidenav {
-  background: #fff;         /* white drawer */
-  color: #000;              /* black text */
-}
-
-/* List-item links in the nav list */
-.main-layout .mat-nav-list .mat-list-item {
-  color: rgba(0,0,0,0.87);  /* default Material body text */
-}
-
-/* Hide any horizontal overflow (prevent cut-off) */
-.sidenav-container {
-  overflow-x: hidden;
-}
-
+/* Logo in original teal — no filter, no box. The PNG has large
+   transparent margins, so it is oversized with negative margins
+   to keep the bar at 64px. */
 .navbar-logo {
-  width: 130px;
-  height: 64px;
-  object-fit: fill;
+  height: 112px;
+  width: auto;
+  margin: -24px 0;
   display: block;
 }
 
-.navbar-title {
-  font-weight: 800;
-  font-size: 1.3rem;
-  letter-spacing: 1px;
-  line-height: 1;
+/* Nav links — ink on white, teal when active/hover */
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink-700) !important;
+  cursor: pointer;
+  padding: 20px 14px !important;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.brand-vehga {
-  color: #0d7c66;
-}
-
-.brand-inspections {
-  color: #0a5c4e;
-}
-
-.navbar-text-custom {
-  color: #374151;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.nav-link,
-.dropdown-item {
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  font-size: 0.85rem;
-  color: #374151 !important;
-}
-
-.nav-link:hover,
-.dropdown-item:hover {
-  color: #0d7c66 !important;
+.nav-link:hover {
+  color: var(--brand) !important;
 }
 
 .nav-link.active {
-  color: #0d7c66 !important;
-  font-weight: 700;
+  color: var(--brand) !important;
+  border-bottom-color: var(--accent);
 }
 
+.dropdown-menu {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.dropdown-item {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-700) !important;
+  cursor: pointer;
+  padding: 9px 16px;
+}
+
+.dropdown-item:hover {
+  background: var(--brand-50);
+  color: var(--brand) !important;
+}
+
+/* Collapsed (mobile) menu */
+@media (max-width: 991.98px) {
+  .nav-link {
+    padding: 12px 8px !important;
+    border-bottom: none;
+  }
+  .nav-link.active {
+    color: var(--brand-700) !important;
+  }
+}
