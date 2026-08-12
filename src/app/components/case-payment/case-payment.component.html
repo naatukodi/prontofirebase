@@ -4,6 +4,53 @@
 
 <ng-container *ngIf="!loading">
 
+  <!-- Everything currently stored on this case, including who saved it -->
+  <div class="saved-card" *ngIf="saved">
+    <div class="saved-card__title">SAVED PAYMENT DETAILS</div>
+
+    <div class="saved-card__row">
+      <span class="saved-card__label">Status</span>
+      <span class="saved-card__value">{{ saved.status || '—' }}</span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Method</span>
+      <span class="saved-card__value">{{ saved.method || '—' }}</span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Amount</span>
+      <span class="saved-card__value">
+        {{ saved.amount != null ? (saved.amount | currency:'INR':'symbol':'1.0-2') : '—' }}
+      </span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Date</span>
+      <span class="saved-card__value">
+        {{ saved.date ? (saved.date | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+      </span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Reference</span>
+      <span class="saved-card__value">{{ saved.reference || '—' }}</span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Notes</span>
+      <span class="saved-card__value">{{ saved.notes || '—' }}</span>
+    </div>
+
+    <div class="saved-card__divider"></div>
+
+    <div class="saved-card__row">
+      <span class="saved-card__label">Saved by</span>
+      <span class="saved-card__value saved-card__value--muted">{{ saved.savedBy || '—' }}</span>
+    </div>
+    <div class="saved-card__row">
+      <span class="saved-card__label">Saved on</span>
+      <span class="saved-card__value saved-card__value--muted">
+        {{ saved.savedAt ? (saved.savedAt | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+      </span>
+    </div>
+  </div>
+
   <div class="form-group">
     <label>Payment Status *</label>
     <select [(ngModel)]="paymentStatus" [disabled]="!canEdit()">
@@ -33,10 +80,20 @@
   </div>
 
   <div class="form-group">
-    <label>Payment Date <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
-    <input type="datetime-local"
-           [(ngModel)]="paymentDate"
-           [readonly]="!canEdit()" />
+    <label>Payment Date (IST) <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
+    <div class="date-field">
+      <input type="datetime-local"
+             [(ngModel)]="paymentDate"
+             (input)="onDateEdited()"
+             [readonly]="!canEdit()" />
+      <span class="date-field__live" *ngIf="dateIsLive">LIVE</span>
+      <button type="button" class="date-field__now"
+              *ngIf="!dateIsLive && canEdit()"
+              (click)="useNow()">Use now</button>
+    </div>
+    <div class="date-field__hint">
+      {{ dateIsLive ? 'Live — updates until you pick a time or save' : 'Edit above, or use the current time' }}
+    </div>
   </div>
 
   <div class="form-group">
@@ -53,12 +110,6 @@
               [readonly]="!canEdit()"
               placeholder="Enter payment related notes here...">
     </textarea>
-  </div>
-
-  <!-- Saved-by summary -->
-  <div *ngIf="savedBy" style="margin-top:12px; padding:10px 12px; background:#f0f4f8; border-left:3px solid #1a8a6e; border-radius:4px; font-size:0.88em; color:#444;">
-    <strong>Last saved by:</strong> {{ savedBy }}
-    <span *ngIf="savedAt"> &nbsp;|&nbsp; {{ savedAt | date:'dd/MM/yyyy h:mm a' }}</span>
   </div>
 
   <br>

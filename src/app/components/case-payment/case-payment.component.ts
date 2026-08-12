@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   MAT_DIALOG_DATA,
@@ -16,7 +16,14 @@ import { AuthorizationService } from '../../services/authorization.service';
   templateUrl: './case-payment.component.html',
   styleUrls: ['./case-payment.component.scss']
 })
-export class CasePaymentComponent implements OnInit {
+export class CasePaymentComponent implements OnInit, OnDestroy {
+
+  /** Payment times are always shown and entered in IST, whatever timezone the
+   *  browser is in, and always stored as UTC. IST has no DST, so a fixed
+   *  offset is exact. */
+  private static readonly IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  readonly istTimezone = '+0530';
+
 
   paymentStatus = '';
   paymentReference = '';
@@ -28,8 +35,27 @@ export class CasePaymentComponent implements OnInit {
   savedBy: string | null = null;
   savedAt: Date | null = null;
 
+  /** Snapshot of what is currently stored on the case, shown as a read-back
+   *  summary above the form. Null until something has been saved. */
+  saved: {
+    status: string;
+    method: string;
+    reference: string;
+    date: Date | null;
+    amount: number | null;
+    notes: string;
+    savedBy: string | null;
+    savedAt: Date | null;
+  } | null = null;
+
   saving = false;
   loading = false;
+
+  /** While true the date field tracks the current IST time, so a payment taken
+   *  now is stamped with the moment it is saved. Editing the field, or a date
+   *  already saved on the case, switches it off. */
+  dateIsLive = true;
+  private clockId: any = null;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -39,7 +65,47 @@ export class CasePaymentComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.paymentDate = this.toIstInputValue(new Date());
+    this.clockId = setInterval(() => {
+      if (this.dateIsLive && !this.saving) {
+        this.paymentDate = this.toIstInputValue(new Date());
+      }
+    }, 1000);
+
     this.loadPayment();
+  }
+
+  ngOnDestroy(): void {
+    if (this.clockId !== null) clearInterval(this.clockId);
+  }
+
+  /** IST wall-clock string for a datetime-local input ("YYYY-MM-DDTHH:mm").
+   *  Built from UTC parts shifted by the IST offset, so it is correct even if
+   *  the browser is in another timezone. */
+  private toIstInputValue(instant: Date): string {
+    const ist = new Date(instant.getTime() + CasePaymentComponent.IST_OFFSET_MS);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}`
+         + `T${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())}`;
+  }
+
+  /** Reads an IST wall-clock input value back as a UTC ISO instant. */
+  private istInputValueToIso(value: string): string | null {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+    if (!m) return null;
+    const [, y, mo, d, h, mi] = m.map(Number) as unknown as number[];
+    const utcMs = Date.UTC(y, mo - 1, d, h, mi) - CasePaymentComponent.IST_OFFSET_MS;
+    return new Date(utcMs).toISOString();
+  }
+
+  /** Called when the user edits the date field — stops the live clock. */
+  onDateEdited(): void {
+    this.dateIsLive = false;
+  }
+
+  useNow(): void {
+    this.dateIsLive = true;
+    this.paymentDate = this.toIstInputValue(new Date());
   }
 
   loadPayment(): void {
@@ -62,9 +128,27 @@ export class CasePaymentComponent implements OnInit {
           this.savedBy          = payment.savedBy          ?? null;
           this.savedAt          = payment.savedAt ? new Date(payment.savedAt) : null;
 
+          // A date already on the case wins over the live clock. Shown in IST,
+          // not UTC — filling a datetime-local input with an ISO UTC string
+          // displayed the time 5:30 behind and shifted it further on each save.
           if (payment.paymentDate) {
-            const d = new Date(payment.paymentDate);
-            this.paymentDate = d.toISOString().slice(0, 16);
+            this.paymentDate = this.toIstInputValue(new Date(payment.paymentDate));
+            this.dateIsLive = false;
+          }
+
+          // Keep a snapshot of the stored values so the summary card shows
+          // what is saved on the case, not what is being edited below.
+          if (this.paymentStatus || this.paymentAmount != null) {
+            this.saved = {
+              status:    this.paymentStatus,
+              method:    this.paymentMethod,
+              reference: this.paymentReference,
+              date:      payment.paymentDate ? new Date(payment.paymentDate) : null,
+              amount:    this.paymentAmount,
+              notes:     this.paymentNotes,
+              savedBy:   this.savedBy,
+              savedAt:   this.savedAt
+            };
           }
 
           this.loading = false;
@@ -109,7 +193,9 @@ export class CasePaymentComponent implements OnInit {
       applicantContact: this.data.applicantContact,
       paymentStatus:    this.paymentStatus,
       paymentReference: this.paymentReference,
-      paymentDate:      this.paymentDate ? new Date(this.paymentDate).toISOString() : null,
+      paymentDate:      this.dateIsLive
+                          ? new Date().toISOString()
+                          : (this.paymentDate ? this.istInputValueToIso(this.paymentDate) : null),
       paymentMethod:    this.paymentMethod,
       paymentAmount:    this.paymentAmount!,
       paymentNotes:     this.paymentNotes,
