@@ -2,11 +2,12 @@
 # https://github.com/firebase/firebase-tools
 
 name: Deploy to Firebase Hosting on merge
+# Production deploys happen only from main. Work lands on release, then reaches
+# main through a reviewed pull request — pushing to release no longer goes live.
 on:
   push:
     branches:
       - main
-      - release
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
