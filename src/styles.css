@@ -6,6 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 :root {
@@ -57,7 +58,16 @@
     --shadow-md: 0 8px 22px rgba(2, 80, 84, 0.14);
     --shadow-brand: 0 6px 16px rgba(3, 112, 118, 0.35);
 
-    --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* Dashboard stage/status accent colors (shared by dashboard + MIS) */
+    --stage-stakeholder: #ad1457;  --stage-stakeholder-bg: #fce4ec;
+    --stage-backend:     #d84315;  --stage-backend-bg:     #fbe9e7;
+    --stage-avo:         #6a1b9a;  --stage-avo-bg:         #f3e5f5;
+    --stage-qc:          #1256b0;  --stage-qc-bg:          #e7f0fd;
+    --stage-final:       #12805c;  --stage-final-bg:       #e3f6ee;
+    --stage-returned:    #d92d20;  --stage-returned-bg:    #fdecea;
 
     /* Angular Material token overrides → brand teal */
     --mdc-theme-primary: var(--brand);
@@ -715,12 +725,12 @@ form:has(> .pg-card) > .pg-card {
     background-size: auto, 24px 24px, auto;
     color: #fff;
     text-align: center;
-    padding: 36px 16px 30px;
+    padding: 24px 16px 20px;
     box-shadow: var(--shadow-brand);
 }
 .main-layout .hero .hero-content h1 {
     margin: 0;
-    font-size: 2rem;
+    font-size: 1.55rem;
     font-weight: 800;
     letter-spacing: 0.16em;
     white-space: nowrap;

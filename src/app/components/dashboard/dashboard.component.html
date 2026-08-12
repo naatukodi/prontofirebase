@@ -8,89 +8,177 @@
         <p>{{ isAdmin ? 'Manage and track all vehicle inspection cases' : 'Your assigned cases and performance' }}</p>
       </div>
       <div class="user-info" *ngIf="currentUser">
-        👤 Welcome, {{ currentUser.name }}
+        <i class="bi bi-person-circle"></i> Welcome, {{ currentUser.name }}
       </div>
     </div>
   </div>
 
   <div class="content-area">
 
-    <!-- ── User stats tiles (non-admin only) ── -->
-    <div class="user-stats-tiles" *ngIf="!isAdmin && userStats">
-      <div class="stat-tile tile-open">
-        <div class="tile-label">Open</div>
-        <div class="tile-value">{{ userStats.openCount }}</div>
-        <div class="tile-sub">Assigned to you</div>
-      </div>
-      <div class="stat-tile tile-aged">
-        <div class="tile-label">Aged</div>
-        <div class="tile-value">{{ userStats.agedCount }}</div>
-        <div class="tile-sub">Pending &gt; 24 hrs</div>
-      </div>
-      <div class="stat-tile tile-completed">
-        <div class="tile-label">Completed</div>
-        <div class="tile-value">{{ userStats.completedCount }}</div>
-        <div class="tile-sub">Forwarded by you</div>
-      </div>
-      <div class="stat-tile tile-tat">
-        <div class="tile-label">Avg TAT</div>
-        <div class="tile-value">
-          {{ userStats.avgTatHours || 0 }}
-          <span class="tile-unit">hrs</span>
-        </div>
-        <div class="tile-sub">Per case you handled</div>
-      </div>
-    </div>
-
-    <!-- Filter row: tabs + date -->
-    <div class="filter-row">
-      <div class="step-filter">
-        <button [class.active]="selectedStep === ''"
-                class="pill all-pill"
-                (click)="selectedStep=''; applyFilter()">
-          All ({{ claims.length - (stepCounts['Returned'] || 0) }})
-        </button>
-        <ng-container *ngFor="let s of steps">
-          <button [class.active]="selectedStep === s"
-                  [class]="'pill ' + s.toLowerCase() + '-pill'"
-                  [disabled]="s !== 'Returned' && (stepCounts[s] || 0) === 0"
-                  (click)="selectedStep=s; applyFilter()">
-            {{ s }} ({{ stepCounts[s] || 0 }})
-          </button>
-        </ng-container>
-        <!-- COMPLETE pill: admin = global approvals; non-admin = always 0, disabled -->
-        <button [class.active]="selectedStep === 'Complete' && isAdmin"
-                class="pill complete-pill"
-                [disabled]="!isAdmin"
-                (click)="selectedStep='Complete'; applyFilter()">
-          ✅ Complete ({{ isAdmin ? completedCases.length : 0 }})
-        </button>
-
-        <!-- MY COMPLETED pill: non-admin only — cases forwarded by this user -->
-        <button *ngIf="!isAdmin"
-                [class.active]="selectedStep === 'MyComplete'"
-                class="pill complete-pill"
-                (click)="selectedStep='MyComplete'; applyFilter()">
-          ✅ My Completed ({{ completedCases.length }})
-        </button>
-      </div>
-
-      <mat-form-field appearance="fill" subscriptSizing="dynamic" class="date-field">
-        <mat-label>Filter by Date</mat-label>
-        <mat-date-range-input [rangePicker]="picker">
-          <input matStartDate placeholder="Start" [(ngModel)]="fromDate" (dateChange)="applyFilter()">
-          <input matEndDate placeholder="End" [(ngModel)]="toDate" (dateChange)="applyFilter()">
-        </mat-date-range-input>
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-date-range-picker #picker></mat-date-range-picker>
-      </mat-form-field>
-    </div>
-
     <!-- Loading / error -->
     <div *ngIf="loading" class="loading">Loading valuations…</div>
     <div *ngIf="!loading && error" class="error">{{ error }}</div>
 
     <ng-container *ngIf="!loading && !error">
+
+      <!-- ══ Overview row: KPI tiles + greeting / donut ══ -->
+      <div class="overview-row">
+
+        <!-- Overview / KPIs -->
+        <div class="panel overview-panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="title-dot"></span>Overview</div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi kpi-total">
+              <div class="kpi-chip"><i class="bi bi-briefcase-fill"></i></div>
+              <div class="kpi-value">{{ totalCases }}</div>
+              <div class="kpi-label">Total Cases</div>
+            </div>
+            <div class="kpi kpi-progress">
+              <div class="kpi-chip"><i class="bi bi-hourglass-split"></i></div>
+              <div class="kpi-value">{{ inProgressCount }}</div>
+              <div class="kpi-label">In Progress</div>
+            </div>
+            <div class="kpi kpi-complete">
+              <div class="kpi-chip"><i class="bi bi-check-circle-fill"></i></div>
+              <div class="kpi-value">{{ completeCount }}</div>
+              <div class="kpi-label">Complete</div>
+            </div>
+            <div class="kpi kpi-returned">
+              <div class="kpi-chip"><i class="bi bi-arrow-return-left"></i></div>
+              <div class="kpi-value">{{ returnedCount }}</div>
+              <div class="kpi-label">Returned</div>
+            </div>
+            <div class="kpi kpi-final">
+              <div class="kpi-chip"><i class="bi bi-file-earmark-text-fill"></i></div>
+              <div class="kpi-value">{{ finalReportCount }}</div>
+              <div class="kpi-label">Final Report</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Greeting + donut -->
+        <div class="panel greet-panel">
+          <div class="greet-head">
+            <div>
+              <div class="greet-hi">{{ greeting }}!</div>
+              <div class="greet-name">{{ currentUser?.name || 'Welcome' }}</div>
+              <div class="greet-role">{{ currentUser?.roleId || '' }}</div>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut" [style.background]="donutGradient">
+              <div class="donut-hole">
+                <div class="donut-total">{{ totalCases }}</div>
+                <div class="donut-total-label">Total Cases</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item" *ngFor="let s of donutSegments">
+                <span class="legend-dot" [style.background]="s.color"></span>
+                <span class="legend-label">{{ s.label }}</span>
+                <span class="legend-val">{{ s.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ Insights row: trend chart + today's cases ══ -->
+      <div class="insights-row">
+
+        <!-- Cases trend -->
+        <div class="panel trend-panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="title-dot"></span>Cases Trend</div>
+            <div class="trend-delta" [class.up]="weekTrendPct >= 0" [class.down]="weekTrendPct < 0">
+              <i class="bi" [ngClass]="weekTrendPct >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right'"></i>
+              {{ weekTrendPct >= 0 ? '+' : '' }}{{ weekTrendPct }}% vs last week
+            </div>
+          </div>
+          <ng-container *ngIf="trend as t">
+            <svg class="trend-svg" viewBox="0 0 700 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"  style="stop-color:#037076; stop-opacity:0.28"/>
+                  <stop offset="100%" style="stop-color:#037076; stop-opacity:0"/>
+                </linearGradient>
+              </defs>
+              <polygon [attr.points]="t.areaPoints" fill="url(#trendFill)"/>
+              <polyline [attr.points]="t.linePoints" fill="none" stroke="#037076" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+              <circle *ngFor="let d of t.dots" [attr.cx]="d.x" [attr.cy]="d.y" r="4"
+                      fill="#ffffff" stroke="#037076" stroke-width="2.5"/>
+            </svg>
+            <div class="trend-axis">
+              <span *ngFor="let l of t.labels">{{ l }}</span>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Today's cases -->
+        <div class="panel today-panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="title-dot"></span>Today's Cases</div>
+            <span class="today-count">{{ todaysCases.length }}</span>
+          </div>
+          <div class="today-list">
+            <div class="today-empty" *ngIf="todaysCases.length === 0">No cases created or updated today.</div>
+            <div class="today-item" *ngFor="let v of todaysCases" (click)="openCase(v)">
+              <div class="today-avatar">{{ initials(v.assignedTo || v.applicantName) }}</div>
+              <div class="today-info">
+                <div class="today-name">{{ v.applicantName || v.vehicleNumber }}</div>
+                <div class="today-sub">{{ v.vehicleNumber }}</div>
+              </div>
+              <span class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">{{ stepName(v) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter row: tabs + date -->
+      <div class="filter-row">
+        <div class="step-filter">
+          <button [class.active]="selectedStep === ''"
+                  class="pill all-pill"
+                  (click)="selectedStep=''; applyFilter()">
+            All ({{ claims.length - (stepCounts['Returned'] || 0) }})
+          </button>
+          <ng-container *ngFor="let s of steps">
+            <button [class.active]="selectedStep === s"
+                    [class]="'pill ' + s.toLowerCase() + '-pill'"
+                    [disabled]="s !== 'Returned' && (stepCounts[s] || 0) === 0"
+                    (click)="selectedStep=s; applyFilter()">
+              {{ s }} ({{ stepCounts[s] || 0 }})
+            </button>
+          </ng-container>
+          <button [class.active]="selectedStep === 'Complete' && isAdmin"
+                  class="pill complete-pill"
+                  [disabled]="!isAdmin"
+                  (click)="selectedStep='Complete'; applyFilter()">
+            <i class="bi bi-check2-circle"></i> Complete ({{ isAdmin ? completedCases.length : 0 }})
+          </button>
+
+          <button *ngIf="!isAdmin"
+                  [class.active]="selectedStep === 'MyComplete'"
+                  class="pill complete-pill"
+                  (click)="selectedStep='MyComplete'; applyFilter()">
+            <i class="bi bi-check2-circle"></i> My Completed ({{ completedCases.length }})
+          </button>
+        </div>
+
+        <mat-form-field appearance="fill" subscriptSizing="dynamic" class="date-field">
+          <mat-label>Filter by Date</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate placeholder="Start" [(ngModel)]="fromDate" (dateChange)="applyFilter()">
+            <input matEndDate placeholder="End" [(ngModel)]="toDate" (dateChange)="applyFilter()">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+        </mat-form-field>
+      </div>
+
       <div *ngIf="filteredClaims.length === 0" class="empty">No valuations to display.</div>
 
       <div *ngIf="filteredClaims.length > 0" class="table-card">
@@ -107,24 +195,42 @@
             <td mat-cell *matCellDef="let v"><strong>{{ v.vehicleNumber }}</strong></td>
           </ng-container>
 
-          <ng-container matColumnDef="assignedTo">
-            <th mat-header-cell *matHeaderCellDef>Assigned To</th>
-            <td mat-cell *matCellDef="let v">{{ v.assignedTo }}</td>
+          <ng-container matColumnDef="applicant">
+            <th mat-header-cell *matHeaderCellDef>Applicant</th>
+            <td mat-cell *matCellDef="let v">
+              <div class="cell-stack">
+                <span class="applicant-name">
+                  {{ v.applicantName }}
+                  <span *ngIf="v.redFlag" class="flag-icon" title="Red flag">🚩</span>
+                </span>
+                <span class="applicant-phone">{{ v.applicantContact }}</span>
+              </div>
+            </td>
           </ng-container>
 
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let v">{{ v.assignedToPhoneNumber }}</td>
+          <ng-container matColumnDef="assignedTo">
+            <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+            <td mat-cell *matCellDef="let v">
+              <div class="assignee">
+                <span class="assignee-avatar">{{ initials(v.assignedTo) }}</span>
+                <div class="cell-stack">
+                  <span class="assignee-name">{{ v.assignedTo || '—' }}</span>
+                  <span class="assignee-phone" *ngIf="v.assignedToPhoneNumber">{{ v.assignedToPhoneNumber }}</span>
+                </div>
+              </div>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="location">
             <th mat-header-cell *matHeaderCellDef>Location</th>
-            <td mat-cell *matCellDef="let v">{{ v.location }}</td>
+            <td mat-cell *matCellDef="let v">
+              <span class="loc-pin"><i class="bi bi-geo-alt-fill"></i></span>{{ v.location || '—' }}
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="createdAt">
-            <th mat-header-cell *matHeaderCellDef>Created</th>
-            <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'dd/MM/yy' }}</td>
+            <th mat-header-cell *matHeaderCellDef>Created On</th>
+            <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'dd MMM yy' }}</td>
           </ng-container>
 
           <ng-container matColumnDef="age">
@@ -134,46 +240,21 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="redFlag">
-            <th mat-header-cell *matHeaderCellDef>Flag</th>
+          <ng-container matColumnDef="stage">
+            <th mat-header-cell *matHeaderCellDef>Stage</th>
             <td mat-cell *matCellDef="let v">
-              <span *ngIf="v.redFlag" class="flag-icon">🚩</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="applicant">
-            <th mat-header-cell *matHeaderCellDef>Applicant</th>
-            <td mat-cell *matCellDef="let v">
-              <span class="applicant-name">{{ v.applicantName }}</span>
-              <span class="applicant-phone">· {{ v.applicantContact }}</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="info">
-            <th mat-header-cell *matHeaderCellDef>Valuation</th>
-            <td mat-cell *matCellDef="let v">
-              <span class="valuation-type">{{ v.valuationType }}</span>
-              <span class="valuation-name"> — {{ v.name }}</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="currentStep">
-            <th mat-header-cell *matHeaderCellDef>Current Step</th>
-            <td mat-cell *matCellDef="let v">
-              <span *ngIf="selectedStep === 'Complete'" class="step-badge step-complete">
-                COMPLETED
-              </span>
-              <span *ngIf="selectedStep !== 'Complete'" class="step-badge" [ngClass]="'step-' + (steps[getStepIndex(v)] || '').toLowerCase()">
-                {{ steps[getStepIndex(v)] }}
-              </span>
+              <span class="type-badge">{{ v.valuationType }}</span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Status</th>
             <td mat-cell *matCellDef="let v">
-              <span class="status-badge" [class.returned]="v.status === 'Returned'" [class.completed]="selectedStep === 'Complete'">
-                {{ selectedStep === 'Complete' ? 'Completed' : v.status }}
+              <span *ngIf="selectedStep === 'Complete' || selectedStep === 'MyComplete'"
+                    class="stage-badge stage-final">Completed</span>
+              <span *ngIf="selectedStep !== 'Complete' && selectedStep !== 'MyComplete'"
+                    class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">
+                {{ stepName(v) }}
               </span>
             </td>
           </ng-container>
@@ -181,9 +262,8 @@
           <ng-container matColumnDef="action">
             <th mat-header-cell *matHeaderCellDef>Action</th>
             <td mat-cell *matCellDef="let v">
-              <button class="enter-btn"
-                      (click)="openCase(v); $event.stopPropagation()">
-                ENTER →
+              <button class="enter-btn" (click)="openCase(v); $event.stopPropagation()">
+                Enter <i class="bi bi-arrow-right"></i>
               </button>
             </td>
           </ng-container>

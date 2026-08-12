@@ -1,4 +1,4 @@
-/* Vehga header — white bar, logo in its real teal (#037076) */
+/* Vehga header — white topbar, logo in its real teal (#037076) */
 
 nav.app-navbar {
   padding-top: 0 !important;
@@ -9,15 +9,21 @@ nav.app-navbar {
   box-shadow: var(--shadow-sm);
 }
 
+/* Brand + greeting cluster */
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 nav.app-navbar .navbar-brand {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
-  margin-right: 12px;
+  margin-right: 4px;
 }
 
-/* Logo in original teal — no filter, no box. The PNG has large
-   transparent margins, so it is oversized with negative margins
-   to keep the bar at 64px. */
+/* Logo in original teal — oversized with negative margins to keep the bar 64px. */
 .navbar-logo {
   height: 112px;
   width: auto;
@@ -25,8 +31,27 @@ nav.app-navbar .navbar-brand {
   display: block;
 }
 
+.greeting {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 1px solid var(--line);
+  padding-left: 14px;
+  margin-left: 4px;
+}
+.greeting strong {
+  color: var(--brand-700);
+  font-weight: 800;
+}
+
 /* Nav links — ink on white, teal when active/hover */
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--ink-700) !important;
@@ -35,14 +60,47 @@ nav.app-navbar .navbar-brand {
   border-bottom: 3px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-
-.nav-link:hover {
-  color: var(--brand) !important;
-}
-
+.nav-link i { font-size: 0.95rem; }
+.nav-link:hover { color: var(--brand) !important; }
 .nav-link.active {
   color: var(--brand) !important;
   border-bottom-color: var(--accent);
+}
+
+/* New Case — filled teal CTA button */
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--grad-brand);
+  color: #fff !important;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 9px 18px;
+  border-radius: 999px;
+  margin: 0 8px;
+  box-shadow: var(--shadow-brand);
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.nav-cta:hover { filter: brightness(1.12); transform: translateY(-1px); color: #fff !important; }
+.nav-cta i { font-size: 0.9rem; }
+
+/* User avatar chip */
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--grad-bright);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-left: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
 .dropdown-menu {
@@ -51,7 +109,6 @@ nav.app-navbar .navbar-brand {
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }
-
 .dropdown-item {
   font-size: 0.88rem;
   font-weight: 600;
@@ -59,7 +116,6 @@ nav.app-navbar .navbar-brand {
   cursor: pointer;
   padding: 9px 16px;
 }
-
 .dropdown-item:hover {
   background: var(--brand-50);
   color: var(--brand) !important;
@@ -67,11 +123,8 @@ nav.app-navbar .navbar-brand {
 
 /* Collapsed (mobile) menu */
 @media (max-width: 991.98px) {
-  .nav-link {
-    padding: 12px 8px !important;
-    border-bottom: none;
-  }
-  .nav-link.active {
-    color: var(--brand-700) !important;
-  }
+  .greeting { display: none; }
+  .nav-link { padding: 12px 8px !important; border-bottom: none; }
+  .nav-link.active { color: var(--brand-700) !important; }
+  .nav-cta { margin: 8px 8px; }
 }

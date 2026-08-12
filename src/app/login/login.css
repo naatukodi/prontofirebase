@@ -28,6 +28,33 @@
   width: 100%;
 }
 
+/* Brand mark row */
+.hero-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+.hero-mark-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-mark-word {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+
 .hero-title {
   margin: 0 0 0.4rem;
   font-size: 2.2rem;
@@ -77,6 +104,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Trust chips */
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2rem;
+}
+.hero-chips span {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: #eaf7f6;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 /* ── RIGHT FORM PANEL ─────────────────────────────────────────── */
