@@ -12,29 +12,22 @@
 
     <div class="pg-content">
 
-      <!-- Actions -->
-      <div class="pg-btn-group" style="margin-bottom:16px;margin-top:0">
-        <button *ngIf="canEditStakeholder()" mat-raised-button color="primary" (click)="onEdit()">Edit</button>
-        <button *ngIf="canDeleteStakeholder()" mat-raised-button color="warn" (click)="onDelete()">Delete</button>
-        <button mat-raised-button color="warn" (click)="onBack()">Back</button>
-      </div>
-
       <!-- Stakeholder -->
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline"><mat-label>Name of Stakeholder</mat-label><input matInput [value]="stakeholder.name" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Branch</mat-label><input matInput [value]="stakeholder.branch || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput [value]="stakeholder.executiveName" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput [value]="stakeholder.executiveContact" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>WhatsApp Number</mat-label><input matInput [value]="stakeholder.executiveWhatsapp || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput [value]="stakeholder.executiveEmail || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Valuation Type</mat-label><input matInput [value]="stakeholder.valuationType || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Block / City</mat-label><input matInput [value]="stakeholder.vehicleLocation?.block || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [value]="stakeholder.vehicleLocation?.district || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Division</mat-label><input matInput [value]="stakeholder.vehicleLocation?.division || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput [value]="stakeholder.vehicleLocation?.state || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput [value]="stakeholder.vehicleLocation?.country || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Name of Stakeholder</mat-label><input matInput [value]="stakeholder.name" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Branch</mat-label><input matInput [value]="stakeholder.branch || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Executive Name</mat-label><input matInput [value]="stakeholder.executiveName" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Contact Number</mat-label><input matInput [value]="stakeholder.executiveContact" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>WhatsApp Number</mat-label><input matInput [value]="stakeholder.executiveWhatsapp || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Email ID</mat-label><input matInput [value]="stakeholder.executiveEmail || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Valuation Type</mat-label><input matInput [value]="stakeholder.valuationType || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Block / City</mat-label><input matInput [value]="stakeholder.vehicleLocation?.block || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>District</mat-label><input matInput [value]="stakeholder.vehicleLocation?.district || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Division</mat-label><input matInput [value]="stakeholder.vehicleLocation?.division || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>State</mat-label><input matInput [value]="stakeholder.vehicleLocation?.state || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Country</mat-label><input matInput [value]="stakeholder.vehicleLocation?.country || '-'" readonly /></mat-form-field>
         </div>
       </div>
 
@@ -42,9 +35,9 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Applicant</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput [value]="stakeholder.applicant.name" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput [value]="stakeholder.applicant.contact" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Alternative No</mat-label><input matInput [value]="stakeholder.applicant.alternativeContact || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Name</mat-label><input matInput [value]="stakeholder.applicant.name" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Contact</mat-label><input matInput [value]="stakeholder.applicant.contact" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Alternative No</mat-label><input matInput [value]="stakeholder.applicant.alternativeContact || '-'" readonly /></mat-form-field>
         </div>
       </div>
 
@@ -52,8 +45,8 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline"><mat-label>Vehicle Number</mat-label><input matInput [value]="stakeholder.vehicleNumber || '-'" readonly /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Vehicle Segment</mat-label>
+          <mat-form-field appearance="fill"><mat-label>Vehicle Number</mat-label><input matInput [value]="stakeholder.vehicleNumber || '-'" readonly /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Vehicle Segment</mat-label>
             <input matInput [value]="
               stakeholder.vehicleSegment === 'four-wheeler' ? 'Four Wheeler' :
               stakeholder.vehicleSegment === 'cv' ? 'Commercial Vehicle' :
@@ -70,7 +63,7 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Remarks</div>
         <div class="pg-card-body">
-          <mat-form-field appearance="outline" style="width:100%">
+          <mat-form-field appearance="fill" style="width:100%">
             <mat-label>Remarks</mat-label>
             <textarea matInput [value]="stakeholder.remarks" readonly rows="3"></textarea>
           </mat-form-field>
@@ -87,14 +80,6 @@
             <label>Others</label>
             <ng-container *ngFor="let doc of otherDocuments"><a [href]="doc.filePath" target="_blank">{{ doc.type }}</a></ng-container>
           </div>
-        </div>
-      </div>
-
-      <!-- Notes -->
-      <div class="pg-card">
-        <div class="pg-card-title"><span class="pg-card-title-accent"></span>Stakeholder Notes</div>
-        <div class="pg-card-body">
-          <app-common-notes [entityType]="'Stakeholder'" [entityId]="valuationId" [currentUser]="getCurrentUser()" [collapsible]="true"></app-common-notes>
         </div>
       </div>
 

@@ -105,11 +105,6 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
       status: ['Completed', Validators.required],
       completedAt: [nowLocal, Validators.required],
       completedBy: ['', Validators.required],
-      paymentStatus: ['Completed', Validators.required],
-      paymentReference: ['Paytm'],
-      paymentDate: [nowLocal, Validators.required],
-      paymentMethod: ['Online', Validators.required],
-      paymentAmount: [800, [Validators.required, Validators.min(0)]],
       remarks: ['']
     });
 
@@ -190,11 +185,6 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
       status: v.status,
       completedAt: this.toIsoUtc(v.completedAt),
       completedBy: this.assignedTo,
-      paymentStatus: v.paymentStatus,
-      paymentReference: v.paymentReference || null,
-      paymentDate: this.toIsoUtc(v.paymentDate),
-      paymentMethod: v.paymentMethod,
-      paymentAmount: String(v.paymentAmount ?? ''),
       completedByPhoneNumber: this.assignedToPhoneNumber,
       completedByEmail: this.assignedToEmail,
       completedByWhatsapp: this.assignedToWhatsapp,
@@ -273,7 +263,7 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
           this.historyLogger.logAction(
             this.valuationId,
             'Final Report Submitted for Review',
-            `${changedFields.length} field(s) updated: ${changedFieldsStr}. Payment: ${payload.paymentMethod} ₹${payload.paymentAmount}. Status: In Review`,
+            `${changedFields.length} field(s) updated: ${changedFieldsStr}. Status: In Review`,
             this.currentUserId,
             this.currentUserName,
             'FinalReport',
@@ -346,7 +336,7 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
           this.historyLogger.logAction(
             this.valuationId,
             'Final Report Completed - Workflow Finalized',
-            `${changedFields.length} field(s) updated: ${changedFieldsStr}. Payment: ${payload.paymentMethod} ₹${payload.paymentAmount}. Remarks: ${payload.remarks || 'None'}. Status: Final Report Complete → Valuation Complete`,
+            `${changedFields.length} field(s) updated: ${changedFieldsStr}. Remarks: ${payload.remarks || 'None'}. Status: Final Report Complete → Valuation Complete`,
             this.currentUserId,
             this.currentUserName,
             'FinalReport',

@@ -7,9 +7,11 @@ import { Component } from '@angular/core';
   template: `
     <footer class="app-footer">
       <div class="footer-content">
-        Vehga Inspections Private Limited 2025 — All rights reserved
+        © {{ year }} Vehga Inspections Private Limited — All rights reserved
       </div>
     </footer>
   `
 })
-export class FooterComponent {}
+export class FooterComponent {
+  year = new Date().getFullYear();
+}

@@ -1,21 +1,19 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light app-navbar">
   <div class="container-fluid">
 
-    <!-- Brand -->
-    <a class="navbar-brand d-flex align-items-center" routerLink="/">
-      <img
-        src="assets/images/vehga-01.png"
-        alt="Vehga Inspections"
-        class="me-2 navbar-logo"
-        style="object-fit: contain;"
-      />
-      <span class="navbar-title">
-        <span class="brand-vehga">VEHGA</span><span class="brand-inspections">INSPECTIONS</span>
+    <!-- Brand + greeting -->
+    <div class="brand-block">
+      <a class="navbar-brand d-flex align-items-center" routerLink="/">
+        <img
+          src="assets/images/vehga-01.png"
+          alt="Vehga Inspections"
+          class="navbar-logo"
+        />
+      </a>
+      <span class="greeting" *ngIf="userName$ | async as name">
+        Hello <strong>{{ name }}</strong>
       </span>
-    </a>
-
-    <!-- User name before menu -->
-    <span class="navbar-text-custom ms-3 me-auto" *ngIf="userName$ | async as uname"> Hello {{ uname }}</span>
+    </div>
 
     <!-- Toggler -->
     <button
@@ -31,30 +29,40 @@
 
     <!-- Nav items -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
 
         <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active">Home</a>
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <i class="bi bi-grid-1x2-fill"></i> Home
+          </a>
         </li>
 
-        <!-- Stakeholder only for CanEditStakeholder -->
+        <!-- New Case CTA — only for CanEditStakeholder -->
         <li class="nav-item" *ngIf="canEditStakeholder$ | async">
-          <a class="nav-link" routerLink="/stakeholder" routerLinkActive="active">New Case</a>
+          <a class="nav-cta" routerLink="/stakeholder" routerLinkActive="active">
+            <i class="bi bi-plus-lg"></i> New Case
+          </a>
         </li>
 
         <!-- Users menu only for Admin -->
         <li class="nav-item dropdown" *ngIf="isAdmin$ | async">
           <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            Users
+            <i class="bi bi-people-fill"></i> Users
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" routerLink="/users" routerLinkActive="active">Users</a></li>
             <li><a class="dropdown-item" routerLink="/users/add" routerLinkActive="active">Add User</a></li>
           </ul>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" (click)="onLogout()" routerLinkActive="active">Logout</a>
+          <a class="nav-link" (click)="onLogout()">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </li>
+
+        <li class="nav-item d-none d-lg-flex align-items-center" *ngIf="userName$ | async as name">
+          <span class="user-avatar" [title]="name">{{ name.charAt(0) }}</span>
         </li>
 
       </ul>

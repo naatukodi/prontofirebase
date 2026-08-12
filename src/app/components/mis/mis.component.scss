@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════
+   MIS Report — Vehga design system
+   ═══════════════════════════════════════════════════════════════ */
+
+.mis-page { min-height: 100vh; }
+
+/* Export button in the heading band */
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: var(--brand-700);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: filter 0.15s ease, transform 0.15s ease;
+
+  i { font-size: 1rem; color: #1d6f42; }
+  &:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.02); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+/* ── Controls ──────────────────────────────────────────────────── */
+.mis-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.period-toggle {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--brand-50);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+
+  button {
+    border: none;
+    background: transparent;
+    color: var(--ink-700);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 7px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover { color: var(--brand-700); }
+    &.active {
+      background: var(--grad-brand);
+      color: #fff;
+      box-shadow: var(--shadow-brand);
+    }
+  }
+}
+
+.date-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.date-lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--ink-500);
+  text-transform: uppercase;
+
+  input[type="date"] {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink-900);
+    background: #fff;
+
+    &:focus { outline: none; border-color: var(--brand); }
+  }
+}
+.apply-btn {
+  background: var(--grad-brand);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  height: 37px;
+
+  &:hover { filter: brightness(1.1); }
+}
+
+.period-summary {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.period-chip {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border: 1px solid var(--brand-100);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.rec-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-500);
+}
+
+/* ── States ────────────────────────────────────────────────────── */
+.mis-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ink-500);
+  font-size: 0.95rem;
+}
+.mis-error {
+  text-align: center;
+  padding: 18px 20px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid #f5c6c0;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+/* ── Table ─────────────────────────────────────────────────────── */
+.mis-table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.mis-scroll {
+  overflow-x: auto;
+}
+.mis-table {
+  border-collapse: collapse;
+  width: 100%;
+  white-space: nowrap;
+
+  th, td {
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    text-align: left;
+  }
+  th {
+    background: var(--brand-700);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    border-bottom: 3px solid var(--accent);
+  }
+  td {
+    color: var(--ink-700);
+    font-weight: 600;
+  }
+  tbody tr:nth-child(even) { background: var(--brand-50); }
+  tbody tr:hover { background: var(--brand-100); }
+
+  .rownum {
+    text-align: center;
+    color: var(--ink-300);
+    font-weight: 700;
+    position: sticky;
+    left: 0;
+    background: inherit;
+  }
+  thead .rownum { background: var(--brand-700); color: #fff; z-index: 1; }
+
+  .col-uniq  { font-weight: 800; color: var(--brand-700); }
+  .col-price { font-weight: 800; color: var(--ink-900); text-align: right; }
+
+  /* Missing value — muted and centred, so it reads as "no data" */
+  .col-blank {
+    color: var(--ink-300);
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  /* Payment status — readable at a glance */
+  .pay-done    { color: var(--success); font-weight: 800; }
+  .pay-pending { color: var(--warning); font-weight: 800; }
+  .pay-other   { color: var(--info);    font-weight: 800; }
+}

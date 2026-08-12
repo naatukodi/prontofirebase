@@ -7,12 +7,7 @@ export interface CompleteValuationResponsePayload {
   status: 'Completed' | 'Pending' | 'Rejected';
   completedAt: string;         // ISO string with Z
   completedBy: string;
-  paymentStatus: 'Completed' | 'Pending' | 'Failed';
-  paymentReference?: string | null;
-  paymentDate: string;         // ISO string with Z
-  paymentMethod: 'Online' | 'Cash' | 'UPI' | 'Card' | string;
-  paymentAmount: string;      // per cURL
-  remarks?: string;         // Add remarks field
+  remarks?: string;
 }
 
 @Injectable({ providedIn: 'root' })

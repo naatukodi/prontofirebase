@@ -23,12 +23,11 @@ import { environment } from '../../../../environments/environment';
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 @Component({
   selector: 'app-valuation-quality-control',
   standalone: true,
-  imports: [RouterModule, SharedModule, WorkflowButtonsComponent, CommonNotesComponent, CommonModule, FormsModule],
+  imports: [RouterModule, SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule],
   templateUrl: './quality-control-view.component.html',
   styleUrls: ['./quality-control-view.component.scss']
 })
@@ -107,10 +106,14 @@ export class QualityControlViewComponent implements OnInit {
     return low > 0 && high > 0 && amt >= low && amt <= high;
   }
 
-  chassisNumbersMatch(): boolean {
-    const chassis = (this.report?.vehicleDetails?.chassisNumber || '').toUpperCase().trim();
-    const stencil = (this.report?.vehicleDetails?.stencilTrace  || '').toUpperCase().trim();
-    return chassis.length > 0 && stencil.length > 0 && chassis === stencil;
+  // Quick-compare badge is driven by the QC officer's saved confirmation
+  // (accChassis on the edit page), not by the auto-prefilled checklist.
+  savedAccChassis: string | null = null;
+
+  chassisCompareState(): 'match' | 'mismatch' | 'pending' {
+    if (this.savedAccChassis === 'pass') return 'match';
+    if (this.savedAccChassis === 'fail') return 'mismatch';
+    return 'pending';
   }
 
   getVehicleTags(): string[] {
@@ -379,6 +382,10 @@ export class QualityControlViewComponent implements OnInit {
           rawResponse: ve?.rawResponse ?? (ve as any)?.RawResponse
         };
         this.prefillChecklist();
+
+        // Saved-only value for the quick-compare badge: stays "Waiting for
+        // Approval" until the officer confirms & saves on the edit page
+        this.savedAccChassis = qcData.qcChecklist?.['accChassis'] ?? null;
 
         // Override prefilled values with whatever was previously saved by the QC officer
         if (qcData.qcChecklist) {

@@ -7,14 +7,13 @@ import { SharedModule } from '../../shared/shared.module/shared.module';
 import { RouterModule } from '@angular/router';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { FormsModule } from '@angular/forms';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 
 @Component({
   selector: 'app-stakeholder-view',
   templateUrl: './stakeholder-view.component.html',
   styleUrls: ['./stakeholder-view.component.scss'],
-  imports: [CommonModule, WorkflowButtonsComponent, SharedModule, RouterModule,FormsModule, CommonNotesComponent],
+  imports: [CommonModule, WorkflowButtonsComponent, SharedModule, RouterModule,FormsModule],
   standalone: true
 })
 export class StakeholderViewComponent implements OnInit {

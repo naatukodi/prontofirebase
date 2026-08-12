@@ -6,9 +6,9 @@ import { catchError } from 'rxjs/operators';
 import { WorkflowService } from './workflow.service';
 import { environment } from '../../environments/environment';
 
+// Per-photo metadata stored by the backend. Date/location are captured and
+// burned in by the camera app now, so the portal only reads the annotation note.
 export interface PhotoMetadata {
-  capturedDate?: string; // ISO string
-  locationText?: string;
   annotationNote?: string;
   originalPhotoUrl?: string;
 }
@@ -173,27 +173,7 @@ export class VehicleInspectionService {
     ).pipe(catchError(this.handleError));
   }
 
-  // ===========================================================================
-  // ✅ NEW METHODS FOR METADATA (Date & Location)
-  // ===========================================================================
-
-  updatePhotoMetadata(
-    valuationId: string,
-    photoType: string,
-    metadata: PhotoMetadata,
-    vehicleNumber: string,
-    applicantContact: string
-  ): Observable<any> {
-    const params = new HttpParams()
-      .set('vehicleNumber', vehicleNumber)
-      .set('applicantContact', applicantContact);
-    return this.http.put<any>(
-      `${this.baseUrl}/${valuationId}/photos/${photoType}/metadata`,
-      metadata,
-      { params }
-    ).pipe(catchError(this.handleError));
-  }
-
+  // Per-photo metadata (used to pre-fill annotation notes in the pencil modal)
   getPhotoMetadata(
     valuationId: string,
     vehicleNumber: string,

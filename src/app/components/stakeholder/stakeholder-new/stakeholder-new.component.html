@@ -49,24 +49,24 @@
         <div class="pg-card-body pg-grid">
 
           <!-- Row 1: Name of Stakeholder | Branch -->
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Name of Stakeholder</mat-label>
             <mat-select formControlName="stakeholderName">
               <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">{{ opt }}</mat-option>
             </mat-select>
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Branch</mat-label>
             <input matInput formControlName="branch" placeholder="Enter branch name" />
           </mat-form-field>
 
           <!-- Row 2: Executive Name | Contact Number -->
-          <mat-form-field appearance="outline"><mat-label>Executive Name</mat-label><input matInput formControlName="stakeholderExecutiveName" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Number</mat-label><input matInput formControlName="stakeholderExecutiveContact" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Executive Name</mat-label><input matInput formControlName="stakeholderExecutiveName" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Contact Number</mat-label><input matInput formControlName="stakeholderExecutiveContact" maxlength="10" /></mat-form-field>
 
           <!-- Row 3: WhatsApp + inline checkbox | Email -->
           <div style="display:flex;align-items:center;gap:8px">
-            <mat-form-field appearance="outline" style="flex:1">
+            <mat-form-field appearance="fill" style="flex:1">
               <mat-label>WhatsApp Number</mat-label>
               <input matInput formControlName="stakeholderExecutiveWhatsapp" maxlength="10" />
             </mat-form-field>
@@ -74,10 +74,10 @@
               <span style="font-size:11px;color:#555">Same as contact</span>
             </mat-checkbox>
           </div>
-          <mat-form-field appearance="outline"><mat-label>Email ID</mat-label><input matInput formControlName="stakeholderExecutiveEmail" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Email ID</mat-label><input matInput formControlName="stakeholderExecutiveEmail" /></mat-form-field>
 
           <!-- Row 4: Valuation Type -->
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Valuation Type</mat-label>
             <mat-select formControlName="valuationType">
               <mat-option value="Retail">Retail</mat-option>
@@ -86,11 +86,11 @@
           </mat-form-field>
 
           <!-- Location fields -->
-          <mat-form-field appearance="outline"><mat-label>Block / City</mat-label><input matInput formControlName="block" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput formControlName="district" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Division</mat-label><input matInput formControlName="division" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>State</mat-label><input matInput formControlName="state" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Country</mat-label><input matInput formControlName="country" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Block / City</mat-label><input matInput formControlName="block" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>District</mat-label><input matInput formControlName="district" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Division</mat-label><input matInput formControlName="division" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>State</mat-label><input matInput formControlName="state" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Country</mat-label><input matInput formControlName="country" /></mat-form-field>
 
         </div>
       </div>
@@ -99,9 +99,9 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Applicant</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline"><mat-label>Applicant Name</mat-label><input matInput formControlName="applicantName" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Applicant Contact</mat-label><input matInput formControlName="applicantContact" maxlength="10" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Alternative No</mat-label><input matInput formControlName="applicantAlternativeContact" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Name</mat-label><input matInput formControlName="applicantName" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Contact</mat-label><input matInput formControlName="applicantContact" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Alternative No</mat-label><input matInput formControlName="applicantAlternativeContact" maxlength="10" /></mat-form-field>
         </div>
       </div>
 
@@ -109,7 +109,7 @@
       <div class="pg-card" [class.field-has-duplicate]="duplicateInfo.isVehicleNumberExists">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Vehicle Details</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>
               Vehicle Number
               <span *ngIf="duplicateInfo.isVehicleNumberExists" class="duplicate-badge" title="Duplicate detected">🚩 Duplicate</span>
@@ -117,7 +117,7 @@
             </mat-label>
             <input matInput formControlName="vehicleNumber" [class.has-warning]="duplicateInfo.isVehicleNumberExists" autocomplete="off" />
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="fill">
             <mat-label>Vehicle Segment</mat-label>
             <mat-select formControlName="vehicleSegment">
               <mat-option value="four-wheeler">Four Wheeler</mat-option>
@@ -135,7 +135,7 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Remarks</div>
         <div class="pg-card-body">
-          <mat-form-field appearance="outline" style="width:100%">
+          <mat-form-field appearance="fill" style="width:100%">
             <mat-label>Remarks</mat-label>
             <textarea matInput formControlName="remarks" rows="3" placeholder="Enter remarks"></textarea>
           </mat-form-field>

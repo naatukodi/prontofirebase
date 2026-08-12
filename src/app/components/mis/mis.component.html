@@ -1,0 +1,86 @@
+<div class="pg-wrap mis-page">
+
+  <!-- Heading band -->
+  <div class="pg-head">
+    <div class="pg-head-row">
+      <div>
+        <h1>MIS Report</h1>
+        <p>Management information system — export daily, weekly or monthly case reports</p>
+      </div>
+      <button class="export-btn" [disabled]="!rows.length" (click)="exportExcel()">
+        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="pg-content">
+
+    <!-- Controls -->
+    <div class="mis-controls">
+      <div class="period-toggle">
+        <button [class.active]="mode === 'daily'"   (click)="setMode('daily')">Daily</button>
+        <button [class.active]="mode === 'weekly'"  (click)="setMode('weekly')">Weekly</button>
+        <button [class.active]="mode === 'monthly'" (click)="setMode('monthly')">Monthly</button>
+        <button [class.active]="mode === 'custom'"  (click)="setMode('custom')">Custom</button>
+      </div>
+
+      <div class="date-controls">
+        <ng-container *ngIf="mode !== 'custom'">
+          <label class="date-lbl">
+            {{ mode === 'daily' ? 'Date' : mode === 'weekly' ? 'Week of' : 'Month' }}
+            <input type="date" [(ngModel)]="refDate" (change)="generate()">
+          </label>
+        </ng-container>
+
+        <ng-container *ngIf="mode === 'custom'">
+          <label class="date-lbl">From
+            <input type="date" [(ngModel)]="fromDate">
+          </label>
+          <label class="date-lbl">To
+            <input type="date" [(ngModel)]="toDate">
+          </label>
+          <button class="apply-btn" (click)="generate()">Apply</button>
+        </ng-container>
+      </div>
+
+      <div class="period-summary" *ngIf="generated">
+        <span class="period-chip">{{ periodLabel }}</span>
+        <span class="rec-count">{{ rows.length }} records</span>
+      </div>
+    </div>
+
+    <!-- States -->
+    <div *ngIf="loading" class="mis-state">Loading MIS data…</div>
+    <div *ngIf="!loading && error" class="mis-error">{{ error }}</div>
+    <div *ngIf="!loading && !error && generated && rows.length === 0" class="mis-state">
+      No cases found for this period.
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading && !error && rows.length > 0" class="mis-table-card">
+      <div class="mis-scroll">
+        <table class="mis-table">
+          <thead>
+            <tr>
+              <th class="rownum">#</th>
+              <th *ngFor="let c of columns; trackBy: trackByCol">{{ c.header }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rows; let i = index">
+              <td class="rownum">{{ i + 1 }}</td>
+              <td *ngFor="let c of columns; trackBy: trackByCol"
+                  [class.col-uniq]="c.key === 'uniqId'"
+                  [class.col-price]="c.key === 'valuationPrice' || c.key === 'paymentAmount'"
+                  [class.col-blank]="isBlank(r, c.key)"
+                  [ngClass]="c.key === 'paymentStatus' ? payClass(r) : ''">
+                {{ cell(r, c.key) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

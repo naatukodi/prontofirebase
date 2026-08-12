@@ -20,12 +20,11 @@ import { UsersService } from '../../../services/users.service';
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 
 @Component({
   selector: 'app-valuation-vehicle-details',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule, CommonNotesComponent],
+  imports: [SharedModule, WorkflowButtonsComponent, CommonModule, FormsModule],
   templateUrl: './valuation-vehicle-details.component.html',
   styleUrls: ['./valuation-vehicle-details.component.scss']
 })

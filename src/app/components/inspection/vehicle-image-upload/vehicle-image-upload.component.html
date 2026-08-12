@@ -89,18 +89,6 @@
             >
               {{ field.type === 'image' ? 'Open Image' : 'Play Video' }}
             </button>
-
-            <div class="metadata-form" *ngIf="field.type === 'image' || field.type === 'video'">
-                <div class="meta-row">
-                    <label>Date:</label>
-                    <input type="datetime-local" [(ngModel)]="mediaMetadata[field.key].capturedDate">
-                </div>
-                <div class="meta-row">
-                    <label>Location:</label>
-                    <input type="text" placeholder="Fetching location..." [(ngModel)]="mediaMetadata[field.key].locationText">
-                </div>
-                <button class="save-meta-btn" (click)="saveMetadata(field.key)">Save Details</button>
-            </div>
           </ng-container>
 
           <div class="field-error" *ngIf="uploadError[field.key]">

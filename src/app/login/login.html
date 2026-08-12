@@ -1,53 +1,77 @@
 <div class="login-wrapper">
 
-  <!-- LEFT HERO -->
+  <!-- LEFT BRAND PANEL -->
   <div class="hero">
-    <img
-      src="assets/images/vehga-01.png"
-      alt="Vehga Inspections Logo"
-      class="logo"
-    />
-    <h1 class="hero-title">Vehga Inspections</h1>
+    <div class="hero-inner">
+      <div class="hero-mark">
+        <span class="hero-mark-badge">V</span>
+        <span class="hero-mark-word">VEHGA</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="hero-vehga">VEHGA</span><span class="hero-inspections">INSPECTIONS</span>
+      </h1>
+      <p class="hero-tagline">India's trusted vehicle inspection &amp; valuation network</p>
+
+      <ul class="hero-points">
+        <li>On-ground vehicle inspections with photo evidence</li>
+        <li>RC-verified vehicle &amp; ownership details</li>
+        <li>Bank-ready valuation reports, end to end</li>
+      </ul>
+
+      <div class="hero-chips">
+        <span>Stakeholder → Final report</span>
+        <span>Multi-branch</span>
+        <span>QC-reviewed valuations</span>
+      </div>
+    </div>
   </div>
 
   <!-- RIGHT FORM -->
   <div class="login-form">
-    <h2>Sign In</h2>
-    <form (submit)="$event.preventDefault()">
-      <div class="form-group">
-        <label for="phone">Phone number</label>
-        <input
-          id="phone"
-          type="tel"
-          [(ngModel)]="phone"
-          name="phone"
-          placeholder="+91XXXXXXXXXX"
-          required
-        />
-      </div>
+    <div class="form-inner">
+      <h2>Sign in</h2>
+      <p class="form-sub">Enter your registered mobile number to receive an OTP</p>
 
-      <button type="button" class="btn primary" (click)="sendOTP()">
-        Send OTP
-      </button>
+      <form (submit)="$event.preventDefault()">
+        <div class="form-group">
+          <label for="phone">Phone number</label>
+          <input
+            id="phone"
+            type="tel"
+            [(ngModel)]="phone"
+            name="phone"
+            placeholder="+91XXXXXXXXXX"
+            autocomplete="tel"
+            required
+          />
+        </div>
 
-      <div *ngIf="confirmation" class="otp-group">
-        <label for="otp">Enter OTP</label>
-        <input
-          id="otp"
-          type="text"
-          [(ngModel)]="otp"
-          name="otp"
-          placeholder="123456"
-          required
-        />
-        <button type="button" class="btn primary" (click)="verifyOTP()">
-          Verify
+        <button type="button" class="btn primary" (click)="sendOTP()">
+          Send OTP
         </button>
-      </div>
 
-      <!-- somewhere at top of template -->
-      <div id="recaptcha-container"></div>
+        <div *ngIf="confirmation" class="otp-group">
+          <label for="otp">Enter OTP</label>
+          <input
+            id="otp"
+            type="text"
+            inputmode="numeric"
+            [(ngModel)]="otp"
+            name="otp"
+            placeholder="6-digit code"
+            autocomplete="one-time-code"
+            required
+          />
+          <button type="button" class="btn primary" (click)="verifyOTP()">
+            Verify &amp; continue
+          </button>
+        </div>
 
-    </form>
+        <div id="recaptcha-container"></div>
+      </form>
+
+      <p class="form-foot">© {{ year }} Vehga Inspections Private Limited</p>
+    </div>
   </div>
 </div>

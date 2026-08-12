@@ -116,7 +116,7 @@ export class VehicleImageUploadComponent implements OnInit {
     private historyLogger: HistoryLoggerService
   ) {
     this.mediaFields.forEach(f => {
-        this.mediaMetadata[f.key] = { capturedDate: '', locationText: '' };
+        this.mediaMetadata[f.key] = {};
     });
   }
 
@@ -174,7 +174,9 @@ export class VehicleImageUploadComponent implements OnInit {
       });
   }
 
-  // ✅ LOAD METADATA & CONVERT TIMEZONE
+  // Loads existing annotation notes so the pencil modal can pre-fill them.
+  // (Date/location metadata is burned into the photo by the camera app,
+  // so it's no longer collected or displayed here.)
   private loadExistingMetadata(): void {
     this.vehicleInspectionService.getPhotoMetadata(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
         next: (data) => {
@@ -182,16 +184,7 @@ export class VehicleImageUploadComponent implements OnInit {
                 Object.keys(data).forEach(key => {
                     const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
                     if(this.mediaMetadata[normalizedKey]) {
-                        let dateVal = data[key].capturedDate;
-                        // FIX: Convert UTC to Local Time so it displays correctly
-                        if(dateVal) {
-                            const dateObj = new Date(dateVal);
-                            const localTime = new Date(dateObj.getTime() - (dateObj.getTimezoneOffset() * 60000));
-                            dateVal = localTime.toISOString().slice(0, 16);
-                        }
                         this.mediaMetadata[normalizedKey] = {
-                            capturedDate: dateVal,
-                            locationText: data[key].locationText,
                             annotationNote: data[key].annotationNote
                         };
                     }
@@ -200,29 +193,6 @@ export class VehicleImageUploadComponent implements OnInit {
         },
         error: (err) => console.warn('Failed to load metadata', err)
     });
-  }
-
-  // ✅ SAVE METADATA (With Sanitization)
-  saveMetadata(fieldKey: string) {
-    const meta = this.mediaMetadata[fieldKey];
-    if(!meta) return;
-
-    // Convert empty string back to undefined to avoid backend 400 error
-    const payload: PhotoMetadata = {
-        capturedDate: meta.capturedDate ? meta.capturedDate : undefined, 
-        locationText: meta.locationText
-    };
-
-    console.log(`Saving metadata for ${fieldKey}:`, payload);
-
-    this.vehicleInspectionService.updatePhotoMetadata(this.valuationId, fieldKey, payload, this.vehicleNumber, this.applicantContact)
-        .subscribe({
-            next: () => alert(`Details saved for ${this.getLabel(fieldKey as MediaKey)}`),
-            error: (err) => {
-                const msg = err.error?.message || err.statusText || 'Unknown error';
-                alert(`Failed to save details: ${msg}`);
-            }
-        });
   }
 
   onFileSelected(event: Event, fieldKey: MediaKey) {
@@ -301,10 +271,6 @@ export class VehicleImageUploadComponent implements OnInit {
               }
             });
 
-            // ✅ FIX: Only update Location/Date for the CURRENT file (fieldKey)
-            // (Moved outside the loop so we don't overwrite every other image)
-            this.captureLocationAndSave(fieldKey);
-
             this.uploadProgress[fieldKey] = 100;
             this.selectedFiles[fieldKey] = null;
           }
@@ -317,64 +283,6 @@ export class VehicleImageUploadComponent implements OnInit {
     catch (err: any) {
       this.isUploading[fieldKey] = false;
       this.uploadError[fieldKey] = err?.message || 'Upload failed.';
-    }
-  }
-
-  // ✅ CAPTURE LOCATION (Browser Geolocation + OpenStreetMap)
-  private captureLocationAndSave(key: string) {
-    if (!this.mediaMetadata[key]) return;
-
-    // 1. Set Date (Local Time)
-    const now = new Date();
-    const localIsoTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-    this.mediaMetadata[key].capturedDate = localIsoTime;
-
-    // 2. Fetch Location
-    if (navigator.geolocation) {
-        this.mediaMetadata[key].locationText = 'Fetching location...';
-        this.cdr.detectChanges(); 
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                try {
-                    // Reverse Geocode
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                    const data = await response.json();
-
-                    const address = data.address;
-                    // Try to construct a readable address: "Area, City, State"
-                    const parts = [
-                        address.suburb || address.neighbourhood || address.road,
-                        address.city || address.town || address.village,
-                        address.state
-                    ].filter(Boolean);
-
-                    this.mediaMetadata[key].locationText = parts.length > 0 ? parts.join(', ') : `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-                
-                } catch (err) {
-                    console.warn('Reverse geocoding failed', err);
-                    this.mediaMetadata[key].locationText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-                }
-
-                // Force UI update & Save
-                this.cdr.detectChanges();
-                this.saveMetadata(key);
-            },
-            (err) => {
-                console.warn('Geolocation denied', err);
-                const errorMsg = err.code === 1 ? 'Location Access Denied' : 'Location Unavailable';
-                this.mediaMetadata[key].locationText = errorMsg;
-                this.cdr.detectChanges();
-                this.saveMetadata(key);
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    } else {
-        this.mediaMetadata[key].locationText = 'No GPS Support';
-        this.saveMetadata(key);
     }
   }
 

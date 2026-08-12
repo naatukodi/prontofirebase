@@ -2,15 +2,15 @@
 
 :host {
   display: block;
-  background: #e8eaed;
   min-height: 100vh;
 }
 
 /* ── Page wrapper ── */
 .fr-wrap {
-  max-width: 920px;
+  text-transform: uppercase;
+  max-width: none;
   margin: 0 auto;
-  padding: 16px 12px 32px;
+  padding: 16px 20px 32px;
   display: flex;
   flex-direction: column;
   gap: 12px;

@@ -55,9 +55,17 @@ export class DashboardComponent implements OnInit {
   steps = ['Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport', 'Returned'];
 
   displayedColumns = [
-    'vehicleNumber','assignedTo','phone','location',
-    'createdAt','age','redFlag','applicant','info',
-    'currentStep','status','action'
+    'vehicleNumber','applicant','assignedTo','location',
+    'createdAt','age','stage','status','action'
+  ];
+
+  // Workflow steps shown in the donut / KPI breakdown (excludes Returned)
+  private readonly donutDefs: Array<{ key: string; label: string; color: string }> = [
+    { key: 'Stakeholder', label: 'Stakeholder', color: 'var(--stage-stakeholder)' },
+    { key: 'BackEnd',     label: 'Backend',     color: 'var(--stage-backend)' },
+    { key: 'AVO',         label: 'AVO',         color: 'var(--stage-avo)' },
+    { key: 'QC',          label: 'QC',          color: 'var(--stage-qc)' },
+    { key: 'FinalReport', label: 'Final Report',color: 'var(--stage-final)' },
   ];
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
@@ -335,4 +343,128 @@ export class DashboardComponent implements OnInit {
 
   trackByValuation = (_: number, v: WFValuation) =>
     `${v.valuationId}:${v.vehicleNumber}:${v.applicantContact}`;
+
+  // ══════════════════════════════════════════════════════════════
+  // Dashboard overview widgets (KPIs · donut · trend · today)
+  // ══════════════════════════════════════════════════════════════
+
+  get greeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  /** Total open cases in the current user's scope. */
+  get totalCases(): number { return this.claims.length; }
+
+  /** Open, not returned, not yet at Final Report. */
+  get inProgressCount(): number {
+    return (this.stepCounts['Stakeholder'] || 0)
+         + (this.stepCounts['BackEnd'] || 0)
+         + (this.stepCounts['AVO'] || 0)
+         + (this.stepCounts['QC'] || 0);
+  }
+  get finalReportCount(): number { return this.stepCounts['FinalReport'] || 0; }
+  get returnedCount(): number { return this.stepCounts['Returned'] || 0; }
+  get completeCount(): number { return this.completedCases.length; }
+
+  /** Donut segments with live counts. */
+  get donutSegments(): Array<{ key: string; label: string; color: string; value: number }> {
+    return this.donutDefs.map(d => ({ ...d, value: this.stepCounts[d.key] || 0 }));
+  }
+
+  /** CSS conic-gradient string for the donut ring (falls back to a soft ring when empty). */
+  get donutGradient(): string {
+    const segs = this.donutSegments;
+    const total = segs.reduce((s, x) => s + x.value, 0);
+    if (total === 0) return 'conic-gradient(var(--line) 0deg 360deg)';
+    let acc = 0;
+    const stops: string[] = [];
+    for (const s of segs) {
+      const start = (acc / total) * 360;
+      acc += s.value;
+      const end = (acc / total) * 360;
+      stops.push(`${s.color} ${start}deg ${end}deg`);
+    }
+    return `conic-gradient(${stops.join(', ')})`;
+  }
+
+  /** Cases created per weekday (Mon→Sun) → SVG geometry for the trend chart. */
+  get trend(): {
+    labels: string[];
+    max: number;
+    linePoints: string;
+    areaPoints: string;
+    dots: Array<{ x: number; y: number; v: number }>;
+  } {
+    const dayCounts = new Array(7).fill(0); // 0=Sun..6=Sat
+    for (const v of this.claims) {
+      if (!v.createdAt) continue;
+      const d = new Date(v.createdAt);
+      if (isNaN(d.getTime())) continue;
+      dayCounts[d.getDay()]++;
+    }
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const labels = order.map(i => names[i]);
+    const values = order.map(i => dayCounts[i]);
+
+    const W = 700, H = 200, padX = 20, padY = 24;
+    const max = Math.max(1, ...values);
+    const step = (W - padX * 2) / (values.length - 1);
+    const dots = values.map((v, i) => ({
+      x: padX + i * step,
+      y: H - padY - (v / max) * (H - padY * 2),
+      v,
+    }));
+    const linePoints = dots.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const areaPoints =
+      `${padX},${H - padY} ` + linePoints + ` ${W - padX},${H - padY}`;
+    return { labels, max, linePoints, areaPoints, dots };
+  }
+
+  /** Percentage change in case volume vs the previous 7 days (for the trend header). */
+  get weekTrendPct(): number {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    let thisWeek = 0, lastWeek = 0;
+    for (const v of this.claims) {
+      if (!v.createdAt) continue;
+      const t = new Date(v.createdAt).getTime();
+      if (isNaN(t)) continue;
+      const age = now - t;
+      if (age <= 7 * day) thisWeek++;
+      else if (age <= 14 * day) lastWeek++;
+    }
+    if (lastWeek === 0) return thisWeek > 0 ? 100 : 0;
+    return Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
+  }
+
+  /** Cases created or updated today — powers the "Today's cases" panel. */
+  get todaysCases(): WFValuation[] {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end = new Date();   end.setHours(23, 59, 59, 999);
+    return this.claims
+      .filter(v => {
+        const t = v.updatedAt || v.createdAt;
+        if (!t) return false;
+        const d = new Date(t);
+        return !isNaN(d.getTime()) && d >= start && d <= end;
+      })
+      .slice(0, 6);
+  }
+
+  stepName(v: WFValuation): string {
+    if (v.status === 'Returned') return 'Returned';
+    return this.steps[this.getStepIndex(v)] || '';
+  }
+
+  initials(name?: string | null): string {
+    if (!name) return '—';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '—';
+    const two = (parts[0][0] || '') + (parts[1]?.[0] || '');
+    return two.toUpperCase();
+  }
 }

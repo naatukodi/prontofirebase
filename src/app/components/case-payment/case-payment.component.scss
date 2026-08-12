@@ -6,3 +6,90 @@
   padding: 8px 0;
   font-size: 14px;
 }
+
+/* Payment date field: live-clock badge and "use now" control */
+.date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+  }
+
+  &__live {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(34, 139, 34, 0.15);
+    color: #1f7a1f;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  &__now {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border: 1px solid rgba(26, 138, 110, 0.5);
+    border-radius: 10px;
+    background: transparent;
+    color: #1a8a6e;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  &__hint {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #6b7280;
+  }
+}
+
+/* Read-back summary of what is stored on the case */
+.saved-card {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: rgba(26, 138, 110, 0.06);
+  border: 1px solid rgba(26, 138, 110, 0.3);
+  border-radius: 8px;
+
+  &__title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #1a8a6e;
+    margin-bottom: 8px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    padding: 3px 0;
+  }
+
+  &__label {
+    flex: 0 0 100px;
+    font-size: 12.5px;
+    color: #6b7280;
+  }
+
+  &__value {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1f2937;
+    word-break: break-word;
+
+    &--muted {
+      font-weight: 400;
+      color: #4b5563;
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    background: rgba(26, 138, 110, 0.25);
+    margin: 10px 0;
+  }
+}

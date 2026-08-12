@@ -14,14 +14,13 @@ import { environment } from '../../../../environments/environment';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { AuthorizationService } from '../../../services/authorization.service';
-import { CommonNotesComponent } from '../../common-notes/common-notes.component';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-final-report-view',
   standalone: true,
-  imports: [SharedModule, WorkflowButtonsComponent, CommonNotesComponent, FormsModule, CommonModule],
+  imports: [SharedModule, WorkflowButtonsComponent, FormsModule, CommonModule],
   templateUrl: './final-report.component.html',
   styleUrls: ['./final-report.component.scss'],
 })

@@ -37,40 +37,21 @@
 
 <ng-container *ngIf="!loading && !error && inspection">
 
-  <fieldset>
-    <div class="actions">
-      <button *ngIf="canEditInspection()" mat-raised-button color="primary" (click)="onEdit()">
-        Edit
-      </button>
-
-      <button *ngIf="canEditInspection()" mat-raised-button color="warn" (click)="openReturnModal()" style="background-color: #f44336; color: white;">
-        Return
-      </button>
-
-      <button *ngIf="canDeleteInspection()" mat-raised-button color="warn" (click)="onDelete()">
-        Delete
-      </button>
-      <button mat-raised-button color="warn" (click)="onBack()">
-        Back
-      </button>
-    </div>
-  </fieldset>
-
   <!-- 1. INSPECTION INFO -->
   <fieldset class="nested-group">
     <legend>Inspection Info</legend>
     <div class="grid">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Vehicle Inspected By</mat-label>
         <input matInput [value]="inspection.vehicleInspectedBy" readonly />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Date of Inspection</mat-label>
         <input matInput [value]="inspection.dateOfInspection | date:'mediumDate':'+0530'" readonly />
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Inspection Location</mat-label>
         <input matInput [value]="inspection.inspectionLocation" readonly />
       </mat-form-field>
@@ -81,35 +62,35 @@
   <fieldset class="nested-group">
     <legend>General Condition</legend>
     <div class="grid">
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Vehicle Moved</mat-label>
         <input matInput [value]="inspection.vehicleMoved ? 'Yes' : 'No'" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Engine Started</mat-label>
         <input matInput [value]="inspection.engineStarted ? 'Yes' : 'No'" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Odometer (km)</mat-label>
         <input matInput [value]="inspection.odometer" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>VIN Plate Present</mat-label>
         <input matInput [value]="inspection.vinPlate ? 'Yes' : 'No'" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Body Type</mat-label>
         <input matInput [value]="inspection.bodyType" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Overall Tyre Condition</mat-label>
         <input matInput [value]="displayBool(inspection.overallTyreCondition, 'Good', 'Not Good')" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Other Accessories Fitted</mat-label>
         <input matInput [value]="inspection.otherAccessoryFitment ? 'Yes' : 'No'" readonly />
       </mat-form-field>
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="fill">
         <mat-label>Road Worthy Condition</mat-label>
         <input matInput [value]="inspection.roadWorthyCondition ? 'OK' : 'Not OK'" readonly />
       </mat-form-field>
@@ -121,7 +102,7 @@
     <fieldset class="nested-group">
       <legend>{{ section.section }}</legend>
       <div class="grid">
-        <mat-form-field *ngFor="let field of section.fields" appearance="outline">
+        <mat-form-field *ngFor="let field of section.fields" appearance="fill">
           <mat-label>{{ field.label }}</mat-label>
           <input matInput [value]="getField(field.key)" readonly />
         </mat-form-field>
@@ -132,7 +113,7 @@
   <fieldset class="nested-group">
     <legend>Remarks</legend>
     <div class="grid">
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Remarks</mat-label>
         <textarea
           matInput
@@ -153,18 +134,6 @@
       </button>
     </div>
 
-  </fieldset>
-
-  <fieldset class="nested-group">
-    <legend>Inspection Notes</legend>
-    <div class="notes-container">
-      <app-common-notes
-        [entityType]="'AVO'"
-        [entityId]="valuationId"
-        [currentUser]="getCurrentUser()"
-        [collapsible]="true">
-      </app-common-notes>
-    </div>
   </fieldset>
 
   <fieldset>

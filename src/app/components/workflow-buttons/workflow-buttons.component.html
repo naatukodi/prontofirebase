@@ -51,8 +51,11 @@
 </mat-accordion>
 
 
+  <!-- Single-line bar: workflow steps (left) + case actions (right) -->
+  <div class="action-bar">
+
   <!-- Notes Button Section -->
-  <div class="case-actions" style="margin-bottom: 15px;">
+  <div class="case-actions">
     <button mat-raised-button color="primary" (click)="openNotesPopup()">
       📝 Notes
     </button>
@@ -126,6 +129,6 @@
     </button>
   </div>
 
-
+  </div><!-- /action-bar -->
 
   <router-outlet></router-outlet>

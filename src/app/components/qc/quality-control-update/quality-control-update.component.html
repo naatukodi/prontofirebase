@@ -19,67 +19,16 @@
       <div class="qc-card-grid">
         <div class="qc-card form-card">
           <div class="qc-card-label">Overall Rating</div>
-          <mat-form-field appearance="outline" class="qc-field">
+          <mat-form-field appearance="fill" class="qc-field">
             <input matInput formControlName="overallRating" placeholder="Good / Average / Poor" />
             <mat-error *ngIf="form.get('overallRating')?.hasError('required')">Required</mat-error>
           </mat-form-field>
         </div>
         <div class="qc-card form-card">
           <div class="qc-card-label">Valuation Amount</div>
-          <mat-form-field appearance="outline" class="qc-field">
+          <mat-form-field appearance="fill" class="qc-field">
             <input matInput type="number" formControlName="valuationAmount" placeholder="₹" />
             <mat-error *ngIf="form.get('valuationAmount')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Payment Details ── -->
-    <div class="qc-section">
-      <div class="qc-section-header">Payment Details</div>
-      <div class="qc-card-grid">
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Payment Status</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <mat-select formControlName="paymentStatus">
-              <mat-option value="Pending">Pending</mat-option>
-              <mat-option value="Completed">Completed</mat-option>
-              <mat-option value="Credit">Credit</mat-option>
-            </mat-select>
-            <mat-error *ngIf="form.get('paymentStatus')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Payment Method</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <mat-select formControlName="paymentMethod">
-              <mat-option value="Online">Online</mat-option>
-              <mat-option value="Cash">Cash</mat-option>
-              <mat-option value="UPI">UPI</mat-option>
-              <mat-option value="Card">Card</mat-option>
-            </mat-select>
-            <mat-error *ngIf="form.get('paymentMethod')?.hasError('required')">Required</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Payment Amount</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <input matInput type="number" formControlName="paymentAmount" placeholder="₹" />
-            <mat-error *ngIf="form.get('paymentAmount')?.hasError('required')">Required</mat-error>
-            <mat-error *ngIf="form.get('paymentAmount')?.hasError('min')">Must be ≥ 0</mat-error>
-          </mat-form-field>
-        </div>
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Payment Reference</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <input matInput formControlName="paymentReference" placeholder="Ref / TXN ID" />
-          </mat-form-field>
-        </div>
-        <div class="qc-card form-card">
-          <div class="qc-card-label">Payment Date</div>
-          <mat-form-field appearance="outline" class="qc-field">
-            <input matInput type="datetime-local" formControlName="paymentDate" />
-            <mat-error *ngIf="form.get('paymentDate')?.hasError('required')">Required</mat-error>
           </mat-form-field>
         </div>
       </div>
@@ -89,7 +38,7 @@
     <div class="qc-section">
       <div class="qc-section-header">Remarks</div>
       <div class="qc-remarks-wrap">
-        <mat-form-field appearance="outline" class="qc-field" style="width:100%">
+        <mat-form-field appearance="fill" class="qc-field" style="width:100%">
           <mat-label>General Remarks</mat-label>
           <textarea matInput formControlName="remarks" rows="3"></textarea>
         </mat-form-field>
