@@ -6,6 +6,7 @@ import { HeaderComponent } from '../header/header';
 import { FooterComponent } from '../footer/footer';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter } from 'rxjs/operators'; // 3. Added filter
+import { AuthorizationService } from '../../services/authorization.service';
 
 @Component({
   standalone: true,
@@ -104,6 +105,14 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
           [active]="rla2.isActive">
           Instant AI Value
         </a>
+        <a mat-tab-link
+          *ngIf="isAdmin"
+          [routerLink]="['/mis']"
+          routerLinkActive
+          #rla3="routerLinkActive"
+          [active]="rla3.isActive">
+          MIS
+        </a>
       </nav>
       
       <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
@@ -116,11 +125,17 @@ import { filter } from 'rxjs/operators'; // 3. Added filter
 })
 export class MainLayoutComponent implements OnInit {
   // Flag to control visibility
-  isDashboard: boolean = true; 
+  isDashboard: boolean = true;
+  isAdmin = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authz: AuthorizationService) {}
 
   ngOnInit() {
+    // Admin-only nav items (MIS)
+    this.authz.loadPermissions()
+      .then(perms => { this.isAdmin = perms.includes('Admin'); })
+      .catch(() => { this.isAdmin = false; });
+
     // 1. Check URL when the component first loads
     this.checkUrl(this.router.url);
 
