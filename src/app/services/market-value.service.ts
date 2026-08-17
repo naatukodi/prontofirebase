@@ -24,8 +24,8 @@ export class MarketValueService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Asks the backend for a single-paragraph AI valuation. The Gemini key lives
-   * server-side — this call carries no credentials of its own.
+   * Asks the backend for a single-paragraph AI valuation. The AI provider's key
+   * lives server-side — this call carries no credentials of its own.
    */
   getMarketValue(request: MarketValueRequest): Observable<MarketValueResponse> {
     return this.http.post<MarketValueResponse>(this.url, request);
