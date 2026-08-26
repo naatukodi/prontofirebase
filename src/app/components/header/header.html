@@ -5,8 +5,8 @@
     <div class="brand-block">
       <a class="navbar-brand d-flex align-items-center" routerLink="/">
         <img
-          src="assets/images/vehga-01.png"
-          alt="Vehga Inspections"
+          [src]="brand.profile().logo"
+          [alt]="brand.profile().legalName"
           class="navbar-logo"
         />
       </a>

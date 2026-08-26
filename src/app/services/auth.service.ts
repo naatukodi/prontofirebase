@@ -4,6 +4,7 @@ import { Auth, authState, User, signOut } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthorizationService } from './authorization.service';
+import { BrandService } from './brand.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -36,6 +37,10 @@ export class AuthService {
       null
     );
     authz?.clearPermissions();
+
+    // Drop the company choice too, so the next person to sign in on this machine
+    // has to pick deliberately rather than inheriting the last session's brand.
+    this.injector.get(BrandService, null)?.clear();
 
     this.router.navigate(['/login']);
   }
