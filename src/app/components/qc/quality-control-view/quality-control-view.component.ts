@@ -20,6 +20,9 @@ import { QualityControlViewModel } from '../../../models/QualityControlViewModel
 import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 import { environment } from '../../../../environments/environment';
 
+// Shared QC verification engine (also used by the QC update page)
+import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
+
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
@@ -53,6 +56,8 @@ export class QualityControlViewComponent implements OnInit {
 
   // Checklist state (read-only on view page — editing happens on update page)
   cl: Record<string, string | null> = {};
+  // What the system compared to reach each verdict, shown under the card.
+  clWhy: Record<string, string> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
 
   // ── Lightbox ──
@@ -128,93 +133,24 @@ export class QualityControlViewComponent implements OnInit {
     ].filter(Boolean) as string[];
   }
 
+  /**
+   * Derives every checklist verdict, and the evidence behind it, from the earlier
+   * workflow steps. The rules live in shared/qc-checklist.ts so this page shows
+   * exactly what the QC update page computed.
+   */
   private prefillChecklist(): void {
-    const vd  = this.report?.vehicleDetails;
-    const ins = this.report?.inspectionDetails;
-    const qc  = this.report?.qualityControl;
+    const result = buildQcChecklist({
+      report: this.report,
+      overallRating: this.viewModel?.overallRating ?? this.report?.qualityControl?.overallRating,
+      chassisPunch: this.viewModel?.chassisPunch ?? this.report?.qualityControl?.chassisPunch,
+      valuationAmount: this.viewModel?.valuationAmount,
+      lowRange: this.viewModel?.lowRange,
+      highRange: this.viewModel?.highRange,
+      photoKeys: this.photoKeys as string[]
+    });
 
-    const chassisPunch   = (this.viewModel?.chassisPunch  || qc?.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
-    const overallRating  = (this.viewModel?.overallRating || qc?.overallRating || '').toUpperCase();
-    const engineCond     = (ins?.engineCondition     || '').toUpperCase();
-    const tyreCond       = (ins?.overallTyreCondition || '').toUpperCase();
-    const exteriorCond   = (ins?.exteriorCondition   || '').toUpperCase();
-    const bodyCondition  = (ins?.bodyCondition       || '').toUpperCase();
-    const valuationAmt   = this.viewModel?.valuationAmount ?? 0;
-    const low            = Number(this.viewModel?.lowRange  ?? 0);
-    const high           = Number(this.viewModel?.highRange ?? 0);
-
-    const condMap = (val: string): string | null => {
-      if (val === 'GOOD') return 'good';
-      if (val === 'AVERAGE') return 'average';
-      if (val === 'POOR') return 'poor';
-      return null;
-    };
-
-    // ── Document Verification ──
-    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
-    // Insurance / Permit / Fitness / RoadTax — no data in model, left for manual entry
-
-    if (chassisPunch === 'ORIGINAL')  this.cl['docChassis'] = 'original';
-    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
-    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
-
-    // ── Data Accuracy ──
-    if (vd?.registrationNumber) this.cl['accReg']    = 'pass';
-    if (vd?.chassisNumber || ins?.vinPlate) this.cl['accChassis'] = 'pass';
-    if ((ins?.odometer ?? 0) > 0) this.cl['accOdo']  = 'pass';
-    if (vd?.make && vd?.model)    this.cl['accVahan'] = 'pass';
-    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner']  = 'pass';
-    if (vd?.ownerName)  this.cl['accSerial'] = 'pass';
-    if (ins?.vehicleInspectedBy)  this.cl['accMandatory'] = 'pass';
-    if (ins?.remarks || ins?.vehicleInspectedBy) this.cl['accRemarks'] = 'pass';
-    // Photo quality (loc/daylight/plate/GPS) require human visual check — left null
-
-    // ── Valuation Quality ──
-    const photoCount = this.photoKeys?.length ?? 0;
-    if (photoCount >= 8) {
-      this.cl['valPhotoLoc']   = 'pass';
-      this.cl['valDaylight']   = 'pass';
-      this.cl['valPlate']      = 'pass';
-      this.cl['valMinPhotos']  = 'pass';
-    } else if (photoCount > 0) {
-      this.cl['valMinPhotos'] = 'fail';
-    }
-    if (low > 0 && high > 0) {
-      this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
-    }
-    // Dedupe — no data available, left for manual entry
-    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
-      const age = new Date().getFullYear() - vd.yearOfMfg;
-      const avgKmPerYear = age > 0 ? ins!.odometer / age : 0;
-      this.cl['valAgeOdo'] = avgKmPerYear < 60000 ? 'pass' : 'fail';
-    }
-    if (overallRating === 'GOOD')    this.cl['valScore'] = 'pass';
-    else if (overallRating === 'POOR') this.cl['valScore'] = 'fail';
-
-    // ── QC Recommendation ──
-    if (chassisPunch === 'ORIGINAL')   this.cl['recChassis'] = 'original';
-    else if (chassisPunch === 'REPUNCHED') this.cl['recChassis'] = 'repunched';
-    else if (chassisPunch === 'TAMPERED')  this.cl['recChassis'] = 'tampered';
-
-    this.cl['recCondition'] = condMap(overallRating);
-    this.cl['recEngine']    = condMap(engineCond);
-
-    const extVal = exteriorCond || bodyCondition;
-    if (extVal === 'GOOD')    this.cl['recExterior'] = 'good';
-    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
-    else if (extVal === 'POOR')   this.cl['recExterior'] = 'major';
-
-    if (tyreCond === 'GOOD')    this.cl['recTyre'] = 'good';
-    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
-    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
-
-    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') {
-      this.cl['recFinal'] = 'not-recommended';
-    } else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') {
-      this.cl['recFinal'] = 'recommended';
-    } else {
-      this.cl['recFinal'] = 'conditional';
-    }
+    this.cl = result.cl;
+    this.clWhy = result.why;
 
     // Pre-fill summary remarks with QC remarks if available
     if (this.viewModel?.remarks && !this.clRemarks['rec']) {
@@ -388,11 +324,7 @@ export class QualityControlViewComponent implements OnInit {
         this.savedAccChassis = qcData.qcChecklist?.['accChassis'] ?? null;
 
         // Override prefilled values with whatever was previously saved by the QC officer
-        if (qcData.qcChecklist) {
-          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
-            if (v !== null && v !== undefined) this.cl[k] = v;
-          });
-        }
+        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);
         if (qcData.qcChecklistRemarks) {
           Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
             if (v) this.clRemarks[k] = v;

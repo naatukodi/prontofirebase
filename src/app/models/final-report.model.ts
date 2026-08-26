@@ -5,6 +5,18 @@ import { Inspection } from './Inspection';
 import { QualityControl } from './QualityControl';
 import { ValuationEstimate } from './ValuationEstimate';
 
+/**
+ * Per-photo capture details, keyed the same way as PhotoUrls. Written by the upload
+ * service from what the camera app stamped on the frame, so it is the inspector's own
+ * device reading rather than something re-derived later.
+ */
+export interface PhotoMeta {
+  capturedDate?: string | null;
+  locationText?: string | null;
+  annotationNote?: string | null;
+  originalPhotoUrl?: string | null;
+}
+
 export interface PhotoUrls {
   FrontLeftSide: string;
   FrontRightSide: string;
@@ -59,6 +71,7 @@ export interface FinalReport {
   qualityControl: QualityControl;
   valuationResponse: ValuationEstimate;
   photoUrls: PhotoUrls;
+  photoMetadata?: Record<string, PhotoMeta>;
   workflow: WorkflowStep[];
   status: string;
   createdBy: string | null;

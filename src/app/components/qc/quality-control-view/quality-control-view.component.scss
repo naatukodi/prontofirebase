@@ -442,6 +442,28 @@
   padding: 10px 14px;
 }
 
+/* ── Paired sub-sections ──
+   Two groups per row, each a vertical stack, so a short group sits beside a long
+   one instead of padding its row out with blank cells. */
+.qc-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 0 12px;
+  padding: 0 2px;
+}
+
+.qc-column {
+  min-width: 0;
+}
+
+.qc-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
 .qc-card {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -462,6 +484,25 @@
   font-weight: 500;
   color: #374151;
   line-height: 1.35;
+}
+
+/* How the verdict on this card was reached — the source it was compared against. */
+.qc-card-why {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #475569;
+  background: #f8fafc;
+  border-left: 2px solid #94a3b8;
+  border-radius: 0 4px 4px 0;
+  padding: 5px 8px;
+}
+
+.qc-why-icon {
+  flex-shrink: 0;
+  color: #64748b;
 }
 
 /* Read-only badge */
@@ -724,4 +765,8 @@
   font-weight: 600;
   &:hover { background: #025054; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+@media (max-width: 900px) {
+  .qc-columns { grid-template-columns: 1fr; }
 }
