@@ -1,6 +1,6 @@
 // src/app/vehicle-image-upload/vehicle-image-upload.component.ts
 
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
@@ -35,6 +35,18 @@ interface MediaField {
   optional: boolean;
 }
 
+interface PhotoGroup {
+  title: string;
+  hint: string;
+  fields: MediaField[];
+  /** Slots in this group that already have a file on the server. */
+  uploaded: number;
+  /** Slots with a file chosen locally but not yet sent. */
+  pending: MediaKey[];
+  /** True while any slot in the group is mid-upload. */
+  busy: boolean;
+}
+
 @Component({
   selector: 'app-vehicle-image-upload',
   imports: [SharedModule, WorkflowButtonsComponent, RouterModule, FormsModule],
@@ -42,7 +54,7 @@ interface MediaField {
   templateUrl: './vehicle-image-upload.component.html',
   styleUrls: ['./vehicle-image-upload.component.scss']
 })
-export class VehicleImageUploadComponent implements OnInit {
+export class VehicleImageUploadComponent implements OnInit, OnDestroy {
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -91,9 +103,73 @@ export class VehicleImageUploadComponent implements OnInit {
 
   selectedFiles: Record<MediaKey, File | null> = this.initRecord(null);
   uploadedUrls: Record<MediaKey, string | null> = this.initRecord(null);
+
+  /**
+   * Object URLs for files picked but not yet uploaded, so the card shows the chosen
+   * photo immediately instead of staying blank until the server round-trip finishes.
+   * Revoked when replaced or on destroy — object URLs leak until released.
+   */
+  localPreviews: Record<MediaKey, string | null> = this.initRecord(null);
   uploadProgress: Partial<Record<MediaKey, number>> = {};
   isUploading:    Partial<Record<MediaKey, boolean>> = {};
   uploadError:    Partial<Record<MediaKey, string>> = {};
+
+  /**
+   * Mandatory slots block Save on the AVO page; optional ones never do. Grouping
+   * them makes that split visible instead of tagging individual cards in one
+   * undifferentiated grid.
+   */
+  get photoGroups(): PhotoGroup[] {
+    const build = (title: string, hint: string, fields: MediaField[]): PhotoGroup => ({
+      title,
+      hint,
+      fields,
+      uploaded: fields.filter(f => !!this.uploadedUrls[f.key]).length,
+      // Files browsed for but not sent yet — what the group's Upload button will send.
+      pending: fields.filter(f => !!this.selectedFiles[f.key]).map(f => f.key),
+      busy: fields.some(f => this.isUploading[f.key])
+    });
+
+    return [
+      build('Mandatory Photos',
+            'All of these are required before the inspection can be saved.',
+            this.mediaFields.filter(f => !f.optional)),
+      build('Optional Photos',
+            'Upload these when they apply — they never block saving.',
+            this.mediaFields.filter(f => f.optional))
+    ];
+  }
+
+  /**
+   * photoGroups is a getter that returns freshly built objects on every call, so with
+   * *ngFor's default identity tracking Angular treated them as new items on EVERY
+   * change detection pass and destroyed/recreated both group subtrees — including
+   * every <input type="file">. The picker would open on one input element, that
+   * element was replaced moments later, and the file chosen in the dialog landed on
+   * a detached input: the selection silently disappeared every time.
+   *
+   * Tracking by a stable key keeps the inputs alive across re-renders.
+   */
+  trackGroup = (_: number, g: PhotoGroup): string => g.title;
+  trackField = (_: number, f: MediaField): MediaKey => f.key;
+
+  /** A required slot with nothing uploaded yet — outlined in red on the card. */
+  isMissingMandatory(field: MediaField): boolean {
+    return !field.optional && !this.uploadedUrls[field.key];
+  }
+
+  /** Total required slots still empty, across both groups. */
+  get missingMandatoryCount(): number {
+    return this.mediaFields.filter(f => this.isMissingMandatory(f)).length;
+  }
+
+  /** Uploads every file selected in this group, one at a time. */
+  async uploadGroup(group: PhotoGroup): Promise<void> {
+    for (const key of group.pending) {
+      await this.uploadMedia(key);
+    }
+    this.cdr.detectChanges();
+  }
 
   // ── Additional (custom-named) photos ──
   customPhotoEntries: { file: File | null; name: string }[] = [];
@@ -124,6 +200,12 @@ export class VehicleImageUploadComponent implements OnInit {
     const rec: any = {};
     this.mediaFields.forEach(f => rec[f.key] = val);
     return rec;
+  }
+
+  ngOnDestroy(): void {
+    // Object URLs are held by the browser until revoked; leaving the page with
+    // unuploaded picks would leak them.
+    (Object.keys(this.localPreviews) as MediaKey[]).forEach(k => this.clearLocalPreview(k));
   }
 
   ngOnInit(): void {
@@ -197,12 +279,33 @@ export class VehicleImageUploadComponent implements OnInit {
 
   onFileSelected(event: Event, fieldKey: MediaKey) {
     const inputEl = event.target as HTMLInputElement;
+
+    // Release any previous pick for this slot before replacing it.
+    this.clearLocalPreview(fieldKey);
+
     if (!inputEl.files || inputEl.files.length === 0) {
       this.selectedFiles[fieldKey] = null;
+      this.cdr.detectChanges();
       return;
     }
-    this.selectedFiles[fieldKey] = inputEl.files[0];
+
+    const file = inputEl.files[0];
+    this.selectedFiles[fieldKey] = file;
+    this.localPreviews[fieldKey] = URL.createObjectURL(file);
     this.uploadError[fieldKey] = undefined;
+
+    // The app runs zoneless (provideZonelessChangeDetection), so mutating these
+    // fields does not re-render on its own — without this the card stays blank and
+    // the picked photo appears to have been ignored.
+    this.cdr.detectChanges();
+  }
+
+  private clearLocalPreview(fieldKey: MediaKey) {
+    const url = this.localPreviews[fieldKey];
+    if (url) {
+      URL.revokeObjectURL(url);
+      this.localPreviews[fieldKey] = null;
+    }
   }
 
   private buildSingleFormData(fieldKey: MediaKey): FormData {
@@ -213,7 +316,9 @@ export class VehicleImageUploadComponent implements OnInit {
   }
 
   // ✅ UPLOAD MEDIA (With Loop Fix)
-  async uploadMedia(fieldKey: MediaKey) {
+  // Resolves once the request has finished (success or failure) so uploadGroup can
+  // await each slot in turn rather than firing them all at once.
+  async uploadMedia(fieldKey: MediaKey): Promise<void> {
     const fieldMeta = this.mediaFields.find(f => f.key === fieldKey);
     if (!fieldMeta) return;
 
@@ -240,9 +345,11 @@ export class VehicleImageUploadComponent implements OnInit {
         { reportProgress: true, observe: 'events' }
       );
 
+      await new Promise<void>(resolve => {
       observable.pipe(
         finalize(() => {
           this.isUploading[fieldKey] = false;
+          resolve();
         })
       ).subscribe({
         next: (event: HttpEvent<any>) => {
@@ -273,11 +380,14 @@ export class VehicleImageUploadComponent implements OnInit {
 
             this.uploadProgress[fieldKey] = 100;
             this.selectedFiles[fieldKey] = null;
+            // The server URL now drives the card; drop the local object URL.
+            this.clearLocalPreview(fieldKey);
           }
         },
         error: (err: HttpErrorResponse) => {
           this.uploadError[fieldKey] = err.error?.message || 'Upload failed.';
         }
+      });
       });
     }
     catch (err: any) {
@@ -310,6 +420,9 @@ export class VehicleImageUploadComponent implements OnInit {
     if (inputEl.files && inputEl.files.length > 0) {
       this.customPhotoEntries[index].file = inputEl.files[0];
     }
+    // Same zoneless caveat as onFileSelected — without this the chosen file name
+    // never appears and the row looks like nothing was picked.
+    this.cdr.detectChanges();
   }
 
   private getCurrentLocationText(): Promise<string | undefined> {

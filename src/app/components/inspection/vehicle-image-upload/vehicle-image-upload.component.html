@@ -12,10 +12,40 @@
   <div *ngIf="error" class="pg-error">{{ error }}</div>
 
   <ng-container *ngIf="!error">
-    <div class="grid">
-      <ng-container *ngFor="let field of mediaFields">
+
+    <!-- trackBy is load-bearing here, not an optimisation: without it the file
+         inputs are recreated on every change detection pass and any pending
+         selection is lost. See trackGroup/trackField in the component. -->
+    <div class="photo-group" *ngFor="let group of photoGroups; trackBy: trackGroup">
+      <div class="photo-group-head">
+        <h3 class="photo-group-title">{{ group.title }}</h3>
+        <span class="photo-group-count" [class.complete]="group.uploaded === group.fields.length">
+          {{ group.uploaded }} / {{ group.fields.length }} uploaded
+        </span>
+      </div>
+      <div class="photo-group-bar">
+        <p class="photo-group-hint">{{ group.hint }}</p>
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          class="upload-all-btn"
+          [disabled]="group.pending.length === 0 || group.busy"
+          (click)="uploadGroup(group)">
+          {{ group.busy
+              ? 'Uploading…'
+              : group.pending.length
+                ? '⬆ Upload ' + group.pending.length + ' Selected'
+                : 'Nothing Selected' }}
+        </button>
+      </div>
+
+      <div class="grid">
+        <ng-container *ngFor="let field of group.fields; trackBy: trackField">
         
-        <div class="image-card">
+        <div class="image-card"
+          [class.card-missing]="isMissingMandatory(field)"
+          [class.card-ready]="selectedFiles[field.key]">
           
           <input
             #fileInput
@@ -41,15 +71,24 @@
               </button>
             </ng-container>
             <ng-template #placeholder>
-              <div class="placeholder">
-                <span>{{ field.type === 'image' ? 'No Image' : 'No Video' }}</span>
-              </div>
+              <!-- Picked but not uploaded yet: show it straight away so choosing a
+                   file gives visible feedback instead of looking like nothing happened. -->
+              <ng-container *ngIf="localPreviews[field.key]; else emptySlot">
+                <img *ngIf="field.type === 'image'" [src]="localPreviews[field.key]" [alt]="field.label" class="thumbnail"/>
+                <video *ngIf="field.type === 'video'" [src]="localPreviews[field.key]" controls class="video-preview"></video>
+                <span class="pending-badge">Not uploaded yet</span>
+              </ng-container>
+              <ng-template #emptySlot>
+                <div class="placeholder">
+                  <span>{{ field.type === 'image' ? 'No Image' : 'No Video' }}</span>
+                </div>
+              </ng-template>
             </ng-template>
           </div>
 
           <div class="label">
             {{ field.label }}
-            <span *ngIf="field.optional" class="optional">(optional)</span>
+            <span *ngIf="isMissingMandatory(field)" class="required-tag">Required</span>
           </div>
 
           <div class="button-group" style="margin-top: 5px; display: flex; gap: 5px; justify-content: center;">
@@ -61,10 +100,10 @@
                 Browse
               </button>
 
-              <button 
-                mat-raised-button 
+              <button
+                mat-raised-button
                 color="primary"
-                type="button" 
+                type="button"
                 *ngIf="selectedFiles[field.key]"
                 (click)="uploadMedia(field.key)"
                 [disabled]="isUploading[field.key]">
@@ -72,8 +111,8 @@
               </button>
           </div>
           
-          <div class="selected-file-name" *ngIf="selectedFiles[field.key]" style="font-size: 10px; color: blue;">
-             Selected: {{ selectedFiles[field.key]?.name }}
+          <div class="selected-file-name" *ngIf="selectedFiles[field.key]">
+            Ready to upload: {{ selectedFiles[field.key]?.name }}
           </div>
 
           <div class="progress-wrapper" *ngIf="isUploading[field.key]">
@@ -95,8 +134,10 @@
             {{ uploadError[field.key] }}
           </div>
         </div> 
-      </ng-container>
+        </ng-container>
+      </div>
     </div>
+
   </ng-container>
 
   <!-- ══════════════════════════════════════
