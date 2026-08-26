@@ -122,7 +122,8 @@ export class WorkflowButtonsComponent {
       this.valuationService.checkDuplicateVehicle(
         this.vehicleNumber,
         engineNumber,
-        chassisNumber
+        chassisNumber,
+        this.id
       ).subscribe(response => {
 
         this.dialog.open(DuplicateDialogComponent, {

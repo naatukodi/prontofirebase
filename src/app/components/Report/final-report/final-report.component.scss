@@ -264,6 +264,7 @@
   padding: 5px 0;
   border-bottom: 1px solid #f3f4f6;
   gap: 8px;
+  min-width: 0;
 
   &:last-child { border-bottom: none; }
 }
@@ -280,9 +281,13 @@
 
 .rps-v {
   flex: 1;
+  min-width: 0;
   font-size: 0.85rem;
   font-weight: 600;
   color: #1f2937;
+  /* .report-paper clips its overflow, so an unbroken chassis or engine number
+     would otherwise be cut off rather than wrapped. */
+  overflow-wrap: anywhere;
 }
 
 .rps-mono { font-family: monospace; letter-spacing: 0.5px; }
@@ -346,6 +351,7 @@
   font-size: 0.8rem;
   color: #374151;
   flex: 1;
+  min-width: 0;
 }
 
 .rp-cl-badge {
@@ -435,9 +441,8 @@
   font-weight: 600;
   background: #f9fafb;
   text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 /* ══════════════════════════════════════════
@@ -706,4 +711,15 @@
   .rps-grid--2col { grid-template-columns: 1fr; }
   .rp-condition-grid { grid-template-columns: 1fr 1fr; }
   .apr-action-bar { grid-template-columns: 1fr; }
+}
+
+/* Stop the fixed-width label from starving the value column once the two-up
+   grid gets narrow — the value wrapped to a sliver before this. */
+@media (max-width: 1100px) {
+  .rps-grid--2col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .rps-row { flex-direction: column; align-items: stretch; gap: 2px; }
+  .rps-l   { width: auto; }
 }

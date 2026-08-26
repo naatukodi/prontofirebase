@@ -165,7 +165,7 @@ export class ValuationVehicleDetailsComponent implements OnInit {
     this.loading = true;
     this.error = null;
     const baseUrl = environment.apiBaseUrl;
-    const url = `${baseUrl}/valuations/${this.valuationId}/vehicledetails`;
+    const url = `${baseUrl}valuations/${this.valuationId}/vehicledetails`;
     const params = new HttpParams()
       .set('vehicleNumber', this.vehicleNumber)
       .set('applicantContact', this.applicantContact);
@@ -197,7 +197,8 @@ export class ValuationVehicleDetailsComponent implements OnInit {
       .checkDuplicateVehicle(
         this.vehicleDetails.registrationNumber,
         this.vehicleDetails.engineNumber,
-        this.vehicleDetails.chassisNumber
+        this.vehicleDetails.chassisNumber,
+        this.valuationId
       )
       .subscribe({
         next: (response) => this.duplicateInfo = response,
