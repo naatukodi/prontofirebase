@@ -1,5 +1,5 @@
 // src/app/main-layout.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router'; // 1. Added Router imports
 import { CommonModule } from '@angular/common'; // 2. Added CommonModule for *ngIf
 import { HeaderComponent } from '../header/header';
@@ -7,6 +7,7 @@ import { FooterComponent } from '../footer/footer';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter } from 'rxjs/operators'; // 3. Added filter
 import { AuthorizationService } from '../../services/authorization.service';
+import { BrandService } from '../../services/brand.service';
 
 @Component({
   standalone: true,
@@ -84,7 +85,7 @@ import { AuthorizationService } from '../../services/authorization.service';
       <section class="hero">
         <div class="hero-content">
           <h1>
-            <span style="color: #ffffff;">VEHGA</span><span style="color: var(--accent);">INSPECTIONS</span>
+            <span style="color: #ffffff;">{{ brand.profile().titleLead }}</span><span style="color: var(--accent);">{{ brand.profile().titleTail }}</span>
           </h1>
           <p>Your one-stop vehicle inspection &amp; valuation dashboard</p>
         </div>
@@ -127,6 +128,9 @@ export class MainLayoutComponent implements OnInit {
   // Flag to control visibility
   isDashboard: boolean = true;
   isAdmin = false;
+
+  /** Public: the dashboard hero binds its wordmark to brand.profile(). */
+  brand = inject(BrandService);
 
   constructor(private router: Router, private authz: AuthorizationService) {}
 

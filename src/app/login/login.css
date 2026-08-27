@@ -260,3 +260,46 @@
     flex: 1 1 auto;
   }
 }
+
+/* ── Company picker ─────────────────────────────────────────────
+   Only rendered when the deployment isn't pinned to a single brand.
+   Selecting one re-themes the login screen immediately, so it's obvious
+   which company you're signing into before the OTP goes out. */
+.brand-choice {
+  display: flex;
+  gap: 10px;
+}
+
+.brand-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 2px solid var(--line, #bcc7cf);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--surface, #fff);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-700, #33484a);
+}
+
+.brand-option:hover { border-color: var(--brand); }
+
+.brand-option.selected {
+  border-color: var(--brand);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  box-shadow: var(--shadow-brand);
+}
+
+.brand-option-logo {
+  height: 26px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}

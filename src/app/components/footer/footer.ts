@@ -1,5 +1,6 @@
 // src/app/footer.component.ts
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { BrandService } from '../../services/brand.service';
 
 @Component({
   selector: 'app-footer',
@@ -7,11 +8,12 @@ import { Component } from '@angular/core';
   template: `
     <footer class="app-footer">
       <div class="footer-content">
-        © {{ year }} Vehga Inspections Private Limited — All rights reserved
+        © {{ year }} {{ brand.profile().legalName }} — All rights reserved
       </div>
     </footer>
   `
 })
 export class FooterComponent {
   year = new Date().getFullYear();
+  brand = inject(BrandService);
 }

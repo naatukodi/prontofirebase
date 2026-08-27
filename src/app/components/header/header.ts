@@ -12,6 +12,7 @@ import { map, switchMap, shareReplay } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { AuthorizationService } from '../../services/authorization.service';
 import { UsersService } from '../../services/users.service';
+import { BrandService } from '../../services/brand.service';
 
 @Component({
   selector: 'app-header',
@@ -33,6 +34,8 @@ export class HeaderComponent {
 
   authSvc = inject(AuthService);
   authzSvc1 = inject(AuthorizationService);
+  /** Public: the template binds the logo to brand.profile(). */
+  brand = inject(BrandService);
 
   isHandset$: Observable<boolean> = this.bp
     .observe(['(max-width: 768px)'])

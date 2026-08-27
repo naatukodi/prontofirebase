@@ -442,6 +442,28 @@
   padding: 10px 14px;
 }
 
+/* ── Paired sub-sections ──
+   Two groups per row, each a vertical stack, so a short group sits beside a long
+   one instead of padding its row out with blank cells. */
+.qc-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 0 12px;
+  padding: 0 2px;
+}
+
+.qc-column {
+  min-width: 0;
+}
+
+.qc-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
 .qc-card {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -462,6 +484,25 @@
   font-weight: 500;
   color: #374151;
   line-height: 1.35;
+}
+
+/* How the verdict on this card was reached — the source it was compared against. */
+.qc-card-why {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #475569;
+  background: #f8fafc;
+  border-left: 2px solid #94a3b8;
+  border-radius: 0 4px 4px 0;
+  padding: 5px 8px;
+}
+
+.qc-why-icon {
+  flex-shrink: 0;
+  color: #64748b;
 }
 
 /* Read-only badge */
@@ -724,4 +765,151 @@
   font-weight: 600;
   &:hover { background: #025054; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+@media (max-width: 900px) {
+  .qc-columns { grid-template-columns: 1fr; }
+}
+
+/* Marks a verdict that came from reading the photos rather than from the form
+   data — a reviewer should be able to tell the two apart at a glance. */
+.qc-ai-tag {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--brand, #037076);
+  color: #fff;
+}
+
+/* ── Photo reader ── */
+.qc-ai-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 12px 14px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--brand-200, #b0dcdd);
+  border-radius: 8px;
+  background: var(--brand-50, #eef7f7);
+}
+
+.qc-ai-copy {
+  flex: 1 1 320px;
+
+  strong {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-700, #025054);
+  }
+
+  small {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: #475569;
+    margin-top: 2px;
+  }
+}
+
+.qc-ai-btn {
+  flex-shrink: 0;
+  padding: 7px 18px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--brand, #037076);
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover:not(:disabled) { opacity: 0.88; }
+  &:disabled { opacity: 0.55; cursor: default; }
+}
+
+.qc-ai-error {
+  margin: 8px 14px 0;
+  padding: 7px 12px;
+  border-left: 3px solid #f87171;
+  border-radius: 0 4px 4px 0;
+  background: #fef2f2;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #b91c1c;
+}
+
+.qc-ai-notes {
+  margin: 8px 14px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--brand, #037076);
+  border-radius: 0 4px 4px 0;
+  background: #f8fafc;
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+
+  li {
+    font-size: 0.73rem;
+    line-height: 1.45;
+    color: #475569;
+  }
+}
+
+/* The raw readings, shown beside the verdicts. */
+.qc-ai-read {
+  margin: 8px 14px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--brand-200, #b0dcdd);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.qc-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 6px 14px;
+  margin-top: 6px;
+}
+
+.qc-ai-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &--wide { grid-column: 1 / -1; }
+}
+
+.qc-ai-k {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.qc-ai-v {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1f2937;
+  /* Identifiers are compared character by character, so they must not be
+     re-spaced or ligatured by a proportional face. */
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  overflow-wrap: anywhere;
+}
+
+.qc-ai-notes-head {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-700, #025054);
 }

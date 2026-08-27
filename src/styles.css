@@ -90,6 +90,40 @@
     --mdc-tab-indicator-active-indicator-color: var(--brand);
 }
 
+/* ── Pronto Moto ────────────────────────────────────────────────
+   BrandService stamps data-brand on <html>, so overriding these tokens
+   re-themes everything downstream — including the Angular Material tokens
+   below, which all resolve through var(--brand).
+
+   Green is darkened from the logo's #02944E, which only reaches 3.9:1 on
+   white; #02763E clears WCAG AA and matches Vehga's contrast (5.86 vs 5.73).
+   Red #EC1E1A is the logo's, used as the accent — orange #F8751C is too
+   light to carry text.
+   ─────────────────────────────────────────────────────────────── */
+:root[data-brand="pronto"] {
+    --brand:      #02763E;
+    --brand-600:  #026835;
+    --brand-700:  #015F31;
+    --brand-800:  #014425;
+    --brand-50:   #eef7f2;
+    --brand-100:  #d9efe3;
+    --brand-200:  #b0dcc4;
+
+    --accent:     #EC1E1A;
+    --accent-600: #c81714;
+    --accent-bg:  #fdeceb;
+
+    --teal-soft:  #2f8a5c;
+
+    --grad-brand:  linear-gradient(120deg, #02763E 0%, #015F31 100%);
+    --grad-deep:   linear-gradient(120deg, #02763E 0%, #015F31 55%, #014425 100%);
+    --grad-bright: linear-gradient(120deg, #35a06a 0%, #2f8a5c 45%, #02763E 100%);
+
+    --shadow-sm: 0 1px 3px rgba(1, 95, 49, 0.10), 0 1px 2px rgba(1, 95, 49, 0.06);
+    --shadow-md: 0 8px 22px rgba(1, 95, 49, 0.14);
+    --shadow-brand: 0 6px 16px rgba(2, 118, 62, 0.35);
+}
+
 /* ── Base ──────────────────────────────────────────────────────── */
 html, body {
     margin: 0;

@@ -20,7 +20,21 @@ export interface InspectionSection {
 }
 
 // ─── Options ─────────────────────────────────────────────────────────────────
-export const CONDITION_OPTIONS = ['GOOD', 'AVERAGE', 'POOR'] as const;
+// Every non-boolean inspection dropdown offers the same list, so an inspector can
+// record a part as damaged / missing / not applicable instead of forcing a
+// GOOD-AVERAGE-POOR verdict onto it. Keep in sync with conditionOptions in
+// inspection_field_registry.dart and with MapVerdict in ProntoPDFGeneration's
+// PdfReportService — the PDF scores and colours these exact strings.
+export const CONDITION_OPTIONS = [
+  'GOOD',
+  'AVERAGE',
+  'POOR',
+  'DAMAGED',
+  'MISSING / NOT PRESENT',
+  'N/A',
+  'YES',
+  'NO',
+] as const;
 export const YES_NO_OPTIONS    = ['YES', 'NO'] as const;
 
 // ─── Normalise stored valuationType → registry key ───────────────────────────

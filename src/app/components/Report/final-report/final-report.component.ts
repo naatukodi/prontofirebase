@@ -1,6 +1,7 @@
 // src/app/components/Report/final-report/final-report.component.ts
 
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, inject } from '@angular/core';
+import { BrandService } from '../../../services/brand.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +26,9 @@ import { UsersService } from '../../../services/users.service';
   styleUrls: ['./final-report.component.scss'],
 })
 export class FinalReportComponent implements OnInit {
+  /** Public: the report header/footer bind their platform name to this. */
+  brand = inject(BrandService);
+
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;

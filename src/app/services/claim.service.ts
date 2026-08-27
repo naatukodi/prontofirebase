@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError, MonoTypeOperatorFunction } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Claim } from '../models/claim.model';
 import { Valuation, WFValuation, UserDashboardStats } from '../models/valuation.model';
 import { environment } from '../../environments/environment';
@@ -30,17 +30,30 @@ export class ClaimService {
     return this.http.get<Claim[]>(this.apiUrl, { params });
   }
 
+  /**
+   * "No cases" is not an error. These endpoints answer 404 when the result set is
+   * empty rather than returning [], which a brand with no cases yet hits on every
+   * dashboard load — it surfaced as "failed to load valuations" for a fresh Pronto
+   * account. Any other status still propagates so real failures stay visible.
+   */
+  private emptyOn404<T>(fallback: T): MonoTypeOperatorFunction<T> {
+    return catchError<T, Observable<T>>((err: HttpErrorResponse) =>
+      err.status === 404 ? of(fallback) : throwError(() => err));
+  }
+
   getOpenValuations(): Observable<WFValuation[]> {
-    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open`);
+    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open`)
+      .pipe(this.emptyOn404<WFValuation[]>([]));
   }
 
   getCompletedCount(): Observable<number> {
     return this.http.get<{ count: number }>(`${this.apiUrl}/workflows/open/completed/count`)
-      .pipe(map(r => r.count));
+      .pipe(this.emptyOn404<{ count: number }>({ count: 0 }), map(r => r.count));
   }
 
   getCompletedCases(): Observable<WFValuation[]> {
-    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open/completed`);
+    return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open/completed`)
+      .pipe(this.emptyOn404<WFValuation[]>([]));
   }
 
   getUserDashboardStats(phone: string, role: string): Observable<UserDashboardStats> {

@@ -1,6 +1,6 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,7 @@ import { switchMap, map, take, catchError } from 'rxjs/operators';
 import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
-import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
@@ -19,6 +19,9 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
 // Models
 import { QualityControl } from '../../../models/QualityControl';
 import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
+
+// Shared QC verification engine (also used by the QC view page)
+import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -88,6 +91,8 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
 
   // Checklist state
   cl: Record<string, string | null> = {};
+  // What the system compared to reach each pre-filled verdict, shown under the card.
+  clWhy: Record<string, string> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
@@ -95,26 +100,129 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   // Gallery page photo selection
   gallerySlots: GallerySlot[] = [];
 
+  // ── AI photo audit ──────────────────────────────────────────────────────
+  aiRunning = false;
+  aiError: string | null = null;
+  aiObservations: string[] = [];
+  /** Keys this run actually verified, so the UI can mark them as machine-read. */
+  aiVerified = new Set<string>();
+  /** What the reader saw, shown so a misread can be told from a wrong vehicle. */
+  aiReadings: QcAiReadings | null = null;
+  aiReadAt: string | null = null;
+  /** Keys carrying a verdict the reviewer already saved — never overwritten. */
+  private savedByReviewer = new Set<string>();
+
+  /**
+   * Reads the case photos and folds the findings into the checklist.
+   *
+   * Run on demand rather than on page load: it costs money per call, and a
+   * reviewer reopening a case should not spend it again for no reason.
+   *
+   * A key the audit could not verify is left alone rather than being cleared —
+   * and the reviewer's own selections are never overwritten, because a human
+   * verdict outranks a machine one.
+   */
+  runAiPhotoAudit(force = false): void {
+    if (this.aiRunning) return;
+    this.aiRunning = true;
+    this.aiError = null;
+    this.cdr.detectChanges();
+
+    this.qcService
+      .runAiPhotoAudit(this.valuationId, this.vehicleNumber, this.applicantContact, force)
+      .subscribe({
+        next: (audit) => {
+          this.aiRunning = false;
+          this.aiObservations = audit.observations || [];
+          this.aiReadings = audit.readings || null;
+          this.aiReadAt = audit.readAt || null;
+
+          if (audit.error) {
+            this.aiError = audit.error;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          // Notes first: even an unresolved check gains a better explanation than
+          // "confirm it by eye" once the photos have actually been looked at.
+          Object.entries(audit.why || {}).forEach(([k, v]) => {
+            if (v && !this.savedByReviewer.has(k)) this.clWhy[k] = v;
+          });
+
+          Object.entries(audit.cl || {}).forEach(([k, v]) => {
+            // A verdict the reviewer saved outranks the machine's, and this arrives
+            // after the page has loaded — so it must never win by being late.
+            if (!v || this.savedByReviewer.has(k)) return;
+            this.cl[k] = v;
+            this.aiVerified.add(k);
+          });
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.aiRunning = false;
+          this.aiError = err?.error?.message || 'Could not reach the photo reader.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  /** True while this card's verdict is the one the photo reader produced. */
+  isAi(key: string): boolean {
+    return this.aiVerified.has(key);
+  }
+
   setCl(key: string, val: string): void {
+    // A manual choice replaces the machine's, so drop the "read from photos" mark.
+    this.aiVerified.delete(key);
     this.cl[key] = this.cl[key] === val ? null : val;
+    this.clWhy[key] = this.cl[key] === null
+      ? 'Cleared by ' + this.currentUserName + '.'
+      : 'Set manually by ' + this.currentUserName + ' — overrides the automatic check.';
   }
 
   toggleGallerySlot(slot: GallerySlot): void {
     slot.selected = !slot.selected;
   }
 
+  /** "FrontLeftSide" → "Front Left Side" — used for photos with no gallery slot. */
+  private static humanisePhotoKey(key: string): string {
+    return key
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   private buildGallerySlots(photoUrls: PhotoUrls, savedSelection: string[]): GallerySlot[] {
     const slots: GallerySlot[] = [];
+    const used = new Set<string>();
+
+    const add = (key: string, label: string) => {
+      const url = (photoUrls as any)?.[key];
+      if (!url || used.has(key)) return;
+      used.add(key);
+      slots.push({
+        label,
+        key,
+        url,
+        selected: savedSelection.length === 0 || savedSelection.includes(key)
+      });
+    };
+
+    // Named gallery slots first, so the familiar report order is preserved.
     for (const def of GALLERY_SLOT_DEFS) {
       const resolvedKey = def.keys.find(k => !!(photoUrls as any)?.[k]);
-      if (!resolvedKey) continue;
-      slots.push({
-        label: def.label,
-        key: resolvedKey,
-        url: (photoUrls as any)[resolvedKey],
-        selected: savedSelection.length === 0 || savedSelection.includes(resolvedKey)
-      });
+      if (resolvedKey) add(resolvedKey, def.label);
     }
+
+    // Then everything else that was uploaded — a photo with no named slot (an
+    // alternate for a slot already filled, or a type the gallery never listed)
+    // was previously impossible to pick for the report.
+    for (const key of Object.keys(photoUrls || {})) {
+      add(key, QualityControlUpdateComponent.humanisePhotoKey(key));
+    }
+
     return slots;
   }
 
@@ -138,7 +246,10 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     private usersSvc: UsersService,
     private valuationSvc: ValuationService,
     private auth: Auth,
-    private historyLogger: HistoryLoggerService
+    private historyLogger: HistoryLoggerService,
+    // The app is zoneless: state set after an async call is not an event-listener
+    // turn, so it needs an explicit nudge to reach the view.
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -188,69 +299,27 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Pre-fills every checklist card from the earlier workflow steps and records what
+   * each verdict was based on. The rules live in shared/qc-checklist.ts so the QC
+   * view page shows exactly the same verdicts and notes.
+   */
   private prefillChecklist(): void {
-    const vd  = this.report?.vehicleDetails;
-    const ins = this.report?.inspectionDetails;
-    const ve  = this.report?.valuationResponse as any;
-    const qcFormVal = this.form.getRawValue();
+    const v  = this.form.getRawValue();
+    const ve = this.report?.valuationResponse as any;
 
-    const chassisPunch  = (qcFormVal.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
-    const overallRating = (qcFormVal.overallRating || '').toUpperCase();
-    const engineCond    = (ins?.engineCondition     || '').toUpperCase();
-    const tyreCond      = (ins?.overallTyreCondition || '').toUpperCase();
-    const exteriorCond  = (ins?.exteriorCondition   || '').toUpperCase();
-    const bodyCondition = (ins?.bodyCondition       || '').toUpperCase();
-    const valuationAmt  = Number(qcFormVal.valuationAmount ?? 0);
-    const low           = Number(ve?.lowRange  ?? ve?.LowRange  ?? 0);
-    const high          = Number(ve?.highRange ?? ve?.HighRange ?? 0);
+    const result = buildQcChecklist({
+      report: this.report,
+      overallRating: v.overallRating,
+      chassisPunch: v.chassisPunch,
+      valuationAmount: v.valuationAmount,
+      lowRange:  ve?.lowRange  ?? ve?.LowRange,
+      highRange: ve?.highRange ?? ve?.HighRange,
+      photoKeys: this.photoKeys as string[]
+    });
 
-    const condMap = (v: string): string | null =>
-      v === 'GOOD' ? 'good' : v === 'AVERAGE' ? 'average' : v === 'POOR' ? 'poor' : null;
-
-    // Document Verification
-    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
-    if (chassisPunch === 'ORIGINAL')   this.cl['docChassis'] = 'original';
-    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
-    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
-
-    // Data Accuracy
-    if (vd?.registrationNumber)            this.cl['accReg']          = 'pass';
-    if (vd?.chassisNumber || ins?.vinPlate) this.cl['accChassis']      = 'pass';
-    if ((ins?.odometer ?? 0) > 0)          this.cl['accOdo']          = 'pass';
-    if (vd?.fuel)                          this.cl['accFuel']         = 'pass';
-    if (vd?.make && vd?.model)             this.cl['accVahan']        = 'pass';
-    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner'] = 'pass';
-    if (vd?.ownerName)                     this.cl['accSerial']       = 'pass';
-    if (ins?.vehicleInspectedBy)           this.cl['accMandatory']    = 'pass';
-    if (ins?.remarks || ins?.vehicleInspectedBy) this.cl['accRemarks'] = 'pass';
-
-    // Valuation Quality
-    const photoCount = this.photoKeys?.length ?? 0;
-    if (photoCount >= 8)      this.cl['valMinPhotos'] = 'pass';
-    else if (photoCount > 0)  this.cl['valMinPhotos'] = 'fail';
-    if (low > 0 && high > 0)
-      this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
-    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
-      const age = new Date().getFullYear() - vd.yearOfMfg;
-      const avgKm = age > 0 ? ins!.odometer / age : 0;
-      this.cl['valAgeOdo'] = avgKm < 60000 ? 'pass' : 'fail';
-    }
-    if (overallRating === 'GOOD') this.cl['valScore'] = 'pass';
-    else if (overallRating === 'POOR') this.cl['valScore'] = 'fail';
-
-    // QC Recommendation
-    this.cl['recCondition'] = condMap(overallRating);
-    this.cl['recEngine']    = condMap(engineCond);
-    const extVal = exteriorCond || bodyCondition;
-    if (extVal === 'GOOD') this.cl['recExterior'] = 'good';
-    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
-    else if (extVal === 'POOR') this.cl['recExterior'] = 'major';
-    if (tyreCond === 'GOOD')     this.cl['recTyre'] = 'good';
-    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
-    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
-    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') this.cl['recFinal'] = 'not-recommended';
-    else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') this.cl['recFinal'] = 'recommended';
-    else this.cl['recFinal'] = 'conditional';
+    this.cl = result.cl;
+    this.clWhy = result.why;
   }
 
   // Load Data
@@ -269,19 +338,27 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         this.gallerySlots = this.buildGallerySlots(reportData.photoUrls, gallerySelection || []);
         this.patchForm(qcData);
         this.prefillChecklist();
-        // Load previously saved checklist values (override prefilled)
-        if (qcData.qcChecklist) {
-          Object.entries(qcData.qcChecklist).forEach(([k, v]) => {
-            if (v !== null && v !== undefined) this.cl[k] = v;
-          });
-        }
+        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);
         if (qcData.qcChecklistRemarks) {
           Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
             if (v) this.clRemarks[k] = v;
           });
         }
+        // Anything the reviewer already saved is theirs. The reading lands after this
+        // point, so remember these keys now — otherwise it would quietly overwrite a
+        // decision a person made and saved.
+        this.savedByReviewer = new Set(
+          Object.entries(qcData.qcChecklist || {})
+            .filter(([, v]) => v !== null && v !== undefined)
+            .map(([k]) => k)
+        );
+
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
+
+        // Reads the photos without being asked. The backend keeps the answer against
+        // this photo set, so only the first open of a case actually spends anything.
+        this.runAiPhotoAudit();
       },
       error: (err) => {
         this.error = err.message || 'Failed to load quality control details.';

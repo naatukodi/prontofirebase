@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { BrandService, BRANDS, BrandKey } from '../services/brand.service';
 
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -31,6 +32,16 @@ export class LoginComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private zone = inject(NgZone);
+
+  /** Public so the template can read isPinned / active(). */
+  brand = inject(BrandService);
+  brands = Object.values(BRANDS);
+
+  /** Picking a company repaints the login screen in that brand immediately, so it is
+   *  obvious which one you are signing into before the OTP is sent. */
+  chooseBrand(key: BrandKey) {
+    this.brand.select(key);
+  }
 
   phone = '+91';
   year = new Date().getFullYear();

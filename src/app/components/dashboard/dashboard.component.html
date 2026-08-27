@@ -179,7 +179,11 @@
         </mat-form-field>
       </div>
 
-      <div *ngIf="filteredClaims.length === 0" class="empty">No valuations to display.</div>
+      <!-- Distinguish "this company has no cases at all" from "nothing matches the
+           current filter" — a newly created brand hits the first one on every load. -->
+      <div *ngIf="filteredClaims.length === 0" class="empty">
+        {{ claims.length === 0 ? 'No cases yet.' : 'No cases match this filter.' }}
+      </div>
 
       <div *ngIf="filteredClaims.length > 0" class="table-card">
         <div class="table-title">

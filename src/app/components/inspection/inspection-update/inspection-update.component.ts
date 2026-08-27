@@ -1,11 +1,11 @@
 // src/app/valuation-inspection-update/inspection-update.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap, take, catchError } from 'rxjs/operators';
-import { Observable, Subscription, of } from 'rxjs';
+import { Observable, Subscription, of, firstValueFrom } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
 
@@ -196,7 +196,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     private _snackBar: MatSnackBar,
     private auth: Auth,
     private historyLogger: HistoryLoggerService,
-    private stakeholderSvc: StakeholderService
+    private stakeholderSvc: StakeholderService,
+    // The app is zoneless: work resumed after an await is not an event-listener
+    // turn, so state set there needs an explicit nudge to reach the view.
+    private cdr: ChangeDetectorRef
   ) {}
 
   private resolveVehicleType(): void {
@@ -343,7 +346,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       steeringLinkages: [''],
       bonnet: [''],
       mudguards: [''],
-      allGlasses: [false],
+      allGlasses: [''],
       boom: [''],
       bucket: [''],
       chainTrack: [''],
@@ -555,17 +558,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         // STORE ORIGINAL DATA
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
-        
-        // Skip mandatory photo check if read-only, we aren't saving anyway
-        if (!this.isViewOnly) {
-            this.checkMandatoryPhotosBeforeSave().then(isComplete => {
-            console.log('📸 Photo Validation Result:', {
-                isComplete: isComplete,
-                missingPhotos: this.missingPhotos,
-                errorMessage: this.mandatoryPhotosError
-            });
-            });
-        }
+        // Mandatory photos are checked in onSave / onSubmit — warning about them on
+        // load blocked the form before the inspector had done anything.
       },
       error: err => {
         console.error('❌ Error Loading Inspection:', err);
@@ -627,7 +621,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       steeringLinkages: nc(data.steeringLinkages),
       bonnet: nc(data.bonnet),
       mudguards: nc(data.mudguards),
-      allGlasses: data.allGlasses || false,
+      allGlasses: nc(data.allGlasses),
       boom: nc(data.boom),
       bucket: nc(data.bucket),
       chainTrack: nc(data.chainTrack),
@@ -889,31 +883,57 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     return fd;
   }
 
+  /**
+   * Opens the photo upload screen. Reachable at any time — Save refuses to run
+   * until the mandatory photos exist, so gating this on a successful save left a
+   * fresh inspection with no way to get here at all.
+   *
+   * Navigating away drops unsaved form edits, so warn first when there are any.
+   */
   onClick() {
-    this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
-      // [ADDED FOR PDF READ-ONLY VIEW] pass viewOnly forward to the image upload screen
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType, viewOnly: this.isViewOnly }
-    });
+    if (!this.isViewOnly && this.form.dirty && !this.saved) {
+      const proceed = confirm(
+        'You have unsaved changes on this form.\n\n' +
+        'Opening the photo screen will discard them. Continue?'
+      );
+      if (!proceed) return;
+    }
+    this.goBackToPhotoUpload();
   }
+
+  /**
+   * Dropdowns in the fixed General Condition block, mapped to the visibilityMap key
+   * that governs them and the value to prefill. Free-text and numeric controls
+   * (Vehicle Inspected By, Inspection Location, Body Type, Odometer, Remarks) are
+   * deliberately absent — the inspector fills those in by hand.
+   */
+  private static readonly STATIC_DEFAULTS: { control: string; visibility: string; value: any }[] = [
+    { control: 'vehicleMoved',          visibility: 'vehicleMoved',          value: true   },
+    { control: 'engineStarted',         visibility: 'engineStarted',         value: true   },
+    { control: 'vinPlate',              visibility: 'vinPlate',              value: true   },
+    { control: 'otherAccessoryFitment', visibility: 'otherAccessoryFitment', value: false  },
+    { control: 'roadWorthyCondition',   visibility: 'roadWorthyCondition',   value: true   },
+    { control: 'overallTyreCondition',  visibility: 'tyreCondition',         value: 'GOOD' },
+  ];
 
   public updateDefaultValues(): void {
     if (this.isViewOnly || !this.valuationType) { return; }
     const defaults: Record<string, any> = {};
 
-    // Old static fields via visibilityMap
-    Object.keys(this.form.controls).forEach(key => {
-      if (!this.showField(key)) { return; }
-      const control = this.form.get(key)!;
-      if (control.value === '' || control.value == null) {
-        defaults[key] = typeof control.value === 'boolean' ? true : 'Good';
+    const isBlank = (v: any) => v === '' || v == null;
+
+    for (const d of InspectionUpdateComponent.STATIC_DEFAULTS) {
+      if (!this.showField(d.visibility)) { continue; }
+      if (isBlank(this.form.get(d.control)?.value)) {
+        defaults[d.control] = d.value;
       }
-    });
+    }
 
     // Registry fields — use each field's declared default
     for (const section of this.registrySections) {
       for (const field of section.fields) {
         const control = this.form.get(field.key);
-        if (control && (control.value === '' || control.value == null)) {
+        if (control && isBlank(control.value)) {
           defaults[field.key] = field.default ?? (field.type === 'condition' ? 'GOOD' : 'YES');
         }
       }
@@ -947,7 +967,12 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   showMissingPhotosDialog(): void {
     const missingList = this.missingPhotos.map(p => `• ${p}`).join('\n');
-    const message = `⚠️ Cannot save inspection!\n\n${this.missingPhotos.length} mandatory images are missing:\n\n${missingList}\n\nPlease go back and upload all required photos before saving.`;
+    // The details are already saved by the time this runs, so say so — the old
+    // wording ("Cannot save inspection!") is what made people retype everything.
+    const message =
+      `✅ Inspection details saved.\n\n` +
+      `⚠️ ${this.missingPhotos.length} mandatory images are still missing:\n\n${missingList}\n\n` +
+      `Upload them to move this case forward. Your entered details are safe.`;
     alert(message);
   }
 
@@ -994,12 +1019,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const photosValid = await this.checkMandatoryPhotosBeforeSave();
-    if (!photosValid) {
-      this.showMissingPhotosDialog();
-      return;
-    }
-
     this.error = null;
     this.saving = true;
     this.saveInProgress = true;
@@ -1007,7 +1026,37 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const changedFields = this.getChangedFields();
     const changedFieldsStr = changedFields.map(f => f.fieldName).join(', ');
 
-    this.inspectionSvc.updateInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact, payload)
+    // Persist the typed details BEFORE checking photos. The old order checked
+    // photos first and returned without saving, so opening the upload screen threw
+    // away everything the inspector had entered and they had to type it all again.
+    // Missing photos should block the case moving on, not cost someone their work.
+    try {
+      await firstValueFrom(
+        this.inspectionSvc.updateInspectionDetails(
+          this.valuationId, this.vehicleNumber, this.applicantContact, payload));
+    } catch {
+      this.saving = false;
+      this.saveInProgress = false;
+      this.error = 'Failed to save inspection details.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Safe to leave the page now — the "unsaved changes" prompt would be a lie.
+    this.form.markAsPristine();
+    this.saved = true;
+
+    const photosValid = await this.checkMandatoryPhotosBeforeSave();
+    if (!photosValid) {
+      this.saving = false;
+      this.saveInProgress = false;
+      this.showMissingPhotosDialog();
+      this.cdr.detectChanges();
+      return;
+    }
+
+    // Photos are complete: advance the workflow and log it.
+    of(null)
       .pipe(
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
           workflow: 'AVO',

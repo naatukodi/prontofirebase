@@ -31,6 +31,7 @@
       <button
         mat-raised-button
         color="warn"
+        type="button"
         (click)="goBackToPhotoUpload()"
         class="go-back-btn">
         ← Go Back to Upload Photos
@@ -117,8 +118,7 @@
         <mat-form-field *ngIf="showField('tyreCondition')" appearance="fill">
           <mat-label>Overall Tyre Condition</mat-label>
           <mat-select formControlName="overallTyreCondition">
-            <mat-option [value]="true">Good</mat-option>
-            <mat-option [value]="false">Not Good</mat-option>
+            <mat-option *ngFor="let opt of conditionOptions" [value]="opt">{{ opt }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="fill">
@@ -131,8 +131,8 @@
         <mat-form-field *ngIf="showField('roadWorthyCondition')" appearance="fill">
           <mat-label>Road Worthy Condition</mat-label>
           <mat-select formControlName="roadWorthyCondition">
-            <mat-option [value]="true">OK</mat-option>
-            <mat-option [value]="false">Not OK</mat-option>
+            <mat-option [value]="true">Yes</mat-option>
+            <mat-option [value]="false">No</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -175,52 +175,13 @@
         <button
           mat-raised-button
           color="primary"
+          type="button"
           (click)="onClick()"
-          [disabled]="(!saved && !isViewOnly) || saving">
+          [disabled]="saving">
           {{ isViewOnly ? 'View Images' : 'View / Upload Images' }}
         </button>
       </div>
 
-    </fieldset>
-
-    <fieldset *ngIf="!isViewOnly">
-      <div class="button-group">
-        <button
-          mat-raised-button
-          color="accent"
-          type="button"
-          [disabled]="saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)"
-          [title]="
-            mandatoryPhotosError && missingPhotos.length > 0
-              ? 'Upload all mandatory photos first'
-              : 'Save inspection'
-          "
-          (click)="onSave()">
-          {{ saving && saveInProgress ? 'Saving…' : 'Save' }}
-        </button>
-
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="!saved || saving || (mandatoryPhotosError !== null && missingPhotos.length > 0)"
-          [title]="
-            mandatoryPhotosError && missingPhotos.length > 0
-              ? 'Upload all mandatory photos first'
-              : 'Submit inspection'
-          ">
-          {{ saving && submitInProgress ? 'Submitting…' : 'Submit' }}
-        </button>
-
-        <button
-          mat-raised-button
-          color="warn"
-          type="button"
-          [disabled]="saving"
-          (click)="onCancel()">
-          Cancel
-        </button>
-      </div>
     </fieldset>
 
   </ng-container>

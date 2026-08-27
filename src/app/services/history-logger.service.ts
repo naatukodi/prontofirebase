@@ -21,7 +21,7 @@ export class HistoryLoggerService {
   ): Promise<void> {
     try {
       await this.http.post(
-        `${this.apiBaseUrl}/valuations/${valuationId}/workflow/addhistory`,
+        `${this.apiBaseUrl}valuations/${valuationId}/workflow/addhistory`,
         {
           ValuationId: valuationId,
           DateTime: new Date().toISOString(),

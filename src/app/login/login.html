@@ -4,14 +4,14 @@
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-mark">
-        <span class="hero-mark-badge">V</span>
-        <span class="hero-mark-word">VEHGA</span>
+        <span class="hero-mark-badge">{{ brand.profile().initial }}</span>
+        <span class="hero-mark-word">{{ brand.profile().wordmark }}</span>
       </div>
 
       <h1 class="hero-title">
-        <span class="hero-vehga">VEHGA</span><span class="hero-inspections">INSPECTIONS</span>
+        <span class="hero-vehga">{{ brand.profile().titleLead }}</span><span class="hero-inspections">{{ brand.profile().titleTail }}</span>
       </h1>
-      <p class="hero-tagline">India's trusted vehicle inspection &amp; valuation network</p>
+      <p class="hero-tagline">{{ brand.profile().tagline }}</p>
 
       <ul class="hero-points">
         <li>On-ground vehicle inspections with photo evidence</li>
@@ -34,6 +34,24 @@
       <p class="form-sub">Enter your registered mobile number to receive an OTP</p>
 
       <form (submit)="$event.preventDefault()">
+        <!-- Company picker. Hidden when this deployment is pinned to one brand, which
+             is how a future per-brand site drops it without a code change. -->
+        <div class="form-group" *ngIf="!brand.isPinned">
+          <label for="brand">Company</label>
+          <div class="brand-choice">
+            <button
+              *ngFor="let b of brands"
+              type="button"
+              class="brand-option"
+              [class.selected]="brand.active() === b.key"
+              (click)="chooseBrand(b.key)"
+            >
+              <img [src]="b.logo" [alt]="b.name" class="brand-option-logo" />
+              <span>{{ b.name }}</span>
+            </button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="phone">Phone number</label>
           <input
@@ -71,7 +89,7 @@
         <div id="recaptcha-container"></div>
       </form>
 
-      <p class="form-foot">© {{ year }} Vehga Inspections Private Limited</p>
+      <p class="form-foot">© {{ year }} {{ brand.profile().legalName }}</p>
     </div>
   </div>
 </div>
