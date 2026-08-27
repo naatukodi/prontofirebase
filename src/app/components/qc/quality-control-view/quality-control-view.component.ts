@@ -1,6 +1,6 @@
 // src/app/components/qc/quality-control-view/quality-control-view.component.ts
 
-import { Component, OnInit, inject, HostListener } from '@angular/core';
+import { Component, OnInit, inject, HostListener, ChangeDetectorRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
 import { ValuationService } from '../../../services/valuation.service';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service'; 
@@ -41,6 +41,62 @@ export class QualityControlViewComponent implements OnInit {
   private authz = inject(AuthorizationService);
 
   viewModel: QualityControlViewModel | null = null;
+
+  // ── What the photos say (read-only mirror of the update page) ───────────
+  aiRunning = false;
+  aiError: string | null = null;
+  aiObservations: string[] = [];
+  aiReadings: QcAiReadings | null = null;
+  aiReadAt: string | null = null;
+  aiVerified = new Set<string>();
+  private savedByReviewer = new Set<string>();
+
+  isAi(key: string): boolean { return this.aiVerified.has(key); }
+
+  /**
+   * Loads what the photos say. Read-only: this page shows the reading and the
+   * evidence, but a verdict is only ever changed on the update page.
+   */
+  loadAiAudit(force = false): void {
+    if (this.aiRunning) return;
+    this.aiRunning = true;
+    this.aiError = null;
+    this.cdr.detectChanges();
+
+    this.qcService
+      .runAiPhotoAudit(this.valuationId, this.vehicleNumber, this.applicantContact, force)
+      .subscribe({
+        next: (audit) => {
+          this.aiRunning = false;
+          this.aiObservations = audit.observations || [];
+          this.aiReadings = audit.readings || null;
+          this.aiReadAt = audit.readAt || null;
+
+          if (audit.error) {
+            this.aiError = audit.error;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          Object.entries(audit.why || {}).forEach(([k, v]) => {
+            if (v && !this.savedByReviewer.has(k)) this.clWhy[k] = v;
+          });
+
+          Object.entries(audit.cl || {}).forEach(([k, v]) => {
+            if (!v || this.savedByReviewer.has(k)) return;
+            this.cl[k] = v;
+            this.aiVerified.add(k);
+          });
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.aiRunning = false;
+          this.aiError = err?.error?.message || 'Could not reach the photo reader.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
 
   valuationId!: string;
   vehicleNumber!: string;
@@ -175,7 +231,9 @@ export class QualityControlViewComponent implements OnInit {
     private qcService: QualityControlService,
     private valuationService: ValuationService,
     private workflowService: WorkflowService, 
-    private userService: UsersService         
+    private userService: UsersService,
+    // Zoneless: the reading arrives long after load and needs an explicit nudge.
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -331,7 +389,18 @@ export class QualityControlViewComponent implements OnInit {
           });
         }
 
+        // Whatever the reviewer saved is theirs; the reading lands after this.
+        this.savedByReviewer = new Set(
+          Object.entries(qcData.qcChecklist || {})
+            .filter(([, v]) => v !== null && v !== undefined)
+            .map(([k]) => k)
+        );
+
         this.loading = false;
+
+        // Same reading as the update page, and free after the first open because
+        // the backend keeps it against the photo set. This page only displays it.
+        this.loadAiAudit();
       },
       error: (err: HttpErrorResponse) => {
         this.loading = false;

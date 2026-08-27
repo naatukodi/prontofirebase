@@ -155,7 +155,12 @@
 
 .rph-valuation {
   flex-shrink: 0;
-  width: 210px;
+  // Sized to its own figures rather than pinned, so a crore-scale valuation pushes
+  // the panel further left instead of clipping its digits. Capped so it can never
+  // crowd out the vehicle identity beside it.
+  width: max-content;
+  min-width: 210px;
+  max-width: 42%;
   padding: 12px 16px;
   background: #fff;
   display: flex;
@@ -177,6 +182,8 @@
   font-weight: 900;
   color: #025054;
   line-height: 1.1;
+  // A rupee figure must never break across lines mid-number.
+  white-space: nowrap;
 }
 
 .rphv-rating {
@@ -196,9 +203,11 @@
 }
 
 .rphv-range-item {
-  flex: 1;
+  // Auto rather than equal thirds: LOW/MID/HIGH take the width their own figures
+  // need, so a longer number widens its column instead of being cut off.
+  flex: 1 1 auto;
   text-align: center;
-  padding: 0 4px;
+  padding: 0 6px;
   & + & { border-left: 1px solid rgba(0,0,0,0.08); }
 }
 
@@ -213,6 +222,7 @@
 .rphv-rv {
   font-size: 0.65rem;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .rphv-low  { .rphv-rl, .rphv-rv { color: #dc2626; } }

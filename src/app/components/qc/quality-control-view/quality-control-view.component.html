@@ -263,32 +263,32 @@
           <div class="qc-card" [class.card-ok]="cl['docRC']==='ok'" [class.card-flag]="cl['docRC']==='flag'">
             <div class="qc-card-title">Registration Certificate (RC)</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docRC']==='ok'" [class.cvb-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docRC']"><span class="qc-why-icon">🛈</span>{{ clWhy['docRC'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docRC']"><span class="qc-ai-tag" *ngIf="isAi('docRC')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docRC'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['docIns']==='ok'" [class.card-flag]="cl['docIns']==='flag'">
             <div class="qc-card-title">Insurance Policy</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docIns']==='ok'" [class.cvb-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docIns']"><span class="qc-why-icon">🛈</span>{{ clWhy['docIns'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docIns']"><span class="qc-ai-tag" *ngIf="isAi('docIns')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docIns'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'">
             <div class="qc-card-title">Permit</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docPermit']==='ok'" [class.cvb-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docPermit']"><span class="qc-why-icon">🛈</span>{{ clWhy['docPermit'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docPermit']"><span class="qc-ai-tag" *ngIf="isAi('docPermit')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docPermit'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['docFitness']==='ok'" [class.card-flag]="cl['docFitness']==='flag'">
             <div class="qc-card-title">Fitness Certificate</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docFitness']==='ok'" [class.cvb-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docFitness']"><span class="qc-why-icon">🛈</span>{{ clWhy['docFitness'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docFitness']"><span class="qc-ai-tag" *ngIf="isAi('docFitness')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docFitness'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['docTax']==='ok'" [class.card-flag]="cl['docTax']==='flag'">
             <div class="qc-card-title">Road Tax</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docTax']"><span class="qc-why-icon">🛈</span>{{ clWhy['docTax'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docTax']"><span class="qc-ai-tag" *ngIf="isAi('docTax')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docTax'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['docHypo']==='same'" [class.card-flag]="cl['docHypo']==='different'">
             <div class="qc-card-title">Hypothecation</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-why-icon">🛈</span>{{ clWhy['docHypo'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-ai-tag" *ngIf="isAi('docHypo')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docHypo'] }}</div>
           </div>
         </div>
           </div>
@@ -303,6 +303,64 @@
       <div class="qc-section">
         <div class="qc-section-header">Data Accuracy</div>
 
+        <!-- What the photos say. Read-only here; verdicts change on the update page. -->
+        <div class="qc-ai-bar">
+          <div class="qc-ai-copy">
+            <strong *ngIf="aiRunning">Reading the inspection photos …</strong>
+            <strong *ngIf="!aiRunning && !aiError">What the photos say</strong>
+            <strong *ngIf="!aiRunning && aiError">The photos could not be read</strong>
+            <small *ngIf="!aiRunning && !aiError">
+              Read from the uploaded photos and compared against the RC and the inspection
+              report.<span *ngIf="aiReadAt"> Last read {{ aiReadAt | date:'d MMM y, h:mm a' }}.</span>
+            </small>
+          </div>
+        </div>
+
+        <div class="qc-ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
+
+        <div class="qc-ai-read" *ngIf="aiReadings && !aiError">
+          <div class="qc-ai-notes-head">Read from the photos</div>
+          <div class="qc-ai-grid">
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">Number plate</span>
+              <span class="qc-ai-v">{{ aiReadings.registrationPlate || '— not legible' }}</span>
+            </div>
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">Chassis plate</span>
+              <span class="qc-ai-v">{{ aiReadings.chassisNumber || '— not legible' }}</span>
+            </div>
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">Chassis stencil</span>
+              <span class="qc-ai-v">{{ aiReadings.chassisStencil || '— not legible' }}</span>
+            </div>
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">VIN plate</span>
+              <span class="qc-ai-v">{{ aiReadings.vinPlate || '— not legible' }}</span>
+            </div>
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">Odometer</span>
+              <span class="qc-ai-v">{{ aiReadings.odometerKm != null ? (aiReadings.odometerKm | number:'1.0-0') + ' km' : '— not legible' }}</span>
+            </div>
+            <div class="qc-ai-item">
+              <span class="qc-ai-k">Capture date</span>
+              <span class="qc-ai-v">{{ aiReadings.captureDates.length ? aiReadings.captureDates.join(', ') : '— none stamped' }}</span>
+            </div>
+            <div class="qc-ai-item qc-ai-item--wide">
+              <span class="qc-ai-k">Capture location</span>
+              <span class="qc-ai-v">{{ aiReadings.places.length ? aiReadings.places.join(' · ') : '— none stamped' }}</span>
+            </div>
+            <div class="qc-ai-item qc-ai-item--wide">
+              <span class="qc-ai-k">Photos with a stamp</span>
+              <span class="qc-ai-v">{{ aiReadings.stampedPhotos }} of {{ aiReadings.totalPhotos }} read</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="qc-ai-notes" *ngIf="aiObservations.length">
+          <div class="qc-ai-notes-head">What the reader noticed</div>
+          <ul><li *ngFor="let note of aiObservations">{{ note }}</li></ul>
+        </div>
+
         <div class="qc-columns">
           <div class="qc-column">
         <div class="qc-sub-header">VEHICLE IDENTITY VERIFICATION</div>
@@ -310,32 +368,32 @@
           <div class="qc-card" [class.card-ok]="cl['accReg']==='pass'" [class.card-flag]="cl['accReg']==='fail'">
             <div class="qc-card-title">Registration Number matches photos &amp; RC</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accReg']==='pass'" [class.cvb-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accReg']"><span class="qc-why-icon">🛈</span>{{ clWhy['accReg'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accReg']"><span class="qc-ai-tag" *ngIf="isAi('accReg')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accReg'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accChassis']==='pass'" [class.card-flag]="cl['accChassis']==='fail'">
             <div class="qc-card-title">Chassis Number matches photos, RC &amp; stencil</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accChassis']==='pass'" [class.cvb-flag]="cl['accChassis']==='fail'">{{ cl['accChassis'] === 'pass' ? '✓ Pass' : cl['accChassis'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accChassis']"><span class="qc-why-icon">🛈</span>{{ clWhy['accChassis'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accChassis']"><span class="qc-ai-tag" *ngIf="isAi('accChassis')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accChassis'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accOdo']==='pass'" [class.card-flag]="cl['accOdo']==='fail'">
             <div class="qc-card-title">Odometer in photo matches reported KM</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accOdo']==='pass'" [class.cvb-flag]="cl['accOdo']==='fail'">{{ cl['accOdo'] === 'pass' ? '✓ Pass' : cl['accOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accOdo']"><span class="qc-why-icon">🛈</span>{{ clWhy['accOdo'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accOdo']"><span class="qc-ai-tag" *ngIf="isAi('accOdo')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accOdo'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accVIN']==='pass'" [class.card-flag]="cl['accVIN']==='fail'">
             <div class="qc-card-title">VIN plate matches RC &amp; inspection report</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accVIN']==='pass'" [class.cvb-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accVIN']"><span class="qc-why-icon">🛈</span>{{ clWhy['accVIN'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accVIN']"><span class="qc-ai-tag" *ngIf="isAi('accVIN')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accVIN'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accMfgReg']==='pass'" [class.card-flag]="cl['accMfgReg']==='fail'">
             <div class="qc-card-title">Manufacture year vs registration gap is logical</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accMfgReg']==='pass'" [class.cvb-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accMfgReg']"><span class="qc-why-icon">🛈</span>{{ clWhy['accMfgReg'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accMfgReg']"><span class="qc-ai-tag" *ngIf="isAi('accMfgReg')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accMfgReg'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accVahan']==='pass'" [class.card-flag]="cl['accVahan']==='fail'">
             <div class="qc-card-title">VAHAN data matches physical inspection</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accVahan']==='pass'" [class.cvb-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accVahan']"><span class="qc-why-icon">🛈</span>{{ clWhy['accVahan'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accVahan']"><span class="qc-ai-tag" *ngIf="isAi('accVahan')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accVahan'] }}</div>
           </div>
         </div>
           </div>
@@ -346,12 +404,12 @@
           <div class="qc-card" [class.card-ok]="cl['accOwner']==='pass'" [class.card-flag]="cl['accOwner']==='fail'">
             <div class="qc-card-title">Owner &amp; applicant identity verified</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accOwner']==='pass'" [class.cvb-flag]="cl['accOwner']==='fail'">{{ cl['accOwner'] === 'pass' ? '✓ Pass' : cl['accOwner'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accOwner']"><span class="qc-why-icon">🛈</span>{{ clWhy['accOwner'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accOwner']"><span class="qc-ai-tag" *ngIf="isAi('accOwner')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accOwner'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
             <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accSerial']==='pass'" [class.cvb-flag]="cl['accSerial']==='fail'">{{ cl['accSerial'] === 'pass' ? '✓ Pass' : cl['accSerial'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accSerial']"><span class="qc-why-icon">🛈</span>{{ clWhy['accSerial'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accSerial']"><span class="qc-ai-tag" *ngIf="isAi('accSerial')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accSerial'] }}</div>
           </div>
         </div>
           </div>
@@ -362,12 +420,12 @@
           <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'">
             <div class="qc-card-title">Transmission type matches RC &amp; vehicle class</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accTransmission']==='pass'" [class.cvb-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accTransmission']"><span class="qc-why-icon">🛈</span>{{ clWhy['accTransmission'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accTransmission']"><span class="qc-ai-tag" *ngIf="isAi('accTransmission')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accTransmission'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accFuel']==='pass'" [class.card-flag]="cl['accFuel']==='fail'">
             <div class="qc-card-title">Fuel type matches engine specs &amp; RC</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accFuel']==='pass'" [class.cvb-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accFuel']"><span class="qc-why-icon">🛈</span>{{ clWhy['accFuel'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accFuel']"><span class="qc-ai-tag" *ngIf="isAi('accFuel')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accFuel'] }}</div>
           </div>
         </div>
           </div>
@@ -378,22 +436,22 @@
           <div class="qc-card" [class.card-ok]="cl['accPhotoLoc']==='pass'" [class.card-flag]="cl['accPhotoLoc']==='fail'">
             <div class="qc-card-title">All photos taken at the same location</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accPhotoLoc']==='pass'" [class.cvb-flag]="cl['accPhotoLoc']==='fail'">{{ cl['accPhotoLoc'] === 'pass' ? '✓ Pass' : cl['accPhotoLoc'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accPhotoLoc']"><span class="qc-why-icon">🛈</span>{{ clWhy['accPhotoLoc'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accPhotoLoc']"><span class="qc-ai-tag" *ngIf="isAi('accPhotoLoc')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accPhotoLoc'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accDaylight']==='pass'" [class.card-flag]="cl['accDaylight']==='fail'">
             <div class="qc-card-title">Vehicle photos taken in clear daylight</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accDaylight']==='pass'" [class.cvb-flag]="cl['accDaylight']==='fail'">{{ cl['accDaylight'] === 'pass' ? '✓ Pass' : cl['accDaylight'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accDaylight']"><span class="qc-why-icon">🛈</span>{{ clWhy['accDaylight'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accDaylight']"><span class="qc-ai-tag" *ngIf="isAi('accDaylight')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accDaylight'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accPlate']==='pass'" [class.card-flag]="cl['accPlate']==='fail'">
             <div class="qc-card-title">Number plate clearly visible front &amp; rear</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accPlate']==='pass'" [class.cvb-flag]="cl['accPlate']==='fail'">{{ cl['accPlate'] === 'pass' ? '✓ Pass' : cl['accPlate'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accPlate']"><span class="qc-why-icon">🛈</span>{{ clWhy['accPlate'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accPlate']"><span class="qc-ai-tag" *ngIf="isAi('accPlate')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accPlate'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['accGPS']==='pass'" [class.card-flag]="cl['accGPS']==='fail'">
             <div class="qc-card-title">GPS timestamp matches inspection date</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accGPS']==='pass'" [class.cvb-flag]="cl['accGPS']==='fail'">{{ cl['accGPS'] === 'pass' ? '✓ Pass' : cl['accGPS'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accGPS']"><span class="qc-why-icon">🛈</span>{{ clWhy['accGPS'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['accGPS']"><span class="qc-ai-tag" *ngIf="isAi('accGPS')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accGPS'] }}</div>
           </div>
         </div>
           </div>
@@ -421,27 +479,27 @@
           <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
             <div class="qc-card-title">Minimum required photos uploaded</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valMinPhotos']"><span class="qc-why-icon">🛈</span>{{ clWhy['valMinPhotos'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['valMinPhotos']"><span class="qc-ai-tag" *ngIf="isAi('valMinPhotos')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valMinPhotos'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
             <div class="qc-card-title">Valuation within acceptable market range</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valInRange']==='pass'" [class.cvb-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valInRange']"><span class="qc-why-icon">🛈</span>{{ clWhy['valInRange'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['valInRange']"><span class="qc-ai-tag" *ngIf="isAi('valInRange')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valInRange'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
             <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valDedupe']==='pass'" [class.cvb-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-why-icon">🛈</span>{{ clWhy['valDedupe'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-ai-tag" *ngIf="isAi('valDedupe')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valDedupe'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['valAgeOdo']==='pass'" [class.card-flag]="cl['valAgeOdo']==='fail'">
             <div class="qc-card-title">Age &amp; odometer consistent with condition rating</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valAgeOdo']==='pass'" [class.cvb-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valAgeOdo']"><span class="qc-why-icon">🛈</span>{{ clWhy['valAgeOdo'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['valAgeOdo']"><span class="qc-ai-tag" *ngIf="isAi('valAgeOdo')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valAgeOdo'] }}</div>
           </div>
           <div class="qc-card" [class.card-ok]="cl['valScore']==='pass'" [class.card-flag]="cl['valScore']==='fail'">
             <div class="qc-card-title">Checklist supports overall vehicle score</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valScore']==='pass'" [class.cvb-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valScore']"><span class="qc-why-icon">🛈</span>{{ clWhy['valScore'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['valScore']"><span class="qc-ai-tag" *ngIf="isAi('valScore')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valScore'] }}</div>
           </div>
         </div>
 
@@ -466,7 +524,7 @@
               [class.cvb-flag]="cl['recCondition']==='poor'">
               {{ cl['recCondition'] === 'good' ? '🟢 Good' : cl['recCondition'] === 'average' ? '🟡 Average' : cl['recCondition'] === 'poor' ? '🔴 Poor' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recCondition']"><span class="qc-why-icon">🛈</span>{{ clWhy['recCondition'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recCondition']"><span class="qc-ai-tag" *ngIf="isAi('recCondition')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recCondition'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -480,7 +538,7 @@
               [class.cvb-flag]="cl['recExterior']==='major'">
               {{ cl['recExterior'] === 'good' ? '✨ Good' : cl['recExterior'] === 'minor' ? '🔧 Minor Damage' : cl['recExterior'] === 'major' ? '💥 Major Damage' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -494,7 +552,7 @@
               [class.cvb-flag]="cl['recEngine']==='poor'">
               {{ cl['recEngine'] === 'good' ? '⚙️ Good' : cl['recEngine'] === 'average' ? '⚠️ Average' : cl['recEngine'] === 'poor' ? '❌ Poor' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -508,7 +566,7 @@
               [class.cvb-flag]="cl['recTyre']==='replacement'">
               {{ cl['recTyre'] === 'good' ? '🟢 Good' : cl['recTyre'] === 'average' ? '🟡 Average' : cl['recTyre'] === 'replacement' ? '🔴 Needs Replacement' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -522,7 +580,7 @@
               [class.cvb-flag]="cl['recDamage']==='major'">
               {{ cl['recDamage'] === 'none' ? '✅ None' : cl['recDamage'] === 'minor' ? '⚠️ Minor' : cl['recDamage'] === 'major' ? '💥 Major' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -534,7 +592,7 @@
               [class.cvb-flag]="cl['recMissingParts']==='present'">
               {{ cl['recMissingParts'] === 'none' ? '✅ None' : cl['recMissingParts'] === 'present' ? '❌ Parts Missing' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
           </div>
 
           <div class="qc-card"
@@ -547,7 +605,7 @@
               [class.cvb-flag]="cl['docChassis']==='tampered'">
               {{ cl['docChassis'] === 'original' ? '✓ Original' : cl['docChassis'] === 'repunched' ? '~ Re-Punched' : cl['docChassis'] === 'tampered' ? '✗ Tampered' : '— Not assessed' }}
             </span>
-            <div class="qc-card-why" *ngIf="clWhy['docChassis']"><span class="qc-why-icon">🛈</span>{{ clWhy['docChassis'] }}</div>
+            <div class="qc-card-why" *ngIf="clWhy['docChassis']"><span class="qc-ai-tag" *ngIf="isAi('docChassis')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docChassis'] }}</div>
           </div>
 
           <div class="qc-card rec-final-card"

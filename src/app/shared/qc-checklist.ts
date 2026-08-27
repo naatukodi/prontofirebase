@@ -118,11 +118,14 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   else                                   mark('docChassis', null,        'Chassis punch not recorded on the QC form.');
 
   // ── Data Accuracy: vehicle identity ───────────────────────────────────────
+  // These four compare a value against what the photo actually shows, and the
+  // form data alone cannot do that — a photo merely existing proves nothing.
+  // They stay unresolved until "Read photos" reads them or a reviewer decides.
   if (vd?.registrationNumber) {
     const plateShots = has('FrontViewGrille', 'RearViewTailgate');
-    mark('accReg', plateShots ? 'pass' : null,
+    mark('accReg', null,
       `RC registration ${vd.registrationNumber}` + (plateShots
-        ? ' — front/rear photos are on file; confirm the plate reads the same.'
+        ? ' — front/rear photos are on file; use "Read photos" on the QC update page, or check the plate by eye.'
         : ' — front/rear photos missing, so the plate cannot be compared.'));
   } else {
     mark('accReg', null, 'No registration number captured to compare against.');
@@ -130,9 +133,9 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
 
   if (vd?.chassisNumber) {
     const stencil = has('ChassisStencilTrace', 'ChassisImprint', 'ChassisVerification');
-    mark('accChassis', stencil ? 'pass' : null,
+    mark('accChassis', null,
       `RC chassis ${vd.chassisNumber}` + (stencil
-        ? ' — stencil/imprint photo on file for comparison.'
+        ? ' — stencil/imprint photo on file; use "Read photos" on the QC update page, or compare it by eye.'
         : ' — no stencil or imprint photo uploaded, so it cannot be cross-checked.'));
   } else {
     mark('accChassis', null, 'No chassis number captured in Vehicle Details.');
@@ -141,18 +144,18 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   const odo = ins?.odometer ?? 0;
   if (odo > 0) {
     const odoShot = has('Odometer', 'InstrumentCluster');
-    mark('accOdo', odoShot ? 'pass' : null,
+    mark('accOdo', null,
       `AVO recorded ${inr(odo)} km` + (odoShot
-        ? ' — odometer photo on file for comparison.'
+        ? ' — odometer photo on file; use "Read photos" on the QC update page, or read the dial by eye.'
         : ' — no odometer photo uploaded.'));
   } else {
     mark('accOdo', 'fail', 'AVO recorded no odometer reading.');
   }
 
   if (has('VinPlate')) {
-    mark('accVIN', ins?.vinPlate ? 'pass' : 'fail', ins?.vinPlate
-      ? 'VIN plate photo uploaded and AVO confirmed the plate is present.'
-      : 'VIN plate photo uploaded but AVO marked the plate as not present.');
+    mark('accVIN', ins?.vinPlate === false ? 'fail' : null, ins?.vinPlate === false
+      ? 'VIN plate photo uploaded but AVO marked the plate as not present.'
+      : 'VIN plate photo on file — use "Read photos" on the QC update page, or compare it to the RC by eye.');
   } else {
     mark('accVIN', ins?.vinPlate === false ? 'fail' : null, ins?.vinPlate === false
       ? 'AVO marked the VIN plate as not present on the vehicle.'
@@ -232,10 +235,15 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     metaEntries.map(([, m]) => (m?.locationText || '').trim()).filter(Boolean)));
 
   if (places.length === 0) {
+    // No stored metadata is NOT the same as no location. The camera app burns the
+    // place and coordinates into the pixels, and WhatsApp strips every EXIF tag on
+    // the way through — so the stamp is usually sitting in the image while this
+    // field is empty. Saying "none carry a location" would be a false negative.
     mark('accPhotoLoc', null,
-      `${photoCount} photo(s) uploaded but none carry a capture location` +
+      `${photoCount} photo(s) uploaded. Their capture location is stamped into the image ` +
+      'itself, which has not been read yet' +
       (ins?.inspectionLocation ? ` (declared: "${ins.inspectionLocation}")` : '') +
-      ' — compare the backgrounds visually.');
+      ' — use "Read photos" on the QC update page, or open them yourself.');
   } else if (places.length === 1) {
     mark('accPhotoLoc', 'pass',
       `All ${metaEntries.length} stamped photo(s) captured at "${places[0]}".`);
@@ -266,8 +274,11 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (!ins?.dateOfInspection) {
     mark('accGPS', null, 'No inspection date declared by AVO to compare the photo timestamps against.');
   } else if (shotDates.length === 0) {
+    // Same false negative as the location above: the timestamp is in the pixels.
     mark('accGPS', null,
-      `AVO declared ${fmtDate(ins.dateOfInspection)} but no photo carries a capture timestamp — compare manually.`);
+      `AVO declared ${fmtDate(ins.dateOfInspection)}. The capture date is stamped into the ` +
+      'photos themselves, which has not been read yet — use "Read photos" on the QC update ' +
+      'page, or open them yourself.');
   } else {
     const declared = new Date(ins.dateOfInspection);
     const offDay = shotDates.filter(d => !sameDay(d, declared));

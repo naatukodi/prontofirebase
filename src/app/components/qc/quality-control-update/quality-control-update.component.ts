@@ -1,6 +1,6 @@
 // src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,7 @@ import { switchMap, map, take, catchError } from 'rxjs/operators';
 import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
-import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
@@ -100,7 +100,81 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   // Gallery page photo selection
   gallerySlots: GallerySlot[] = [];
 
+  // ── AI photo audit ──────────────────────────────────────────────────────
+  aiRunning = false;
+  aiError: string | null = null;
+  aiObservations: string[] = [];
+  /** Keys this run actually verified, so the UI can mark them as machine-read. */
+  aiVerified = new Set<string>();
+  /** What the reader saw, shown so a misread can be told from a wrong vehicle. */
+  aiReadings: QcAiReadings | null = null;
+  aiReadAt: string | null = null;
+  /** Keys carrying a verdict the reviewer already saved — never overwritten. */
+  private savedByReviewer = new Set<string>();
+
+  /**
+   * Reads the case photos and folds the findings into the checklist.
+   *
+   * Run on demand rather than on page load: it costs money per call, and a
+   * reviewer reopening a case should not spend it again for no reason.
+   *
+   * A key the audit could not verify is left alone rather than being cleared —
+   * and the reviewer's own selections are never overwritten, because a human
+   * verdict outranks a machine one.
+   */
+  runAiPhotoAudit(force = false): void {
+    if (this.aiRunning) return;
+    this.aiRunning = true;
+    this.aiError = null;
+    this.cdr.detectChanges();
+
+    this.qcService
+      .runAiPhotoAudit(this.valuationId, this.vehicleNumber, this.applicantContact, force)
+      .subscribe({
+        next: (audit) => {
+          this.aiRunning = false;
+          this.aiObservations = audit.observations || [];
+          this.aiReadings = audit.readings || null;
+          this.aiReadAt = audit.readAt || null;
+
+          if (audit.error) {
+            this.aiError = audit.error;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          // Notes first: even an unresolved check gains a better explanation than
+          // "confirm it by eye" once the photos have actually been looked at.
+          Object.entries(audit.why || {}).forEach(([k, v]) => {
+            if (v && !this.savedByReviewer.has(k)) this.clWhy[k] = v;
+          });
+
+          Object.entries(audit.cl || {}).forEach(([k, v]) => {
+            // A verdict the reviewer saved outranks the machine's, and this arrives
+            // after the page has loaded — so it must never win by being late.
+            if (!v || this.savedByReviewer.has(k)) return;
+            this.cl[k] = v;
+            this.aiVerified.add(k);
+          });
+
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.aiRunning = false;
+          this.aiError = err?.error?.message || 'Could not reach the photo reader.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  /** True while this card's verdict is the one the photo reader produced. */
+  isAi(key: string): boolean {
+    return this.aiVerified.has(key);
+  }
+
   setCl(key: string, val: string): void {
+    // A manual choice replaces the machine's, so drop the "read from photos" mark.
+    this.aiVerified.delete(key);
     this.cl[key] = this.cl[key] === val ? null : val;
     this.clWhy[key] = this.cl[key] === null
       ? 'Cleared by ' + this.currentUserName + '.'
@@ -172,7 +246,10 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     private usersSvc: UsersService,
     private valuationSvc: ValuationService,
     private auth: Auth,
-    private historyLogger: HistoryLoggerService
+    private historyLogger: HistoryLoggerService,
+    // The app is zoneless: state set after an async call is not an event-listener
+    // turn, so it needs an explicit nudge to reach the view.
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -267,8 +344,21 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             if (v) this.clRemarks[k] = v;
           });
         }
+        // Anything the reviewer already saved is theirs. The reading lands after this
+        // point, so remember these keys now — otherwise it would quietly overwrite a
+        // decision a person made and saved.
+        this.savedByReviewer = new Set(
+          Object.entries(qcData.qcChecklist || {})
+            .filter(([, v]) => v !== null && v !== undefined)
+            .map(([k]) => k)
+        );
+
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
+
+        // Reads the photos without being asked. The backend keeps the answer against
+        // this photo set, so only the first open of a case actually spends anything.
+        this.runAiPhotoAudit();
       },
       error: (err) => {
         this.error = err.message || 'Failed to load quality control details.';
