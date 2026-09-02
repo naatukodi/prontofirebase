@@ -733,3 +733,52 @@
   .rps-row { flex-direction: column; align-items: stretch; gap: 2px; }
   .rps-l   { width: auto; }
 }
+
+/* ── Report preview modal ──
+   Wider and taller than the form modals: this one is for reading a page of the
+   PDF, so the box is sized to the viewport rather than to a text field. */
+.modal-box--preview {
+  width: min(1100px, 94vw);
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+}
+
+.pv-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #f1f5f9;
+}
+
+.pv-frame {
+  display: block;
+  width: 100%;
+  height: min(74vh, 900px);
+  border: 0;
+  background: #f1f5f9;
+}
+
+.pv-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  padding: 24px;
+  font-size: 0.85rem;
+  color: #64748b;
+
+  &.pv-state--error { color: #b91c1c; }
+}
+
+/* Says, next to the buttons, why Download is not one of them yet. */
+.pv-hint {
+  margin-right: auto;
+  align-self: center;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #92400e;
+
+  &.pv-hint--ok { color: #15803d; }
+}

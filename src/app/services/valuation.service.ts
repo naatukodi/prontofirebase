@@ -160,6 +160,24 @@ export class ValuationService {
       );
   }
 
+  /**
+   * Runs the duplicate check for one case and records the outcome on it, so the
+   * printed report can state what was found. The server reads engine and chassis
+   * off the case itself, so this replaces the old fetch-details-then-check pair.
+   */
+  runCaseDedupe(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<VehicleDuplicateCheckResponse> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http.post<VehicleDuplicateCheckResponse>(
+      `${this.baseUrl}/${valuationId}/dedupe`, null, { params });
+  }
+
   assignUser(valuationId: string, userId: string): Observable<any> {
     const url = `${this.baseUrl}/${valuationId}/assign`;
     return this.http.post(url, { userId });

@@ -30,8 +30,33 @@ fieldset.nested-group {
     font-weight: 500;
     font-size: 1.1rem;
     color: rgba(0,0,0,0.87);
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 }
+
+/* ── Section scores ────────────────────────────────────────────────────────
+   Bands mirror the printed report: ≥7 good, ≥4 average, below that poor.
+   A section with nothing rated yet shows "Not rated" in neutral grey rather
+   than a number, so an unfilled section never reads as a pass. */
+.score-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+
+  &[data-band='good']    { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+  &[data-band='average'] { background: #fff7ed; color: #b45309; border-color: #fed7aa; }
+  &[data-band='poor']    { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+}
+
 
 /* Grid layout for controls */
 .grid {

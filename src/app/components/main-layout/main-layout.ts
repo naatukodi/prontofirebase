@@ -1,5 +1,5 @@
 // src/app/main-layout.component.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router'; // 1. Added Router imports
 import { CommonModule } from '@angular/common'; // 2. Added CommonModule for *ngIf
 import { HeaderComponent } from '../header/header';
@@ -7,7 +7,6 @@ import { FooterComponent } from '../footer/footer';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter } from 'rxjs/operators'; // 3. Added filter
 import { AuthorizationService } from '../../services/authorization.service';
-import { BrandService } from '../../services/brand.service';
 
 @Component({
   standalone: true,
@@ -15,10 +14,12 @@ import { BrandService } from '../../services/brand.service';
   host: { class: 'main-layout' },
   imports: [CommonModule, HeaderComponent, RouterOutlet, RouterModule, FooterComponent, MatTabsModule],
   styles: [`
+    /* Slightly more room above than when the hero band sat here, so the pill
+       row has some air between it and the header instead of butting against it. */
     ::ng-deep .main-nav-tabs {
       background: transparent !important;
       border-bottom: none !important;
-      padding: 16px 0 4px;
+      padding: 24px 0 6px;
     }
     ::ng-deep .main-nav-tabs .mat-mdc-tab-links {
       display: flex !important;
@@ -81,15 +82,6 @@ import { BrandService } from '../../services/brand.service';
     <app-header></app-header>
 
     <ng-container *ngIf="isDashboard">
-      
-      <section class="hero">
-        <div class="hero-content">
-          <h1>
-            <span style="color: #ffffff;">{{ brand.profile().titleLead }}</span><span style="color: var(--accent);">{{ brand.profile().titleTail }}</span>
-          </h1>
-          <p>Your one-stop vehicle inspection &amp; valuation dashboard</p>
-        </div>
-      </section>
 
       <nav mat-tab-nav-bar [tabPanel]="tabPanel" backgroundColor="primary" class="main-nav-tabs">
         <a mat-tab-link
@@ -128,9 +120,6 @@ export class MainLayoutComponent implements OnInit {
   // Flag to control visibility
   isDashboard: boolean = true;
   isAdmin = false;
-
-  /** Public: the dashboard hero binds its wordmark to brand.profile(). */
-  brand = inject(BrandService);
 
   constructor(private router: Router, private authz: AuthorizationService) {}
 

@@ -474,8 +474,15 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/valuations', this.valuationId, 'stakeholder'], {
-            queryParams: { vehicleNumber: vn, applicantContact: ac }
+          // The case has moved to Backend — follow it there. This also fixes a
+          // wrong path: the route is /valuation (singular), so the old plural
+          // form fell through the wildcard and landed on the dashboard.
+          this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
+            queryParams: {
+              vehicleNumber: vn,
+              applicantContact: ac,
+              valuationType: this.form.get('valuationType')?.value
+            }
           });
         },
         error: err => {

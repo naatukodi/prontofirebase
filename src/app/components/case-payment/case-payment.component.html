@@ -1,131 +1,152 @@
-<h2>Payment Details</h2>
-
-<div *ngIf="loading" style="text-align:center; padding: 20px;">Loading…</div>
-
-<ng-container *ngIf="!loading">
-
-  <!-- Everything currently stored on this case, including who saved it -->
-  <div class="saved-card" *ngIf="saved">
-    <div class="saved-card__title">SAVED PAYMENT DETAILS</div>
-
-    <div class="saved-card__row">
-      <span class="saved-card__label">Status</span>
-      <span class="saved-card__value">{{ saved.status || '—' }}</span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Method</span>
-      <span class="saved-card__value">{{ saved.method || '—' }}</span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Amount</span>
-      <span class="saved-card__value">
-        {{ saved.amount != null ? (saved.amount | currency:'INR':'symbol':'1.0-2') : '—' }}
-      </span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Date</span>
-      <span class="saved-card__value">
-        {{ saved.date ? (saved.date | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
-      </span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Reference</span>
-      <span class="saved-card__value">{{ saved.reference || '—' }}</span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Notes</span>
-      <span class="saved-card__value">{{ saved.notes || '—' }}</span>
-    </div>
-
-    <div class="saved-card__divider"></div>
-
-    <div class="saved-card__row">
-      <span class="saved-card__label">Saved by</span>
-      <span class="saved-card__value saved-card__value--muted">{{ saved.savedBy || '—' }}</span>
-    </div>
-    <div class="saved-card__row">
-      <span class="saved-card__label">Saved on</span>
-      <span class="saved-card__value saved-card__value--muted">
-        {{ saved.savedAt ? (saved.savedAt | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
-      </span>
-    </div>
+<div class="pay-head">
+  <div>
+    <div class="pay-title">Payment Details</div>
+    <div class="pay-sub">Record the QC fee payment for this case</div>
   </div>
+  <button type="button" class="pay-close" (click)="dialogRef.close()" aria-label="Close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
 
-  <div class="form-group">
-    <label>Payment Status *</label>
-    <select [(ngModel)]="paymentStatus" [disabled]="!canEdit()">
-      <option value="">Select</option>
-      <option value="Completed">Completed</option>
-      <option value="Pending">Pending</option>
-      <option value="Credit">Credit</option>
-    </select>
-  </div>
+<div class="pay-body">
 
-  <div class="form-group">
-    <label>Payment Method <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
-    <select [(ngModel)]="paymentMethod" [disabled]="!canEdit()">
-      <option value="">Select</option>
-      <option value="Online">Online</option>
-      <option value="Cash">Cash</option>
-      <option value="UPI">UPI</option>
-      <option value="Card">Card</option>
-    </select>
-  </div>
+  <div *ngIf="loading" class="pay-loading">Loading…</div>
 
-  <div class="form-group">
-    <label>Payment Reference <span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
-    <input type="text"
-           [(ngModel)]="paymentReference"
-           [readonly]="!canEdit()" />
-  </div>
+  <ng-container *ngIf="!loading">
 
-  <div class="form-group">
-    <label>Payment Date (IST) <span *ngIf="paymentStatus !== 'Pending'">*</span><span *ngIf="paymentStatus === 'Pending'" style="color:#888;font-size:0.85em;"> (optional)</span></label>
-    <div class="date-field">
-      <input type="datetime-local"
-             [(ngModel)]="paymentDate"
-             (input)="onDateEdited()"
-             [readonly]="!canEdit()" />
-      <span class="date-field__live" *ngIf="dateIsLive">LIVE</span>
-      <button type="button" class="date-field__now"
-              *ngIf="!dateIsLive && canEdit()"
-              (click)="useNow()">Use now</button>
+    <!-- Everything currently stored on this case, including who saved it -->
+    <div class="saved-card" *ngIf="saved">
+      <div class="saved-card__title">Saved payment details</div>
+
+      <div class="saved-card__grid">
+        <div class="saved-card__row">
+          <span class="saved-card__label">Status</span>
+          <span class="saved-card__value">{{ saved.status || '—' }}</span>
+        </div>
+        <div class="saved-card__row">
+          <span class="saved-card__label">Method</span>
+          <span class="saved-card__value">{{ saved.method || '—' }}</span>
+        </div>
+        <div class="saved-card__row">
+          <span class="saved-card__label">Amount</span>
+          <span class="saved-card__value">
+            {{ saved.amount != null ? (saved.amount | currency:'INR':'symbol':'1.0-2') : '—' }}
+          </span>
+        </div>
+        <div class="saved-card__row">
+          <span class="saved-card__label">Date</span>
+          <span class="saved-card__value">
+            {{ saved.date ? (saved.date | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+          </span>
+        </div>
+        <div class="saved-card__row saved-card__row--wide">
+          <span class="saved-card__label">Reference</span>
+          <span class="saved-card__value">{{ saved.reference || '—' }}</span>
+        </div>
+        <div class="saved-card__row saved-card__row--wide">
+          <span class="saved-card__label">Notes</span>
+          <span class="saved-card__value">{{ saved.notes || '—' }}</span>
+        </div>
+      </div>
+
+      <div class="saved-card__divider"></div>
+
+      <div class="saved-card__grid">
+        <div class="saved-card__row">
+          <span class="saved-card__label">Saved by</span>
+          <span class="saved-card__value saved-card__value--muted">{{ saved.savedBy || '—' }}</span>
+        </div>
+        <div class="saved-card__row">
+          <span class="saved-card__label">Saved on</span>
+          <span class="saved-card__value saved-card__value--muted">
+            {{ saved.savedAt ? (saved.savedAt | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+          </span>
+        </div>
+      </div>
     </div>
-    <div class="date-field__hint">
-      {{ dateIsLive ? 'Live — updates until you pick a time or save' : 'Edit above, or use the current time' }}
+
+    <div class="pay-grid">
+      <div class="field">
+        <span class="field-label">Payment Status *</span>
+        <select class="input" [(ngModel)]="paymentStatus" [disabled]="!canEdit()">
+          <option value="">Select</option>
+          <option value="Completed">Completed</option>
+          <option value="Pending">Pending</option>
+          <option value="Credit">Credit</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <span class="field-label">
+          Payment Method
+          <ng-container *ngIf="paymentStatus !== 'Pending'">*</ng-container>
+          <span class="field-optional" *ngIf="paymentStatus === 'Pending'">(optional)</span>
+        </span>
+        <select class="input" [(ngModel)]="paymentMethod" [disabled]="!canEdit()">
+          <option value="">Select</option>
+          <option value="Online">Online</option>
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+        </select>
+      </div>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label>Payment Amount *</label>
-    <input type="number"
-           [(ngModel)]="paymentAmount"
-           [readonly]="!canEdit()" />
-  </div>
+    <div class="pay-grid">
+      <div class="field">
+        <span class="field-label">
+          Payment Reference
+          <span class="field-optional" *ngIf="paymentStatus === 'Pending'">(optional)</span>
+        </span>
+        <input class="input" type="text" placeholder="Optional — UTR / transaction ID"
+               [(ngModel)]="paymentReference" [readonly]="!canEdit()" />
+      </div>
 
-  <div class="form-group">
-    <label>Payment Notes</label>
-    <textarea rows="4"
-              [(ngModel)]="paymentNotes"
-              [readonly]="!canEdit()"
-              placeholder="Enter payment related notes here...">
-    </textarea>
-  </div>
+      <div class="field">
+        <div class="label-row">
+          <span class="field-label">
+            Payment Date (IST)
+            <ng-container *ngIf="paymentStatus !== 'Pending'">*</ng-container>
+            <span class="field-optional" *ngIf="paymentStatus === 'Pending'">(optional)</span>
+          </span>
+          <span class="live-chip" *ngIf="dateIsLive">● LIVE</span>
+          <button type="button" class="use-now" *ngIf="!dateIsLive && canEdit()" (click)="useNow()">
+            Use now
+          </button>
+        </div>
+        <input class="input" type="datetime-local"
+               [(ngModel)]="paymentDate" (input)="onDateEdited()" [readonly]="!canEdit()" />
+        <span class="field-hint">
+          {{ dateIsLive ? 'Updates automatically until you pick a time or save'
+                        : 'Edit above, or use the current time' }}
+        </span>
+      </div>
+    </div>
 
-  <br>
+    <div class="field">
+      <span class="field-label">Payment Amount *</span>
+      <div class="amount-wrap">
+        <span class="amount-prefix">₹</span>
+        <input class="input input--amount" type="number" placeholder="0.00"
+               [(ngModel)]="paymentAmount" [readonly]="!canEdit()" />
+      </div>
+    </div>
 
-  <div style="text-align:right;">
-    <button mat-raised-button
-            color="primary"
-            *ngIf="canEdit()"
-            (click)="save()"
-            [disabled]="saving">
-      {{ saving ? 'Saving…' : 'Save' }}
-    </button>
+    <div class="field">
+      <span class="field-label">Payment Notes</span>
+      <textarea class="input input--notes" rows="3"
+                placeholder="Enter payment related notes here..."
+                [(ngModel)]="paymentNotes" [readonly]="!canEdit()"></textarea>
+    </div>
 
-    <button mat-button (click)="dialogRef.close()">
-      Close
-    </button>
-  </div>
+  </ng-container>
+</div>
 
-</ng-container>
+<div class="pay-foot">
+  <button type="button" class="btn btn--secondary" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" class="btn btn--primary"
+          *ngIf="canEdit()" (click)="save()" [disabled]="saving">
+    {{ saving ? 'Saving…' : 'Save Payment' }}
+  </button>
+</div>

@@ -16,7 +16,8 @@ import { UsersService } from '../../../services/users.service';
 import { StakeholderService } from '../../../services/stakeholder.service';
 
 // Registry
-import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../../../shared/inspection-field-registry';         
+import { getFieldRegistry, normalizeVehicleType, InspectionSection } from '../../../shared/inspection-field-registry';
+import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -81,6 +82,18 @@ export class InspectionViewComponent implements OnInit {
     return getFieldRegistry(vk);
   }
 
+  /**
+   * Section score, read straight off the saved inspection. Same engine the AVO
+   * update page and the printed report use, so the three never disagree.
+   */
+  sectionScore(section: InspectionSection): number | null {
+    return sectionScoreFor(section, key => (this.inspection as any)?.[key]);
+  }
+
+  band(score: number | null): ScoreBand | null {
+    return scoreBand(score);
+  }
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -120,7 +133,7 @@ export class InspectionViewComponent implements OnInit {
       odometer: [null],
       vinPlate: [null],
       bodyType: [''],
-      overallTyreCondition: [''],
+      transmissionType: [''],
       otherAccessoryFitment: [null],
       windshieldGlass: [''],
       roadWorthyCondition: [null],
@@ -294,7 +307,7 @@ export class InspectionViewComponent implements OnInit {
             odometer: data.odometer,
             vinPlate: data.vinPlate,
             bodyType: data.bodyType,
-            overallTyreCondition: data.overallTyreCondition,
+            transmissionType: data.transmissionType,
             otherAccessoryFitment: data.otherAccessoryFitment,
             windshieldGlass: data.windshieldGlass,
             roadWorthyCondition: data.roadWorthyCondition,

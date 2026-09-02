@@ -1,6 +1,7 @@
 // src/app/components/Report/final-report/final-report.component.ts
 
-import { Component, OnInit, HostListener, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { BrandService } from '../../../services/brand.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -17,6 +18,7 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
+import { scoreInspection, SectionScore } from '../../../shared/inspection-score';
 
 @Component({
   selector: 'app-final-report-view',
@@ -25,7 +27,7 @@ import { UsersService } from '../../../services/users.service';
   templateUrl: './final-report.component.html',
   styleUrls: ['./final-report.component.scss'],
 })
-export class FinalReportComponent implements OnInit {
+export class FinalReportComponent implements OnInit, OnDestroy {
   /** Public: the report header/footer bind their platform name to this. */
   brand = inject(BrandService);
 
@@ -38,6 +40,20 @@ export class FinalReportComponent implements OnInit {
   error: string | null = null;
   downloadingPdf = false;
 
+  // ── Report PDF: preview always, download only once approved ──────────────
+  // The generator is the single source of truth for what the customer receives,
+  // so the preview is the real PDF rather than an HTML mock-up of it. It is
+  // fetched once and the same blob serves both the iframe and the download, so
+  // approving a case does not regenerate it.
+  /** True once the workflow row reads Completed — i.e. the case was approved. */
+  caseApproved = false;
+  showPreviewModal = false;
+  previewLoading = false;
+  previewError: string | null = null;
+  /** Object URL for the fetched PDF; revoked on destroy. */
+  private pdfObjectUrl: string | null = null;
+  pdfPreviewUrl: SafeResourceUrl | null = null;
+
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
   // Photos QC chose for the PDF gallery page (falls back to all photoKeys if QC never set one)
@@ -46,6 +62,10 @@ export class FinalReportComponent implements OnInit {
   viewModel: QualityControlViewModel | null = null;
   cl: Record<string, string | null> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
+
+  // ── Section scores, carried over from the AVO inspection ──
+  sectionScores: SectionScore[] = [];
+  overallScore: number | null = null;
 
   // ── Hero lightbox (browses ALL photos, unaffected by QC's gallery selection) ──
   lightboxOpen = false;
@@ -83,7 +103,14 @@ export class FinalReportComponent implements OnInit {
     return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
   }
 
+  /**
+   * The headline score: the mean of the AVO's section scores, computed by the
+   * same engine the AVO page, the QC page and the printed report's cover gauge
+   * use. Falls back to the stored rating only when there is nothing to score.
+   */
   getRatingDisplay(): string {
+    if (this.overallScore !== null) return this.overallScore.toFixed(1);
+
     const raw = (this.report?.qualityControl?.overallRating || this.viewModel?.overallRating || '').trim();
     if (!raw) return '—';
     const num = Number(raw);
@@ -120,9 +147,15 @@ export class FinalReportComponent implements OnInit {
     const qc  = this.report?.qualityControl;
 
     const chassisPunch  = (this.viewModel?.chassisPunch || qc?.chassisPunch || '').toUpperCase().replace(/[-\s]/g, '');
-    const overallRating = (this.viewModel?.overallRating || qc?.overallRating || '').toUpperCase();
+    // Overall Rating is now the derived score ("8.5"), so band it back to a word
+    // before the GOOD / POOR comparisons below. Words still work unchanged.
+    const ratingRaw = String(this.viewModel?.overallRating || qc?.overallRating || '').trim();
+    const ratingNum = Number(ratingRaw);
+    const overallRating = ratingRaw && !isNaN(ratingNum)
+      ? (ratingNum >= 7 ? 'GOOD' : ratingNum >= 4 ? 'AVERAGE' : 'POOR')
+      : ratingRaw.toUpperCase();
     const engineCond    = (ins?.engineCondition     || '').toUpperCase();
-    const tyreCond      = (ins?.overallTyreCondition || '').toUpperCase();
+    const tyreCond      = (ins?.tyreCondition || ins?.overallTyreCondition || '').toUpperCase();
     const exteriorCond  = (ins?.exteriorCondition   || '').toUpperCase();
     const bodyCondition = (ins?.bodyCondition       || '').toUpperCase();
     const valuationAmt  = this.viewModel?.valuationAmount ?? 0;
@@ -148,7 +181,6 @@ export class FinalReportComponent implements OnInit {
     if ((ins?.odometer ?? 0) > 0)                  this.cl['accOdo']       = 'pass';
     if (vd?.make && vd?.model)                     this.cl['accVahan']     = 'pass';
     if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner']     = 'pass';
-    if (vd?.ownerName)                             this.cl['accSerial']    = 'pass';
     if (ins?.vehicleInspectedBy)                   this.cl['accMandatory'] = 'pass';
     if (ins?.remarks || ins?.vehicleInspectedBy)   this.cl['accRemarks']   = 'pass';
 
@@ -156,7 +188,6 @@ export class FinalReportComponent implements OnInit {
     const photoCount = this.photoKeys?.length ?? 0;
     if (photoCount >= 8)      this.cl['valMinPhotos'] = 'pass';
     else if (photoCount > 0)  this.cl['valMinPhotos'] = 'fail';
-    if (low > 0 && high > 0)  this.cl['valInRange'] = (valuationAmt >= low && valuationAmt <= high) ? 'pass' : 'fail';
     if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
       const age = new Date().getFullYear() - vd.yearOfMfg;
       this.cl['valAgeOdo'] = age > 0 && (ins!.odometer / age) < 60000 ? 'pass' : 'fail';
@@ -202,9 +233,11 @@ export class FinalReportComponent implements OnInit {
       this.valuationId, 5, this.vehicleNumber, encodeURIComponent(this.applicantContact), approvedBy
     ).subscribe({
       next: () => {
-        alert('✅ Case approved. Final report has been dispatched.');
+        // Stay on the page: approving is what unlocks the download, so leaving
+        // for the case list would send the approver straight back here.
+        this.caseApproved = true;
         this.showApproveModal = false;
-        this.onBack();
+        alert('✅ Case approved. Final report has been dispatched — you can now download the PDF.');
       },
       error: (err: any) => {
         const msg = err.error?.message || err.message || 'Approval processed.';
@@ -243,7 +276,8 @@ export class FinalReportComponent implements OnInit {
     private valuationResponseService: ValuationResponseService,
     private authz: AuthorizationService,
     private workflowService: WorkflowService,
-    private userService: UsersService
+    private userService: UsersService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -253,7 +287,29 @@ export class FinalReportComponent implements OnInit {
       this.applicantContact = params.get('applicantContact')!;
       this.valuationType    = params.get('valuationType')!;
       this.loadFinalReport();
+      this.loadApprovalState();
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.pdfObjectUrl) URL.revokeObjectURL(this.pdfObjectUrl);
+  }
+
+  /**
+   * Whether the case has been approved. The workflow row is the authority — the
+   * approve button completes step 5, which sets the row's status to Completed.
+   * A failed lookup leaves the case un-approved, so the download stays shut
+   * rather than opening on an error.
+   */
+  private loadApprovalState(): void {
+    this.workflowService
+      .getTable(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: (table) => {
+          this.caseApproved = (table?.status || '').trim().toLowerCase() === 'completed';
+        },
+        error: () => { this.caseApproved = false; }
+      });
   }
 
   private loadFinalReport(): void {
@@ -267,6 +323,14 @@ export class FinalReportComponent implements OnInit {
           this.report    = data;
           this.photoKeys = Object.keys(this.report.photoUrls || {}) as (keyof PhotoUrls)[];
           this.selectedPhotoKeys = this.photoKeys;
+
+          const scored = scoreInspection(
+            data.stakeholder?.vehicleSegment,
+            data.inspectionDetails as unknown as Record<string, unknown>,
+            this.valuationType
+          );
+          this.sectionScores = scored.sections;
+          this.overallScore = scored.overall;
 
           this.valuationService
             .getGalleryPhotoSelection(this.valuationId, this.vehicleNumber, this.applicantContact)
@@ -311,27 +375,71 @@ export class FinalReportComponent implements OnInit {
       });
   }
 
-  downloadPdf(): void {
-    if (this.downloadingPdf) return;
-    this.downloadingPdf = true;
+  /** Opens the preview, generating the report the first time it is asked for. */
+  openPreview(): void {
+    this.showPreviewModal = true;
+    this.loadPdfPreview();
+  }
 
-    const params = new HttpParams()
-      .set('id', this.valuationId)
-      .set('vehicleNumber', this.vehicleNumber)
-      .set('applicantContact', this.applicantContact);
+  /** Approve straight from the preview — the point of checking it first. */
+  approveFromPreview(): void {
+    this.showPreviewModal = false;
+    this.onApprove();
+  }
+
+  /** Fetches the report and hands it to the preview frame. */
+  loadPdfPreview(force = false): void {
+    if (this.previewLoading) return;
+    if (this.pdfObjectUrl && !force) return;
+
+    this.previewLoading = true;
+    this.previewError = null;
 
     this.http
       .get(`${environment.pdfApiBaseUrl}/api/Valuation/FinalReport/pdf`, {
-        params,
+        params: this.pdfParams(),
+        responseType: 'blob',
+      })
+      .subscribe({
+        next: (blob) => {
+          if (this.pdfObjectUrl) URL.revokeObjectURL(this.pdfObjectUrl);
+          // The generator sets the content type, but a blob served without one
+          // makes the browser offer a download instead of rendering it inline.
+          this.pdfObjectUrl = URL.createObjectURL(
+            blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+          );
+          this.pdfPreviewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            `${this.pdfObjectUrl}#toolbar=0&navpanes=0`);
+          this.previewLoading = false;
+        },
+        error: () => {
+          this.previewError = 'The report could not be generated for preview. Try again.';
+          this.previewLoading = false;
+        },
+      });
+  }
+
+  /**
+   * Saves the report. Only offered once the case is approved — an unapproved
+   * case can be read on screen but must not leave the portal as a file, since a
+   * downloaded PDF is indistinguishable from a final one.
+   */
+  downloadPdf(): void {
+    if (this.downloadingPdf || !this.caseApproved) return;
+
+    // The preview already fetched it; save that rather than generating twice.
+    if (this.pdfObjectUrl) { this.saveFrom(this.pdfObjectUrl); return; }
+
+    this.downloadingPdf = true;
+    this.http
+      .get(`${environment.pdfApiBaseUrl}/api/Valuation/FinalReport/pdf`, {
+        params: this.pdfParams(),
         responseType: 'blob',
       })
       .subscribe({
         next: (blob) => {
           const objectUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = objectUrl;
-          a.download = `${this.vehicleNumber}_report.pdf`;
-          a.click();
+          this.saveFrom(objectUrl);
           URL.revokeObjectURL(objectUrl);
           this.downloadingPdf = false;
         },
@@ -340,6 +448,20 @@ export class FinalReportComponent implements OnInit {
           this.downloadingPdf = false;
         },
       });
+  }
+
+  private pdfParams(): HttpParams {
+    return new HttpParams()
+      .set('id', this.valuationId)
+      .set('vehicleNumber', this.vehicleNumber)
+      .set('applicantContact', this.applicantContact);
+  }
+
+  private saveFrom(objectUrl: string): void {
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `${this.vehicleNumber}_report.pdf`;
+    a.click();
   }
 
   onBack(): void {
@@ -416,6 +538,7 @@ export class FinalReportComponent implements OnInit {
     this.showReturnModal   = false;
     this.showOverrideModal = false;
     this.showApproveModal  = false;
+    this.showPreviewModal  = false;
     this.showRejectModal   = false;
   }
 

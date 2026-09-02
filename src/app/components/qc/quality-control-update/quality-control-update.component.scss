@@ -88,6 +88,92 @@
   letter-spacing: 0.03em;
 }
 
+/* ── Overall vehicle score ──
+   Derived, not entered: the mean of the AVO's section scores. Bands match the
+   printed report — ≥7 good, ≥4 average, below that poor. */
+.qc-overall {
+  margin: 10px 14px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.qc-overall-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.qc-overall-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.qc-overall-note {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.qc-overall-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: #64748b;
+
+  &[data-band='good']    { color: #059669; }
+  &[data-band='average'] { color: #b45309; }
+  &[data-band='poor']    { color: #dc2626; }
+}
+
+.qc-overall-max {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-left: 5px;
+}
+
+.qc-overall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 4px 18px;
+  padding: 10px 16px 12px;
+}
+
+.qc-overall-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px dotted #e2e8f0;
+  padding-bottom: 3px;
+}
+
+.qc-overall-name {
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.qc-overall-score {
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+
+  &[data-band='good']    { color: #059669; }
+  &[data-band='average'] { color: #b45309; }
+  &[data-band='poor']    { color: #dc2626; }
+}
+
 /* ── Card grid ── */
 .qc-card-grid {
   display: grid;
@@ -96,43 +182,49 @@
   padding: 10px 14px;
 }
 
-/* ── Paired sub-sections ──
-   Two groups per row, each a vertical stack. A short group (2 rows) sits beside a
-   long one (6 rows) without padding itself out with blank cells. */
+/* ── Sub-sections, dissolved ──
+   The group wrappers and their lists are display:contents, so every card in a
+   section becomes a direct item of this one grid. All the checks in a section
+   read as one set flowing across the width rather than four separate stacks. */
 .qc-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   align-items: start;
-  gap: 0 12px;
-  padding: 0 2px;
-}
-
-.qc-column {
-  min-width: 0;
-}
-
-.qc-card-list {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
   padding: 10px 14px;
 }
 
+.qc-column,
+.qc-card-list { display: contents; }
+
+/* The section header above already names the group. */
+.qc-columns .qc-sub-header { display: none; }
+
+
+
+/* Plain rows, not boxes. State is carried by the ✓ / ✗ pill and the note beneath
+   it, so a tinted bordered card per field just added noise across a long list. */
 .qc-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: #fff;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 10px 2px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: background 0.15s, border-color 0.15s;
+  gap: 7px;
+  border-bottom: 1px solid #eef2f6;
 
-  &.card-ok   { background: #f0fdf4; border-color: #86efac; }
-  &.card-warn { background: #fffbeb; border-color: #fde68a; }
-  &.card-flag { background: #fef2f2; border-color: #fca5a5; }
+  &.card-ok,
+  &.card-warn,
+  &.card-flag { background: none; }
 
-  &.form-card { background: #fafafa; }
+  /* The two entry fields still need to read as inputs, so they keep a frame. */
+  &.form-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    padding: 12px 14px;
+  }
 }
 
 .qc-card-title {
@@ -241,75 +333,6 @@
   font-size: 0.75rem;
   line-height: 1.4;
   color: #b91c1c;
-}
-
-.qc-ai-notes {
-  margin: 8px 14px 0;
-  padding: 8px 12px;
-  border-left: 3px solid var(--brand, #037076);
-  border-radius: 0 4px 4px 0;
-  background: #f8fafc;
-
-  ul {
-    margin: 4px 0 0;
-    padding-left: 18px;
-  }
-
-  li {
-    font-size: 0.73rem;
-    line-height: 1.45;
-    color: #475569;
-  }
-}
-
-/* The raw readings, shown beside the verdicts. */
-.qc-ai-read {
-  margin: 8px 14px 0;
-  padding: 8px 12px;
-  border: 1px solid var(--brand-200, #b0dcdd);
-  border-radius: 6px;
-  background: #fff;
-}
-
-.qc-ai-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 6px 14px;
-  margin-top: 6px;
-}
-
-.qc-ai-item {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-
-  &--wide { grid-column: 1 / -1; }
-}
-
-.qc-ai-k {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #6b7280;
-}
-
-.qc-ai-v {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #1f2937;
-  /* Identifiers are compared character by character, so they must not be
-     re-spaced or ligatured by a proportional face. */
-  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
-  overflow-wrap: anywhere;
-}
-
-.qc-ai-notes-head {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brand-700, #025054);
 }
 
 .qc-card-label {
@@ -421,4 +444,19 @@
 
 @media (max-width: 900px) {
   .qc-columns { grid-template-columns: 1fr; }
+}
+
+/* Verdict sits beside the title, not under it — a long list of checks is scanned
+   down the right-hand edge, and a badge on its own line broke that column.
+   The note spans the full width beneath both. */
+.qc-card:not(.form-card) {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 7px 10px;
+
+  .qc-card-title  { grid-column: 1; grid-row: 1; }
+  .qc-vbadge,
+  .qc-card-actions { grid-column: 2; grid-row: 1; justify-self: end; }
+  .qc-card-why    { grid-column: 1 / -1; }
 }

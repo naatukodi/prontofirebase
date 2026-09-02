@@ -24,10 +24,16 @@ nav.app-navbar .navbar-brand {
 }
 
 /* Logo in original teal — oversized with negative margins to keep the bar 64px. */
+/* Both brands use the trimmed horizontal lockup the report prints — no internal
+   whitespace, so the height is the real height and no negative margin is needed
+   to crop padding back. One rule fits both: Vehga lands at 180px wide, Pronto at
+   123px. A per-brand override does not belong here anyway — this is a component
+   stylesheet, so a `:root[data-brand=…]` selector gets an _ngcontent attribute
+   appended and never matches <html>. */
 .navbar-logo {
-  height: 112px;
+  height: 44px;
   width: auto;
-  margin: -24px 0;
+  margin: 0;
   display: block;
 }
 

@@ -11,67 +11,233 @@
   margin: 8px 0 22px;
 }
 
-/* Case actions (Notes, History, Payment, Dedupe) — one pill box,
-   sitting beside the workflow box */
+/* Case actions (Notes, History, Payment, Dedupe) — four standalone buttons.
+   They used to share one white pill container, which read as a single control
+   rather than four separate actions. */
 .case-actions {
   display: inline-flex;
   gap: 10px;
   margin: 0;
+  padding: 0;
   flex-wrap: wrap;
   order: 2;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 7px 10px;
-  box-shadow: var(--shadow-sm);
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
 .case-actions button {
   border-radius: 999px !important;
-  box-shadow: none !important;
-}
-
-/* Step navigation — segmented pill group — left side */
-.button-group {
+  box-shadow: var(--shadow-sm) !important;
   display: inline-flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  margin: 0;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  padding: 0 18px;
+}
+
+/* ── Status badges on Payment / Dedupe ──────────────────────────────────────
+   Both say what the case already holds, so the reviewer does not have to open
+   a dialog to find out. Payment reads "Pending" until something is saved;
+   Dedupe reads the match count. */
+.ca-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
   border-radius: 999px;
-  padding: 7px 10px;
-  box-shadow: var(--shadow-sm);
-  order: 1;
-}
-
-.button-group button {
-  background: transparent;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  white-space: nowrap;
+  background: var(--brand-50);
   color: var(--ink-700);
-  border: none;
-  border-radius: 999px !important;
-  padding: 8px 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  min-width: unset;
-  transition: background 0.15s ease, color 0.15s ease;
+
+  &[data-tone='paid']    { background: var(--success-bg); color: var(--success); }
+  &[data-tone='pending'] { background: var(--warning-bg); color: var(--warning); }
 }
 
-.button-group button:hover {
+.ca-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: help;
+
+  &[data-tone='clear'] { background: var(--success-bg); color: var(--success); }
+  &[data-tone='flag']  { background: var(--warning-bg); color: var(--warning); }
+}
+
+/* ── Workflow tracker ──────────────────────────────────────────────────────
+   Circle above label, connected by rules — the stepper shape from the redesign
+   reference. Three things are shown at once and must stay distinct:
+     data-state  where the CASE is  (done / current / todo)
+     --viewing   which page YOU are on
+     --locked    a stage you have no permission to open
+*/
+.wf-track {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 0;
+  width: 100%;
+}
+
+.wf-step {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 66px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.wf-step__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-300);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  svg { width: 14px; height: 14px; }
+}
+
+.wf-step__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink-500);
+  white-space: nowrap;
+}
+
+/* Stages the case has already cleared */
+.wf-step[data-state='done'] .wf-step__dot {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* Where the case actually is right now — bigger, filled, and haloed, so the
+   one question the tracker exists to answer is readable at a glance. */
+.wf-step[data-state='current'] {
+  .wf-step__dot {
+    width: 32px;
+    height: 32px;
+    background: var(--ink-900);
+    border-color: transparent;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 0 0 4px var(--brand-100);
+  }
+
+  .wf-step__label {
+    font-weight: 800;
+    color: var(--ink-900);
+  }
+}
+
+/* Returned cases sit back at an earlier stage — flag rather than celebrate it */
+.wf-step--returned {
+  .wf-step__dot {
+    background: var(--warning);
+    box-shadow: 0 0 0 4px var(--warning-bg);
+  }
+
+  .wf-step__label { color: var(--warning); }
+}
+
+/* The page you are looking at, which is not necessarily the case's stage */
+.wf-step--viewing:not([data-state='current']) .wf-step__dot {
+  border-color: var(--brand-200);
   background: var(--brand-50);
   color: var(--brand-700);
 }
 
-/* Active step — brand gradient with glow */
-.button-group button.active-step {
-  background: var(--grad-brand) !important;
-  color: #fff !important;
-  box-shadow: var(--shadow-brand);
+.wf-step:hover:not(.wf-step--locked) .wf-step__label { color: var(--brand-700); }
+
+.wf-step--locked {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
-.button-group button.active-step:hover {
-  filter: brightness(1.1);
+/* Connector between stages, filled once the case is past it. The bottom margin
+   lifts it to circle height — the labels sit below and must not push it down. */
+.wf-track__line {
+  flex: 0 1 44px;
+  min-width: 16px;
+  height: 2px;
+  margin: 13px 2px 0;
+  border-radius: 2px;
+  background: var(--line);
+
+  &[data-state='done'] { background: var(--brand); }
+}
+
+.wf-track__note {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+@media (max-width: 720px) {
+  .wf-track__line { display: none; }
+  .wf-track { gap: 12px; }
+}
+
+/* ── Case facts ────────────────────────────────────────────────────────────
+   The original single line, kept as-is — only a little more air: a touch more
+   line-height between rows, and a real separator with margin instead of the
+   &nbsp; pairs that set the column spacing by accident. */
+.panel-content {
+  font-size: 0.88rem;
+  color: var(--ink-700);
+  line-height: 2;
+}
+
+.panel-content + .panel-content { margin-top: 6px; }
+
+.panel-content strong {
+  color: var(--ink-900);
+}
+
+.panel-content .sep {
+  margin: 0 12px;
+  color: var(--line);
+}
+
+/* The registration is how everyone refers to a case out loud. Red because it
+   has to be findable in one glance — nothing else on the panel uses it, so it
+   cannot be confused with the brand teal that carries workflow state. */
+.wf-vehicle {
+  padding: 1px 8px;
+  border-radius: 5px;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 /* Status / loading / error lines */
@@ -106,28 +272,39 @@
     box-shadow: var(--shadow-sm) !important;
   }
 
+  /* The stage tracker lives in the header, beside the title. Material fixes the
+     header height and clips overflow, which would cut the track in half — so the
+     height is released and the description allowed to wrap. */
   ::ng-deep .mat-expansion-panel-header {
     background: var(--brand-50) !important;
+    height: auto !important;
+    min-height: 48px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 
+  /* Reads as a section heading, not another field label: uppercase, tracked
+     out, with a brand rule down its left edge so the eye separates the panel's
+     own title from the stage pills sitting beside it. */
   ::ng-deep .mat-expansion-panel-header-title {
     color: var(--brand-800);
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+    margin-right: 28px;
+    padding-left: 12px;
+    border-left: 3px solid var(--brand);
+    align-items: center;
   }
 
   ::ng-deep .mat-expansion-panel-header-description {
     color: var(--ink-500);
     font-size: 0.84rem;
+    flex: 1 1 auto;
+    overflow: visible;
+    margin-right: 12px;
   }
 }
 
-.panel-content {
-  font-size: 0.88rem;
-  color: var(--ink-700);
-  line-height: 1.7;
-}
-
-.panel-content strong {
-  color: var(--ink-900);
-}

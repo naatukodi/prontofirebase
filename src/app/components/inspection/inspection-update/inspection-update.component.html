@@ -115,10 +115,10 @@
           <mat-label>Body Type</mat-label>
           <input matInput formControlName="bodyType" />
         </mat-form-field>
-        <mat-form-field *ngIf="showField('tyreCondition')" appearance="fill">
-          <mat-label>Overall Tyre Condition</mat-label>
-          <mat-select formControlName="overallTyreCondition">
-            <mat-option *ngFor="let opt of conditionOptions" [value]="opt">{{ opt }}</mat-option>
+        <mat-form-field *ngIf="showField('transmissionType')" appearance="fill">
+          <mat-label>Transmission Type</mat-label>
+          <mat-select formControlName="transmissionType">
+            <mat-option *ngFor="let opt of transmissionOptions" [value]="opt">{{ opt }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field *ngIf="showField('otherAccessoryFitment')" appearance="fill">
@@ -138,10 +138,18 @@
       </div>
     </fieldset>
 
-    <!-- SYSTEM INSPECTION — registry-driven per vehicle type (GOOD/AVERAGE/POOR, YES/NO) -->
+    <!-- SYSTEM INSPECTION — registry-driven per vehicle type, each with its own score.
+         The overall figure is QC's to read, so it is not repeated here. -->
     <ng-container *ngFor="let section of registrySections">
       <fieldset class="nested-group">
-        <legend>{{ section.section }}</legend>
+        <legend>
+          {{ section.section }}
+          <span class="score-badge" [attr.data-band]="band(sectionScores[section.section])">
+            {{ sectionScores[section.section] !== null && sectionScores[section.section] !== undefined
+                 ? (sectionScores[section.section] | number:'1.1-1') + ' / 10'
+                 : 'Not rated' }}
+          </span>
+        </legend>
         <div class="grid">
           <ng-container *ngFor="let field of section.fields">
             <mat-form-field *ngIf="field.type === 'condition'" appearance="fill">

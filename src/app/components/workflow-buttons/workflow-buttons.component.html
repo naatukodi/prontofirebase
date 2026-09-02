@@ -12,37 +12,71 @@
         Workflow Status
       </mat-panel-title>
       <mat-panel-description>
-        {{ table?.workflow }} &mdash; step {{ table?.workflowStepOrder }}
+        <!-- All five stages in order, with the case's position marked. Sits in the
+             header so the case's position is visible even when the panel is closed.
+             Clicking a stage opens it; stages the user cannot view are shown but
+             not linked. stopPropagation keeps a stage click from also toggling
+             the panel open and shut. -->
+        <div class="wf-track" *ngIf="!loadingTable" (click)="$event.stopPropagation()">
+          <ng-container *ngFor="let step of workflowSteps; let last = last">
+            <a class="wf-step"
+               [attr.data-state]="stepState(step.order)"
+               [class.wf-step--returned]="isCaseReturned && stepState(step.order) === 'current'"
+               [class.wf-step--locked]="!step.can()"
+               [routerLink]="step.can() ? ['/valuation', id, step.route] : null"
+               [queryParams]="stepQueryParams"
+               routerLinkActive="wf-step--viewing"
+               [title]="step.can() ? step.label : step.label + ' — you do not have access to this stage'">
+              <span class="wf-step__dot">
+                <svg *ngIf="stepState(step.order) === 'done'" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <ng-container *ngIf="stepState(step.order) !== 'done'">{{ step.order }}</ng-container>
+              </span>
+              <span class="wf-step__label">{{ step.label }}</span>
+            </a>
+            <span class="wf-track__line"
+                  *ngIf="!last"
+                  [attr.data-state]="stepState(step.order) === 'done' ? 'done' : 'todo'"></span>
+          </ng-container>
+        </div>
       </mat-panel-description>
     </mat-expansion-panel-header>
 
     <!-- panel content -->
     <ng-container *ngIf="!loadingTable && table">
       <div class="panel-content">
-        <strong>Vehicle Number:</strong> {{ table.vehicleNumber }} &nbsp; | &nbsp;
-        <strong>Applicant Name:</strong> {{ table.applicantName }} &nbsp; | &nbsp;
-        <strong>Valuation Type:</strong> {{ table.valuationType }} &nbsp; | &nbsp;
+        <strong>Vehicle Number:</strong> <span class="wf-vehicle">{{ table.vehicleNumber }}</span>
+        <span class="sep">|</span>
+        <strong>Applicant Name:</strong> {{ table.applicantName }}
+        <span class="sep">|</span>
+        <strong>Valuation Type:</strong> {{ table.valuationType }}
+        <span class="sep">|</span>
         <strong>Status:</strong> {{ table.status }}
       </div>
     </ng-container>
-    <br/>
+
+    <div class="wf-track__note" *ngIf="isCaseReturned">
+      This case was returned and is back at an earlier stage.
+    </div>
 
     <div *ngIf="loadingAssigned" class="loading-spinner">
       <mat-spinner diameter="24"></mat-spinner> Loading…
     </div>
 
     <ng-container *ngIf="assignedUser; else noAssigned">
-        <span>
-          <strong>Currently Assigned User:</strong>
-          &nbsp;|&nbsp;
-          <strong>{{ assignedUser.name }}</strong>
-          &nbsp;|&nbsp;{{ assignedUser.phoneNumber }}
-          &nbsp;|&nbsp;{{ assignedUser.email }}
-          &nbsp;|&nbsp;{{ assignedUser.whatsapp }}
-        </span>
+      <div class="panel-content">
+        <strong>Currently Assigned User:</strong>
+        <span class="sep">|</span>
+        <strong>{{ assignedUser.name }}</strong>
+        <span class="sep">|</span>{{ assignedUser.phoneNumber }}
+        <span class="sep">|</span>{{ assignedUser.email }}
+        <span class="sep">|</span>{{ assignedUser.whatsapp }}
+      </div>
     </ng-container>
     <ng-template #noAssigned>
-      <span><strong>No user is currently assigned.</strong></span>
+      <div class="panel-content"><strong>No user is currently assigned.</strong></div>
     </ng-template>
 
     <div *ngIf="loadingTable" class="table-loading">Loading status…</div>
@@ -66,66 +100,18 @@
 
     <button mat-raised-button color="warn" (click)="openPaymentPopup()" [disabled]="!canAccessPayment()">
       💳 Payment
+      <span class="ca-chip" *ngIf="!paymentBadgeLoading" [attr.data-tone]="paymentBadge.tone">
+        {{ paymentBadge.label }}
+      </span>
     </button>
 
     <button *ngIf="canViewCaseActions()" mat-raised-button color="primary" (click)="checkDuplicates()">
-      🔎 Dedupe
-    </button>
-  </div>
-
-  <div class="button-group">
-    <!-- Stakeholder Tab -->
-    <button
-    *ngIf="canViewStakeholder()"
-      mat-button
-      [routerLink]="['/valuation', id, 'stakeholder']"
-      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-      routerLinkActive="active-step">
-      Stake Holder
-    </button>
-
-    <!-- Vehicle Details Tab -->
-    <button
-      *ngIf="canViewVehicleDetails()"
-      mat-button
-      [routerLink]="['/valuation', id, 'vehicle-details']"
-      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-      routerLinkActive="active-step"
-    >
-      Backend
-    </button>
-
-    <!-- Inspection Tab -->
-    <button
-      *ngIf="canViewInspection()"
-      mat-button
-      [routerLink]="['/valuation', id, 'inspection']"
-      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-      routerLinkActive="active-step"
-    >
-      AVO
-    </button>
-
-    <!-- Quality Control Tab -->
-    <button
-      *ngIf="canViewQualityControl()"
-      mat-button
-      [routerLink]="['/valuation', id, 'quality-control']"
-      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-      routerLinkActive="active-step"
-    >
-      QC
-    </button>
-
-    <!-- Final Report Tab -->
-    <button
-      *ngIf="canViewFinalReport()"
-      mat-button
-      [routerLink]="['/valuation', id, 'final-report']"
-      [queryParams]="{ vehicleNumber: vehicleNumber, applicantContact: applicantContact, valuationType: valuationType }"
-      routerLinkActive="active-step"
-    >
-      Final Report
+      🔎 {{ dedupeLabel }}
+      <span class="ca-dot" *ngIf="!dedupeLoading"
+            [attr.data-tone]="(dedupeCount || 0) > 0 ? 'flag' : 'clear'"
+            [title]="(dedupeCount || 0) > 0
+                       ? 'This vehicle, engine or chassis already appears on another case'
+                       : 'No other case matches this vehicle, engine or chassis'">i</span>
     </button>
   </div>
 
