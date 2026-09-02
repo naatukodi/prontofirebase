@@ -83,8 +83,8 @@
         <input matInput [value]="inspection.bodyType" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
-        <mat-label>Overall Tyre Condition</mat-label>
-        <input matInput [value]="displayBool(inspection.overallTyreCondition, 'Good', 'Not Good')" readonly />
+        <mat-label>Transmission Type</mat-label>
+        <input matInput [value]="inspection.transmissionType || '—'" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Other Accessories Fitted</mat-label>
@@ -100,7 +100,14 @@
   <!-- SYSTEM INSPECTION — registry-driven per vehicle type (read-only) -->
   <ng-container *ngFor="let section of registrySections">
     <fieldset class="nested-group">
-      <legend>{{ section.section }}</legend>
+      <legend>
+        {{ section.section }}
+        <span class="score-badge" [attr.data-band]="band(sectionScore(section))">
+          {{ sectionScore(section) !== null
+               ? (sectionScore(section) | number:'1.1-1') + ' / 10'
+               : 'Not rated' }}
+        </span>
+      </legend>
       <div class="grid">
         <mat-form-field *ngFor="let field of section.fields" appearance="fill">
           <mat-label>{{ field.label }}</mat-label>

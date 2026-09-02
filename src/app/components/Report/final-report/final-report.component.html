@@ -108,7 +108,7 @@
           <div class="rps-row"><span class="rps-l">Chassis Punch Status</span>
             <span class="rps-v">
               <span class="rps-badge" [class.rps-badge--ok]="report.qualityControl?.chassisPunch?.toLowerCase()==='original'" [class.rps-badge--warn]="report.qualityControl?.chassisPunch?.toLowerCase()==='re-punched'" [class.rps-badge--err]="report.qualityControl?.chassisPunch?.toLowerCase()==='tampered'">
-                {{ report.qualityControl?.chassisPunch || '—' }}
+                {{ report.qualityControl?.chassisPunch || 'NOT RECORDED' }}
               </span>
             </span>
           </div>
@@ -144,7 +144,8 @@
             </span>
           </div>
           <div class="rps-row"><span class="rps-l">Engine Condition</span><span class="rps-v">{{ report.inspectionDetails?.engineCondition || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Overall Tyre Condition</span><span class="rps-v">{{ report.inspectionDetails?.overallTyreCondition || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Transmission Type</span><span class="rps-v">{{ report.inspectionDetails?.transmissionType || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Tyre Condition</span><span class="rps-v">{{ report.inspectionDetails?.tyreCondition || report.inspectionDetails?.overallTyreCondition || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Brake System</span><span class="rps-v">{{ report.inspectionDetails?.brakeSystem || '—' }}</span></div>
         </div>
         <div class="rps-remarks" *ngIf="report.inspectionDetails?.remarks">
@@ -177,8 +178,7 @@
 
           <div class="rp-cl-sub">VALUATION QUALITY</div>
           <div class="rp-cl-row"><span class="rp-cl-label">Minimum required photos uploaded</span><span class="rp-cl-badge" [class.cl-ok]="cl['valMinPhotos']==='pass'" [class.cl-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Valuation within acceptable market range</span><span class="rp-cl-badge" [class.cl-ok]="cl['valInRange']==='pass'" [class.cl-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Dedupe check completed</span><span class="rp-cl-badge" [class.cl-ok]="cl['valDedupe']==='pass'" [class.cl-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Blacklist check completed</span><span class="rp-cl-badge" [class.cl-ok]="cl['valDedupe']==='pass'" [class.cl-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Vehicle age &amp; odometer reading consistent</span><span class="rp-cl-badge" [class.cl-ok]="cl['valAgeOdo']==='pass'" [class.cl-flag]="cl['valAgeOdo']==='fail'">{{ cl['valAgeOdo'] === 'pass' ? '✓ Pass' : cl['valAgeOdo'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Checklist ratings support overall vehicle score</span><span class="rp-cl-badge" [class.cl-ok]="cl['valScore']==='pass'" [class.cl-flag]="cl['valScore']==='fail'">{{ cl['valScore'] === 'pass' ? '✓ Pass' : cl['valScore'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
         </div>
@@ -296,8 +296,12 @@
 
     <!-- Bottom bar -->
     <div class="fr-toolbar">
-      <button mat-raised-button color="accent" (click)="downloadPdf()" [disabled]="downloadingPdf">
-        {{ downloadingPdf ? '⏳ Generating...' : '⬇ Download PDF' }}
+      <button mat-raised-button color="primary" (click)="openPreview()">👁 Preview PDF</button>
+      <button mat-raised-button color="accent" (click)="downloadPdf()"
+              [disabled]="downloadingPdf || !caseApproved"
+              [title]="caseApproved ? 'Save the final report'
+                                    : 'Preview the report and approve the case to unlock the download'">
+        {{ downloadingPdf ? '⏳ Generating...' : caseApproved ? '⬇ Download PDF' : '🔒 Download PDF' }}
       </button>
       <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
@@ -344,6 +348,41 @@
       <div class="modal-footer">
         <button class="btn-cancel" (click)="closeModals()">Cancel</button>
         <button class="btn-confirm" (click)="submitReturn()">Confirm Return</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW MODAL — the generated PDF, checked before the case is approved. -->
+  <div class="modal-overlay" *ngIf="showPreviewModal" (click)="closeModals()">
+    <div class="modal-box modal-box--preview" (click)="$event.stopPropagation()">
+      <div class="modal-header" style="background:#037076">
+        <h3>👁 Report Preview</h3>
+        <span class="close-btn" (click)="closeModals()">×</span>
+      </div>
+
+      <div class="pv-body">
+        <div class="pv-state" *ngIf="previewLoading">Generating the report…</div>
+        <div class="pv-state pv-state--error" *ngIf="previewError">
+          ⚠ {{ previewError }}
+          <button class="btn-cancel" (click)="loadPdfPreview(true)">Try again</button>
+        </div>
+        <iframe *ngIf="pdfPreviewUrl && !previewLoading && !previewError"
+                class="pv-frame" [src]="pdfPreviewUrl" title="Final report preview"></iframe>
+      </div>
+
+      <div class="modal-footer">
+        <span class="pv-hint" *ngIf="!caseApproved">
+          🔒 Check the report, then approve the case to unlock the download.
+        </span>
+        <span class="pv-hint pv-hint--ok" *ngIf="caseApproved">
+          ✅ Case approved — the download is unlocked.
+        </span>
+        <button class="btn-cancel" (click)="closeModals()">Close</button>
+        <button class="btn-confirm" style="background:#10b981"
+                *ngIf="!caseApproved && canEditFinalReport()"
+                (click)="approveFromPreview()">✅ Approve Case</button>
+        <button class="btn-confirm" *ngIf="caseApproved"
+                [disabled]="downloadingPdf" (click)="downloadPdf()">⬇ Download PDF</button>
       </div>
     </div>
   </div>

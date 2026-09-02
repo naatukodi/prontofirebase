@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
+import { QualityControlService } from '../../../services/quality-control.service';
 import { ValuationService } from '../../../services/valuation.service';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service'; 
@@ -22,6 +22,7 @@ import { environment } from '../../../../environments/environment';
 
 // Shared QC verification engine (also used by the QC update page)
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
+import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -45,8 +46,6 @@ export class QualityControlViewComponent implements OnInit {
   // ── What the photos say (read-only mirror of the update page) ───────────
   aiRunning = false;
   aiError: string | null = null;
-  aiObservations: string[] = [];
-  aiReadings: QcAiReadings | null = null;
   aiReadAt: string | null = null;
   aiVerified = new Set<string>();
   private savedByReviewer = new Set<string>();
@@ -68,8 +67,6 @@ export class QualityControlViewComponent implements OnInit {
       .subscribe({
         next: (audit) => {
           this.aiRunning = false;
-          this.aiObservations = audit.observations || [];
-          this.aiReadings = audit.readings || null;
           this.aiReadAt = audit.readAt || null;
 
           if (audit.error) {
@@ -105,6 +102,14 @@ export class QualityControlViewComponent implements OnInit {
 
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
+
+  // ── Section scores, carried over from the AVO inspection ──
+  sectionScores: SectionScore[] = [];
+  overallScore: number | null = null;
+
+  band(score: number | null): ScoreBand | null {
+    return scoreBand(score);
+  }
 
   // ✅ UPDATED: Return Status Display Variables
   returnMessage: string | null = null;
@@ -148,7 +153,16 @@ export class QualityControlViewComponent implements OnInit {
     return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
   }
 
+  /**
+   * The headline score: the mean of the AVO's section scores.
+   *
+   * Falls back to the QC officer's typed Overall Rating only when there is no
+   * inspection data to score — an unfilled inspection should not borrow a
+   * number from somewhere else.
+   */
   getRatingDisplay(): string {
+    if (this.overallScore !== null) return this.overallScore.toFixed(1);
+
     const raw = (this.report?.qualityControl?.overallRating || this.viewModel?.overallRating || '').trim();
     if (!raw) return '—';
     const num = Number(raw);
@@ -202,7 +216,9 @@ export class QualityControlViewComponent implements OnInit {
       valuationAmount: this.viewModel?.valuationAmount,
       lowRange: this.viewModel?.lowRange,
       highRange: this.viewModel?.highRange,
-      photoKeys: this.photoKeys as string[]
+      photoKeys: this.photoKeys as string[],
+      vehicleSegment: this.report?.stakeholder?.vehicleSegment,
+      valuationType: this.valuationType
     });
 
     this.cl = result.cl;
@@ -362,6 +378,17 @@ export class QualityControlViewComponent implements OnInit {
       next: ({ qcData, reportData }) => {
         this.report = reportData;
         this.photoKeys = Object.keys(this.report.photoUrls || {}) as (keyof PhotoUrls)[];
+
+        // Overall score is derived from the AVO's own section scores, not from
+        // the hand-typed Overall Rating — so this page, the AVO page and the
+        // report's cover gauge all show the same number.
+        const scored = scoreInspection(
+          reportData.stakeholder?.vehicleSegment,
+          reportData.inspectionDetails as unknown as Record<string, unknown>,
+          this.valuationType
+        );
+        this.sectionScores = scored.sections;
+        this.overallScore = scored.overall;
 
         const ve = reportData.valuationResponse;
         this.viewModel = {

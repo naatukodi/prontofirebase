@@ -2,7 +2,9 @@
 
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Component, Input, inject, SimpleChanges } from '@angular/core';
+import { Component, Input, inject, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { catchError, switchMap, take } from 'rxjs/operators';
 import { AuthorizationService } from '../../services/authorization.service';
 import { WorkflowService } from '../../services/workflow.service';
 import { WorkflowTable } from '../../models/WorkflowTable';
@@ -48,7 +50,82 @@ export class WorkflowButtonsComponent {
 
   currentUserName: string = '';
 
+  // ── Workflow tracker ─────────────────────────────────────────────────────
+  /**
+   * The five stages, always shown in order. A stage the user has no permission
+   * for is still listed — the point is to show where the case stands — but it
+   * is not clickable.
+   */
+  readonly workflowSteps: { order: number; label: string; route: string; can: () => boolean }[] = [
+    { order: 1, label: 'Stake Holder', route: 'stakeholder',     can: () => this.canViewStakeholder() },
+    { order: 2, label: 'Backend',      route: 'vehicle-details', can: () => this.canViewVehicleDetails() },
+    { order: 3, label: 'AVO',          route: 'inspection',      can: () => this.canViewInspection() },
+    { order: 4, label: 'QC',           route: 'quality-control', can: () => this.canViewQualityControl() },
+    { order: 5, label: 'Final Report', route: 'final-report',    can: () => this.canViewFinalReport() },
+  ];
+
+  /** Query params every stage link carries. */
+  get stepQueryParams() {
+    return {
+      vehicleNumber: this.vehicleNumber,
+      applicantContact: this.applicantContact,
+      valuationType: this.valuationType
+    };
+  }
+
+  private get caseStatus(): string {
+    return (this.table?.status || '').trim().toLowerCase();
+  }
+
+  get isCaseComplete(): boolean {
+    return this.caseStatus === 'completed';
+  }
+
+  /** A returned case sits back at an earlier stage and needs flagging as such. */
+  get isCaseReturned(): boolean {
+    return this.caseStatus === 'returned';
+  }
+
+  /** Colours the status chip: done, needs attention, or still moving. */
+  get statusTone(): 'done' | 'warn' | 'active' {
+    if (this.isCaseComplete) return 'done';
+    if (this.isCaseReturned || this.caseStatus === 'rejected') return 'warn';
+    return 'active';
+  }
+
+  /**
+   * Where each stage stands: everything before the current step is done, the
+   * current step is in progress, everything after is still to come. A completed
+   * case shows all five as done.
+   */
+  stepState(order: number): 'done' | 'current' | 'todo' {
+    if (this.isCaseComplete) return 'done';
+    const current = this.table?.workflowStepOrder ?? 0;
+    if (!current) return 'todo';
+    if (order < current) return 'done';
+    if (order === current) return 'current';
+    return 'todo';
+  }
+
+  // ── Toolbar status badges ────────────────────────────────────────────────
+  /** What the case has on file for payment. "Pending" until something is saved. */
+  paymentBadge: { label: string; tone: 'paid' | 'pending' } = { label: 'Pending', tone: 'pending' };
+  paymentBadgeLoading = true;
+
+  /** Duplicate count. null while the check is still running. */
+  dedupeCount: number | null = null;
+  dedupeLoading = true;
+  /** Cached so opening the dialog does not repeat the two calls. */
+  private dedupeResult: VehicleDuplicateCheckResponse | null = null;
+
+  get dedupeLabel(): string {
+    if (this.dedupeLoading || this.dedupeCount === null) return 'Dedupe';
+    if (this.dedupeCount === 0) return 'Dedupe — no matches';
+    return `Dedupe — ${this.dedupeCount} match${this.dedupeCount === 1 ? '' : 'es'}`;
+  }
+
   private authz = inject(AuthorizationService);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     private tableSvc: WorkflowService,
@@ -61,6 +138,8 @@ export class WorkflowButtonsComponent {
 
   async ngOnInit(): Promise<void> {
     this.loadAssignedUser();
+    this.loadPaymentBadge();
+    this.loadDedupeBadge();
 
     const user = await this.authService.getCurrentUser();
     this.currentUserName =
@@ -104,36 +183,72 @@ export class WorkflowButtonsComponent {
     }
   }
 
+  // ================= STATUS BADGES =================
+
+  /**
+   * Payment badge. Nothing saved on the case reads as "Pending"; a saved record
+   * shows its own status, so a payment deliberately saved as Pending or Credit
+   * is never displayed as Paid.
+   */
+  private loadPaymentBadge(): void {
+    this.paymentBadgeLoading = true;
+    this.tableSvc.getPayment(this.id)
+      .pipe(take(1), catchError(() => of(null)))
+      .subscribe(payment => {
+        const status = (payment?.paymentStatus || '').trim();
+        if (!status) {
+          this.paymentBadge = { label: 'Pending', tone: 'pending' };
+        } else if (status.toLowerCase() === 'completed') {
+          this.paymentBadge = { label: 'Paid', tone: 'paid' };
+        } else {
+          this.paymentBadge = { label: status, tone: 'pending' };
+        }
+        this.paymentBadgeLoading = false;
+        this.cdr.detectChanges();
+      });
+  }
+
+  private loadDedupeBadge(): void {
+    this.dedupeLoading = true;
+    this.runDuplicateCheck().subscribe(response => {
+      this.dedupeResult = response;
+      this.dedupeCount = response?.totalDuplicatesFound ?? 0;
+      this.dedupeLoading = false;
+      this.cdr.detectChanges();
+    });
+  }
+
   // ================= DUPLICATE CHECK =================
 
+  /**
+   * One call: the server reads engine and chassis off the case, runs the check,
+   * and records the outcome so the printed report can state it. This used to be
+   * two requests here — fetch details, then check — and the answer was discarded.
+   */
+  private runDuplicateCheck(): Observable<VehicleDuplicateCheckResponse | null> {
+    return this.valuationService
+      .runCaseDedupe(this.id, this.vehicleNumber, this.applicantContact)
+      .pipe(take(1), catchError(() => of(null)));
+  }
+
   checkDuplicates() {
-
-    // First get vehicle details to fetch engine & chassis
-    this.valuationService.getVehicleDetails(
-      this.id,
-      this.vehicleNumber,
-      this.applicantContact
-    ).subscribe(details => {
-
-      const engineNumber = details?.engineNumber || '';
-      const chassisNumber = details?.chassisNumber || '';
-
-      // Now call duplicate API with ALL fields
-      this.valuationService.checkDuplicateVehicle(
-        this.vehicleNumber,
-        engineNumber,
-        chassisNumber,
-        this.id
-      ).subscribe(response => {
-
-        this.dialog.open(DuplicateDialogComponent, {
-          width: '950px',
-          maxHeight: '90vh',
-          data: response
-        });
-
+    const open = (response: VehicleDuplicateCheckResponse) =>
+      this.dialog.open(DuplicateDialogComponent, {
+        width: '950px',
+        maxHeight: '90vh',
+        data: response
       });
 
+    // The badge already ran this on load — reuse it rather than paying twice.
+    if (this.dedupeResult) { open(this.dedupeResult); return; }
+
+    this.runDuplicateCheck().subscribe(response => {
+      if (!response) return;
+      this.dedupeResult = response;
+      this.dedupeCount = response.totalDuplicatesFound ?? 0;
+      this.dedupeLoading = false;
+      this.cdr.detectChanges();
+      open(response);
     });
   }
 
@@ -161,9 +276,13 @@ export class WorkflowButtonsComponent {
   }
 
   openPaymentPopup(): void {
-    this.dialog.open(CasePaymentComponent, {
-      width: '600px',
-      maxHeight: '90vh',
+    const ref = this.dialog.open(CasePaymentComponent, {
+      width: '640px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: '86vh',
+      // Strips MatDialog's own surface padding so the dialog's head and foot
+      // bands reach the panel edges — see styles.css.
+      panelClass: 'payment-dialog-panel',
       data: {
         valuationId: this.id,
         vehicleNumber: this.vehicleNumber,
@@ -172,6 +291,10 @@ export class WorkflowButtonsComponent {
         currentUserName: this.currentUserName
       }
     });
+
+    // Re-read the badge after the dialog closes so a payment just saved shows
+    // up immediately, without a page refresh.
+    ref.afterClosed().pipe(take(1)).subscribe(() => this.loadPaymentBadge());
   }
 
   // ================= PERMISSIONS =================

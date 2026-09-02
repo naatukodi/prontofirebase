@@ -16,11 +16,37 @@
     <!-- ── Core QC Fields ── -->
     <div class="qc-section">
       <div class="qc-section-header">Quality Control</div>
+
+      <!-- Derived from the AVO's section scores; not editable here. -->
+      <div class="qc-overall" *ngIf="sectionScores.length">
+        <div class="qc-overall-head">
+          <div>
+            <div class="qc-overall-label">Overall Vehicle Score</div>
+            <div class="qc-overall-note">
+              Average of the {{ sectionScores.length }} inspection section scores recorded by the AVO
+            </div>
+          </div>
+          <div class="qc-overall-value" [attr.data-band]="band(overallScore)">
+            {{ overallScore !== null ? (overallScore | number:'1.1-1') : '—' }}<span class="qc-overall-max">/ 10</span>
+          </div>
+        </div>
+        <div class="qc-overall-grid">
+          <div class="qc-overall-item" *ngFor="let s of sectionScores">
+            <span class="qc-overall-name">{{ s.section }}</span>
+            <span class="qc-overall-score" [attr.data-band]="band(s.score)">
+              {{ s.score !== null ? (s.score | number:'1.1-1') : '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div class="qc-card-grid">
         <div class="qc-card form-card">
           <div class="qc-card-label">Overall Rating</div>
           <mat-form-field appearance="fill" class="qc-field">
-            <input matInput formControlName="overallRating" placeholder="Good / Average / Poor" />
+            <input matInput formControlName="overallRating"
+                   [placeholder]="overallScore !== null ? '' : 'Good / Average / Poor'" />
+            <mat-hint *ngIf="overallScore !== null">Derived from the section scores above</mat-hint>
             <mat-error *ngIf="form.get('overallRating')?.hasError('required')">Required</mat-error>
           </mat-form-field>
         </div>
@@ -157,52 +183,7 @@
 
       <!-- What it SAW, not what it concluded. A wrong reading and a wrong vehicle
            produce the same verdict, and only these values tell them apart. -->
-      <div class="qc-ai-read" *ngIf="aiReadings && !aiError">
-        <div class="qc-ai-notes-head">Read from the photos</div>
-        <div class="qc-ai-grid">
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">Number plate</span>
-            <span class="qc-ai-v">{{ aiReadings.registrationPlate || '— not legible' }}</span>
-          </div>
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">Chassis plate</span>
-            <span class="qc-ai-v">{{ aiReadings.chassisNumber || '— not legible' }}</span>
-          </div>
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">Chassis stencil</span>
-            <span class="qc-ai-v">{{ aiReadings.chassisStencil || '— not legible' }}</span>
-          </div>
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">VIN plate</span>
-            <span class="qc-ai-v">{{ aiReadings.vinPlate || '— not legible' }}</span>
-          </div>
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">Odometer</span>
-            <span class="qc-ai-v">
-              {{ aiReadings.odometerKm != null ? (aiReadings.odometerKm | number:'1.0-0') + ' km' : '— not legible' }}
-            </span>
-          </div>
-          <div class="qc-ai-item">
-            <span class="qc-ai-k">Capture date</span>
-            <span class="qc-ai-v">{{ aiReadings.captureDates.length ? aiReadings.captureDates.join(', ') : '— none stamped' }}</span>
-          </div>
-          <div class="qc-ai-item qc-ai-item--wide">
-            <span class="qc-ai-k">Capture location</span>
-            <span class="qc-ai-v">{{ aiReadings.places.length ? aiReadings.places.join(' · ') : '— none stamped' }}</span>
-          </div>
-          <div class="qc-ai-item qc-ai-item--wide">
-            <span class="qc-ai-k">Photos with a stamp</span>
-            <span class="qc-ai-v">{{ aiReadings.stampedPhotos }} of {{ aiReadings.totalPhotos }} read</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="qc-ai-notes" *ngIf="aiObservations.length">
-        <div class="qc-ai-notes-head">What the reader noticed</div>
-        <ul>
-          <li *ngFor="let note of aiObservations">{{ note }}</li>
-        </ul>
-      </div>
 
       <div class="qc-columns">
         <div class="qc-column">
@@ -279,14 +260,6 @@
           </div>
         </div>
 
-        <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
-          <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
-          <div class="qc-card-why" *ngIf="clWhy['accSerial']"><span class="qc-ai-tag" *ngIf="isAi('accSerial')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accSerial'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['accSerial']==='pass'" (click)="setCl('accSerial','pass')">✓ Pass</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['accSerial']==='fail'" (click)="setCl('accSerial','fail')">✗ Fail</button>
-          </div>
-        </div>
 
       </div>
         </div>
@@ -384,17 +357,9 @@
           </div>
         </div>
 
-        <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
-          <div class="qc-card-title">Valuation amount within acceptable market range</div>
-          <div class="qc-card-why" *ngIf="clWhy['valInRange']"><span class="qc-ai-tag" *ngIf="isAi('valInRange')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valInRange'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['valInRange']==='pass'" (click)="setCl('valInRange','pass')">✓ Pass</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['valInRange']==='fail'" (click)="setCl('valInRange','fail')">✗ Fail</button>
-          </div>
-        </div>
 
         <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
-          <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
+          <div class="qc-card-title">Blacklist check — not stolen or blacklisted</div>
           <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-ai-tag" *ngIf="isAi('valDedupe')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valDedupe'] }}</div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['valDedupe']==='pass'" (click)="setCl('valDedupe','pass')">✓ Pass</button>

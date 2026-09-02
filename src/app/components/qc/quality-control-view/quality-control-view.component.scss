@@ -36,7 +36,6 @@
   color: rgba(0,0,0,0.75);
 }
 
-
 /* ── Photo Strip thumbnails ── */
 .qc-photo-strip {
   display: flex;
@@ -269,6 +268,11 @@
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+.qch-score-bar {
+  align-items: center;
+  gap: 12px;
+}
+
 .qch-score {
   background: #1e3a5f;
   color: #f59e0b;
@@ -278,6 +282,63 @@
   border-radius: 20px;
   border: 1px solid rgba(245,158,11,0.3);
   letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Says where the headline number came from, so it doesn't read as arbitrary. */
+.qch-score-src {
+  order: -1;
+  font-size: 0.66rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.03em;
+}
+
+/* ── Section score breakdown ───────────────────────────────────────────── */
+.qc-scorebreak {
+  background: #0d1b2e;
+  padding: 0 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.qc-scorebreak-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 8px;
+}
+
+.qc-scorebreak-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px 18px;
+}
+
+.qc-scorebreak-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px dotted rgba(255,255,255,0.12);
+  padding-bottom: 3px;
+}
+
+.qc-scorebreak-name {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.02em;
+}
+
+.qc-scorebreak-val {
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.5);
+
+  &[data-band='good']    { color: #34d399; }
+  &[data-band='average'] { color: #fbbf24; }
+  &[data-band='poor']    { color: #f87171; }
 }
 
 /* ══════════════════════════════════════════
@@ -445,38 +506,41 @@
 /* ── Paired sub-sections ──
    Two groups per row, each a vertical stack, so a short group sits beside a long
    one instead of padding its row out with blank cells. */
+/* ── Sub-sections, dissolved ──
+   The group wrappers and their lists are display:contents, so every card in a
+   section becomes a direct item of this one grid. All the checks in a section
+   read as one set flowing across the width rather than four separate stacks. */
 .qc-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   align-items: start;
-  gap: 0 12px;
-  padding: 0 2px;
-}
-
-.qc-column {
-  min-width: 0;
-}
-
-.qc-card-list {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
   padding: 10px 14px;
 }
 
+.qc-column,
+.qc-card-list { display: contents; }
+
+/* The section header above already names the group. */
+.qc-columns .qc-sub-header { display: none; }
+
+
+
+/* Plain rows, not boxes. State is carried by the ✓ / ✗ pill and the note beneath
+   it, so a tinted bordered card per field just added noise across a long list. */
 .qc-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px 14px;
-  background: #fff;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 10px 2px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: background 0.15s, border-color 0.15s;
+  gap: 7px;
+  border-bottom: 1px solid #eef2f6;
 
-  &.card-ok   { background: #f0fdf4; border-color: #86efac; }
-  &.card-warn { background: #fffbeb; border-color: #fde68a; }
-  &.card-flag { background: #fef2f2; border-color: #fca5a5; }
+  &.card-ok,
+  &.card-warn,
+  &.card-flag { background: none; }
 }
 
 .qc-card-title {
@@ -768,7 +832,6 @@
 }
 
 @media (max-width: 900px) {
-  .qc-columns { grid-template-columns: 1fr; }
 }
 
 /* Marks a verdict that came from reading the photos rather than from the form
@@ -845,71 +908,17 @@
   color: #b91c1c;
 }
 
-.qc-ai-notes {
-  margin: 8px 14px 0;
-  padding: 8px 12px;
-  border-left: 3px solid var(--brand, #037076);
-  border-radius: 0 4px 4px 0;
-  background: #f8fafc;
-
-  ul {
-    margin: 4px 0 0;
-    padding-left: 18px;
-  }
-
-  li {
-    font-size: 0.73rem;
-    line-height: 1.45;
-    color: #475569;
-  }
-}
-
-/* The raw readings, shown beside the verdicts. */
-.qc-ai-read {
-  margin: 8px 14px 0;
-  padding: 8px 12px;
-  border: 1px solid var(--brand-200, #b0dcdd);
-  border-radius: 6px;
-  background: #fff;
-}
-
-.qc-ai-grid {
+/* Verdict sits beside the title, not under it — a long list of checks is scanned
+   down the right-hand edge, and a badge on its own line broke that column.
+   The note spans the full width beneath both. */
+.qc-card:not(.form-card) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 6px 14px;
-  margin-top: 6px;
-}
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 7px 10px;
 
-.qc-ai-item {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-
-  &--wide { grid-column: 1 / -1; }
-}
-
-.qc-ai-k {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #6b7280;
-}
-
-.qc-ai-v {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #1f2937;
-  /* Identifiers are compared character by character, so they must not be
-     re-spaced or ligatured by a proportional face. */
-  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
-  overflow-wrap: anywhere;
-}
-
-.qc-ai-notes-head {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brand-700, #025054);
+  .qc-card-title  { grid-column: 1; grid-row: 1; }
+  .qc-vbadge,
+  .qc-card-actions { grid-column: 2; grid-row: 1; justify-self: end; }
+  .qc-card-why    { grid-column: 1 / -1; }
 }

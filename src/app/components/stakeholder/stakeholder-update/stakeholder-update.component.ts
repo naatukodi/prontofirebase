@@ -419,8 +419,9 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
+        // The case has moved to Backend — follow it rather than staying here.
         this.router.navigate(
-          ['/valuation', this.valuationId, 'stakeholder'],
+          ['/valuation', this.valuationId, 'vehicle-details'],
           {
             queryParams: {
               vehicleNumber: this.vehicleNumber,

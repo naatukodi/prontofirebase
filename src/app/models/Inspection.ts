@@ -8,6 +8,7 @@ export interface Inspection {
   odometer: number;
   vinPlate: boolean;
   bodyType: string;
+  transmissionType: string;
   overallTyreCondition: string;
   otherAccessoryFitment: boolean;
   windshieldGlass: string;

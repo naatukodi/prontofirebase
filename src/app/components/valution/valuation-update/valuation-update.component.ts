@@ -793,7 +793,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
+          // The case has moved to AVO — follow it rather than staying here.
+          this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,
               applicantContact: this.applicantContact,

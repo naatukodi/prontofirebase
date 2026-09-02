@@ -37,6 +37,11 @@ export const CONDITION_OPTIONS = [
 ] as const;
 export const YES_NO_OPTIONS    = ['YES', 'NO'] as const;
 
+/** Gearbox type, recorded by the AVO in General Condition. VAHAN does not
+ *  return this, so it is observed rather than looked up. Keep in sync with
+ *  TransmissionType on InspectionDetails in both API projects. */
+export const TRANSMISSION_OPTIONS = ['MANUAL', 'AUTOMATIC', 'AMT', 'CVT', 'DCT'] as const;
+
 // ─── Normalise stored valuationType → registry key ───────────────────────────
 export function normalizeVehicleType(raw: string | null | undefined): VehicleTypeKey | null {
   if (!raw) return null;
@@ -158,13 +163,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'airConditioner',        label: 'Air Conditioner',          type: 'yes-no', default: 'NO' },
-        { key: 'audio',                  label: 'Audio',                    type: 'yes-no', default: 'NO' },
+        { key: 'airConditioner',        label: 'Air Conditioner',          type: 'condition', default: 'NO' },
+        { key: 'audio',                  label: 'Audio',                    type: 'condition', default: 'NO' },
         { key: 'upholstery',             label: 'Upholstery',               type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicLift',          label: 'Hydraulic Lift',           type: 'yes-no', default: 'YES' },
-        { key: 'frontCrashGuard',        label: 'Front Crash Guard',        type: 'yes-no', default: 'NO' },
-        { key: 'rearCrashGuard',         label: 'Rear Crash Guard',         type: 'yes-no', default: 'NO' },
-        { key: 'sideUnderRunProtection', label: 'Side Under Run Protection',type: 'yes-no', default: 'NO' },
+        { key: 'hydraulicLift',          label: 'Hydraulic Lift',           type: 'condition', default: 'YES' },
+        { key: 'frontCrashGuard',        label: 'Front Crash Guard',        type: 'condition', default: 'NO' },
+        { key: 'rearCrashGuard',         label: 'Rear Crash Guard',         type: 'condition', default: 'NO' },
+        { key: 'sideUnderRunProtection', label: 'Side Under Run Protection',type: 'condition', default: 'NO' },
         { key: 'paintWork',              label: 'Paint Work',               type: 'condition', default: 'GOOD' },
       ],
     },
@@ -214,7 +219,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO' },
+        { key: 'abs',          label: 'ABS',           type: 'condition',    default: 'NO' },
       ],
     },
     {
@@ -261,12 +266,12 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'yes-no',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'yes-no',    default: 'NO' },
+        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
+        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
         { key: 'airBags',        label: 'Air Bags',        type: 'condition', default: 'GOOD' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'yes-no',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'yes-no',   default: 'NO' },
-        { key: 'sunRoof',        label: 'Sun Roof',        type: 'yes-no',    default: 'NO' },
+        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
+        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
+        { key: 'sunRoof',        label: 'Sun Roof',        type: 'condition',    default: 'NO' },
         { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
       ],
     },
@@ -316,7 +321,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',      label: 'Front Brakes',        type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',       label: 'Rear Brakes',         type: 'condition', default: 'GOOD' },
         { key: 'brakeLeversFluid', label: 'Brake Levers / Fluid',type: 'condition', default: 'GOOD' },
-        { key: 'abs',              label: 'ABS',                 type: 'yes-no',    default: 'NO' },
+        { key: 'abs',              label: 'ABS',                 type: 'condition',    default: 'NO' },
       ],
     },
     {
@@ -363,14 +368,14 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'mainStand',       label: 'Main Stand',          type: 'yes-no', default: 'NO' },
-        { key: 'sideStand',       label: 'Side Stand',          type: 'yes-no', default: 'NO' },
+        { key: 'mainStand',       label: 'Main Stand',          type: 'condition', default: 'NO' },
+        { key: 'sideStand',       label: 'Side Stand',          type: 'condition', default: 'NO' },
         { key: 'legGuard',        label: 'Leg Guard',           type: 'condition', default: 'GOOD' },
-        { key: 'sareeGuard',      label: 'Saree Guard',         type: 'yes-no', default: 'YES' },
-        { key: 'horn',            label: 'Horn',                type: 'yes-no', default: 'NO' },
-        { key: 'kickPedalFootRest',label: 'Kick Pedal / Foot Rest',type: 'yes-no', default: 'NO' },
-        { key: 'chainGuard',      label: 'Chain Guard',         type: 'yes-no', default: 'NO' },
-        { key: 'selfStart',       label: 'Self Start',          type: 'yes-no', default: 'NO' },
+        { key: 'sareeGuard',      label: 'Saree Guard',         type: 'condition', default: 'YES' },
+        { key: 'horn',            label: 'Horn',                type: 'condition', default: 'NO' },
+        { key: 'kickPedalFootRest',label: 'Kick Pedal / Foot Rest',type: 'condition', default: 'NO' },
+        { key: 'chainGuard',      label: 'Chain Guard',         type: 'condition', default: 'NO' },
+        { key: 'selfStart',       label: 'Self Start',          type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -419,7 +424,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO' },
+        { key: 'abs',          label: 'ABS',           type: 'condition',    default: 'NO' },
       ],
     },
     {
@@ -466,13 +471,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'yes-no',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'yes-no',    default: 'NO' },
+        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
+        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
         { key: 'upholstery',     label: 'Upholstery',      type: 'condition', default: 'GOOD' },
-        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'yes-no',    default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'yes-no',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'yes-no',   default: 'NO' },
-        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'yes-no',    default: 'NO' },
+        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'condition',    default: 'YES' },
+        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
+        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
+        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'condition',    default: 'NO' },
         { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
       ],
     },
@@ -522,7 +527,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'serviceBrake',  label: 'Service Brake',  type: 'condition', default: 'GOOD' },
         { key: 'retarder',      label: 'Retarder',       type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake',  label: 'Parking Brake',  type: 'condition', default: 'GOOD' },
-        { key: 'emergencyStop', label: 'Emergency Stop', type: 'yes-no',    default: 'NO' },
+        { key: 'emergencyStop', label: 'Emergency Stop', type: 'condition',    default: 'NO' },
       ],
     },
     {
@@ -569,13 +574,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'swingMechanism', label: 'Swing Mechanism', type: 'yes-no',    default: 'NO' },
-        { key: 'trackChains',    label: 'Track Chains',    type: 'yes-no',    default: 'NO' },
+        { key: 'swingMechanism', label: 'Swing Mechanism', type: 'condition',    default: 'NO' },
+        { key: 'trackChains',    label: 'Track Chains',    type: 'condition',    default: 'NO' },
         { key: 'sprockets',      label: 'Sprockets',       type: 'condition', default: 'GOOD' },
         { key: 'rollers',        label: 'Rollers',         type: 'condition', default: 'GOOD' },
-        { key: 'hourMeter',      label: 'Hour Meter',      type: 'yes-no',    default: 'NO' },
-        { key: 'bonnetGuard',    label: 'Bonnet / Guard',  type: 'yes-no',    default: 'NO' },
-        { key: 'rockBreaker',    label: 'Rock Breaker',    type: 'yes-no',    default: 'NO' },
+        { key: 'hourMeter',      label: 'Hour Meter',      type: 'condition',    default: 'NO' },
+        { key: 'bonnetGuard',    label: 'Bonnet / Guard',  type: 'condition',    default: 'NO' },
+        { key: 'rockBreaker',    label: 'Rock Breaker',    type: 'condition',    default: 'NO' },
         { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
       ],
     },
@@ -672,13 +677,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'yes-no',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'yes-no',    default: 'NO' },
+        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
+        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
         { key: 'upholstery',     label: 'Upholstery',      type: 'condition', default: 'GOOD' },
-        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'yes-no',    default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'yes-no',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'yes-no',   default: 'NO' },
-        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'yes-no',    default: 'NO' },
+        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'condition',    default: 'YES' },
+        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
+        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
+        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'condition',    default: 'NO' },
         { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
       ],
     },
@@ -775,13 +780,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'OTHER SYSTEMS',
       fields: [
-        { key: 'muffler',        label: 'Muffler',         type: 'yes-no',    default: 'NO' },
-        { key: 'airFilter',      label: 'Air Filter',      type: 'yes-no',    default: 'NO' },
+        { key: 'muffler',        label: 'Muffler',         type: 'condition',    default: 'NO' },
+        { key: 'airFilter',      label: 'Air Filter',      type: 'condition',    default: 'NO' },
         { key: 'attachmentHitch',label: 'Attachment Hitch',type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicLiftFe',label: 'Hydraulic Lift Arm',type: 'yes-no',  default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'yes-no',   default: 'NO' },
-        { key: 'dropArm',        label: 'Drop Arm',        type: 'yes-no',    default: 'NO' },
-        { key: 'rearDrawbar',    label: 'Rear Drawbar',    type: 'yes-no',    default: 'NO' },
+        { key: 'hydraulicLiftFe',label: 'Hydraulic Lift Arm',type: 'condition',  default: 'YES' },
+        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
+        { key: 'dropArm',        label: 'Drop Arm',        type: 'condition',    default: 'NO' },
+        { key: 'rearDrawbar',    label: 'Rear Drawbar',    type: 'condition',    default: 'NO' },
         { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
       ],
     },

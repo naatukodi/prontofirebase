@@ -9,6 +9,7 @@ export interface BrandProfile {
   name: string;
   /** Legal entity — used in the login footer and anywhere the full name is needed. */
   legalName: string;
+  /** Horizontal lockup that spells the company name — the same mark the report prints. */
   logo: string;
   /** Single letter in the login hero's badge. */
   initial: string;
@@ -25,7 +26,7 @@ export const BRANDS: Record<BrandKey, BrandProfile> = {
     key: 'vehga',
     name: 'Vehga',
     legalName: 'Vehga Inspections Private Limited',
-    logo: 'assets/images/vehga-01.png',
+    logo: 'assets/images/vehga-logo-trimmed.png',
     initial: 'V',
     wordmark: 'VEHGA',
     titleLead: 'VEHGA',
@@ -36,7 +37,7 @@ export const BRANDS: Record<BrandKey, BrandProfile> = {
     key: 'pronto',
     name: 'Pronto Moto',
     legalName: 'Pronto Moto Services',
-    logo: 'assets/images/prontomoto.png',
+    logo: 'assets/images/pronto-logo-trimmed.png',
     initial: 'P',
     wordmark: 'PRONTO',
     titleLead: 'PRONTO',

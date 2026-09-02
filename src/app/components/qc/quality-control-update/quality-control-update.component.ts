@@ -10,7 +10,7 @@ import { switchMap, map, take, catchError } from 'rxjs/operators';
 import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
-import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
+import { QualityControlService } from '../../../services/quality-control.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
@@ -22,6 +22,7 @@ import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 
 // Shared QC verification engine (also used by the QC view page)
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
+import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -97,17 +98,22 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   report!: FinalReport;
   photoKeys: (keyof PhotoUrls)[] = [];
 
-  // Gallery page photo selection
+  // ── Section scores, carried over from the AVO inspection ──
+  sectionScores: SectionScore[] = [];
+  overallScore: number | null = null;
+
+  band(score: number | null): ScoreBand | null {
+    return scoreBand(score);
+  }
+
+  /** Gallery page photo selection */
   gallerySlots: GallerySlot[] = [];
 
   // ── AI photo audit ──────────────────────────────────────────────────────
   aiRunning = false;
   aiError: string | null = null;
-  aiObservations: string[] = [];
   /** Keys this run actually verified, so the UI can mark them as machine-read. */
   aiVerified = new Set<string>();
-  /** What the reader saw, shown so a misread can be told from a wrong vehicle. */
-  aiReadings: QcAiReadings | null = null;
   aiReadAt: string | null = null;
   /** Keys carrying a verdict the reviewer already saved — never overwritten. */
   private savedByReviewer = new Set<string>();
@@ -133,8 +139,6 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (audit) => {
           this.aiRunning = false;
-          this.aiObservations = audit.observations || [];
-          this.aiReadings = audit.readings || null;
           this.aiReadAt = audit.readAt || null;
 
           if (audit.error) {
@@ -315,7 +319,9 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       valuationAmount: v.valuationAmount,
       lowRange:  ve?.lowRange  ?? ve?.LowRange,
       highRange: ve?.highRange ?? ve?.HighRange,
-      photoKeys: this.photoKeys as string[]
+      photoKeys: this.photoKeys as string[],
+      vehicleSegment: this.report?.stakeholder?.vehicleSegment,
+      valuationType: this.valuationType
     });
 
     this.cl = result.cl;
@@ -336,7 +342,29 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         this.report = reportData;
         this.photoKeys = Object.keys(reportData.photoUrls || {}) as (keyof PhotoUrls)[];
         this.gallerySlots = this.buildGallerySlots(reportData.photoUrls, gallerySelection || []);
+
+        // Overall score is the mean of the AVO's section scores — the same
+        // figure the AVO page shows and the report's cover gauge prints.
+        const scored = scoreInspection(
+          reportData.stakeholder?.vehicleSegment,
+          reportData.inspectionDetails as unknown as Record<string, unknown>,
+          this.valuationType
+        );
+        this.sectionScores = scored.sections;
+        this.overallScore = scored.overall;
         this.patchForm(qcData);
+
+        // Overall Rating is the derived score. Written after patchForm so it
+        // replaces whatever was saved before, and locked so the two can never
+        // disagree — the checklist and the printed report both read this field.
+        if (this.overallScore !== null) {
+          this.form.patchValue({ overallRating: this.overallScore.toFixed(1) });
+          this.form.get('overallRating')?.disable({ emitEvent: false });
+        } else {
+          // Nothing scored yet — leave it typeable so the case is not stuck.
+          this.form.get('overallRating')?.enable({ emitEvent: false });
+        }
+
         this.prefillChecklist();
         applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);
         if (qcData.qcChecklistRemarks) {
@@ -694,7 +722,8 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
+          // The case has moved to Final Report — follow it rather than staying here.
+          this.router.navigate(['/valuation', this.valuationId, 'final-report'], {
             queryParams: {
               vehicleNumber: this.vehicleNumber,
               applicantContact: this.applicantContact,

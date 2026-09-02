@@ -12,10 +12,16 @@
 // permanent em-dash.
 
 import { FinalReport } from '../models/final-report.model';
+import { getFieldRegistry, normalizeVehicleType } from './inspection-field-registry';
+import { mapVerdict } from './inspection-score';
 
 export interface QcChecklistInput {
   report: FinalReport | null | undefined;
-  /** Overall rating as entered on the QC form ('GOOD' / 'AVERAGE' / 'POOR'). */
+  /**
+   * Overall vehicle score, as shown on the QC form — normally the derived
+   * number ("8.5"). Older cases hold a word ('GOOD' / 'AVERAGE' / 'POOR');
+   * both are accepted and banded the same way.
+   */
   overallRating?: string | null;
   /** Chassis punch as entered on the QC form ('Original' / 'Re-punched' / 'Tampered'). */
   chassisPunch?: string | null;
@@ -24,6 +30,10 @@ export interface QcChecklistInput {
   highRange?: number | null;
   /** Keys of the photos actually uploaded for this valuation. */
   photoKeys?: string[];
+  /** Vehicle segment, so the damage and missing-parts counts read the right registry. */
+  vehicleSegment?: string | null;
+  /** Stakeholder valuation type, used when no segment was resolved. */
+  valuationType?: string | null;
 }
 
 export interface QcChecklistResult {
@@ -37,6 +47,45 @@ function fmtDate(iso?: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
   return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN');
+}
+
+/**
+ * Overall Rating is now the score derived from the AVO's section scores, so it
+ * arrives as a number ("8.5") rather than a word. Everything below reasons in
+ * GOOD / AVERAGE / POOR, so band it back — using the same thresholds the score
+ * badges and the printed report use. Words still passed in still work, so cases
+ * saved before this keep reading correctly.
+ */
+function bandRating(raw?: string | null): string {
+  const s = (raw ?? '').trim();
+  if (!s) return '';
+  const n = Number(s);
+  if (isNaN(n)) return s.toUpperCase();
+  return n >= 7 ? 'GOOD' : n >= 4 ? 'AVERAGE' : 'POOR';
+}
+
+/**
+ * Transmission implied by an RC variant string, or null when it says nothing.
+ * Word boundaries matter — "AT" appears inside plenty of model names, so a bare
+ * substring test would read a transmission out of "PLATINA".
+ */
+function transmissionFromVariant(variant?: string | null): string | null {
+  const v = (variant || '').toUpperCase();
+  if (!v) return null;
+  const has = (token: string) => new RegExp(`(^|[^A-Z0-9])${token}([^A-Z0-9]|$)`).test(v);
+
+  if (has('AMT')) return 'AMT';
+  if (has('CVT')) return 'CVT';
+  if (has('DCT') || has('DSG')) return 'DCT';
+  if (has('AUTOMATIC') || has('AUTO') || has('AT')) return 'AUTOMATIC';
+  if (has('MANUAL') || has('MT') || has('IMT')) return 'MANUAL';
+  return null;
+}
+
+/** AMT, CVT and DCT are all automatics — comparing families avoids flagging
+ *  "AVO said AUTOMATIC, variant says AMT" as a mismatch when it is not one. */
+function isAutomatic(type: string): boolean {
+  return type !== 'MANUAL';
 }
 
 export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
@@ -57,9 +106,14 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   const inr = (n: number) => n.toLocaleString('en-IN');
 
   const chassisPunch  = (input.chassisPunch  || '').toUpperCase().replace(/[-\s]/g, '');
-  const overallRating = (input.overallRating || '').toUpperCase();
+  const overallRating = bandRating(input.overallRating);
+  /** What the reviewer actually sees on the form — shown in the notes verbatim. */
+  const ratingShown   = (input.overallRating ?? '').toString().trim();
   const engineCond    = (ins?.engineCondition      || '').toUpperCase();
-  const tyreCond      = (ins?.overallTyreCondition || '').toUpperCase();
+  // Tyre condition now comes from the registry field in BASIC SYSTEMS. The old
+  // General Condition control was replaced by Transmission Type, so it is only
+  // a fallback for cases inspected before that swap.
+  const tyreCond      = (ins?.tyreCondition || ins?.overallTyreCondition || '').toUpperCase();
   const exteriorCond  = (ins?.exteriorCondition    || '').toUpperCase();
   const bodyCondition = (ins?.bodyCondition        || '').toUpperCase();
   const valuationAmt  = Number(input.valuationAmount ?? 0);
@@ -76,12 +130,12 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   /** Checks a document's expiry against the inspection date. */
   const checkExpiry = (key: string, label: string, validTo: string | null | undefined) => {
     if (!validTo) {
-      mark(key, null, `${label} expiry date not captured in Vehicle Details — verify from the uploaded document.`);
+      mark(key, 'flag', `${label} expiry date not captured in Vehicle Details — verify from the uploaded document before approving.`);
       return;
     }
     const d = new Date(validTo);
     if (isNaN(d.getTime())) {
-      mark(key, null, `${label} expiry "${validTo}" could not be read — verify manually.`);
+      mark(key, 'flag', `${label} expiry "${validTo}" could not be read — verify manually before approving.`);
       return;
     }
     const shown = fmtDate(validTo);
@@ -96,7 +150,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   } else if (vd?.registrationNumber) {
     mark('docRC', 'flag', `VAHAN reports RC status inactive for ${vd.registrationNumber}.`);
   } else {
-    mark('docRC', null, 'No registration number captured in Vehicle Details.');
+    mark('docRC', 'flag', 'No registration number captured in Vehicle Details.');
   }
 
   checkExpiry('docIns',     'Insurance' + (vd?.insurer   ? ` (${vd.insurer})` : ''), vd?.insuranceValidUpTo);
@@ -118,48 +172,48 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   else                                   mark('docChassis', null,        'Chassis punch not recorded on the QC form.');
 
   // ── Data Accuracy: vehicle identity ───────────────────────────────────────
-  // These four compare a value against what the photo actually shows, and the
-  // form data alone cannot do that — a photo merely existing proves nothing.
-  // They stay unresolved until "Read photos" reads them or a reviewer decides.
+  // These compare a recorded value against what the photo actually shows, which
+  // the form data alone cannot do — a photo merely existing proves nothing. They
+  // open as FAIL and the note says exactly which of the two sides is missing, so
+  // an unread check never reads as a proven mismatch. The photo reader replaces
+  // both the verdict and the note the moment it can read the field: PASS when it
+  // matches the RC, FAIL naming both values when it does not.
   if (vd?.registrationNumber) {
     const plateShots = has('FrontViewGrille', 'RearViewTailgate');
-    mark('accReg', null,
-      `RC registration ${vd.registrationNumber}` + (plateShots
-        ? ' — front/rear photos are on file; use "Read photos" on the QC update page, or check the plate by eye.'
-        : ' — front/rear photos missing, so the plate cannot be compared.'));
+    mark('accReg', 'fail', plateShots
+      ? `Not compared yet: the plate has not been read from the photos. RC says ${vd.registrationNumber}, and the front/rear photos are on file — use "Read again" above, or check the plate by eye.`
+      : `Cannot be compared: no front or rear photo was uploaded to read the plate from. RC says ${vd.registrationNumber}.`);
   } else {
-    mark('accReg', null, 'No registration number captured to compare against.');
+    mark('accReg', 'fail', 'Cannot be compared: no registration number was captured in Vehicle Details.');
   }
 
   if (vd?.chassisNumber) {
     const stencil = has('ChassisStencilTrace', 'ChassisImprint', 'ChassisVerification');
-    mark('accChassis', null,
-      `RC chassis ${vd.chassisNumber}` + (stencil
-        ? ' — stencil/imprint photo on file; use "Read photos" on the QC update page, or compare it by eye.'
-        : ' — no stencil or imprint photo uploaded, so it cannot be cross-checked.'));
+    mark('accChassis', 'fail', stencil
+      ? `Not compared yet: the chassis number has not been read from the photos. RC says ${vd.chassisNumber}, and a stencil/imprint photo is on file — use "Read again" above, or compare it by eye.`
+      : `Cannot be compared: no stencil or imprint photo was uploaded to read the chassis number from. RC says ${vd.chassisNumber}.`);
   } else {
-    mark('accChassis', null, 'No chassis number captured in Vehicle Details.');
+    mark('accChassis', 'fail', 'Cannot be compared: no chassis number was captured in Vehicle Details.');
   }
 
   const odo = ins?.odometer ?? 0;
   if (odo > 0) {
     const odoShot = has('Odometer', 'InstrumentCluster');
-    mark('accOdo', null,
-      `AVO recorded ${inr(odo)} km` + (odoShot
-        ? ' — odometer photo on file; use "Read photos" on the QC update page, or read the dial by eye.'
-        : ' — no odometer photo uploaded.'));
+    mark('accOdo', 'fail', odoShot
+      ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} km and an odometer photo is on file — use "Read again" above, or read the dial by eye.`
+      : `Cannot be compared: no odometer photo was uploaded to read the dial from. AVO recorded ${inr(odo)} km.`);
   } else {
-    mark('accOdo', 'fail', 'AVO recorded no odometer reading.');
+    mark('accOdo', 'fail', 'Cannot be compared: AVO recorded no odometer reading.');
   }
 
   if (has('VinPlate')) {
-    mark('accVIN', ins?.vinPlate === false ? 'fail' : null, ins?.vinPlate === false
-      ? 'VIN plate photo uploaded but AVO marked the plate as not present.'
-      : 'VIN plate photo on file — use "Read photos" on the QC update page, or compare it to the RC by eye.');
+    mark('accVIN', 'fail', ins?.vinPlate === false
+      ? 'AVO marked the VIN plate as not present on the vehicle, even though a VIN plate photo was uploaded.'
+      : 'Not compared yet: the VIN plate has not been read from the photos. The photo is on file — use "Read again" above, or compare it to the RC by eye.');
   } else {
-    mark('accVIN', ins?.vinPlate === false ? 'fail' : null, ins?.vinPlate === false
+    mark('accVIN', 'fail', ins?.vinPlate === false
       ? 'AVO marked the VIN plate as not present on the vehicle.'
-      : 'No VIN plate photo uploaded to compare against the RC.');
+      : 'Cannot be compared: no VIN plate photo was uploaded to read the VIN from.');
   }
 
   const mfgYear = vd?.yearOfMfg ?? 0;
@@ -171,7 +225,9 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
       `Manufactured ${mfgYear}, registered ${fmtDate(vd.dateOfRegistration)} — a gap of ${months} month(s), ` +
       (ok ? 'within the normal 18-month window.' : 'outside the normal 18-month window.'));
   } else {
-    mark('accMfgReg', null, 'Manufacture year or registration date missing — the gap cannot be calculated.');
+    mark('accMfgReg', 'fail', `Cannot be compared: ${!mfgYear && !vd?.dateOfRegistration
+      ? 'neither the manufacture year nor the registration date was captured'
+      : !mfgYear ? 'no manufacture year was captured' : 'no registration date was captured'} in Vehicle Details, so the gap cannot be calculated.`);
   }
 
   if (vd?.make && vd?.model) {
@@ -187,7 +243,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
         ? (bodyOk ? ' — matches the body type recorded by AVO.' : ` — AVO recorded body type ${insBody} instead.`)
         : ' — AVO did not record a body type to compare.'));
   } else {
-    mark('accVahan', null, 'VAHAN make/model not captured — nothing to compare with the inspection.');
+    mark('accVahan', 'fail', 'Cannot be compared: VAHAN returned no make/model, so there is nothing to check the inspection entry against.');
   }
 
   // ── Data Accuracy: owner / applicant ──────────────────────────────────────
@@ -195,31 +251,53 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (applicant && vd?.ownerName) {
     const norm = (x: string) => x.trim().toUpperCase().replace(/\s+/g, ' ');
     const same = norm(applicant) === norm(vd.ownerName);
-    mark('accOwner', same ? 'pass' : null,
+    mark('accOwner', same ? 'pass' : 'fail',
       `Applicant "${applicant}" vs RC owner "${vd.ownerName}"` +
-      (same ? ' — exact match.' : ' — names differ, confirm from the ID documents.'));
+      (same ? ' — exact match.' : ' — the two names differ; confirm from the ID documents before approving.'));
   } else {
-    mark('accOwner', null, 'Applicant name or RC owner name missing — the two cannot be compared.');
-  }
-
-  if (vd?.ownerSerialNo) {
-    mark('accSerial', 'pass', `RC shows owner serial number ${vd.ownerSerialNo}.`);
-  } else {
-    mark('accSerial', null, 'RC did not return an owner serial number.');
+    mark('accOwner', 'fail', `Cannot be compared: ${!applicant && !vd?.ownerName
+      ? 'neither the applicant name nor the RC owner name is on record'
+      : !applicant ? 'no applicant name is on record' : 'VAHAN returned no owner name'}.`);
   }
 
   // ── Data Accuracy: technical specifications ───────────────────────────────
-  mark('accTransmission', null,
-    (vd?.makerVariant || vd?.classOfVehicle)
-      ? `RC lists ${vd.makerVariant || vd.classOfVehicle} — VAHAN does not return transmission type, so confirm it from the variant and the interior photos.`
-      : 'RC variant not captured — confirm the transmission from the vehicle photos.');
+  // VAHAN has no transmission field, so there is no direct value to compare the
+  // AVO's answer against. The variant string often carries one though — "SWIFT
+  // VDI AMT", "CITY ZX CVT" — and where it does, that is a real comparison.
+  // Where it does not, the recorded value is shown and the verdict is left to
+  // the reviewer rather than invented.
+  const recordedTx = (ins?.transmissionType || '').toUpperCase().trim();
+  const rcVariant  = vd?.makerVariant || vd?.classOfVehicle || '';
+  const rcTx       = transmissionFromVariant(rcVariant);
+
+  if (!recordedTx) {
+    mark('accTransmission', 'fail', rcVariant
+      ? `AVO did not record a transmission type. RC lists ${rcVariant} — confirm from the variant and the interior photos.`
+      : 'Cannot be compared: AVO did not record a transmission type, and the RC returned no variant to infer one from.');
+  } else if (!rcTx) {
+    // The AVO had the vehicle in front of them and VAHAN has no transmission
+    // field at all, so their answer is the authoritative one. With nothing to
+    // contradict it, this passes on the recorded value rather than making the
+    // reviewer re-decide something already established at inspection.
+    mark('accTransmission', 'pass',
+      `AVO recorded ${recordedTx} at inspection.` +
+      (rcVariant
+        ? ` RC lists ${rcVariant}, which does not state a transmission, so there is nothing to contradict it.`
+        : ' The RC variant was not captured, so there is nothing to contradict it.'));
+  } else if (isAutomatic(rcTx) === isAutomatic(recordedTx)) {
+    mark('accTransmission', 'pass',
+      `AVO recorded ${recordedTx} and the RC variant ${rcVariant} indicates ${rcTx} — consistent.`);
+  } else {
+    mark('accTransmission', 'fail',
+      `AVO recorded ${recordedTx} but the RC variant ${rcVariant} indicates ${rcTx} — check the interior photos before approving.`);
+  }
 
   if (vd?.fuel) {
     mark('accFuel', 'pass', `RC fuel type ${vd.fuel}` +
       (vd.engineCC  ? ` with a ${vd.engineCC}cc engine` : '') +
       (vd.normsType ? `, ${vd.normsType}` : '') + '.');
   } else {
-    mark('accFuel', null, 'RC did not return a fuel type.');
+    mark('accFuel', 'fail', 'Cannot be compared: VAHAN returned no fuel type for this vehicle.');
   }
 
   // ── Data Accuracy: photo quality & completeness ───────────────────────────
@@ -239,11 +317,11 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     // place and coordinates into the pixels, and WhatsApp strips every EXIF tag on
     // the way through — so the stamp is usually sitting in the image while this
     // field is empty. Saying "none carry a location" would be a false negative.
-    mark('accPhotoLoc', null,
-      `${photoCount} photo(s) uploaded. Their capture location is stamped into the image ` +
-      'itself, which has not been read yet' +
+    mark('accPhotoLoc', 'fail',
+      `Not checked yet: the capture location is stamped into the image itself, not into ` +
+      `the photo metadata, and the ${photoCount} uploaded photo(s) have not been read` +
       (ins?.inspectionLocation ? ` (declared: "${ins.inspectionLocation}")` : '') +
-      ' — use "Read photos" on the QC update page, or open them yourself.');
+      ' — use "Read again" above, or open them yourself.');
   } else if (places.length === 1) {
     mark('accPhotoLoc', 'pass',
       `All ${metaEntries.length} stamped photo(s) captured at "${places[0]}".`);
@@ -253,12 +331,12 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
       places.map(p => `"${p}"`).join(', ') + '.');
   }
 
-  mark('accDaylight', null, 'Lighting cannot be judged automatically — open the photos to confirm.');
+  mark('accDaylight', 'fail', 'Not checked: lighting cannot be judged from the form data. Open the photos and confirm the vehicle was shot in daylight.');
 
-  mark('accPlate', has('FrontViewGrille', 'RearViewTailgate') ? null : 'fail',
+  mark('accPlate', 'fail',
     has('FrontViewGrille', 'RearViewTailgate')
-      ? 'Front and rear photos are on file — confirm the plate is legible in both.'
-      : 'Front or rear photo is missing, so the plate cannot be checked.');
+      ? 'Not checked: legibility cannot be judged from the form data. Front and rear photos are on file — confirm the plate is readable in both.'
+      : 'Cannot be checked: the front or rear photo is missing, so the plate is not visible.');
 
   // Same idea for the timestamp: compare the stamped capture dates against the date
   // AVO declared, by calendar day — the stamp carries a time, the declaration doesn't.
@@ -272,13 +350,13 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     .filter(d => !isNaN(d.getTime()));
 
   if (!ins?.dateOfInspection) {
-    mark('accGPS', null, 'No inspection date declared by AVO to compare the photo timestamps against.');
+    mark('accGPS', 'fail', 'Cannot be compared: AVO declared no inspection date to check the photo timestamps against.');
   } else if (shotDates.length === 0) {
     // Same false negative as the location above: the timestamp is in the pixels.
-    mark('accGPS', null,
-      `AVO declared ${fmtDate(ins.dateOfInspection)}. The capture date is stamped into the ` +
-      'photos themselves, which has not been read yet — use "Read photos" on the QC update ' +
-      'page, or open them yourself.');
+    mark('accGPS', 'fail',
+      `Not checked yet: the capture date is stamped into the photos themselves, not into ` +
+      `the photo metadata, and they have not been read. AVO declared ${fmtDate(ins.dateOfInspection)}` +
+      ' — use "Read again" above, or open them yourself.');
   } else {
     const declared = new Date(ins.dateOfInspection);
     const offDay = shotDates.filter(d => !sameDay(d, declared));
@@ -296,21 +374,15 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (photoCount >= 8) mark('valMinPhotos', 'pass', `${photoCount} photos uploaded — at or above the minimum of 8.`);
   else                 mark('valMinPhotos', 'fail', `${photoCount} photo(s) uploaded — below the minimum of 8.`);
 
-  if (low > 0 && high > 0) {
-    const inRange = valuationAmt >= low && valuationAmt <= high;
-    mark('valInRange', inRange ? 'pass' : 'fail',
-      `QC amount ₹${inr(valuationAmt)} against the AI estimate ₹${inr(low)}–₹${inr(high)}` +
-      (inRange ? ' — inside the range.' : ' — outside the range.'));
-  } else {
-    mark('valInRange', null, 'No AI market estimate available to compare the amount against.');
-  }
-
   if (vd?.backlistStatus) {
     mark('valDedupe', 'fail', 'VAHAN reports this vehicle as blacklisted.');
   } else if (vd?.registrationNumber) {
     mark('valDedupe', 'pass', `VAHAN reports no blacklist flag on ${vd.registrationNumber}.`);
   } else {
-    mark('valDedupe', null, 'No registration number available to run the check against.');
+    // The only checklist verdict the customer PDF prints. "fail" there renders
+    // BLACKLIST: YES in red, so an unrun check must stay unset — the report then
+    // prints PENDING, which is what actually happened.
+    mark('valDedupe', null, 'No registration number available to run the blacklist check against.');
   }
 
   if (mfgYear && odo > 0) {
@@ -321,17 +393,20 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
       `${inr(Math.round(avgKm))} km/year over ${age || 1} year(s)` +
       (ok ? ' — within the usual range.' : ' — above the 60,000 km/year threshold.'));
   } else {
-    mark('valAgeOdo', null, 'Manufacture year or odometer reading missing — usage cannot be derived.');
+    mark('valAgeOdo', 'fail', `Cannot be derived: ${!mfgYear && !odo
+      ? 'neither the manufacture year nor an odometer reading was captured'
+      : !mfgYear ? 'no manufacture year was captured' : 'AVO recorded no odometer reading'}, so usage per year cannot be calculated.`);
   }
 
-  if (overallRating === 'GOOD')      mark('valScore', 'pass', 'Overall rating recorded as GOOD on the QC form.');
-  else if (overallRating === 'POOR') mark('valScore', 'fail', 'Overall rating recorded as POOR on the QC form.');
-  else                               mark('valScore', null,   'No overall rating recorded on the QC form.');
+  if (overallRating === 'GOOD')      mark('valScore', 'pass', `Overall vehicle score ${ratingShown} — in the GOOD band (7 and above).`);
+  else if (overallRating === 'POOR') mark('valScore', 'fail', `Overall vehicle score ${ratingShown} — in the POOR band (below 4).`);
+  else if (overallRating)            mark('valScore', 'fail', `Overall vehicle score ${ratingShown} — in the AVERAGE band (4 to 7); a judgement call.`);
+  else                               mark('valScore', 'fail', 'No inspection sections have been scored yet, so there is no overall score.');
 
   // ── QC Recommendation ─────────────────────────────────────────────────────
   mark('recCondition', condMap(overallRating), overallRating
-    ? `Taken from the Overall Rating on the QC form (${overallRating}).`
-    : 'No overall rating recorded on the QC form.');
+    ? `Derived from the overall vehicle score ${ratingShown} (${overallRating} band).`
+    : 'No overall vehicle score available yet.');
 
   mark('recEngine', condMap(engineCond), engineCond
     ? `AVO recorded engine condition as ${engineCond}.`
@@ -356,8 +431,42 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     ? `AVO recorded overall tyre condition as ${tyreCond}.`
     : 'AVO did not record an overall tyre condition.');
 
-  mark('recDamage', null, 'Judge from the inspection remarks and the vehicle photos.');
-  mark('recMissingParts', null, 'Judge from the inspection entries marked MISSING / NOT PRESENT or DAMAGED.');
+  // Damage and missing parts are already answered by the AVO's own entries — walk
+  // the registry for this vehicle type and count them, rather than asking the
+  // reviewer to re-read 300 fields. Cards the AVO left blank or marked N/A do not
+  // count either way; the note names what was found so the verdict can be checked.
+  const vk = normalizeVehicleType(input.vehicleSegment) ?? normalizeVehicleType(input.valuationType);
+  const damaged: string[] = [];
+  const missing: string[] = [];
+  if (vk && ins) {
+    for (const section of getFieldRegistry(vk)) {
+      for (const f of section.fields) {
+        const v = mapVerdict((ins as unknown as Record<string, unknown>)[f.key] as string);
+        if (v === 'DAMAGED' || v === 'POOR' || v === 'BAD') damaged.push(f.label);
+        else if (v === 'MISSING' || v === 'NO') missing.push(f.label);
+      }
+    }
+  }
+  const list = (xs: string[], cap = 6) =>
+    xs.slice(0, cap).join(', ') + (xs.length > cap ? `, +${xs.length - cap} more` : '');
+
+  if (!vk || !ins) {
+    mark('recDamage', 'major', 'No inspection entries could be read for this vehicle type — check the photos before approving.');
+  } else if (damaged.length === 0) {
+    mark('recDamage', 'none', 'No inspection entry is marked DAMAGED or POOR.');
+  } else if (damaged.length <= 2) {
+    mark('recDamage', 'minor', `${damaged.length} entr(y/ies) marked DAMAGED or POOR: ${list(damaged)}.`);
+  } else {
+    mark('recDamage', 'major', `${damaged.length} entries marked DAMAGED or POOR: ${list(damaged)}.`);
+  }
+
+  if (!vk || !ins) {
+    mark('recMissingParts', 'present', 'No inspection entries could be read for this vehicle type — check the photos before approving.');
+  } else if (missing.length === 0) {
+    mark('recMissingParts', 'none', 'No inspection entry is marked MISSING / NOT PRESENT or NO.');
+  } else {
+    mark('recMissingParts', 'present', `${missing.length} entr(y/ies) marked missing or not present: ${list(missing)}.`);
+  }
 
   if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') {
     mark('recFinal', 'not-recommended',

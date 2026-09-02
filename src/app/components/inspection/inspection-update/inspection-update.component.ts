@@ -23,9 +23,10 @@ import { Inspection } from '../../../models/Inspection';
 // Field registry
 import {
   getFieldRegistry, normalizeVehicleType,
-  CONDITION_OPTIONS, YES_NO_OPTIONS,
+  CONDITION_OPTIONS, YES_NO_OPTIONS, TRANSMISSION_OPTIONS,
   InspectionSection
 } from '../../../shared/inspection-field-registry';
+import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -63,6 +64,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   readonly conditionOptions = CONDITION_OPTIONS;
   readonly yesNoOptions = YES_NO_OPTIONS;
+  readonly transmissionOptions = TRANSMISSION_OPTIONS;
 
   // Resolved vehicle type: falls back to the stakeholder's vehicleSegment when
   // valuationType (e.g. "Retail") doesn't map to a vehicle type.
@@ -106,11 +108,44 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   mandatoryPhotosError: string | null = null;
   missingPhotos: string[] = [];
 
+  // ── Section scores ────────────────────────────────────────────────────────
+  // Recomputed on every form change rather than read from a getter in the
+  // template: the app is zoneless, and a mat-select writing through a
+  // ControlValueAccessor is not a template event listener, so nothing would
+  // schedule change detection and the badges would freeze at their first value.
+  sectionScores: Record<string, number | null> = {};
+  private scoreSub?: Subscription;
+
+  /** Colour band for a score — drives the badge class. */
+  band(score: number | null): ScoreBand | null {
+    return scoreBand(score);
+  }
+
+  /**
+   * Score for one registry section, from the values currently in the form.
+   * Every field counts; mark an item N/A to take it out of the average.
+   */
+  private computeSectionScore(section: InspectionSection): number | null {
+    return sectionScoreFor(section, key => this.form?.get(key)?.value);
+  }
+
+  /**
+   * Rebuilds every section score.
+   *
+   * QC averages these into the overall vehicle score, using the same engine, so
+   * the badges here are what that figure is built from.
+   */
+  private recomputeScores(): void {
+    const next: Record<string, number | null> = {};
+    for (const s of this.registrySections) next[s.section] = this.computeSectionScore(s);
+    this.sectionScores = next;
+  }
+
   private visibilityMap: Record<string, string[]> = {
     'four-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
-      'tyreCondition','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
+      'transmissionType','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
       'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
@@ -119,7 +154,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'cv': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
@@ -131,7 +166,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'two-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
       'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
       'mainStand','sideStand','frontMudGuard','rearMudGuard','fuelTankCondition','chainSprocket',
@@ -141,7 +176,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'three-wheeler': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
       'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
       'frontForkAssy','mudguards','allGlasses','dashboard','seats','upholstery','interiorTrims',
@@ -151,7 +186,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'tractor': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','exteriorCondition','gearboxAssembly',
+      'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
       'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
       'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
@@ -162,7 +197,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'ce': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
       'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
       'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashboard',
@@ -174,7 +209,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     'bus': [
       'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
-      'fuelSystem','tyreCondition','bodyCondition','cabinCondition','exteriorCondition',
+      'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
@@ -214,6 +249,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         if (seg && normalizeVehicleType(seg)) {
           this.effectiveVehicleType = seg;
         }
+        // The registry — and therefore which sections exist at all — only
+        // becomes known here. Zoneless: nothing else schedules a render, so
+        // without this the form stays blank until some other async call lands.
+        this.recomputeScores();
+        this.cdr.detectChanges();
       });
   }
 
@@ -258,7 +298,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup if needed
+    this.scoreSub?.unsubscribe();
   }
 
   showField(key: string): boolean {
@@ -312,7 +352,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       odometer: [0, Validators.min(0)],
       vinPlate: [false],
       bodyType: [''],
-      overallTyreCondition: [''],
+      transmissionType: [''],
       otherAccessoryFitment: [false],
       windshieldGlass: [''],
       roadWorthyCondition: [false],
@@ -539,6 +579,14 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       dropArm: [''],
       attachmentHitch: ['']
     });
+
+    // Keep the section badges in step with what the inspector is choosing.
+    this.scoreSub?.unsubscribe();
+    this.scoreSub = this.form.valueChanges.subscribe(() => {
+      this.recomputeScores();
+      this.cdr.detectChanges();
+    });
+    this.recomputeScores();
   }
 
   private loadInspection() {
@@ -587,7 +635,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       odometer: data.odometer || 0,
       vinPlate: toBool(data.vinPlate) ?? false,
       bodyType: data.bodyType || '',
-      overallTyreCondition: nc(data.overallTyreCondition),
+      transmissionType: nc(data.transmissionType),
       otherAccessoryFitment: toBool(data.otherAccessoryFitment) ?? false,
       windshieldGlass: data.windshieldGlass || '',
       roadWorthyCondition: toBool(data.roadWorthyCondition) ?? false,
@@ -913,7 +961,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     { control: 'vinPlate',              visibility: 'vinPlate',              value: true   },
     { control: 'otherAccessoryFitment', visibility: 'otherAccessoryFitment', value: false  },
     { control: 'roadWorthyCondition',   visibility: 'roadWorthyCondition',   value: true   },
-    { control: 'overallTyreCondition',  visibility: 'tyreCondition',         value: 'GOOD' },
+    { control: 'transmissionType',      visibility: 'transmissionType',      value: 'MANUAL' },
   ];
 
   public updateDefaultValues(): void {
@@ -1143,7 +1191,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
+          // The case has moved to QC, so follow it there. Landing back on the
+          // AVO page left people wondering whether the submit had worked.
+          this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
             queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
           });
         },

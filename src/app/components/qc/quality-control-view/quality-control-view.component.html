@@ -68,6 +68,22 @@
           <div class="qch-score">
             {{ getRatingDisplay() }} / 10
           </div>
+          <div class="qch-score-src" *ngIf="overallScore !== null">
+            Average of {{ sectionScores.length }} inspection section scores
+          </div>
+        </div>
+
+        <!-- Where that number comes from — the AVO's own section scores. -->
+        <div class="qc-scorebreak" *ngIf="sectionScores.length">
+          <div class="qc-scorebreak-title">Section Scores</div>
+          <div class="qc-scorebreak-grid">
+            <div class="qc-scorebreak-item" *ngFor="let s of sectionScores">
+              <span class="qc-scorebreak-name">{{ s.section }}</span>
+              <span class="qc-scorebreak-val" [attr.data-band]="band(s.score)">
+                {{ s.score !== null ? (s.score | number:'1.1-1') : '—' }}
+              </span>
+            </div>
+          </div>
         </div>
         <div class="qc-data-section">
           <div class="qc-data-grid">
@@ -318,48 +334,7 @@
 
         <div class="qc-ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
 
-        <div class="qc-ai-read" *ngIf="aiReadings && !aiError">
-          <div class="qc-ai-notes-head">Read from the photos</div>
-          <div class="qc-ai-grid">
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">Number plate</span>
-              <span class="qc-ai-v">{{ aiReadings.registrationPlate || '— not legible' }}</span>
-            </div>
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">Chassis plate</span>
-              <span class="qc-ai-v">{{ aiReadings.chassisNumber || '— not legible' }}</span>
-            </div>
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">Chassis stencil</span>
-              <span class="qc-ai-v">{{ aiReadings.chassisStencil || '— not legible' }}</span>
-            </div>
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">VIN plate</span>
-              <span class="qc-ai-v">{{ aiReadings.vinPlate || '— not legible' }}</span>
-            </div>
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">Odometer</span>
-              <span class="qc-ai-v">{{ aiReadings.odometerKm != null ? (aiReadings.odometerKm | number:'1.0-0') + ' km' : '— not legible' }}</span>
-            </div>
-            <div class="qc-ai-item">
-              <span class="qc-ai-k">Capture date</span>
-              <span class="qc-ai-v">{{ aiReadings.captureDates.length ? aiReadings.captureDates.join(', ') : '— none stamped' }}</span>
-            </div>
-            <div class="qc-ai-item qc-ai-item--wide">
-              <span class="qc-ai-k">Capture location</span>
-              <span class="qc-ai-v">{{ aiReadings.places.length ? aiReadings.places.join(' · ') : '— none stamped' }}</span>
-            </div>
-            <div class="qc-ai-item qc-ai-item--wide">
-              <span class="qc-ai-k">Photos with a stamp</span>
-              <span class="qc-ai-v">{{ aiReadings.stampedPhotos }} of {{ aiReadings.totalPhotos }} read</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="qc-ai-notes" *ngIf="aiObservations.length">
-          <div class="qc-ai-notes-head">What the reader noticed</div>
-          <ul><li *ngFor="let note of aiObservations">{{ note }}</li></ul>
-        </div>
 
         <div class="qc-columns">
           <div class="qc-column">
@@ -405,11 +380,6 @@
             <div class="qc-card-title">Owner &amp; applicant identity verified</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['accOwner']==='pass'" [class.cvb-flag]="cl['accOwner']==='fail'">{{ cl['accOwner'] === 'pass' ? '✓ Pass' : cl['accOwner'] === 'fail' ? '✗ Fail' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['accOwner']"><span class="qc-ai-tag" *ngIf="isAi('accOwner')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accOwner'] }}</div>
-          </div>
-          <div class="qc-card" [class.card-ok]="cl['accSerial']==='pass'" [class.card-flag]="cl['accSerial']==='fail'">
-            <div class="qc-card-title">Ownership serial verified (1st / 2nd / 3rd owner)</div>
-            <span class="qc-vbadge" [class.cvb-ok]="cl['accSerial']==='pass'" [class.cvb-flag]="cl['accSerial']==='fail'">{{ cl['accSerial'] === 'pass' ? '✓ Pass' : cl['accSerial'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['accSerial']"><span class="qc-ai-tag" *ngIf="isAi('accSerial')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accSerial'] }}</div>
           </div>
         </div>
           </div>
@@ -471,7 +441,6 @@
           <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET MID</div><div class="qc-vinfo-val qc-vinfo-mid">₹{{ viewModel.midRange | number }}</div></div>
           <div class="qc-vinfo-card"><div class="qc-vinfo-label">MARKET HIGH</div><div class="qc-vinfo-val qc-vinfo-high">₹{{ viewModel.highRange | number }}</div></div>
           <div class="qc-vinfo-card"><div class="qc-vinfo-label">VEHICLE SCORE</div><div class="qc-vinfo-val">{{ report.qualityControl?.overallRating || '—' }}</div></div>
-          <div class="qc-vinfo-card"><div class="qc-vinfo-label">DEDUPE</div><div class="qc-vinfo-val" [class.qc-vinfo-ok]="cl['valDedupe']==='pass'" [class.qc-vinfo-fail]="cl['valDedupe']==='fail'">{{ cl['valDedupe']==='pass' ? 'Verified Clean' : cl['valDedupe']==='fail' ? 'Flagged' : 'Pending' }}</div></div>
         </div>
 
         <div class="qc-sub-header">VALUATION ACCURACY</div>
@@ -481,13 +450,8 @@
             <span class="qc-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['valMinPhotos']"><span class="qc-ai-tag" *ngIf="isAi('valMinPhotos')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valMinPhotos'] }}</div>
           </div>
-          <div class="qc-card" [class.card-ok]="cl['valInRange']==='pass'" [class.card-flag]="cl['valInRange']==='fail'">
-            <div class="qc-card-title">Valuation within acceptable market range</div>
-            <span class="qc-vbadge" [class.cvb-ok]="cl['valInRange']==='pass'" [class.cvb-flag]="cl['valInRange']==='fail'">{{ cl['valInRange'] === 'pass' ? '✓ Pass' : cl['valInRange'] === 'fail' ? '✗ Fail' : '—' }}</span>
-            <div class="qc-card-why" *ngIf="clWhy['valInRange']"><span class="qc-ai-tag" *ngIf="isAi('valInRange')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valInRange'] }}</div>
-          </div>
           <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
-            <div class="qc-card-title">Dedupe check — not stolen or blacklisted</div>
+            <div class="qc-card-title">Blacklist check — not stolen or blacklisted</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valDedupe']==='pass'" [class.cvb-flag]="cl['valDedupe']==='fail'">{{ cl['valDedupe'] === 'pass' ? '✓ Pass' : cl['valDedupe'] === 'fail' ? '✗ Fail' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-ai-tag" *ngIf="isAi('valDedupe')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valDedupe'] }}</div>
           </div>
