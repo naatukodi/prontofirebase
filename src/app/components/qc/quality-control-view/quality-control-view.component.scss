@@ -452,16 +452,6 @@
   &:hover { color: #037076; }
 }
 
-.qcc-match {
-  font-size: 0.72rem;
-  font-weight: 800;
-  margin-top: 4px;
-  color: rgba(0,0,0,0.38);
-
-  &--ok   { color: #059669; }
-  &--fail { color: #dc2626; }
-}
-
 /* Photo strip — inside card, needs own padding */
 .qc-photo-strip {
   padding: 12px 20px 16px;
@@ -502,6 +492,19 @@
   gap: 10px;
   padding: 10px 14px;
 }
+
+/* Blocks with a small, fixed set of cards fill their width. auto-fill lays down
+   as many tracks as fit and leaves the spare ones empty, which left these
+   sections trailing off into blank space; auto-fit collapses the empty tracks so
+   the cards stretch across whatever their number. */
+.qc-card-grid--fill {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+@media (max-width: 900px) {
+  .qc-card-grid--fill { grid-template-columns: 1fr; }
+}
+
 
 /* ── Paired sub-sections ──
    Two groups per row, each a vertical stack, so a short group sits beside a long
@@ -848,55 +851,7 @@
   color: #fff;
 }
 
-/* ── Photo reader ── */
-.qc-ai-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin: 12px 14px 0;
-  padding: 10px 14px;
-  border: 1px solid var(--brand-200, #b0dcdd);
-  border-radius: 8px;
-  background: var(--brand-50, #eef7f7);
-}
-
-.qc-ai-copy {
-  flex: 1 1 320px;
-
-  strong {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--brand-700, #025054);
-  }
-
-  small {
-    display: block;
-    font-size: 0.72rem;
-    line-height: 1.4;
-    color: #475569;
-    margin-top: 2px;
-  }
-}
-
-.qc-ai-btn {
-  flex-shrink: 0;
-  padding: 7px 18px;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--brand, #037076);
-  color: #fff;
-  transition: opacity 0.15s;
-
-  &:hover:not(:disabled) { opacity: 0.88; }
-  &:disabled { opacity: 0.55; cursor: default; }
-}
-
+/* ── Photo reader ── Only its failure is rendered; the reader itself is silent. */
 .qc-ai-error {
   margin: 8px 14px 0;
   padding: 7px 12px;
@@ -921,4 +876,47 @@
   .qc-vbadge,
   .qc-card-actions { grid-column: 2; grid-row: 1; justify-self: end; }
   .qc-card-why    { grid-column: 1 / -1; }
+}
+
+/* Chassis verification shot inside Quick Compare — large enough to read the
+   stamped digits against the RC number printed directly above it. */
+.qcc-shot {
+  margin-top: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  cursor: zoom-in;
+  transition: border-color 0.15s;
+
+  &:hover { border-color: var(--brand, #037076); }
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    background: #f1f5f9;
+  }
+}
+
+.qcc-shot-cap {
+  display: block;
+  padding: 4px 8px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.qcc-noshot {
+  margin-top: 8px;
+  padding: 16px 10px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-align: center;
 }

@@ -183,12 +183,13 @@ export class QualityControlViewComponent implements OnInit {
 
   // Quick-compare badge is driven by the QC officer's saved confirmation
   // (accChassis on the edit page), not by the auto-prefilled checklist.
-  savedAccChassis: string | null = null;
 
-  chassisCompareState(): 'match' | 'mismatch' | 'pending' {
-    if (this.savedAccChassis === 'pass') return 'match';
-    if (this.savedAccChassis === 'fail') return 'mismatch';
-    return 'pending';
+
+  /** Chassis verification shot, shown under the number it is checked against. */
+  chassisPhotoUrl(): string | null {
+    const photos = (this.report?.photoUrls || {}) as unknown as Record<string, string>;
+    return photos['ChassisVerification'] || photos['ChassisImprint']
+        || photos['ChassisStencilTrace'] || null;
   }
 
   getVehicleTags(): string[] {
@@ -406,7 +407,6 @@ export class QualityControlViewComponent implements OnInit {
 
         // Saved-only value for the quick-compare badge: stays "Waiting for
         // Approval" until the officer confirms & saves on the edit page
-        this.savedAccChassis = qcData.qcChecklist?.['accChassis'] ?? null;
 
         // Override prefilled values with whatever was previously saved by the QC officer
         applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);

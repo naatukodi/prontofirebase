@@ -18,7 +18,8 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
-import { scoreInspection, SectionScore } from '../../../shared/inspection-score';
+import { scoreInspection, SectionScore, mapVerdict } from '../../../shared/inspection-score';
+import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 
 @Component({
   selector: 'app-final-report-view',
@@ -61,6 +62,9 @@ export class FinalReportComponent implements OnInit, OnDestroy {
 
   viewModel: QualityControlViewModel | null = null;
   cl: Record<string, string | null> = {};
+  /** What the engine compared to reach each verdict — kept so the saved-value
+   *  overlay can annotate an override, even though the report prints verdicts only. */
+  clWhy: Record<string, string> = {};
   clRemarks: Record<string, string> = { doc: '', acc: '', val: '', rec: '' };
 
   // ── Section scores, carried over from the AVO inspection ──
@@ -141,80 +145,30 @@ export class FinalReportComponent implements OnInit, OnDestroy {
     return [vd.classOfVehicle, vd.fuel, vd.bodyType, vd.normsType, vd.makerVariant].filter(Boolean) as string[];
   }
 
+  /**
+   * Derives every checklist verdict from the shared engine — the same one both
+   * QC pages use. This page used to carry its own simplified copy of the rules,
+   * which had drifted: it never set docHypo at all (so Hypothecation printed
+   * blank on the report while QC showed Yes/No), and it passed several checks on
+   * the mere existence of a field where the engine now requires a comparison.
+   */
   private prefillChecklist(): void {
-    const vd  = this.report?.vehicleDetails;
-    const ins = this.report?.inspectionDetails;
-    const qc  = this.report?.qualityControl;
+    const qc = this.report?.qualityControl;
 
-    const chassisPunch  = (this.viewModel?.chassisPunch || qc?.chassisPunch || '').toUpperCase().replace(/[-\s]/g, '');
-    // Overall Rating is now the derived score ("8.5"), so band it back to a word
-    // before the GOOD / POOR comparisons below. Words still work unchanged.
-    const ratingRaw = String(this.viewModel?.overallRating || qc?.overallRating || '').trim();
-    const ratingNum = Number(ratingRaw);
-    const overallRating = ratingRaw && !isNaN(ratingNum)
-      ? (ratingNum >= 7 ? 'GOOD' : ratingNum >= 4 ? 'AVERAGE' : 'POOR')
-      : ratingRaw.toUpperCase();
-    const engineCond    = (ins?.engineCondition     || '').toUpperCase();
-    const tyreCond      = (ins?.tyreCondition || ins?.overallTyreCondition || '').toUpperCase();
-    const exteriorCond  = (ins?.exteriorCondition   || '').toUpperCase();
-    const bodyCondition = (ins?.bodyCondition       || '').toUpperCase();
-    const valuationAmt  = this.viewModel?.valuationAmount ?? 0;
-    const low           = Number(this.viewModel?.lowRange  ?? 0);
-    const high          = Number(this.viewModel?.highRange ?? 0);
+    const result = buildQcChecklist({
+      report: this.report,
+      overallRating: this.viewModel?.overallRating ?? qc?.overallRating,
+      chassisPunch: this.viewModel?.chassisPunch ?? qc?.chassisPunch,
+      valuationAmount: this.viewModel?.valuationAmount,
+      lowRange: this.viewModel?.lowRange,
+      highRange: this.viewModel?.highRange,
+      photoKeys: this.photoKeys as string[],
+      vehicleSegment: this.report?.stakeholder?.vehicleSegment,
+      valuationType: this.valuationType
+    });
 
-    const condMap = (val: string): string | null => {
-      if (val === 'GOOD') return 'good';
-      if (val === 'AVERAGE') return 'average';
-      if (val === 'POOR') return 'poor';
-      return null;
-    };
-
-    // Document Verification
-    if (vd?.registrationNumber) this.cl['docRC'] = 'ok';
-    if (chassisPunch === 'ORIGINAL')       this.cl['docChassis'] = 'original';
-    else if (chassisPunch === 'REPUNCHED') this.cl['docChassis'] = 'repunched';
-    else if (chassisPunch === 'TAMPERED')  this.cl['docChassis'] = 'tampered';
-
-    // Data Accuracy
-    if (vd?.registrationNumber)                    this.cl['accReg']       = 'pass';
-    if (vd?.chassisNumber || (ins as any)?.vinPlate) this.cl['accChassis'] = 'pass';
-    if ((ins?.odometer ?? 0) > 0)                  this.cl['accOdo']       = 'pass';
-    if (vd?.make && vd?.model)                     this.cl['accVahan']     = 'pass';
-    if (this.report?.stakeholder?.applicant?.name) this.cl['accOwner']     = 'pass';
-    if (ins?.vehicleInspectedBy)                   this.cl['accMandatory'] = 'pass';
-    if (ins?.remarks || ins?.vehicleInspectedBy)   this.cl['accRemarks']   = 'pass';
-
-    // Valuation Quality
-    const photoCount = this.photoKeys?.length ?? 0;
-    if (photoCount >= 8)      this.cl['valMinPhotos'] = 'pass';
-    else if (photoCount > 0)  this.cl['valMinPhotos'] = 'fail';
-    if (vd?.yearOfMfg && (ins?.odometer ?? 0) > 0) {
-      const age = new Date().getFullYear() - vd.yearOfMfg;
-      this.cl['valAgeOdo'] = age > 0 && (ins!.odometer / age) < 60000 ? 'pass' : 'fail';
-    }
-    if (overallRating === 'GOOD')       this.cl['valScore'] = 'pass';
-    else if (overallRating === 'POOR')  this.cl['valScore'] = 'fail';
-
-    // QC Recommendation
-    this.cl['recCondition'] = condMap(overallRating);
-    this.cl['recEngine']    = condMap(engineCond);
-
-    const extVal = exteriorCond || bodyCondition;
-    if (extVal === 'GOOD')                        this.cl['recExterior'] = 'good';
-    else if (extVal === 'AVERAGE' || extVal === 'FAIR') this.cl['recExterior'] = 'minor';
-    else if (extVal === 'POOR')                   this.cl['recExterior'] = 'major';
-
-    if (tyreCond === 'GOOD')         this.cl['recTyre'] = 'good';
-    else if (tyreCond === 'AVERAGE') this.cl['recTyre'] = 'average';
-    else if (tyreCond === 'POOR')    this.cl['recTyre'] = 'replacement';
-
-    if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') {
-      this.cl['recFinal'] = 'not-recommended';
-    } else if (overallRating === 'GOOD' && chassisPunch === 'ORIGINAL') {
-      this.cl['recFinal'] = 'recommended';
-    } else {
-      this.cl['recFinal'] = 'conditional';
-    }
+    this.cl = result.cl;
+    this.clWhy = result.why;
 
     if (this.viewModel?.remarks && !this.clRemarks['rec']) {
       this.clRemarks['rec'] = this.viewModel.remarks;
@@ -355,11 +309,7 @@ export class FinalReportComponent implements OnInit, OnDestroy {
 
           this.prefillChecklist();
 
-          if (qc?.qcChecklist) {
-            Object.entries(qc.qcChecklist).forEach(([k, v]) => {
-              if (v !== null && v !== undefined) this.cl[k] = v;
-            });
-          }
+          applySavedChecklist({ cl: this.cl, why: this.clWhy }, qc?.qcChecklist);
           if (qc?.qcChecklistRemarks) {
             Object.entries(qc.qcChecklistRemarks).forEach(([k, v]) => {
               if (v) this.clRemarks[k] = v;
@@ -424,6 +374,25 @@ export class FinalReportComponent implements OnInit, OnDestroy {
    * case can be read on screen but must not leave the portal as a file, since a
    * downloaded PDF is indistinguishable from a final one.
    */
+  /**
+   * Tile colour for a condition recorded by the AVO, using the same vocabulary
+   * the scoring engine normalises — so BRAKE SYSTEM: GOOD reads green like the
+   * QC-derived tiles beside it rather than falling through to the unset grey.
+   */
+  condClass(value: string | null | undefined): string {
+    switch (mapVerdict(value)) {
+      case 'GOOD':
+      case 'YES':     return 'cv-green';
+      case 'AVERAGE': return 'cv-amber';
+      case 'POOR':
+      case 'BAD':
+      case 'DAMAGED':
+      case 'MISSING':
+      case 'NO':      return 'cv-red';
+      default:        return '';
+    }
+  }
+
   downloadPdf(): void {
     if (this.downloadingPdf || !this.caseApproved) return;
 

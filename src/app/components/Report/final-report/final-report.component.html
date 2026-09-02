@@ -129,24 +129,6 @@
           <div class="rps-row"><span class="rps-l">Date of Inspection</span><span class="rps-v">{{ report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy' }}</span></div>
           <div class="rps-row"><span class="rps-l">Inspection Location</span><span class="rps-v">{{ report.inspectionDetails?.inspectionLocation || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Odometer Reading</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer | number }} km</span></div>
-          <div class="rps-row"><span class="rps-l">Engine Started</span>
-            <span class="rps-v">
-              <span class="rps-badge" [class.rps-badge--ok]="report.inspectionDetails?.engineStarted" [class.rps-badge--err]="!report.inspectionDetails?.engineStarted">
-                {{ report.inspectionDetails?.engineStarted ? 'YES' : 'NO' }}
-              </span>
-            </span>
-          </div>
-          <div class="rps-row"><span class="rps-l">Road Worthy</span>
-            <span class="rps-v">
-              <span class="rps-badge" [class.rps-badge--ok]="report.inspectionDetails?.roadWorthyCondition" [class.rps-badge--err]="!report.inspectionDetails?.roadWorthyCondition">
-                {{ report.inspectionDetails?.roadWorthyCondition ? 'YES' : 'NO' }}
-              </span>
-            </span>
-          </div>
-          <div class="rps-row"><span class="rps-l">Engine Condition</span><span class="rps-v">{{ report.inspectionDetails?.engineCondition || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Transmission Type</span><span class="rps-v">{{ report.inspectionDetails?.transmissionType || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Tyre Condition</span><span class="rps-v">{{ report.inspectionDetails?.tyreCondition || report.inspectionDetails?.overallTyreCondition || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Brake System</span><span class="rps-v">{{ report.inspectionDetails?.brakeSystem || '—' }}</span></div>
         </div>
         <div class="rps-remarks" *ngIf="report.inspectionDetails?.remarks">
           <strong>Remarks:</strong> {{ report.inspectionDetails?.remarks }}
@@ -164,7 +146,7 @@
           <div class="rp-cl-row"><span class="rp-cl-label">Permit</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPermit']==='ok'" [class.cl-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Fitness Certificate</span><span class="rp-cl-badge" [class.cl-ok]="cl['docFitness']==='ok'" [class.cl-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Road Tax</span><span class="rp-cl-badge" [class.cl-ok]="cl['docTax']==='ok'" [class.cl-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Hypothecation</span><span class="rp-cl-badge" [class.cl-ok]="cl['docHypo']==='same'" [class.cl-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Hypothecation</span><span class="rp-cl-badge" [class.cl-ok]="cl['docHypo']==='no'" [class.cl-warn]="cl['docHypo']==='yes'">{{ cl['docHypo'] === 'no' ? '✓ No' : cl['docHypo'] === 'yes' ? '● Yes' : '—' }}</span></div>
 
           <div class="rp-cl-sub">DATA ACCURACY</div>
           <div class="rp-cl-row"><span class="rp-cl-label">Registration No matches photos &amp; RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accReg']==='pass'" [class.cl-flag]="cl['accReg']==='fail'">{{ cl['accReg'] === 'pass' ? '✓ Pass' : cl['accReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
@@ -188,12 +170,6 @@
       <div class="rp-section">
         <div class="rps-heading">5. CONDITION ASSESSMENT</div>
         <div class="rp-condition-grid">
-          <div class="rp-cond-item">
-            <div class="rp-cond-label">Overall Condition</div>
-            <div class="rp-cond-val" [class.cv-green]="cl['recCondition']==='good'" [class.cv-amber]="cl['recCondition']==='average'" [class.cv-red]="cl['recCondition']==='poor'">
-              {{ cl['recCondition'] === 'good' ? 'GOOD' : cl['recCondition'] === 'average' ? 'AVERAGE' : cl['recCondition'] === 'poor' ? 'POOR' : '—' }}
-            </div>
-          </div>
           <div class="rp-cond-item">
             <div class="rp-cond-label">Exterior Condition</div>
             <div class="rp-cond-val" [class.cv-green]="cl['recExterior']==='good'" [class.cv-amber]="cl['recExterior']==='minor'" [class.cv-red]="cl['recExterior']==='major'">
@@ -225,10 +201,24 @@
             </div>
           </div>
           <div class="rp-cond-item">
-            <div class="rp-cond-label">Chassis Punch</div>
-            <div class="rp-cond-val" [class.cv-green]="cl['docChassis']==='original'" [class.cv-amber]="cl['docChassis']==='repunched'" [class.cv-red]="cl['docChassis']==='tampered'">
-              {{ cl['docChassis'] === 'original' ? 'ORIGINAL' : cl['docChassis'] === 'repunched' ? 'RE-PUNCHED' : cl['docChassis'] === 'tampered' ? 'TAMPERED' : '—' }}
+            <div class="rp-cond-label">Engine Started</div>
+            <div class="rp-cond-val" [class.cv-green]="report.inspectionDetails?.engineStarted" [class.cv-red]="!report.inspectionDetails?.engineStarted">
+              {{ report.inspectionDetails?.engineStarted ? 'YES' : 'NO' }}
             </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Road Worthy</div>
+            <div class="rp-cond-val" [class.cv-green]="report.inspectionDetails?.roadWorthyCondition" [class.cv-red]="!report.inspectionDetails?.roadWorthyCondition">
+              {{ report.inspectionDetails?.roadWorthyCondition ? 'YES' : 'NO' }}
+            </div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Transmission Type</div>
+            <div class="rp-cond-val cv-plain">{{ report.inspectionDetails?.transmissionType || '—' }}</div>
+          </div>
+          <div class="rp-cond-item">
+            <div class="rp-cond-label">Brake System</div>
+            <div class="rp-cond-val" [ngClass]="condClass(report.inspectionDetails?.brakeSystem)">{{ report.inspectionDetails?.brakeSystem || '—' }}</div>
           </div>
         </div>
         <div class="rps-remarks" *ngIf="clRemarks['rec']">
@@ -247,17 +237,51 @@
         </div>
       </div>
 
-      <!-- ── FINAL RECOMMENDATION ── -->
+      <!-- ── FINAL RECOMMENDATION ──
+           The same three fields the QC page's QC Recommendation block carries,
+           in the same order, so the report states exactly what QC decided. -->
       <div class="rp-recommendation"
            [class.rpr-green]="cl['recFinal']==='recommended'"
            [class.rpr-amber]="cl['recFinal']==='conditional'"
            [class.rpr-red]="cl['recFinal']==='not-recommended'">
         <div class="rpr-title">FINAL QC RECOMMENDATION</div>
-        <div class="rpr-value">
-          {{ cl['recFinal'] === 'recommended' ? '✅ RECOMMENDED FOR DISBURSEMENT'
-           : cl['recFinal'] === 'conditional'  ? '⚠️ RECOMMENDED WITH CONDITIONS'
-           : cl['recFinal'] === 'not-recommended' ? '❌ NOT RECOMMENDED'
-           : '— PENDING ASSESSMENT' }}
+
+        <div class="rpr-grid">
+          <div class="rpr-item">
+            <div class="rpr-item-l">1. Overall Vehicle Condition</div>
+            <div class="rpr-item-v"
+                 [class.cv-green]="cl['recCondition']==='good'"
+                 [class.cv-amber]="cl['recCondition']==='average'"
+                 [class.cv-red]="cl['recCondition']==='poor'">
+              {{ cl['recCondition'] === 'good' ? 'GOOD'
+               : cl['recCondition'] === 'average' ? 'AVERAGE'
+               : cl['recCondition'] === 'poor' ? 'POOR' : '—' }}
+            </div>
+          </div>
+
+          <div class="rpr-item">
+            <div class="rpr-item-l">2. Chassis Punch</div>
+            <div class="rpr-item-v"
+                 [class.cv-green]="cl['docChassis']==='original'"
+                 [class.cv-amber]="cl['docChassis']==='repunched'"
+                 [class.cv-red]="cl['docChassis']==='tampered'">
+              {{ cl['docChassis'] === 'original' ? 'ORIGINAL'
+               : cl['docChassis'] === 'repunched' ? 'RE-PUNCHED'
+               : cl['docChassis'] === 'tampered' ? 'TAMPERED' : '—' }}
+            </div>
+          </div>
+
+          <div class="rpr-item">
+            <div class="rpr-item-l">3. Final QC Recommendation</div>
+            <div class="rpr-item-v"
+                 [class.cv-green]="cl['recFinal']==='recommended'"
+                 [class.cv-amber]="cl['recFinal']==='conditional'"
+                 [class.cv-red]="cl['recFinal']==='not-recommended'">
+              {{ cl['recFinal'] === 'recommended' ? 'RECOMMENDED'
+               : cl['recFinal'] === 'conditional' ? 'RECOMMENDED WITH CONDITIONS'
+               : cl['recFinal'] === 'not-recommended' ? 'NOT RECOMMENDED' : '—' }}
+            </div>
+          </div>
         </div>
       </div>
 
