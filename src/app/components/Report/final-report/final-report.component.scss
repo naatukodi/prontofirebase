@@ -331,11 +331,20 @@
 /* ══════════════════════════════════════════
    QC CHECKLIST TABLE
 ═══════════════════════════════════════════ */
+/* Checks run side by side rather than one per full-width row — 25 of them down
+   a single column made the section far longer than it needed to be, and each
+   row's badge sat an entire page-width from its label. The sub-headings span
+   the full width so the three groups still read as groups. */
 .rp-cl-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  column-gap: 28px;
+  align-items: start;
   padding: 8px 20px 12px;
 }
 
 .rp-cl-sub {
+  grid-column: 1 / -1;
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 1px;
@@ -353,8 +362,14 @@
   padding: 5px 0;
   border-bottom: 1px solid #f3f4f6;
   gap: 12px;
+}
 
-  &:last-child { border-bottom: none; }
+/* Rows are grid items now, so :last-child only ever matched the final check of
+   the last group. Drop the rule under each sub-heading instead. */
+.rp-cl-sub + .rp-cl-row { border-top: none; }
+
+@media (max-width: 760px) {
+  .rp-cl-table { grid-template-columns: 1fr; }
 }
 
 .rp-cl-label {
@@ -415,6 +430,9 @@
   &.cv-green { color: #15803d; background: #f0fdf4; }
   &.cv-amber { color: #a16207; background: #fffbeb; }
   &.cv-red   { color: #b91c1c; background: #fef2f2; }
+
+  /* A stated fact rather than a verdict — reads as a value, not as unset. */
+  &.cv-plain { color: #374151; background: #f8fafc; }
 }
 
 /* ══════════════════════════════════════════
@@ -476,18 +494,43 @@
   letter-spacing: 1.5px;
   color: #6b7280;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.rpr-value {
-  font-size: 1.1rem;
+/* Three fields across, matching the QC page's QC Recommendation block. */
+.rpr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 24px;
+  text-align: left;
+}
+
+.rpr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.rpr-item-l {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.rpr-item-v {
+  font-size: 0.95rem;
   font-weight: 900;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   color: #94a3b8;
 
-  .rpr-green & { color: #15803d; }
-  .rpr-amber & { color: #a16207; }
-  .rpr-red   & { color: #b91c1c; }
+  &.cv-green { color: #15803d; }
+  &.cv-amber { color: #a16207; }
+  &.cv-red   { color: #b91c1c; }
+}
+
+@media (max-width: 900px) {
+  .rpr-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Report Footer ── */

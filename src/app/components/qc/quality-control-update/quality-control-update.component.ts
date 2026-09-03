@@ -183,6 +183,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.clWhy[key] = this.cl[key] === null
       ? 'Cleared by ' + this.currentUserName + '.'
       : 'Set manually by ' + this.currentUserName + ' — overrides the automatic check.';
+
+    // The reading now starts when AVO submits, so it can land half a minute after
+    // this page opened — long after the reviewer began working. Without this, a
+    // verdict decided here would be silently overwritten when it arrives. Marking
+    // the key protects a choice made seconds ago exactly as one saved last week.
+    this.savedByReviewer.add(key);
   }
 
   toggleGallerySlot(slot: GallerySlot): void {
@@ -374,12 +380,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         }
         // Anything the reviewer already saved is theirs. The reading lands after this
         // point, so remember these keys now — otherwise it would quietly overwrite a
-        // decision a person made and saved.
-        this.savedByReviewer = new Set(
-          Object.entries(qcData.qcChecklist || {})
-            .filter(([, v]) => v !== null && v !== undefined)
-            .map(([k]) => k)
-        );
+        // decision a person made and saved. Added rather than assigned, so the set
+        // only ever grows: setCl puts this session's choices in it too, and a reload
+        // of the case data must not drop them.
+        Object.entries(qcData.qcChecklist || {})
+          .filter(([, v]) => v !== null && v !== undefined)
+          .forEach(([k]) => this.savedByReviewer.add(k));
 
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;

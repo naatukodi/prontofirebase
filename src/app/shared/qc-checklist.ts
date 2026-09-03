@@ -158,12 +158,16 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   checkExpiry('docFitness', 'Fitness'   + (vd?.fitnessNo ? ` ${vd.fitnessNo}` : ''), vd?.fitnessValidTo);
   checkExpiry('docTax',     'Road tax',                                              vd?.taxUpto);
 
+  // Answers "is this vehicle hypothecated", which the RC states outright, rather
+  // than "does the lender match the financing bank", which needs the loan file
+  // the portal has no access to — that phrasing is why this card used to sit
+  // unresolved on every hypothecated case.
   if (vd?.hypothecation) {
-    mark('docHypo', null, vd.lender
-      ? `RC shows hypothecation to ${vd.lender} — confirm it matches the financing bank.`
-      : 'RC shows hypothecation but no lender name — confirm the bank from the RC copy.');
+    mark('docHypo', 'yes', vd.lender
+      ? `RC shows hypothecation to ${vd.lender}.`
+      : 'RC shows hypothecation, though VAHAN returned no lender name.');
   } else {
-    mark('docHypo', 'same', 'RC shows no hypothecation on record.');
+    mark('docHypo', 'no', 'RC shows no hypothecation on record.');
   }
 
   if (chassisPunch === 'ORIGINAL')       mark('docChassis', 'original',  'Chassis punch recorded as Original on the QC form.');
@@ -181,7 +185,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (vd?.registrationNumber) {
     const plateShots = has('FrontViewGrille', 'RearViewTailgate');
     mark('accReg', 'fail', plateShots
-      ? `Not compared yet: the plate has not been read from the photos. RC says ${vd.registrationNumber}, and the front/rear photos are on file — use "Read again" above, or check the plate by eye.`
+      ? `Not compared yet: the plate has not been read from the photos. RC says ${vd.registrationNumber}, and the front/rear photos are on file — check the plate against them by eye.`
       : `Cannot be compared: no front or rear photo was uploaded to read the plate from. RC says ${vd.registrationNumber}.`);
   } else {
     mark('accReg', 'fail', 'Cannot be compared: no registration number was captured in Vehicle Details.');
@@ -190,7 +194,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (vd?.chassisNumber) {
     const stencil = has('ChassisStencilTrace', 'ChassisImprint', 'ChassisVerification');
     mark('accChassis', 'fail', stencil
-      ? `Not compared yet: the chassis number has not been read from the photos. RC says ${vd.chassisNumber}, and a stencil/imprint photo is on file — use "Read again" above, or compare it by eye.`
+      ? `Not compared yet: the chassis number has not been read from the photos. RC says ${vd.chassisNumber}, and a stencil/imprint photo is on file — compare it against them by eye.`
       : `Cannot be compared: no stencil or imprint photo was uploaded to read the chassis number from. RC says ${vd.chassisNumber}.`);
   } else {
     mark('accChassis', 'fail', 'Cannot be compared: no chassis number was captured in Vehicle Details.');
@@ -200,7 +204,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (odo > 0) {
     const odoShot = has('Odometer', 'InstrumentCluster');
     mark('accOdo', 'fail', odoShot
-      ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} km and an odometer photo is on file — use "Read again" above, or read the dial by eye.`
+      ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} km and an odometer photo is on file — read the dial off it by eye.`
       : `Cannot be compared: no odometer photo was uploaded to read the dial from. AVO recorded ${inr(odo)} km.`);
   } else {
     mark('accOdo', 'fail', 'Cannot be compared: AVO recorded no odometer reading.');
@@ -209,7 +213,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   if (has('VinPlate')) {
     mark('accVIN', 'fail', ins?.vinPlate === false
       ? 'AVO marked the VIN plate as not present on the vehicle, even though a VIN plate photo was uploaded.'
-      : 'Not compared yet: the VIN plate has not been read from the photos. The photo is on file — use "Read again" above, or compare it to the RC by eye.');
+      : 'Not compared yet: the VIN plate has not been read from the photos. The photo is on file — compare it to the RC by eye.');
   } else {
     mark('accVIN', 'fail', ins?.vinPlate === false
       ? 'AVO marked the VIN plate as not present on the vehicle.'
@@ -321,7 +325,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
       `Not checked yet: the capture location is stamped into the image itself, not into ` +
       `the photo metadata, and the ${photoCount} uploaded photo(s) have not been read` +
       (ins?.inspectionLocation ? ` (declared: "${ins.inspectionLocation}")` : '') +
-      ' — use "Read again" above, or open them yourself.');
+      ' — open the photos and read the stamp yourself.');
   } else if (places.length === 1) {
     mark('accPhotoLoc', 'pass',
       `All ${metaEntries.length} stamped photo(s) captured at "${places[0]}".`);
@@ -356,7 +360,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     mark('accGPS', 'fail',
       `Not checked yet: the capture date is stamped into the photos themselves, not into ` +
       `the photo metadata, and they have not been read. AVO declared ${fmtDate(ins.dateOfInspection)}` +
-      ' — use "Read again" above, or open them yourself.');
+      ' — open the photos and read the stamp yourself.');
   } else {
     const declared = new Date(ins.dateOfInspection);
     const offDay = shotDates.filter(d => !sameDay(d, declared));
@@ -492,8 +496,12 @@ export function applySavedChecklist(
   saved: Record<string, string | null> | null | undefined
 ): void {
   if (!saved) return;
-  Object.entries(saved).forEach(([k, v]) => {
-    if (v === null || v === undefined) return;
+  Object.entries(saved).forEach(([k, rawV]) => {
+    if (rawV === null || rawV === undefined) return;
+    // docHypo was same/different before it became yes/no.
+    const v = k === 'docHypo'
+      ? (rawV === 'same' ? 'no' : rawV === 'different' ? 'yes' : rawV)
+      : rawV;
     if (result.cl[k] !== v) {
       result.why[k] = 'Saved by the reviewer' +
         (result.cl[k] ? `, overriding the automatic verdict — ${result.why[k] || ''}` : '.');

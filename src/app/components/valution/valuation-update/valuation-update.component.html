@@ -398,8 +398,25 @@
           <input matInput type="number" formControlName="exShowroomPrice"/>
         </mat-form-field>
 
-        <mat-checkbox formControlName="backlistStatus">Backlist Status</mat-checkbox>
-        <mat-checkbox formControlName="rcStatus">RC Status</mat-checkbox>
+        <!-- Both come back from the Surepass RC fetch. They are booleans on the
+             model, but a bare checkbox reads as "tick to opt in" rather than as a
+             looked-up fact, so they are stated in the same words the view page
+             and the QC checks use. -->
+        <mat-form-field appearance="fill">
+          <mat-label>Blacklist Status</mat-label>
+          <mat-select formControlName="backlistStatus">
+            <mat-option [value]="false">No</mat-option>
+            <mat-option [value]="true">Yes</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>RC Status</mat-label>
+          <mat-select formControlName="rcStatus">
+            <mat-option [value]="true">Valid</mat-option>
+            <mat-option [value]="false">Not Valid</mat-option>
+          </mat-select>
+        </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Manufactured Date</mat-label>

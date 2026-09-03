@@ -128,13 +128,13 @@
         </div>
 
         <div class="qc-card"
-          [class.card-ok]="cl['docHypo']==='same'"
-          [class.card-flag]="cl['docHypo']==='different'">
+          [class.card-ok]="cl['docHypo']==='no'"
+          [class.card-warn]="cl['docHypo']==='yes'">
           <div class="qc-card-title">Hypothecation</div>
           <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-ai-tag" *ngIf="isAi('docHypo')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docHypo'] }}</div>
           <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['docHypo']==='same'" (click)="setCl('docHypo','same')">✓ Same Bank</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['docHypo']==='different'" (click)="setCl('docHypo','different')">✗ Different</button>
+            <button type="button" class="qc-pill ok" [class.active]="cl['docHypo']==='no'" (click)="setCl('docHypo','no')">✓ No</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['docHypo']==='yes'" (click)="setCl('docHypo','yes')">● Yes</button>
           </div>
         </div>
 
@@ -154,35 +154,14 @@
     <div class="qc-section">
       <div class="qc-section-header">Data Accuracy</div>
 
-      <!-- Reads the uploaded AVO photos and fills the identity checks below. Runs on
-           open; the backend keeps the answer against this photo set, so only the
-           first open of a case actually spends anything. -->
-      <div class="qc-ai-bar">
-        <div class="qc-ai-copy">
-          <strong *ngIf="aiRunning">Reading the inspection photos …</strong>
-          <strong *ngIf="!aiRunning && !aiError">What the photos say</strong>
-          <strong *ngIf="!aiRunning && aiError">The photos could not be read</strong>
-          <small *ngIf="aiRunning">
-            Reading the number plate, chassis, VIN plate, odometer and capture stamps.
-            This takes about half a minute the first time.
-          </small>
-          <small *ngIf="!aiRunning && !aiError">
-            Read from the uploaded photos and compared against the RC and the inspection
-            report.<span *ngIf="aiReadAt"> Last read {{ aiReadAt | date:'d MMM y, h:mm a' }}.</span>
-          </small>
-        </div>
-        <button type="button" class="qc-ai-btn" (click)="runAiPhotoAudit(true)" [disabled]="aiRunning">
-          <span *ngIf="!aiRunning">↻ Read again</span>
-          <span *ngIf="aiRunning">Reading …</span>
-        </button>
-      </div>
-
+      <!-- Reads the uploaded AVO photos on open and fills the identity checks
+           below. The backend keeps the answer against this photo set, so only
+           the first open of a case actually spends anything. Only a failure is
+           surfaced — a successful read speaks through the verdicts themselves. -->
       <div class="qc-ai-error" *ngIf="aiError">
         ⚠ {{ aiError }} — every check below is still yours to decide by eye.
       </div>
 
-      <!-- What it SAW, not what it concluded. A wrong reading and a wrong vehicle
-           produce the same verdict, and only these values tell them apart. -->
 
 
       <div class="qc-columns">
@@ -329,6 +308,69 @@
           </div>
         </div>
 
+        <div class="qc-card"
+          [class.card-ok]="cl['recExterior']==='good'"
+          [class.card-warn]="cl['recExterior']==='minor'"
+          [class.card-flag]="cl['recExterior']==='major'">
+          <div class="qc-card-title">Exterior Condition</div>
+          <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recExterior']==='good'"  (click)="setCl('recExterior','good')">✨ Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')">🔧 Minor Damage</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recExterior']==='major'" (click)="setCl('recExterior','major')">💥 Major Damage</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recEngine']==='good'"
+          [class.card-warn]="cl['recEngine']==='average'"
+          [class.card-flag]="cl['recEngine']==='poor'">
+          <div class="qc-card-title">Engine / Mechanical Condition</div>
+          <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recEngine']==='good'"    (click)="setCl('recEngine','good')">⚙️ Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')">⚠️ Average</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recEngine']==='poor'"    (click)="setCl('recEngine','poor')">❌ Poor</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recTyre']==='good'"
+          [class.card-warn]="cl['recTyre']==='average'"
+          [class.card-flag]="cl['recTyre']==='replacement'">
+          <div class="qc-card-title">Tyre Condition</div>
+          <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recTyre']==='good'"        (click)="setCl('recTyre','good')">🟢 Good</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recTyre']==='average'"     (click)="setCl('recTyre','average')">🟡 Average</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recTyre']==='replacement'" (click)="setCl('recTyre','replacement')">🔴 Needs Replacement</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recDamage']==='none'"
+          [class.card-warn]="cl['recDamage']==='minor'"
+          [class.card-flag]="cl['recDamage']==='major'">
+          <div class="qc-card-title">Damage Detected</div>
+          <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recDamage']==='none'"  (click)="setCl('recDamage','none')">✅ None</button>
+            <button type="button" class="qc-pill warn" [class.active]="cl['recDamage']==='minor'" (click)="setCl('recDamage','minor')">⚠️ Minor</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recDamage']==='major'" (click)="setCl('recDamage','major')">💥 Major</button>
+          </div>
+        </div>
+
+        <div class="qc-card"
+          [class.card-ok]="cl['recMissingParts']==='none'"
+          [class.card-flag]="cl['recMissingParts']==='present'">
+          <div class="qc-card-title">Missing Parts</div>
+          <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok"   [class.active]="cl['recMissingParts']==='none'"    (click)="setCl('recMissingParts','none')">✅ None</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['recMissingParts']==='present'" (click)="setCl('recMissingParts','present')">❌ Parts Missing</button>
+          </div>
+        </div>
+
       </div>
         </div>
       </div>
@@ -346,7 +388,7 @@
       <div class="qc-section-header">Valuation Quality</div>
 
       <div class="qc-sub-header">VALUATION ACCURACY</div>
-      <div class="qc-card-grid">
+      <div class="qc-card-grid qc-card-grid--fill">
 
         <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
           <div class="qc-card-title">Minimum required photos uploaded<small>Front, Rear, Left, Right, Odometer, Engine, Chassis, Stencil</small></div>
@@ -416,7 +458,7 @@
     ═══════════════════════════════════════ -->
     <div class="qc-section">
       <div class="qc-section-header">QC Recommendation</div>
-      <div class="qc-card-grid">
+      <div class="qc-card-grid qc-card-grid--fill">
 
         <div class="qc-card"
           [class.card-ok]="cl['recCondition']==='good'"
@@ -432,72 +474,9 @@
         </div>
 
         <div class="qc-card"
-          [class.card-ok]="cl['recExterior']==='good'"
-          [class.card-warn]="cl['recExterior']==='minor'"
-          [class.card-flag]="cl['recExterior']==='major'">
-          <div class="qc-card-title">2. Exterior Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok"   [class.active]="cl['recExterior']==='good'"  (click)="setCl('recExterior','good')">✨ Good</button>
-            <button type="button" class="qc-pill warn" [class.active]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')">🔧 Minor Damage</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['recExterior']==='major'" (click)="setCl('recExterior','major')">💥 Major Damage</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
-          [class.card-ok]="cl['recEngine']==='good'"
-          [class.card-warn]="cl['recEngine']==='average'"
-          [class.card-flag]="cl['recEngine']==='poor'">
-          <div class="qc-card-title">3. Engine / Mechanical Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok"   [class.active]="cl['recEngine']==='good'"    (click)="setCl('recEngine','good')">⚙️ Good</button>
-            <button type="button" class="qc-pill warn" [class.active]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')">⚠️ Average</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['recEngine']==='poor'"    (click)="setCl('recEngine','poor')">❌ Poor</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
-          [class.card-ok]="cl['recTyre']==='good'"
-          [class.card-warn]="cl['recTyre']==='average'"
-          [class.card-flag]="cl['recTyre']==='replacement'">
-          <div class="qc-card-title">4. Tyre Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok"   [class.active]="cl['recTyre']==='good'"        (click)="setCl('recTyre','good')">🟢 Good</button>
-            <button type="button" class="qc-pill warn" [class.active]="cl['recTyre']==='average'"     (click)="setCl('recTyre','average')">🟡 Average</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['recTyre']==='replacement'" (click)="setCl('recTyre','replacement')">🔴 Needs Replacement</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
-          [class.card-ok]="cl['recDamage']==='none'"
-          [class.card-warn]="cl['recDamage']==='minor'"
-          [class.card-flag]="cl['recDamage']==='major'">
-          <div class="qc-card-title">5. Damage Detected</div>
-          <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok"   [class.active]="cl['recDamage']==='none'"  (click)="setCl('recDamage','none')">✅ None</button>
-            <button type="button" class="qc-pill warn" [class.active]="cl['recDamage']==='minor'" (click)="setCl('recDamage','minor')">⚠️ Minor</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['recDamage']==='major'" (click)="setCl('recDamage','major')">💥 Major</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
-          [class.card-ok]="cl['recMissingParts']==='none'"
-          [class.card-flag]="cl['recMissingParts']==='present'">
-          <div class="qc-card-title">6. Missing Parts</div>
-          <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok"   [class.active]="cl['recMissingParts']==='none'"    (click)="setCl('recMissingParts','none')">✅ None</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['recMissingParts']==='present'" (click)="setCl('recMissingParts','present')">❌ Parts Missing</button>
-          </div>
-        </div>
-
-        <div class="qc-card"
           [class.card-ok]="cl['docChassis']==='original'"
           [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
-          <div class="qc-card-title">7. Chassis Punch</div>
+          <div class="qc-card-title">2. Chassis Punch</div>
           <div class="qc-card-why" *ngIf="clWhy['docChassis']"><span class="qc-ai-tag" *ngIf="isAi('docChassis')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docChassis'] }}</div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docChassis']==='original'" (click)="setCl('docChassis','original'); form.patchValue({chassisPunch:'Original'})">✓ Original</button>
@@ -510,7 +489,7 @@
           [class.card-ok]="cl['recFinal']==='recommended'"
           [class.card-warn]="cl['recFinal']==='conditional'"
           [class.card-flag]="cl['recFinal']==='not-recommended'">
-          <div class="qc-card-title">8. Final QC Recommendation</div>
+          <div class="qc-card-title">3. Final QC Recommendation</div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recFinal']==='recommended'"     (click)="setCl('recFinal','recommended')">✅ Recommended</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recFinal']==='conditional'"     (click)="setCl('recFinal','conditional')">⚠️ With Conditions</button>

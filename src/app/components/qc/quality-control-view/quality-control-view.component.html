@@ -162,16 +162,17 @@
           <div class="qcc">
             <div class="qcc-title">CHASSIS QUICK COMPARE</div>
             <div class="qcc-number">{{ report.vehicleDetails?.chassisNumber || '—' }}</div>
-            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('VinPlate'))">↑ Chassis Photo</span>
-            <div class="qcc-number qcc-number--stencil">{{ report.vehicleDetails?.stencilTrace || report.vehicleDetails?.chassisNumber || '—' }}</div>
-            <span class="qcc-link" (click)="openLightbox(photoKeys.indexOf('ChassisImprint'))">↑ Stencil Trace</span>
-            <div class="qcc-match"
-                 [class.qcc-match--ok]="chassisCompareState() === 'match'"
-                 [class.qcc-match--fail]="chassisCompareState() === 'mismatch'">
-              {{ chassisCompareState() === 'match' ? '✓ Numbers Match'
-                 : chassisCompareState() === 'mismatch' ? '✗ Mismatch'
-                 : '— Waiting for Approval' }}
+
+            <!-- The chassis verification shot, directly under the number it is
+                 checked against. Click opens it full size in the lightbox. -->
+            <div class="qcc-shot" *ngIf="chassisPhotoUrl(); else noChassisShot"
+                 (click)="openLightbox(photoKeys.indexOf('ChassisVerification'))">
+              <img [src]="chassisPhotoUrl()" alt="Chassis verification photo" />
+              <span class="qcc-shot-cap">CHASSIS VERIFICATION</span>
             </div>
+            <ng-template #noChassisShot>
+              <div class="qcc-noshot">No chassis verification photo uploaded.</div>
+            </ng-template>
           </div>
         </div>
       </div>
@@ -301,9 +302,9 @@
             <span class="qc-vbadge" [class.cvb-ok]="cl['docTax']==='ok'" [class.cvb-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['docTax']"><span class="qc-ai-tag" *ngIf="isAi('docTax')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docTax'] }}</div>
           </div>
-          <div class="qc-card" [class.card-ok]="cl['docHypo']==='same'" [class.card-flag]="cl['docHypo']==='different'">
+          <div class="qc-card" [class.card-ok]="cl['docHypo']==='no'" [class.card-warn]="cl['docHypo']==='yes'">
             <div class="qc-card-title">Hypothecation</div>
-            <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='same'" [class.cvb-flag]="cl['docHypo']==='different'">{{ cl['docHypo'] === 'same' ? '✓ Same Bank' : cl['docHypo'] === 'different' ? '✗ Different' : '—' }}</span>
+            <span class="qc-vbadge" [class.cvb-ok]="cl['docHypo']==='no'" [class.cvb-warn]="cl['docHypo']==='yes'">{{ cl['docHypo'] === 'no' ? '✓ No' : cl['docHypo'] === 'yes' ? '● Yes' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-ai-tag" *ngIf="isAi('docHypo')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docHypo'] }}</div>
           </div>
         </div>
@@ -319,19 +320,9 @@
       <div class="qc-section">
         <div class="qc-section-header">Data Accuracy</div>
 
-        <!-- What the photos say. Read-only here; verdicts change on the update page. -->
-        <div class="qc-ai-bar">
-          <div class="qc-ai-copy">
-            <strong *ngIf="aiRunning">Reading the inspection photos …</strong>
-            <strong *ngIf="!aiRunning && !aiError">What the photos say</strong>
-            <strong *ngIf="!aiRunning && aiError">The photos could not be read</strong>
-            <small *ngIf="!aiRunning && !aiError">
-              Read from the uploaded photos and compared against the RC and the inspection
-              report.<span *ngIf="aiReadAt"> Last read {{ aiReadAt | date:'d MMM y, h:mm a' }}.</span>
-            </small>
-          </div>
-        </div>
-
+        <!-- The reader still runs on open and fills the checks below; only a
+             failure is surfaced, since a successful read speaks through the
+             verdicts themselves. -->
         <div class="qc-ai-error" *ngIf="aiError">⚠ {{ aiError }}</div>
 
 
@@ -423,6 +414,74 @@
             <span class="qc-vbadge" [class.cvb-ok]="cl['accGPS']==='pass'" [class.cvb-flag]="cl['accGPS']==='fail'">{{ cl['accGPS'] === 'pass' ? '✓ Pass' : cl['accGPS'] === 'fail' ? '✗ Fail' : '—' }}</span>
             <div class="qc-card-why" *ngIf="clWhy['accGPS']"><span class="qc-ai-tag" *ngIf="isAi('accGPS')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accGPS'] }}</div>
           </div>
+          <div class="qc-card"
+            [class.card-ok]="cl['recExterior']==='good'"
+            [class.card-warn]="cl['recExterior']==='minor'"
+            [class.card-flag]="cl['recExterior']==='major'">
+            <div class="qc-card-title">Exterior Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recExterior']==='good'"
+              [class.cvb-warn]="cl['recExterior']==='minor'"
+              [class.cvb-flag]="cl['recExterior']==='major'">
+              {{ cl['recExterior'] === 'good' ? '✨ Good' : cl['recExterior'] === 'minor' ? '🔧 Minor Damage' : cl['recExterior'] === 'major' ? '💥 Major Damage' : '— Not assessed' }}
+            </span>
+            <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recEngine']==='good'"
+            [class.card-warn]="cl['recEngine']==='average'"
+            [class.card-flag]="cl['recEngine']==='poor'">
+            <div class="qc-card-title">Engine / Mechanical Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recEngine']==='good'"
+              [class.cvb-warn]="cl['recEngine']==='average'"
+              [class.cvb-flag]="cl['recEngine']==='poor'">
+              {{ cl['recEngine'] === 'good' ? '⚙️ Good' : cl['recEngine'] === 'average' ? '⚠️ Average' : cl['recEngine'] === 'poor' ? '❌ Poor' : '— Not assessed' }}
+            </span>
+            <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recTyre']==='good'"
+            [class.card-warn]="cl['recTyre']==='average'"
+            [class.card-flag]="cl['recTyre']==='replacement'">
+            <div class="qc-card-title">Tyre Condition</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recTyre']==='good'"
+              [class.cvb-warn]="cl['recTyre']==='average'"
+              [class.cvb-flag]="cl['recTyre']==='replacement'">
+              {{ cl['recTyre'] === 'good' ? '🟢 Good' : cl['recTyre'] === 'average' ? '🟡 Average' : cl['recTyre'] === 'replacement' ? '🔴 Needs Replacement' : '— Not assessed' }}
+            </span>
+            <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recDamage']==='none'"
+            [class.card-warn]="cl['recDamage']==='minor'"
+            [class.card-flag]="cl['recDamage']==='major'">
+            <div class="qc-card-title">Damage Detected</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recDamage']==='none'"
+              [class.cvb-warn]="cl['recDamage']==='minor'"
+              [class.cvb-flag]="cl['recDamage']==='major'">
+              {{ cl['recDamage'] === 'none' ? '✅ None' : cl['recDamage'] === 'minor' ? '⚠️ Minor' : cl['recDamage'] === 'major' ? '💥 Major' : '— Not assessed' }}
+            </span>
+            <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
+          </div>
+
+          <div class="qc-card"
+            [class.card-ok]="cl['recMissingParts']==='none'"
+            [class.card-flag]="cl['recMissingParts']==='present'">
+            <div class="qc-card-title">Missing Parts</div>
+            <span class="qc-vbadge"
+              [class.cvb-ok]="cl['recMissingParts']==='none'"
+              [class.cvb-flag]="cl['recMissingParts']==='present'">
+              {{ cl['recMissingParts'] === 'none' ? '✅ None' : cl['recMissingParts'] === 'present' ? '❌ Parts Missing' : '— Not assessed' }}
+            </span>
+            <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
+          </div>
+
         </div>
           </div>
         </div>
@@ -444,7 +503,7 @@
         </div>
 
         <div class="qc-sub-header">VALUATION ACCURACY</div>
-        <div class="qc-card-grid">
+        <div class="qc-card-grid qc-card-grid--fill">
           <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
             <div class="qc-card-title">Minimum required photos uploaded</div>
             <span class="qc-vbadge" [class.cvb-ok]="cl['valMinPhotos']==='pass'" [class.cvb-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span>
@@ -475,7 +534,7 @@
       <!-- QC Recommendation -->
       <div class="qc-section">
         <div class="qc-section-header">QC Recommendation</div>
-        <div class="qc-card-grid">
+        <div class="qc-card-grid qc-card-grid--fill">
 
           <div class="qc-card"
             [class.card-ok]="cl['recCondition']==='good'"
@@ -492,77 +551,9 @@
           </div>
 
           <div class="qc-card"
-            [class.card-ok]="cl['recExterior']==='good'"
-            [class.card-warn]="cl['recExterior']==='minor'"
-            [class.card-flag]="cl['recExterior']==='major'">
-            <div class="qc-card-title">2. Exterior Condition</div>
-            <span class="qc-vbadge"
-              [class.cvb-ok]="cl['recExterior']==='good'"
-              [class.cvb-warn]="cl['recExterior']==='minor'"
-              [class.cvb-flag]="cl['recExterior']==='major'">
-              {{ cl['recExterior'] === 'good' ? '✨ Good' : cl['recExterior'] === 'minor' ? '🔧 Minor Damage' : cl['recExterior'] === 'major' ? '💥 Major Damage' : '— Not assessed' }}
-            </span>
-            <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
-          </div>
-
-          <div class="qc-card"
-            [class.card-ok]="cl['recEngine']==='good'"
-            [class.card-warn]="cl['recEngine']==='average'"
-            [class.card-flag]="cl['recEngine']==='poor'">
-            <div class="qc-card-title">3. Engine / Mechanical Condition</div>
-            <span class="qc-vbadge"
-              [class.cvb-ok]="cl['recEngine']==='good'"
-              [class.cvb-warn]="cl['recEngine']==='average'"
-              [class.cvb-flag]="cl['recEngine']==='poor'">
-              {{ cl['recEngine'] === 'good' ? '⚙️ Good' : cl['recEngine'] === 'average' ? '⚠️ Average' : cl['recEngine'] === 'poor' ? '❌ Poor' : '— Not assessed' }}
-            </span>
-            <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
-          </div>
-
-          <div class="qc-card"
-            [class.card-ok]="cl['recTyre']==='good'"
-            [class.card-warn]="cl['recTyre']==='average'"
-            [class.card-flag]="cl['recTyre']==='replacement'">
-            <div class="qc-card-title">4. Tyre Condition</div>
-            <span class="qc-vbadge"
-              [class.cvb-ok]="cl['recTyre']==='good'"
-              [class.cvb-warn]="cl['recTyre']==='average'"
-              [class.cvb-flag]="cl['recTyre']==='replacement'">
-              {{ cl['recTyre'] === 'good' ? '🟢 Good' : cl['recTyre'] === 'average' ? '🟡 Average' : cl['recTyre'] === 'replacement' ? '🔴 Needs Replacement' : '— Not assessed' }}
-            </span>
-            <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
-          </div>
-
-          <div class="qc-card"
-            [class.card-ok]="cl['recDamage']==='none'"
-            [class.card-warn]="cl['recDamage']==='minor'"
-            [class.card-flag]="cl['recDamage']==='major'">
-            <div class="qc-card-title">5. Damage Detected</div>
-            <span class="qc-vbadge"
-              [class.cvb-ok]="cl['recDamage']==='none'"
-              [class.cvb-warn]="cl['recDamage']==='minor'"
-              [class.cvb-flag]="cl['recDamage']==='major'">
-              {{ cl['recDamage'] === 'none' ? '✅ None' : cl['recDamage'] === 'minor' ? '⚠️ Minor' : cl['recDamage'] === 'major' ? '💥 Major' : '— Not assessed' }}
-            </span>
-            <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
-          </div>
-
-          <div class="qc-card"
-            [class.card-ok]="cl['recMissingParts']==='none'"
-            [class.card-flag]="cl['recMissingParts']==='present'">
-            <div class="qc-card-title">6. Missing Parts</div>
-            <span class="qc-vbadge"
-              [class.cvb-ok]="cl['recMissingParts']==='none'"
-              [class.cvb-flag]="cl['recMissingParts']==='present'">
-              {{ cl['recMissingParts'] === 'none' ? '✅ None' : cl['recMissingParts'] === 'present' ? '❌ Parts Missing' : '— Not assessed' }}
-            </span>
-            <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
-          </div>
-
-          <div class="qc-card"
             [class.card-ok]="cl['docChassis']==='original'"
             [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
-            <div class="qc-card-title">7. Chassis Punch</div>
+            <div class="qc-card-title">2. Chassis Punch</div>
             <span class="qc-vbadge"
               [class.cvb-ok]="cl['docChassis']==='original'"
               [class.cvb-warn]="cl['docChassis']==='repunched'"
@@ -576,7 +567,7 @@
             [class.card-ok]="cl['recFinal']==='recommended'"
             [class.card-warn]="cl['recFinal']==='conditional'"
             [class.card-flag]="cl['recFinal']==='not-recommended'">
-            <div class="qc-card-title">8. Final QC Recommendation</div>
+            <div class="qc-card-title">3. Final QC Recommendation</div>
             <span class="qc-vbadge"
               [class.cvb-ok]="cl['recFinal']==='recommended'"
               [class.cvb-warn]="cl['recFinal']==='conditional'"
