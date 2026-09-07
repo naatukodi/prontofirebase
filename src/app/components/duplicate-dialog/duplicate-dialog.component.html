@@ -1,15 +1,31 @@
-<h2 mat-dialog-title>Dedupe Results</h2>
+<div class="cd-head">
+  <div>
+    <div class="cd-title">Dedupe Results</div>
+    <div class="cd-sub">Other cases matching this vehicle, engine or chassis</div>
+  </div>
+  <button type="button" class="cd-close" (click)="dialogRef.close()" aria-label="Close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
 
-<div mat-dialog-content>
+<div class="cd-body">
 
-  <p><strong>Total Duplicates:</strong> {{ data.totalDuplicatesFound }}</p>
-  <p>
-    <strong>Average Valuation:</strong>
-    ₹{{ (data.averageValuationAmount || 0) | number:'1.0-0' }}
-  </p>
+  <!-- The headline numbers, so the answer is readable without the table. -->
+  <div class="dup-summary">
+    <div class="dup-tile" [attr.data-tone]="hasDuplicates ? 'flag' : 'clear'">
+      <span class="cd-eyebrow">Total duplicates</span>
+      <span class="dup-tile__value">{{ data.totalDuplicatesFound || 0 }}</span>
+    </div>
+    <div class="dup-tile">
+      <span class="cd-eyebrow">Average valuation</span>
+      <span class="dup-tile__value">
+        ₹{{ (data.averageValuationAmount || 0) | number:'1.0-0' }}
+      </span>
+    </div>
+  </div>
 
-  <div class="table-wrapper" *ngIf="data.existingRecords.length">
-
+  <div class="dup-scroll" *ngIf="hasDuplicates">
     <table class="dup-table">
       <thead>
         <tr>
@@ -18,41 +34,31 @@
           <th>Status</th>
           <th>Company</th>
           <th>Date</th>
-          <th>Valuation</th>
+          <th class="dup-table__num">Valuation</th>
           <th>Matched Field</th>
         </tr>
       </thead>
 
       <tbody>
         <tr *ngFor="let record of data.existingRecords">
-          <td>{{ record.valuationId }}</td>
+          <td class="dup-table__id">{{ record.valuationId }}</td>
           <td>{{ record.vehicleNumber }}</td>
           <td>{{ record.status }}</td>
-          <td>{{ record.company || '-' }}</td>
-
-          <!-- ✅ NEW DATE COLUMN -->
-          <td>
-            {{ record.createdDate ? (record.createdDate | date:'dd-MM-yyyy') : '-' }}
-          </td>
-
-          <!-- ✅ Proper Currency Format -->
-          <td>
-            ₹{{ (record.valuationAmount || 0) | number:'1.0-0' }}
-          </td>
-
-          <td>{{ record.matchedField }}</td>
+          <td>{{ record.company || '—' }}</td>
+          <td>{{ record.createdDate ? (record.createdDate | date:'dd-MM-yyyy') : '—' }}</td>
+          <td class="dup-table__num">₹{{ (record.valuationAmount || 0) | number:'1.0-0' }}</td>
+          <td><span class="dup-match">{{ record.matchedField }}</span></td>
         </tr>
       </tbody>
     </table>
-
   </div>
 
-  <div *ngIf="!data.existingRecords.length">
+  <div class="cd-empty" *ngIf="!hasDuplicates">
     No duplicates found.
   </div>
 
 </div>
 
-<div mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Close</button>
+<div class="cd-foot">
+  <button type="button" class="cd-btn cd-btn--secondary" (click)="dialogRef.close()">Close</button>
 </div>

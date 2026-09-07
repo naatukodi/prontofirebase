@@ -30,15 +30,12 @@ export class CommonNotesComponent
   @Input() entityType: string = '';
   @Input() entityId: string = '';
   @Input() currentUser: string = '';
-  @Input() showHeader = true;
-  @Input() collapsible = false;
 
   notes: CommonNote[] = [];
   isLoading = false;
   error: string | null = null;
   showForm = false;
   newNoteText = '';
-  isCollapsed = false;
 
   private destroy$ = new Subject<void>();
 
@@ -125,10 +122,6 @@ export class CommonNotesComponent
   toggleForm(): void {
     this.showForm = !this.showForm;
     if (!this.showForm) this.newNoteText = '';
-  }
-
-  toggleCollapse(): void {
-    this.isCollapsed = !this.isCollapsed;
   }
 
   closeDialog(): void {

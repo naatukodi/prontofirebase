@@ -773,17 +773,186 @@ form:has(> .pg-card) > .pg-card {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PAYMENT DIALOG PANEL
-   MatDialog pads its own surface, which would inset the payment
-   dialog's head/foot bands. The panel class is set where the dialog
-   is opened (workflow-buttons.component.ts); the component itself
-   cannot reach the surface because it is an ancestor of its host.
+   CASE DIALOG PANEL
+   The four case actions — Notes, History, Payment and Dedupe — open
+   as the same panel: a pinned head, a body that scrolls between them,
+   and a pinned foot. MatDialog pads its own surface, which would inset
+   the head and foot bands, so that padding is stripped here; no
+   component can reach the surface itself, since it is an ancestor of
+   the component's host. The panel class is set where the dialogs are
+   opened (workflow-buttons.component.ts).
+
+   The shell lives here rather than in one component's stylesheet so
+   the four dialogs cannot drift apart. Each component styles only its
+   own contents, and sets the flex column on its own :host.
    ═══════════════════════════════════════════════════════════════ */
-.payment-dialog-panel .mat-mdc-dialog-surface {
+.case-dialog-panel .mat-mdc-dialog-surface {
     padding: 0;
     border-radius: 18px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     box-shadow: 0 30px 70px rgba(10, 20, 45, 0.38);
+}
+
+/* ── Head ──────────────────────────────────────────────────────── */
+.cd-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+}
+.cd-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 1.25;
+    color: var(--ink-900);
+}
+.cd-sub {
+    font-size: 12.5px;
+    color: var(--ink-500);
+    margin-top: 2px;
+}
+.cd-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-50);
+    color: var(--ink-500);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.cd-close:hover { background: var(--brand-100); color: var(--ink-900); }
+.cd-close:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ── Body ──────────────────────────────────────────────────────── */
+.cd-body {
+    padding: 24px 26px;
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ── Foot ──────────────────────────────────────────────────────── */
+.cd-foot {
+    padding: 16px 26px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.cd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    padding: 11px 20px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+.cd-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.cd-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cd-btn--primary { background: var(--brand); color: #fff; }
+.cd-btn--primary:hover:not(:disabled) { background: var(--brand-700); }
+.cd-btn--secondary {
+    background: var(--surface);
+    color: var(--ink-900);
+    border-color: var(--line);
+}
+.cd-btn--secondary:hover { border-color: var(--brand); color: var(--brand-700); }
+
+/* ── Shared body pieces ────────────────────────────────────────── */
+/* Count beside a dialog title, e.g. Notes (3). */
+.cd-count {
+    background: var(--brand-50);
+    color: var(--brand-600);
+    border: 1px solid var(--brand-100);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.cd-loading,
+.cd-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--ink-500);
+    font-size: 13.5px;
+}
+.cd-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.cd-error__dismiss {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* A row in a scrolling list — notes, history entries. */
+.cd-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: var(--surface);
+}
+
+/* Small caps label used above a value or a group of them. */
+.cd-eyebrow {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand-600);
+}
+
+/* Metadata line under a card's content: who, when, which stage. */
+.cd-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    font-size: 11.5px;
+    color: var(--ink-500);
+}
+.cd-meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ── Narrow screens ────────────────────────────────────────────── */
+@media (max-width: 560px) {
+    .cd-head, .cd-body, .cd-foot { padding-left: 18px; padding-right: 18px; }
+    .cd-foot .cd-btn { flex: 1; justify-content: center; }
 }

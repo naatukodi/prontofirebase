@@ -1,17 +1,17 @@
-<div class="pay-head">
+<div class="cd-head">
   <div>
-    <div class="pay-title">Payment Details</div>
-    <div class="pay-sub">Record the QC fee payment for this case</div>
+    <div class="cd-title">Payment Details</div>
+    <div class="cd-sub">Record the QC fee payment for this case</div>
   </div>
-  <button type="button" class="pay-close" (click)="dialogRef.close()" aria-label="Close">
+  <button type="button" class="cd-close" (click)="dialogRef.close()" aria-label="Close">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
   </button>
 </div>
 
-<div class="pay-body">
+<div class="cd-body">
 
-  <div *ngIf="loading" class="pay-loading">Loading…</div>
+  <div *ngIf="loading" class="cd-loading">Loading…</div>
 
   <ng-container *ngIf="!loading">
 
@@ -143,9 +143,9 @@
   </ng-container>
 </div>
 
-<div class="pay-foot">
-  <button type="button" class="btn btn--secondary" (click)="dialogRef.close()">Cancel</button>
-  <button type="button" class="btn btn--primary"
+<div class="cd-foot">
+  <button type="button" class="cd-btn cd-btn--secondary" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" class="cd-btn cd-btn--primary"
           *ngIf="canEdit()" (click)="save()" [disabled]="saving">
     {{ saving ? 'Saving…' : 'Save Payment' }}
   </button>
