@@ -377,6 +377,111 @@ button[mat-raised-button] {
   margin-bottom: 28px;
 }
 
+.photo-download-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--brand-100);
+  border-radius: 12px;
+  background: var(--brand-50);
+}
+
+.photo-download-text { min-width: 0; }
+
+.photo-download-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand-700);
+}
+
+.photo-download-hint {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-500);
+}
+
+.download-all-btn {
+  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.case-media-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+// A matched pair, outlined against the filled Download All button beside them:
+// stamping is a one-off step, not what an AVO comes to this bar to do. Identical
+// metrics so Add and Remove read as two faces of one control rather than a
+// button and an afterthought — only the colour separates them.
+// Metrics deliberately track the Material button beside them — 36px tall, 4px
+// radius, same type size — so the three read as one row of controls rather than
+// a Material button with two smaller things bolted on. White ground because the
+// bar itself is --brand-50; a tinted button would sink into it.
+.logo-btn {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid;
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.logo-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+// Add leads the pair, so it carries the brand border at full strength.
+.logo-btn-add {
+  border-color: var(--brand-600);
+  color: var(--brand-700);
+}
+
+.logo-btn-add:hover:not(:disabled) {
+  background: var(--brand-50);
+  border-color: var(--brand-800);
+}
+
+// Remove stays quieter, but its border has to be dark enough that enabled does
+// not read as disabled — the two states are otherwise only 45% opacity apart.
+.logo-btn-remove {
+  border-color: var(--ink-300);
+  color: var(--ink-700);
+}
+
+.logo-btn-remove:hover:not(:disabled) {
+  background: #f4f7f7;
+  border-color: var(--ink-500);
+}
+
+.logo-stamp-note,
+.logo-stamp-error {
+  margin: -10px 0 16px;
+  font-size: 0.8rem;
+}
+
+.logo-stamp-note { color: var(--ink-500); }
+.logo-stamp-error { color: #b3261e; }
+
 .photo-group-head {
   display: flex;
   align-items: baseline;

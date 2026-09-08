@@ -13,6 +13,50 @@
 
   <ng-container *ngIf="!error">
 
+    <!-- Bulk download. An anchor, not an HttpClient call: the endpoint answers with
+         Content-Disposition, so a plain navigation saves the file — and a navigation
+         is not subject to CORS, which the browser would otherwise apply to a fetch
+         from the deployed portal. target=_blank keeps a failed download (which comes
+         back as JSON) from replacing the page the AVO is working on. -->
+    <div class="photo-download-bar">
+      <div class="photo-download-text">
+        <h3 class="photo-download-title">Case Media</h3>
+        <p class="photo-download-hint">{{ downloadSummary }}</p>
+      </div>
+      <div class="case-media-actions">
+        <!-- Which company's mark goes on is read from the case, so there is nothing
+             to choose here: the camera app captures without a logo because the
+             company is not known at capture time. -->
+        <button type="button"
+                class="logo-btn logo-btn-add"
+                [disabled]="!!logoBusy || !canDownloadMedia"
+                (click)="applyBrandLogo(true)">
+          {{ logoBusy === 'add' ? 'Working…' : 'Add Company Logo' }}
+        </button>
+
+        <button type="button"
+                *ngIf="logoOnPhotos"
+                class="logo-btn logo-btn-remove"
+                [disabled]="!!logoBusy"
+                (click)="applyBrandLogo(false)">
+          {{ logoBusy === 'remove' ? 'Working…' : 'Remove Logo' }}
+        </button>
+
+        <a mat-raised-button
+           color="primary"
+           class="download-all-btn"
+           [href]="photosDownloadUrl"
+           [disabled]="!canDownloadMedia"
+           target="_blank"
+           rel="noopener">
+          ⬇ Download All Media
+        </a>
+      </div>
+    </div>
+
+    <p *ngIf="logoMessage" class="logo-stamp-note">{{ logoMessage }}</p>
+    <p *ngIf="logoError" class="logo-stamp-error">{{ logoError }}</p>
+
     <!-- trackBy is load-bearing here, not an optimisation: without it the file
          inputs are recreated on every change detection pass and any pending
          selection is lost. See trackGroup/trackField in the component. -->

@@ -11,6 +11,8 @@ import { environment } from '../../environments/environment';
 export interface PhotoMetadata {
   annotationNote?: string;
   originalPhotoUrl?: string;
+  /** Whether the case's company wordmark is currently burned onto this photo. */
+  logoApplied?: boolean;
 }
 
 export interface SavedCustomPhoto {
@@ -21,6 +23,19 @@ export interface SavedCustomPhoto {
   location?: string;
   annotationNote?: string;
   originalPhotoUrl?: string;
+  logoApplied?: boolean;
+}
+
+/** Outcome of stamping (or clearing) the company wordmark across a case's photos. */
+export interface BrandLogoResult {
+  /** Resolved from the case itself, never chosen by the portal: 'vehga' | 'pronto'. */
+  brand: string;
+  applied: boolean;
+  /** Photos actually redrawn — ones already in the requested state are skipped. */
+  changed: number;
+  failed: number;
+  /** New URL per photo key, so thumbnails refresh without reloading the case. */
+  photoUrls: Record<string, string>;
 }
 
 @Injectable({
@@ -147,6 +162,23 @@ export class VehicleInspectionService {
     ).pipe(catchError(this.handleError));
   }
 
+  /**
+   * Link for the bulk photo download. Deliberately a URL rather than a request: the
+   * endpoint answers with Content-Disposition, so letting the browser navigate to it
+   * downloads the archive without an XHR — and a navigation needs no CORS entry, which
+   * the deployed portal origin does not have on the API.
+   */
+  photosDownloadUrl(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): string {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return `${this.baseUrl}/${valuationId}/photos/download?${params.toString()}`;
+  }
+
   annotatePhoto(
     valuationId: string,
     vehicleNumber: string,
@@ -160,6 +192,30 @@ export class VehicleInspectionService {
     return this.http.put<{ photoUrl: string; note: string }>(
       `${this.baseUrl}/${valuationId}/photos/${photoKey}/annotate`,
       { note },
+      { params }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Stamps the case's company wordmark onto every photo, or clears it.
+   *
+   * No brand is sent: the backend reads it off the case, so a Pronto case gets the
+   * Pronto mark whichever company's operator presses the button. Compositing is
+   * server-side because the blob container serves no CORS headers, which would
+   * taint a browser canvas drawing these images.
+   */
+  applyBrandLogo(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    apply: boolean
+  ): Observable<BrandLogoResult> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+    return this.http.put<BrandLogoResult>(
+      `${this.baseUrl}/${valuationId}/photos/logo`,
+      { apply },
       { params }
     ).pipe(catchError(this.handleError));
   }

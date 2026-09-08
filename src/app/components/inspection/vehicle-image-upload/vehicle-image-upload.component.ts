@@ -4,7 +4,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs/operators';
-import { VehicleInspectionService, PhotoMetadata, SavedCustomPhoto } from '../../../services/vehicle-inspection.service';
+import { VehicleInspectionService, PhotoMetadata, SavedCustomPhoto, BrandLogoResult } from '../../../services/vehicle-inspection.service';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { AuthorizationService } from '../../../services/authorization.service';
@@ -158,6 +158,46 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
     return !field.optional && !this.uploadedUrls[field.key];
   }
 
+  // ── Bulk download ────────────────────────────────────────────────────────
+  /** Photos on the server, across both groups and the AVO's own extra shots. */
+  get uploadedPhotoCount(): number {
+    const slots = this.mediaFields
+      .filter(f => f.type === 'image' && !!this.uploadedUrls[f.key]).length;
+    return slots + this.savedCustomPhotos.length;
+  }
+
+  get hasUploadedVideo(): boolean {
+    return !!this.uploadedUrls['vehicleVideo'];
+  }
+
+  /** Nothing to download until something is actually on the server. */
+  get canDownloadMedia(): boolean {
+    return this.uploadedPhotoCount > 0 || this.hasUploadedVideo;
+  }
+
+  /**
+   * What the archive will contain, said plainly. The video is worth naming: it is
+   * most of the download's size on its own, so it should not be a surprise.
+   */
+  get downloadSummary(): string {
+    if (!this.canDownloadMedia) return 'Nothing uploaded yet.';
+
+    const parts: string[] = [];
+    if (this.uploadedPhotoCount) {
+      parts.push(`${this.uploadedPhotoCount} photo${this.uploadedPhotoCount === 1 ? '' : 's'}`);
+    }
+    if (this.hasUploadedVideo) parts.push('the walkaround video');
+
+    return `${parts.join(' and ')} on this case.`;
+  }
+
+  /** Where the Download All button points. Empty until the route params arrive. */
+  get photosDownloadUrl(): string {
+    if (!this.valuationId || !this.vehicleNumber || !this.applicantContact) return '';
+    return this.vehicleInspectionService.photosDownloadUrl(
+      this.valuationId, this.vehicleNumber, this.applicantContact);
+  }
+
   /** Total required slots still empty, across both groups. */
   get missingMandatoryCount(): number {
     return this.mediaFields.filter(f => this.isMissingMandatory(f)).length;
@@ -182,6 +222,18 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
   annotationNote = '';
   annotationSaving = false;
   annotationError: string | undefined;
+
+  // ── Company wordmark ──
+  // The camera app captures without a logo: which company a case belongs to is only
+  // settled when its vehicle number is looked up, and never for an offline capture,
+  // so a mark burned in at capture time would be permanent and sometimes wrong. It
+  // goes on here instead, from the case's own brand.
+  /** Which action is in flight, so only that button says "Working…". */
+  logoBusy: 'add' | 'remove' | null = null;
+  logoError: string | undefined;
+  logoMessage: string | undefined;
+  /** True once at least one photo carries the mark — drives the Remove affordance. */
+  logoOnPhotos = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -267,14 +319,27 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
                     const normalizedKey = key.charAt(0).toLowerCase() + key.slice(1);
                     if(this.mediaMetadata[normalizedKey]) {
                         this.mediaMetadata[normalizedKey] = {
-                            annotationNote: data[key].annotationNote
+                            annotationNote: data[key].annotationNote,
+                            logoApplied: data[key].logoApplied
                         };
                     }
                 });
+                this.refreshLogoState();
             }
         },
         error: (err) => console.warn('Failed to load metadata', err)
     });
+  }
+
+  /**
+   * Whether anything on the case currently carries the wordmark. Read from the
+   * photos themselves rather than tracked separately, so a case stamped in an
+   * earlier session shows the right affordance when the page is reopened.
+   */
+  private refreshLogoState(): void {
+    this.logoOnPhotos =
+      Object.values(this.mediaMetadata).some(m => m?.logoApplied) ||
+      this.savedCustomPhotos.some(p => p.logoApplied);
   }
 
   onFileSelected(event: Event, fieldKey: MediaKey) {
@@ -402,7 +467,11 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
     this.vehicleInspectionService
       .getCustomPhotos(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
-        next: (photos) => { this.savedCustomPhotos = photos || []; this.cdr.detectChanges(); },
+        next: (photos) => {
+          this.savedCustomPhotos = photos || [];
+          this.refreshLogoState();
+          this.cdr.detectChanges();
+        },
         error: (err) => console.warn('Failed to load custom photos', err)
       });
   }
@@ -518,6 +587,76 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
   closeAnnotate(): void {
     if (this.annotationSaving) return;
     this.annotating = null;
+  }
+
+  // ── Company wordmark ──
+
+  /**
+   * Stamps the case's company wordmark across every photo, or clears it.
+   *
+   * One action for the whole case rather than one per photo: a case runs to nearly
+   * thirty shots, and the answer is the same for all of them. It is also safe to
+   * repeat — the backend skips photos already in the requested state, so pressing it
+   * again after more photos arrive stamps only the new ones.
+   */
+  applyBrandLogo(apply: boolean): void {
+    if (this.logoBusy || !this.canDownloadMedia) return;
+
+    this.logoBusy = apply ? 'add' : 'remove';
+    this.logoError = undefined;
+    this.logoMessage = undefined;
+
+    this.vehicleInspectionService
+      .applyBrandLogo(this.valuationId, this.vehicleNumber, this.applicantContact, apply)
+      .subscribe({
+        next: (result) => {
+          // Same blob names never recur, but the previous URL is already in the
+          // browser cache, so bust it the way saveAnnotation does.
+          const stamp = new Date().getTime();
+          Object.entries(result.photoUrls || {}).forEach(([photoKey, url]) => {
+            const busted = `${url}?t=${stamp}`;
+            const field = this.mediaFields.find(
+              f => f.key.charAt(0).toUpperCase() + f.key.slice(1) === photoKey);
+            if (field) {
+              (this.uploadedUrls as any)[field.key] = busted;
+              if (this.mediaMetadata[field.key]) this.mediaMetadata[field.key].logoApplied = apply;
+            } else {
+              const custom = this.savedCustomPhotos.find(p => p.id === photoKey);
+              if (custom) {
+                custom.photoUrl = busted;
+                custom.logoApplied = apply;
+              }
+            }
+          });
+
+          this.refreshLogoState();
+          this.logoMessage = this.describeLogoResult(result);
+          this.logoBusy = null;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.logoBusy = null;
+          this.logoError = err.error?.message || 'Failed to update the logo on these photos.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  private describeLogoResult(result: BrandLogoResult): string {
+    const brand = result.brand === 'pronto' ? 'Pronto Moto' : 'Vehga';
+    const verb = result.applied ? 'added to' : 'removed from';
+
+    if (result.changed === 0 && result.failed === 0) {
+      return result.applied
+        ? `Every photo already carries the ${brand} logo.`
+        : 'No photo on this case carries a logo.';
+    }
+
+    const photos = `${result.changed} photo${result.changed === 1 ? '' : 's'}`;
+    const failed = result.failed
+      ? ` ${result.failed} could not be read and were left unchanged.`
+      : '';
+    return `${brand} logo ${verb} ${photos}.${failed}`;
   }
 
   saveAnnotation(): void {
