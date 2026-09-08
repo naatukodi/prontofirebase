@@ -76,7 +76,8 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     'Sundaram Finance',
     'Manappuram Finance',
     'L&T Finance',
-    'Equitas Small Finance Bank'
+    'Equitas Small Finance Bank',
+    'Sakthi Finance Limited'
   ];
 
   saving = false;
