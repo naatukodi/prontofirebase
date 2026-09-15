@@ -49,6 +49,10 @@
       <div class="panel-content">
         <strong>Vehicle Number:</strong> <span class="wf-vehicle">{{ table.vehicleNumber }}</span>
         <span class="sep">|</span>
+        <ng-container *ngIf="referenceNumber">
+          <strong>Unique ID:</strong> <span class="wf-reference">{{ referenceNumber }}</span>
+          <span class="sep">|</span>
+        </ng-container>
         <strong>Applicant Name:</strong> {{ table.applicantName }}
         <span class="sep">|</span>
         <strong>Valuation Type:</strong> {{ table.valuationType }}

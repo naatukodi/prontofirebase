@@ -143,10 +143,14 @@ export class WorkflowButtonsComponent {
     private snackBar: MatSnackBar
   ) {}
 
+  /** The case reference, e.g. VG-519499-K. Null until it loads. */
+  referenceNumber: string | null = null;
+
   async ngOnInit(): Promise<void> {
     this.loadAssignedUser();
     this.loadPaymentBadge();
     this.loadDedupeBadge();
+    this.loadReferenceNumber();
 
     const user = await this.authService.getCurrentUser();
     this.currentUserName =
@@ -154,6 +158,20 @@ export class WorkflowButtonsComponent {
       user?.phoneNumber ||
       user?.email ||
       'Unknown';
+  }
+
+  /**
+   * The reference this case is known by, shown beside the vehicle number.
+   *
+   * This panel is on every stage page, so one call here puts the number in front of
+   * whoever is working the case. Idempotent on the server, and a failure just leaves
+   * the field out rather than holding up the panel.
+   */
+  private loadReferenceNumber(): void {
+    if (!this.id || !this.vehicleNumber || !this.applicantContact) return;
+    this.valuationService
+      .getReferenceNumber(this.id, this.vehicleNumber, this.applicantContact)
+      .subscribe(ref => (this.referenceNumber = ref));
   }
 
   private loadAssignedUser() {

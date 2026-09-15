@@ -94,8 +94,8 @@
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 66px;
+  gap: 7px;
+  min-width: 92px;
   padding: 0;
   border: none;
   background: none;
@@ -107,10 +107,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
   border: 2px solid var(--line);
@@ -118,11 +118,11 @@
   color: var(--ink-300);
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 
-  svg { width: 14px; height: 14px; }
+  svg { width: 18px; height: 18px; }
 }
 
 .wf-step__label {
-  font-size: 10.5px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--ink-500);
@@ -308,3 +308,11 @@
   }
 }
 
+
+/* The case reference, beside the vehicle number it is quoted with. */
+.wf-reference {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--brand-700, #0f766e);
+  font-variant-numeric: tabular-nums;
+}

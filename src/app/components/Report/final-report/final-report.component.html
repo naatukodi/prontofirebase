@@ -25,7 +25,7 @@
         </div>
         <div class="rph-right">
           <div class="rph-date">Date: {{ report.createdAt | date:'dd-MM-yyyy' }}</div>
-          <div class="rph-id">Ref: {{ valuationId | slice:0:8 | uppercase }}</div>
+          <div class="rph-id">Ref: {{ referenceNumber || (valuationId | slice:0:8 | uppercase) }}</div>
         </div>
       </div>
 
@@ -55,7 +55,7 @@
           <div class="rphv-rating">
             Rating: <strong>{{ getRatingDisplay() }} / 10</strong>
           </div>
-          <div class="rphv-range-row">
+          <div class="rphv-range-row" *ngIf="hasRange()">
             <div class="rphv-range-item rphv-low">
               <div class="rphv-rl">LOW</div>
               <div class="rphv-rv">₹{{ viewModel?.lowRange | number }}</div>
@@ -69,7 +69,13 @@
               <div class="rphv-rv">₹{{ viewModel?.highRange | number }}</div>
             </div>
           </div>
-          <div class="rphv-in-range" [class.rphv-out]="!isInRange()">
+
+          <!-- No range is a different thing from a range of zero. -->
+          <div class="rphv-range-row rphv-range-none" *ngIf="!hasRange()">
+            {{ rangeLoading ? 'Fetching market range…' : 'Market range not available for this vehicle.' }}
+          </div>
+
+          <div class="rphv-in-range" [class.rphv-out]="hasRange() && !isInRange()" *ngIf="hasRange()">
             {{ isInRange() ? '✓ Within Market Range' : '⚠ Outside Market Range' }}
           </div>
         </div>
@@ -107,8 +113,8 @@
           <div class="rps-row"><span class="rps-l">Class of Vehicle</span><span class="rps-v">{{ report.vehicleDetails?.classOfVehicle || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Chassis Punch Status</span>
             <span class="rps-v">
-              <span class="rps-badge" [class.rps-badge--ok]="report.qualityControl?.chassisPunch?.toLowerCase()==='original'" [class.rps-badge--warn]="report.qualityControl?.chassisPunch?.toLowerCase()==='re-punched'" [class.rps-badge--err]="report.qualityControl?.chassisPunch?.toLowerCase()==='tampered'">
-                {{ report.qualityControl?.chassisPunch || 'NOT RECORDED' }}
+              <span class="rps-badge" [class.rps-badge--ok]="chassisPunchLabel()==='ORIGINAL'" [class.rps-badge--warn]="chassisPunchLabel()==='RE-PUNCHED'" [class.rps-badge--err]="chassisPunchLabel()==='TAMPERED'">
+                {{ chassisPunchLabel() }}
               </span>
             </span>
           </div>
@@ -143,7 +149,7 @@
           <div class="rp-cl-sub">DOCUMENT VERIFICATION</div>
           <div class="rp-cl-row"><span class="rp-cl-label">Registration Certificate (RC)</span><span class="rp-cl-badge" [class.cl-ok]="cl['docRC']==='ok'" [class.cl-flag]="cl['docRC']==='flag'">{{ cl['docRC'] === 'ok' ? '✓ OK' : cl['docRC'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Insurance Policy</span><span class="rp-cl-badge" [class.cl-ok]="cl['docIns']==='ok'" [class.cl-flag]="cl['docIns']==='flag'">{{ cl['docIns'] === 'ok' ? '✓ OK' : cl['docIns'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Permit</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPermit']==='ok'" [class.cl-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Permit</span><span class="rp-cl-badge" [class.cl-ok]="cl['docPermit']==='ok'" [class.cl-flag]="cl['docPermit']==='flag'">{{ cl['docPermit'] === 'ok' ? '✓ OK' : cl['docPermit'] === 'flag' ? '✗ Flag' : cl['docPermit'] === 'na' ? 'N/A' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Fitness Certificate</span><span class="rp-cl-badge" [class.cl-ok]="cl['docFitness']==='ok'" [class.cl-flag]="cl['docFitness']==='flag'">{{ cl['docFitness'] === 'ok' ? '✓ OK' : cl['docFitness'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Road Tax</span><span class="rp-cl-badge" [class.cl-ok]="cl['docTax']==='ok'" [class.cl-flag]="cl['docTax']==='flag'">{{ cl['docTax'] === 'ok' ? '✓ OK' : cl['docTax'] === 'flag' ? '✗ Flag' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Hypothecation</span><span class="rp-cl-badge" [class.cl-ok]="cl['docHypo']==='no'" [class.cl-warn]="cl['docHypo']==='yes'">{{ cl['docHypo'] === 'no' ? '✓ No' : cl['docHypo'] === 'yes' ? '● Yes' : '—' }}</span></div>
@@ -155,8 +161,7 @@
           <div class="rp-cl-row"><span class="rp-cl-label">VIN plate matches RC &amp; inspection report</span><span class="rp-cl-badge" [class.cl-ok]="cl['accVIN']==='pass'" [class.cl-flag]="cl['accVIN']==='fail'">{{ cl['accVIN'] === 'pass' ? '✓ Pass' : cl['accVIN'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">Manufacture year vs registration gap logical</span><span class="rp-cl-badge" [class.cl-ok]="cl['accMfgReg']==='pass'" [class.cl-flag]="cl['accMfgReg']==='fail'">{{ cl['accMfgReg'] === 'pass' ? '✓ Pass' : cl['accMfgReg'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
           <div class="rp-cl-row"><span class="rp-cl-label">VAHAN data matches inspection findings</span><span class="rp-cl-badge" [class.cl-ok]="cl['accVahan']==='pass'" [class.cl-flag]="cl['accVahan']==='fail'">{{ cl['accVahan'] === 'pass' ? '✓ Pass' : cl['accVahan'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Transmission type matches RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accTransmission']==='pass'" [class.cl-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
-          <div class="rp-cl-row"><span class="rp-cl-label">Fuel type matches engine specs &amp; RC</span><span class="rp-cl-badge" [class.cl-ok]="cl['accFuel']==='pass'" [class.cl-flag]="cl['accFuel']==='fail'">{{ cl['accFuel'] === 'pass' ? '✓ Pass' : cl['accFuel'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
+          <div class="rp-cl-row"><span class="rp-cl-label">Transmission type consistent with RC variant</span><span class="rp-cl-badge" [class.cl-ok]="cl['accTransmission']==='pass'" [class.cl-flag]="cl['accTransmission']==='fail'">{{ cl['accTransmission'] === 'pass' ? '✓ Pass' : cl['accTransmission'] === 'fail' ? '✗ Fail' : cl['accTransmission'] === 'na' ? 'N/A' : '—' }}</span></div>
 
           <div class="rp-cl-sub">VALUATION QUALITY</div>
           <div class="rp-cl-row"><span class="rp-cl-label">Minimum required photos uploaded</span><span class="rp-cl-badge" [class.cl-ok]="cl['valMinPhotos']==='pass'" [class.cl-flag]="cl['valMinPhotos']==='fail'">{{ cl['valMinPhotos'] === 'pass' ? '✓ Pass' : cl['valMinPhotos'] === 'fail' ? '✗ Fail' : '—' }}</span></div>
@@ -293,7 +298,7 @@
         </div>
         <div class="rpf-right">
           <div class="rpf-label">GENERATED ON</div>
-          <div class="rpf-val">{{ report.createdAt | date:'dd MMM yyyy, hh:mm a' }}</div>
+          <div class="rpf-val">{{ report.createdAt | date:'dd-MM-yyyy, hh:mm a' }}</div>
         </div>
       </div>
 

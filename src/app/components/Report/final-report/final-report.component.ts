@@ -62,6 +62,8 @@ export class FinalReportComponent implements OnInit, OnDestroy {
 
   viewModel: QualityControlViewModel | null = null;
   cl: Record<string, string | null> = {};
+  /** The case reference, e.g. VG-519499-K. Null until it loads. */
+  referenceNumber: string | null = null;
   /** What the engine compared to reach each verdict — kept so the saved-value
    *  overlay can annotate an override, even though the report prints verdicts only. */
   clWhy: Record<string, string> = {};
@@ -124,6 +126,58 @@ export class FinalReportComponent implements OnInit, OnDestroy {
       'AVERAGE': '5.0', 'BELOW AVERAGE': '3.5', 'POOR': '2.5', 'VERY POOR': '1.5'
     };
     return map[raw.toUpperCase()] ?? raw;
+  }
+
+  /**
+   * The chassis punch as the report should print it.
+   *
+   * Prefers QualityControl.chassisPunch, then the checklist verdict the photo
+   * reader may have supplied under `docChassis` — the same fallback order the
+   * PDF service uses, so the two cannot disagree.
+   */
+  chassisPunchLabel(): string {
+    const direct = (this.report?.qualityControl?.chassisPunch || '').trim();
+    const fromChecklist = (this.cl?.['docChassis'] || '').trim();
+    const raw = direct || fromChecklist;
+    switch (raw.toUpperCase().replace(/[-\s]/g, '')) {
+      case 'ORIGINAL':  return 'ORIGINAL';
+      case 'REPUNCHED': return 'RE-PUNCHED';
+      case 'TAMPERED':  return 'TAMPERED';
+      default:          return raw ? raw.toUpperCase() : 'NOT RECORDED';
+    }
+  }
+
+  /** Whether a market range is actually available to compare against. */
+  hasRange(): boolean {
+    return Number(this.viewModel?.lowRange ?? 0) > 0
+        && Number(this.viewModel?.highRange ?? 0) > 0;
+  }
+
+  /** True while the range is being generated for a case that has none stored. */
+  rangeLoading = false;
+
+  /**
+   * Asks the server for the market range when the case has none.
+   *
+   * Cheap on the server unless the case genuinely has no stored range, in which
+   * case it generates one. Called on load so a case whose warm-up failed at AVO
+   * submit is not left without a range for good.
+   */
+  private ensureRange(): void {
+    if (this.hasRange() || this.rangeLoading) return;
+    this.rangeLoading = true;
+    this.valuationService
+      .getMarketRange(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: (v: any) => {
+          this.rangeLoading = false;
+          if (!v || !this.viewModel) return;
+          this.viewModel.lowRange  = v.lowRange  ?? v.LowRange  ?? null;
+          this.viewModel.midRange  = v.midRange  ?? v.MidRange  ?? null;
+          this.viewModel.highRange = v.highRange ?? v.HighRange ?? null;
+        },
+        error: () => (this.rangeLoading = false)
+      });
   }
 
   isInRange(): boolean {
@@ -270,6 +324,12 @@ export class FinalReportComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error   = null;
 
+    // Independent of the report load: the header prints it, and a missing
+    // reference must not hold up the rest of the page.
+    this.valuationService
+      .getReferenceNumber(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe(ref => (this.referenceNumber = ref));
+
     this.valuationService
       .getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact)
       .subscribe({
@@ -301,11 +361,18 @@ export class FinalReportComponent implements OnInit, OnDestroy {
             valuationAmount: qc?.valuationAmount ?? 0,
             chassisPunch:    qc?.chassisPunch    ?? '',
             remarks:         qc?.remarks         ?? '',
-            lowRange:    ve?.lowRange    ?? (ve as any)?.LowRange    ?? 0,
-            midRange:    ve?.midRange    ?? (ve as any)?.MidRange    ?? 0,
-            highRange:   ve?.highRange   ?? (ve as any)?.HighRange   ?? 0,
+            // Null, not 0. A missing range used to render as ₹0 and "Outside Market
+            // Range", which reads as a valuation of zero rather than as an answer the
+            // system never got.
+            lowRange:    ve?.lowRange    ?? (ve as any)?.LowRange    ?? null,
+            midRange:    ve?.midRange    ?? (ve as any)?.MidRange    ?? null,
+            highRange:   ve?.highRange   ?? (ve as any)?.HighRange   ?? null,
             rawResponse: ve?.rawResponse ?? (ve as any)?.RawResponse ?? ''
           };
+
+          // A case whose warm-up failed at AVO submit has no range stored; ask for
+          // one now rather than printing a blank on every future visit.
+          this.ensureRange();
 
           this.prefillChecklist();
 
