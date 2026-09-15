@@ -13,4 +13,7 @@ export interface QualityControl {
   assignedToWhatsapp: string;
   qcChecklist?: Record<string, string | null>;
   qcChecklistRemarks?: Record<string, string>;
+  /** Checklist keys the reviewer decided themselves, as opposed to the
+   *  system or the photo reader. Only these are protected from a re-read. */
+  qcChecklistReviewerKeys?: string[];
 }

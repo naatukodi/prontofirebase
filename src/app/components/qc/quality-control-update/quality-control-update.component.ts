@@ -1,4 +1,4 @@
-// src/app/valuation-quality-control/quality-control-update.component.ts
+﻿// src/app/valuation-quality-control/quality-control-update.component.ts
 
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -10,7 +10,7 @@ import { switchMap, map, take, catchError } from 'rxjs/operators';
 import { forkJoin, of, Observable, Subscription } from 'rxjs';
 
 // Services
-import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { ValuationService } from '../../../services/valuation.service';
@@ -22,6 +22,8 @@ import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 
 // Shared QC verification engine (also used by the QC view page)
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
+import { reportInvalidForm } from '../../../shared/form-errors';
+import { splitEvidence } from '../../../shared/evidence';
 import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
 
 // Components
@@ -58,6 +60,20 @@ interface GallerySlot {
   selected: boolean;
 }
 
+/** Checklist verdict -> the value stored on QualityControl.chassisPunch. */
+const CHASSIS_PUNCH_LABELS: Record<string, string> = {
+  original: 'Original',
+  repunched: 'Re-Punched',
+  tampered: 'Tampered',
+};
+
+/** Control names whose humanised form would not match the on-screen label. */
+const QC_FIELD_LABELS: Record<string, string> = {
+  overallRating: 'Overall rating',
+  valuationAmount: 'Valuation amount',
+  chassisPunch: 'Chassis punch status',
+};
+
 @Component({
   selector: 'app-valuation-quality-control-update',
   standalone: true,
@@ -84,7 +100,10 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
 
   form!: FormGroup;
   loading = true;
+  /** A save/submit failure. The form stays on screen so the work is not lost. */
   error: string | null = null;
+  /** A load failure. There is genuinely nothing to render, so the form is hidden. */
+  loadError: string | null = null;
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
@@ -114,6 +133,10 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   aiError: string | null = null;
   /** Keys this run actually verified, so the UI can mark them as machine-read. */
   aiVerified = new Set<string>();
+  /** What the reader actually saw. Was fetched and then thrown away. */
+  aiReadings: QcAiReadings | null = null;
+  /** Checklist key to 'resolved' | 'unresolved' for keys the reader examined. */
+  aiStatus: Record<string, string> = {};
   aiReadAt: string | null = null;
   /** Keys carrying a verdict the reviewer already saved — never overwritten. */
   private savedByReviewer = new Set<string>();
@@ -140,6 +163,15 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         next: (audit) => {
           this.aiRunning = false;
           this.aiReadAt = audit.readAt || null;
+          this.aiReadings = audit.readings ?? null;
+          this.aiStatus = audit.status ?? {};
+
+          // Damage and missing parts are derived in the browser, because comparing them
+          // against what the AVO recorded needs the per-vehicle field registry. Rebuild
+          // them now the findings exist; anything the reviewer decided is restored below.
+          this.prefillChecklist();
+          applySavedChecklist({ cl: this.cl, why: this.clWhy }, this.qcChecklistSaved,
+                              [...this.savedByReviewer]);
 
           if (audit.error) {
             this.aiError = audit.error;
@@ -153,12 +185,31 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
             if (v && !this.savedByReviewer.has(k)) this.clWhy[k] = v;
           });
 
+          // A card the reader looked at and could not settle keeps the checklist's
+          // default verdict otherwise — for accOdo that default is 'fail', which
+          // reads as "the odometer does not match" when nothing was concluded.
+          Object.entries(this.aiStatus).forEach(([k, st]) => {
+            if (st === 'unresolved' && !this.savedByReviewer.has(k) && !(audit.cl || {})[k]) {
+              this.cl[k] = null;
+            }
+          });
+
           Object.entries(audit.cl || {}).forEach(([k, v]) => {
             // A verdict the reviewer saved outranks the machine's, and this arrives
             // after the page has loaded — so it must never win by being late.
             if (!v || this.savedByReviewer.has(k)) return;
             this.cl[k] = v;
             this.aiVerified.add(k);
+
+            // The chassis punch has a dedicated field of its own, which the
+            // approval page and the report read in preference to the checklist.
+            // Keep the two in step so an AI reading is not silently dropped.
+            if (k === 'docChassis') {
+              const label = CHASSIS_PUNCH_LABELS[v];
+              if (label && !this.form.get('chassisPunch')?.value) {
+                this.form.patchValue({ chassisPunch: label });
+              }
+            }
           });
 
           this.cdr.detectChanges();
@@ -172,6 +223,57 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   }
 
   /** True while this card's verdict is the one the photo reader produced. */
+  /**
+   * Checklist keys the photo reader answers. Everything else on the checklist is
+   * derived in the browser and is never waiting on a read.
+   * Keep in step with the keys QcVisionAuditService writes.
+   */
+  private static readonly AI_ANSWERED_KEYS = new Set<string>([
+    'accChassis', 'accChassisPhotos', 'accDaylight', 'accGPS', 'accOdo', 'accPhotoLoc', 'accPlate',
+    'accReg', 'accVIN', 'docChassis', 'recEngine', 'recExterior', 'recTyre',
+  ]);
+
+  /**
+   * True while the reader is still working on this particular check.
+   *
+   * The read takes twenty to forty seconds across a full photo set and used to
+   * happen with nothing on screen, so the checklist's own default verdict sat
+   * there looking like the answer until the real one quietly replaced it.
+   * A verdict the reviewer has already saved is not waiting on anything.
+   */
+  aiPending(key: string): boolean {
+    return this.aiRunning
+        && QualityControlUpdateComponent.AI_ANSWERED_KEYS.has(key)
+        && !this.savedByReviewer.has(key);
+  }
+
+  /** Evidence lines the reviewer has opened out. Keyed by checklist key. */
+  /** The checklist as last saved, so a rebuild can put the reviewer's work back. */
+  private qcChecklistSaved: Record<string, string | null> | null = null;
+
+  private expandedEvidence = new Set<string>();
+
+  /** The cause, for the face of the card. */
+  evidenceLead(key: string): string {
+    return splitEvidence(this.clWhy[key]).lead;
+  }
+
+  /** Whether there is more to the explanation than the card is showing. */
+  evidenceHasMore(key: string): boolean {
+    return splitEvidence(this.clWhy[key]).full !== null;
+  }
+
+  isEvidenceOpen(key: string): boolean {
+    return this.expandedEvidence.has(key);
+  }
+
+  /** Opens or closes the full explanation behind the ⓘ on a card. */
+  toggleEvidence(key: string): void {
+    if (!this.evidenceHasMore(key)) return;
+    if (this.expandedEvidence.has(key)) this.expandedEvidence.delete(key);
+    else this.expandedEvidence.add(key);
+  }
+
   isAi(key: string): boolean {
     return this.aiVerified.has(key);
   }
@@ -291,7 +393,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         this.loadQualityControl();
       } else {
         this.loading = false;
-        this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
+        this.loadError = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
   }
@@ -304,7 +406,9 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       overallRating: ['', Validators.required],
       valuationAmount: [0, [Validators.required, Validators.min(0)]],
-      chassisPunch: [''],
+      // Optional here was why the report printed NOT RECORDED: a reviewer could
+      // submit without ever answering it.
+      chassisPunch: ['', Validators.required],
       remarks: ['']
     });
   }
@@ -327,17 +431,56 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       highRange: ve?.highRange ?? ve?.HighRange,
       photoKeys: this.photoKeys as string[],
       vehicleSegment: this.report?.stakeholder?.vehicleSegment,
-      valuationType: this.valuationType
+      valuationType: this.valuationType,
+      // Damage and missing parts are judged from these, not from the AVO's typed
+      // entries. Null until the read lands, and those two cards say so.
+      aiFindings: this.aiReadings
+        ? {
+            damage: this.aiReadings.damageFound ?? [],
+            missingParts: this.aiReadings.missingParts ?? [],
+            photosRead: true,
+          }
+        : null,
     });
 
     this.cl = result.cl;
     this.clWhy = result.why;
   }
 
+  /** Save failures used to hide the whole form, including the retry button. */
+  /** The reader examined this key and could not settle it. */
+  aiUnresolved(key: string): boolean {
+    return this.aiStatus[key] === 'unresolved';
+  }
+
+  /** The odometer the AVO typed, for the evidence strip on the accOdo card. */
+  get avoOdometer(): number | null {
+    const v = this.report?.inspectionDetails?.odometer;
+    return typeof v === 'number' && v > 0 ? v : null;
+  }
+
+  /** The odometer the reader took off the dial, when it managed to read one. */
+  get photoOdometer(): number | null {
+    const v = this.aiReadings?.odometerKm;
+    return typeof v === 'number' && v > 0 ? v : null;
+  }
+
+  /** Photo reading minus AVO reading, only when both are known. */
+  get odometerDelta(): number | null {
+    const a = this.avoOdometer, p = this.photoOdometer;
+    return a !== null && p !== null ? p - a : null;
+  }
+
+  private showSaveError(message: string | null): void {
+    this._snackBar.open('⚠ ' + (message || 'Something went wrong.'), 'Close',
+      { duration: 6000, horizontalPosition: 'center', verticalPosition: 'top' });
+  }
+
   // Load Data
   private loadQualityControl() {
     this.loading = true;
     this.error = null;
+    this.loadError = null;
 
     const qc$ = this.qcService.getQualityControlDetails(this.valuationId, this.vehicleNumber, this.applicantContact);
     const report$ = this.valuationSvc.getFinalReport(this.valuationId, this.vehicleNumber, this.applicantContact);
@@ -371,21 +514,21 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
           this.form.get('overallRating')?.enable({ emitEvent: false });
         }
 
+        this.qcChecklistSaved = qcData.qcChecklist ?? null;
         this.prefillChecklist();
-        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);
+        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist,
+                            qcData.qcChecklistReviewerKeys ?? []);
         if (qcData.qcChecklistRemarks) {
           Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
             if (v) this.clRemarks[k] = v;
           });
         }
-        // Anything the reviewer already saved is theirs. The reading lands after this
-        // point, so remember these keys now — otherwise it would quietly overwrite a
-        // decision a person made and saved. Added rather than assigned, so the set
-        // only ever grows: setCl puts this session's choices in it too, and a reload
-        // of the case data must not drop them.
-        Object.entries(qcData.qcChecklist || {})
-          .filter(([, v]) => v !== null && v !== undefined)
-          .forEach(([k]) => this.savedByReviewer.add(k));
+        // Only what the reviewer actually decided is theirs. The whole checklist is
+        // persisted, including verdicts the photo reader supplied, so seeding this from
+        // "has a saved value" made one Save protect every card and lock the reader out
+        // of the case for good. Added rather than assigned, so the set only ever grows:
+        // setCl puts this session's choices in it too, and a reload must not drop them.
+        (qcData.qcChecklistReviewerKeys || []).forEach(k => this.savedByReviewer.add(k));
 
         this.originalFormData = JSON.parse(JSON.stringify(this.form.getRawValue()));
         this.loading = false;
@@ -395,7 +538,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         this.runAiPhotoAudit();
       },
       error: (err) => {
-        this.error = err.message || 'Failed to load quality control details.';
+        this.loadError = err.message || 'Failed to load quality control details.';
         this.loading = false;
       }
     });
@@ -493,7 +636,8 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
 
       // Checklist
       qcChecklist: this.cl,
-      qcChecklistRemarks: this.clRemarks
+      qcChecklistRemarks: this.clRemarks,
+      qcChecklistReviewerKeys: [...this.savedByReviewer]
     };
     return payload;
   }
@@ -529,7 +673,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   // Save Action
   onSave() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.showSaveError(reportInvalidForm(this.form, QC_FIELD_LABELS));
       return;
     }
     this.saving = true;
@@ -634,6 +778,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err.message || 'Save failed.';
+          this.showSaveError(this.error);
           this.saveInProgress = false;
           this.saving = false;
         }
@@ -643,7 +788,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   // Submit Action
   onSubmit() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.showSaveError(reportInvalidForm(this.form, QC_FIELD_LABELS));
       return;
     }
     this.saving = true;
@@ -739,6 +884,7 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err.message || 'Submit failed.';
+          this.showSaveError(this.error);
           this.submitInProgress = false;
           this.saving = false;
         }

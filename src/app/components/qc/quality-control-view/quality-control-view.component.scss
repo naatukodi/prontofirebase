@@ -543,7 +543,8 @@
 
   &.card-ok,
   &.card-warn,
-  &.card-flag { background: none; }
+  &.card-flag,
+  &.card-na { background: none; }
 }
 
 .qc-card-title {
@@ -586,6 +587,8 @@
   &.cvb-ok   { background: #dcfce7; color: #15803d; }
   &.cvb-warn { background: #fef9c3; color: #a16207; }
   &.cvb-flag { background: #fee2e2; color: #b91c1c; }
+  /* Not applicable to this vehicle — deliberately neutral, not a pass. */
+  &.cvb-na   { background: #f1f5f9; color: #475569; }
 }
 
 /* Remarks text block */
@@ -920,3 +923,59 @@
   color: #94a3b8;
   text-align: center;
 }
+
+/* The photo read takes 20-40s. Without this the checklist's own default verdict
+   sits there looking like the answer until the real one quietly replaces it. */
+.qc-ai-reading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-bottom: 10px;
+}
+.qc-card-reading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f766e;
+  background: #f0fdfa;
+  border-left: 2px solid #14b8a6;
+  border-radius: 0 4px 4px 0;
+  padding: 5px 8px;
+}
+.qc-reading-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #14b8a6;
+  flex-shrink: 0;
+  animation: qc-reading-pulse 1.1s ease-in-out infinite;
+}
+@keyframes qc-reading-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+/* The ⓘ opens the full explanation when the card is showing only the cause. */
+.qc-why-icon--btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity 0.12s ease;
+
+  &:hover { opacity: 1; }
+  &[aria-expanded="true"] { opacity: 1; }
+}
+.qc-why-text { flex: 1; min-width: 0; }
