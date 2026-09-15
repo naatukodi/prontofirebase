@@ -32,6 +32,7 @@
           <th>Valuation ID</th>
           <th>Vehicle No</th>
           <th>Status</th>
+          <th>Inspected By</th>
           <th>Company</th>
           <th>Date</th>
           <th class="dup-table__num">Valuation</th>
@@ -44,6 +45,7 @@
           <td class="dup-table__id">{{ record.valuationId }}</td>
           <td>{{ record.vehicleNumber }}</td>
           <td>{{ record.status }}</td>
+          <td>{{ brandName(record.brand) }}</td>
           <td>{{ record.company || '—' }}</td>
           <td>{{ record.createdDate ? (record.createdDate | date:'dd-MM-yyyy') : '—' }}</td>
           <td class="dup-table__num">₹{{ (record.valuationAmount || 0) | number:'1.0-0' }}</td>

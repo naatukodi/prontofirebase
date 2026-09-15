@@ -2,6 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { VehicleDuplicateCheckResponse } from '../../models/vehicle-duplicate-check.interface';
+import { brandName } from '../../services/brand.service';
 
 @Component({
   selector: 'app-duplicate-dialog',
@@ -11,6 +12,9 @@ import { VehicleDuplicateCheckResponse } from '../../models/vehicle-duplicate-ch
   styleUrls: ['./duplicate-dialog.component.scss']
 })
 export class DuplicateDialogComponent {
+
+  /** Dedupe spans both companies, so each match has to say which one it sits in. */
+  readonly brandName = brandName;
 
   constructor(
     @Inject(MAT_DIALOG_DATA)

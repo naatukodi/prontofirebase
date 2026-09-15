@@ -46,6 +46,21 @@ export const BRANDS: Record<BrandKey, BrandProfile> = {
   },
 };
 
+/**
+ * Display name for a brand key that came from the backend rather than from the
+ * picker — a dedupe match, say, which can belong to either company.
+ *
+ * Null, blank and unrecognised all mean Vehga, matching BrandContext.Normalise on
+ * the server: cases written before multi-brand carry no brand at all.
+ *
+ * Lives here so the two display names stay in one place; read BRANDS through this
+ * rather than hardcoding 'Pronto Moto' at each call site.
+ */
+export function brandName(brand?: string | null): string {
+  const key = (brand || '').trim().toLowerCase() as BrandKey;
+  return (BRANDS[key] ?? BRANDS.vehga).name;
+}
+
 const STORAGE_KEY = 'pronto_active_brand';
 
 /**

@@ -25,13 +25,14 @@
           <h4>Existing Records:</h4>
           <div class="table-responsive">
             <table class="records-table">
-              <thead><tr><th>Valuation ID</th><th>Vehicle Number</th><th>Status</th><th>Created Date</th></tr></thead>
+              <thead><tr><th>Valuation ID</th><th>Vehicle Number</th><th>Status</th><th>Inspected By</th><th>Created Date</th></tr></thead>
               <tbody>
                 <tr *ngFor="let record of duplicateInfo.existingRecords">
                   <td>{{ record.valuationId }}</td>
                   <td><span class="highlight">{{ record.vehicleNumber }}</span></td>
                   <td><span class="status-badge" [ngClass]="'status-' + record.status.toLowerCase()">{{ record.status }}</span></td>
-                  <td>{{ record.createdDate | date: 'dd-MMM-yyyy hh:mm a' }}</td>
+                  <td>{{ brandName(record.brand) }}</td>
+                  <td>{{ record.createdDate | date: 'dd-MM-yyyy hh:mm a' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -54,6 +55,7 @@
             <mat-select formControlName="stakeholderName">
               <mat-option *ngFor="let opt of stakeholderOptions" [value]="opt">{{ opt }}</mat-option>
             </mat-select>
+            <mat-error *ngIf="form.get('stakeholderName')?.hasError('required')">Select the stakeholder</mat-error>
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Branch</mat-label>
@@ -61,8 +63,13 @@
           </mat-form-field>
 
           <!-- Row 2: Executive Name | Contact Number -->
-          <mat-form-field appearance="fill"><mat-label>Executive Name</mat-label><input matInput formControlName="stakeholderExecutiveName" /></mat-form-field>
-          <mat-form-field appearance="fill"><mat-label>Contact Number</mat-label><input matInput formControlName="stakeholderExecutiveContact" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Executive Name</mat-label><input matInput formControlName="stakeholderExecutiveName" />
+            <mat-error *ngIf="form.get('stakeholderExecutiveName')?.hasError('required')">Executive name is required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Contact Number</mat-label><input matInput formControlName="stakeholderExecutiveContact" maxlength="10" />
+            <mat-error *ngIf="form.get('stakeholderExecutiveContact')?.hasError('required')">Contact number is required</mat-error>
+            <mat-error *ngIf="form.get('stakeholderExecutiveContact')?.hasError('pattern')">Enter 10 digits</mat-error>
+          </mat-form-field>
 
           <!-- Row 3: WhatsApp + inline checkbox | Email -->
           <div style="display:flex;align-items:center;gap:8px">
@@ -83,6 +90,7 @@
               <mat-option value="Retail">Retail</mat-option>
               <mat-option value="Repo">Repo</mat-option>
             </mat-select>
+            <mat-error *ngIf="form.get('valuationType')?.hasError('required')">Select a valuation type</mat-error>
           </mat-form-field>
 
           <!-- Location fields -->
@@ -99,8 +107,13 @@
       <div class="pg-card">
         <div class="pg-card-title"><span class="pg-card-title-accent"></span>Applicant</div>
         <div class="pg-card-body pg-grid">
-          <mat-form-field appearance="fill"><mat-label>Applicant Name</mat-label><input matInput formControlName="applicantName" /></mat-form-field>
-          <mat-form-field appearance="fill"><mat-label>Applicant Contact</mat-label><input matInput formControlName="applicantContact" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Name</mat-label><input matInput formControlName="applicantName" />
+            <mat-error *ngIf="form.get('applicantName')?.hasError('required')">Applicant name is required</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="fill"><mat-label>Applicant Contact</mat-label><input matInput formControlName="applicantContact" maxlength="10" />
+            <mat-error *ngIf="form.get('applicantContact')?.hasError('required')">Applicant contact is required</mat-error>
+            <mat-error *ngIf="form.get('applicantContact')?.hasError('pattern')">Enter 10 digits</mat-error>
+          </mat-form-field>
           <mat-form-field appearance="fill"><mat-label>Alternative No</mat-label><input matInput formControlName="applicantAlternativeContact" maxlength="10" /></mat-form-field>
         </div>
       </div>
@@ -116,6 +129,8 @@
               <span *ngIf="isCheckingDuplicate" class="checking-badge">Checking...</span>
             </mat-label>
             <input matInput formControlName="vehicleNumber" [class.has-warning]="duplicateInfo.isVehicleNumberExists" autocomplete="off" />
+            <mat-error *ngIf="form.get('vehicleNumber')?.hasError('required')">Vehicle number is required</mat-error>
+            <mat-error *ngIf="form.get('vehicleNumber')?.hasError('pattern')">Letters and digits only, no spaces or dashes</mat-error>
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Vehicle Segment</mat-label>

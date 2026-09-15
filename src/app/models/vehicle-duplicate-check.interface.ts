@@ -21,4 +21,12 @@ export interface ExistingVehicleRecord {
   // ✅ ADD THESE
   company?: string;
   valuationAmount?: number;
+  /**
+   * Which company the matching case belongs to: 'vehga' | 'pronto'.
+   *
+   * Dedupe searches across both companies, so a match is not necessarily in the
+   * one you are working in. Not the same as `company` above, which is the
+   * stakeholder's name.
+   */
+  brand?: string;
 }
