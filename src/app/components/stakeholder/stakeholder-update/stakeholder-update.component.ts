@@ -1,6 +1,8 @@
 // src/app/components/stakeholder/stakeholder-update/stakeholder-update.component.ts
 
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { reportInvalidForm } from '../../../shared/form-errors';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Observable, Subscription } from 'rxjs';
@@ -17,6 +19,22 @@ import { Auth, User, authState } from '@angular/fire/auth';
 import { UsersService } from '../../../services/users.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+
+/** Control names whose humanised form would not match the on-screen label. */
+const STAKEHOLDER_FIELD_LABELS: Record<string, string> = {
+  stakeholderName: 'Name of Stakeholder',
+  stakeholderExecutiveName: 'Executive Name',
+  stakeholderExecutiveContact: 'Contact Number',
+  stakeholderExecutiveWhatsapp: 'WhatsApp Number',
+  stakeholderExecutiveEmail: 'Email',
+  valuationType: 'Valuation Type',
+  applicantName: 'Applicant Name',
+  applicantContact: 'Applicant Contact',
+  applicantAlternativeContact: 'Alternative Contact',
+  vehicleNumber: 'Vehicle Number',
+  vehicleSegment: 'Vehicle Segment',
+  block: 'Block / City',
+};
 
 @Component({
   selector: 'app-stakeholder-update',
@@ -37,28 +55,28 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
   private usersSvc = inject(UsersService);
 
   stakeholderOptions: string[] = [
-    'State Bank of India (SBI)',
+    'State Bank of India',
     'HDFC Bank',
     'ICICI Bank',
     'Axis Bank',
     'IndusInd Bank',
-    'Punjab National Bank (PNB)',
+    'Punjab National Bank',
     'Federal Bank',
     'Union Bank of India',
     'Bank of Baroda',
-    'IDFC FIRST Bank',
+    'IDFC First Bank',
     'Karur Vysya Bank',
     'Kotak Mahindra Bank',
-    'Mahindra Finance',
-    'Bajaj Finserv',
-    'Hero FinCorp',
-    'TVS Credit Services',
-    'Shriram Finance',
-    'Muthoot Capital Services',
+    'Mahindra & Mahindra Financial Services',
+    'Bajaj Finance Limited',
+    'Hero FinCorp Limited',
+    'TVS Credit Services Limited',
+    'Shriram Finance Limited',
+    'Muthoot Capital Services Limited',
     'Cholamandalam Investment and Finance Company',
-    'Sundaram Finance',
-    'Manappuram Finance',
-    'L&T Finance',
+    'Sundaram Finance Limited',
+    'Manappuram Finance Limited',
+    'Larsen & Toubro Finance',
     'Equitas Small Finance Bank',
     'Sakthi Finance Limited'
   ];
@@ -85,7 +103,8 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
     private historyLogger: HistoryLoggerService,
-    private auth: Auth
+    private auth: Auth,
+    private _snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -283,7 +302,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
 
   onSave() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.notifyError(reportInvalidForm(this.form, STAKEHOLDER_FIELD_LABELS));
       return;
     }
     this.saving = true;
@@ -353,18 +372,27 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       next: (): void => {
         this.saving = this.saveInProgress = false;
         this.saved = true;
+        this._snackBar.open('✅ Stakeholder details saved', 'Close',
+          { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top' });
       },
       error: (err: { message?: string }): void => {
         this.error = err.message || 'Save failed';
-        this.saveInProgress = false; 
+        this.saveInProgress = false;
         this.saving = false;
+        this.notifyError(this.error);
       }
     });
   }
 
+  /** Surfaces a blocked or failed action; the buttons sit below a long form. */
+  private notifyError(message: string | null): void {
+    this._snackBar.open('⚠ ' + (message || 'Something went wrong.'), 'Close',
+      { duration: 6000, horizontalPosition: 'center', verticalPosition: 'top' });
+  }
+
   onSubmit() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.notifyError(reportInvalidForm(this.form, STAKEHOLDER_FIELD_LABELS));
       return;
     }
     this.saving = true;
@@ -434,6 +462,7 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       },
       error: err => {
         this.error = err.message || 'Submit failed';
+        this.notifyError(this.error);
         this.submitInProgress = false;
         this.saving = false;
       }

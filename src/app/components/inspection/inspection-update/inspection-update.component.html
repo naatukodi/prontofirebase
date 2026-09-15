@@ -8,7 +8,7 @@
   </app-workflow-buttons>
 
   <div *ngIf="loading">Loading inspection details …</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="error || loadError" class="error">{{ error || loadError }}</div>
 
   <div class="error-alert" *ngIf="mandatoryPhotosError && missingPhotos && missingPhotos.length > 0 && !isViewOnly">
     <div class="alert-header">
@@ -47,7 +47,7 @@
     </div>
   </fieldset>
 
-  <ng-container *ngIf="!loading && !error">
+  <ng-container *ngIf="!loading && !loadError">
 
     <fieldset class="nested-group">
       <legend>Inspection Info</legend>
@@ -103,6 +103,8 @@
         <mat-form-field *ngIf="showField('odometer')" appearance="fill">
           <mat-label>Odometer (km)</mat-label>
           <input matInput type="number" formControlName="odometer" />
+          <mat-error *ngIf="form.get('odometer')?.hasError('required')">Odometer reading is required</mat-error>
+          <mat-error *ngIf="form.get('odometer')?.hasError('min')">Enter the reading shown on the dial — 0 km is not a valid reading</mat-error>
         </mat-form-field>
         <mat-form-field *ngIf="showField('vinPlate')" appearance="fill">
           <mat-label>VIN Plate Present</mat-label>
@@ -144,10 +146,12 @@
       <fieldset class="nested-group">
         <legend>
           {{ section.section }}
-          <span class="score-badge" [attr.data-band]="band(sectionScores[section.section])">
-            {{ sectionScores[section.section] !== null && sectionScores[section.section] !== undefined
-                 ? (sectionScores[section.section] | number:'1.1-1') + ' / 10'
-                 : 'Not rated' }}
+          <span class="score-badge" [attr.data-band]="section.scored === false ? null : band(sectionScores[section.section])">
+            {{ section.scored === false
+                 ? 'Not scored'
+                 : (sectionScores[section.section] !== null && sectionScores[section.section] !== undefined
+                     ? (sectionScores[section.section] | number:'1.1-1') + ' / 10'
+                     : 'Not rated') }}
           </span>
         </legend>
         <div class="grid">
