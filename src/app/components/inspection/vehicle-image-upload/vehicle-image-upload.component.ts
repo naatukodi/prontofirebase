@@ -96,6 +96,10 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
     { key: 'tireRearLeft',           label: 'Tire - Rear Left',                    type: 'image', optional: true  },
     { key: 'tireRearRight',          label: 'Tire - Rear Right',                   type: 'image', optional: true  },
     { key: 'vehicleVideo',           label: 'Vehicle Video',                       type: 'video', optional: false },
+    // All three chassis slots are mandatory. They were briefly optional on the
+    // grounds that AVOs were uploading one picture into all three, but these two
+    // are the evidence photos the report leans on, so a missing one is worse than
+    // a duplicated one.
     { key: 'chassisVerification',    label: 'Chassis Verification',                type: 'image', optional: false },
     { key: 'chassisStencilTrace',    label: 'Chassis Stencil Trace',               type: 'image', optional: false },
     { key: 'workingOperationPhoto',  label: 'Working / Operation Photo',           type: 'image', optional: false }

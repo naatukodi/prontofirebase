@@ -6,9 +6,12 @@
 // numbers a user sees on the AVO page must be the numbers printed on the report,
 // so any change here has to be mirrored there — and vice versa.
 //
-// EVERY FIELD IS SCORED, including the OTHER SYSTEMS entries. NO counts as 1/10,
-// so answering NO does pull the section down — which is what a reviewer expects
-// when they look at a card full of NOs.
+// Most fields are scored, and NO counts as 1/10, so answering NO pulls the
+// section down — which is what a reviewer expects when they look at a card full
+// of NOs. The exceptions are marked `scored: false` in the registry: OTHER
+// SYSTEMS (accessories and fitments) and ABS. Those are facts about how the
+// vehicle was built, not judgements of its condition, and a vehicle that never
+// had a crash guard should not score worse than one that does.
 //
 // Where an item genuinely does not apply to the vehicle — no air conditioner was
 // ever fitted, a crash guard was never part of the spec — the answer is N/A, not
@@ -18,8 +21,13 @@
 //
 // Verified against a real report (TS15UD1953, REF PM-519499-K):
 //   BASIC SYSTEMS  9×GOOD + 1×AVERAGE → (8.5×9 + 5.5)/10 = 8.2   ✓ matches PDF
-//   OTHER SYSTEMS  4×NO + 4×GOOD      → 30.5/8            = 3.8   ✓ matches PDF
-//   Overall        mean of 10 sections → 80/10            = 8.0   ✓ matches gauge
+//
+// The same report also recorded OTHER SYSTEMS 4×NO + 4×GOOD → 3.8, and an overall
+// of 8.0 as the mean of all 10 sections. Both figures predate this change: OTHER
+// SYSTEMS is no longer scored, so it contributes nothing and the overall is now
+// the mean of the 9 scored sections. A report regenerated for that vehicle will
+// therefore show a higher overall than the one on file, which is the point — the
+// old figure was marked down for accessories the vehicle never had.
 
 import {
   InspectionSection,
@@ -113,12 +121,21 @@ export interface SectionScore {
   total: number;
 }
 
-/** Score for one section, given a way to read each field's current value. */
+/**
+ * Score for one section, given a way to read each field's current value.
+ *
+ * Returns null for a section marked `scored: false`, which reads downstream as
+ * "unscored" exactly like a section nobody filled in — so it drops out of the
+ * overall average rather than counting as a zero.
+ */
 export function sectionScoreFor(
   section: InspectionSection,
   readValue: (key: string) => string | null | undefined
 ): number | null {
-  return sectionScoreOrNull(section.fields.map(f => readValue(f.key)));
+  if (section.scored === false) return null;
+  return sectionScoreOrNull(
+    section.fields.filter(f => f.scored !== false).map(f => readValue(f.key))
+  );
 }
 
 /**
@@ -134,13 +151,18 @@ export function scoreSections(
 ): SectionScore[] {
   if (!vehicleType) return [];
   return getFieldRegistry(vehicleType).map((section: InspectionSection) => {
-    const values = section.fields.map(f => readValue(f.key));
+    const scorable = section.scored === false
+      ? []
+      : section.fields.filter(f => f.scored !== false);
+    const values = scorable.map(f => readValue(f.key));
     const rated = values.filter(v => verdictPoints(mapVerdict(v)) !== null).length;
     return {
       section: section.section,
-      score: sectionScoreOrNull(values),
+      score: scorable.length === 0 ? null : sectionScoreOrNull(values),
       rated,
-      total: section.fields.length,
+      // Counts only the fields that can move the score, so "3 of 4 rated" does
+      // not silently include one that never counts.
+      total: scorable.length,
     };
   });
 }
