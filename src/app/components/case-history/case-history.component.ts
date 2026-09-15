@@ -1,4 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
+import { formatDdMmYyyyHhMm } from '../../shared/date-format';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../services/workflow.service';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -88,7 +89,7 @@ export class CaseHistoryComponent implements OnInit {
   }
 
   formatDate(date: Date | string): string {
-    const d = new Date(date);
-    return d.toLocaleString();
+    // Was toLocaleString(), which renders per the viewer's browser locale.
+    return formatDdMmYyyyHhMm(date);
   }
 }

@@ -37,7 +37,7 @@
         <div class="saved-card__row">
           <span class="saved-card__label">Date</span>
           <span class="saved-card__value">
-            {{ saved.date ? (saved.date | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+            {{ saved.date ? (saved.date | date:'dd-MM-yyyy h:mm a':istTimezone) + ' IST' : '—' }}
           </span>
         </div>
         <div class="saved-card__row saved-card__row--wide">
@@ -60,7 +60,7 @@
         <div class="saved-card__row">
           <span class="saved-card__label">Saved on</span>
           <span class="saved-card__value saved-card__value--muted">
-            {{ saved.savedAt ? (saved.savedAt | date:'dd/MM/yyyy h:mm a':istTimezone) + ' IST' : '—' }}
+            {{ saved.savedAt ? (saved.savedAt | date:'dd-MM-yyyy h:mm a':istTimezone) + ' IST' : '—' }}
           </span>
         </div>
       </div>
