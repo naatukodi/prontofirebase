@@ -96,7 +96,7 @@ import { AuthorizationService } from '../../services/authorization.service';
           routerLinkActive
           #rla2="routerLinkActive"
           [active]="rla2.isActive">
-          Instant AI Value
+          Vehga Value
         </a>
         <a mat-tab-link
           *ngIf="isAdmin"

@@ -35,6 +35,12 @@ export interface WFValuation {
   valuationType: string | null; // e.g. Car, Bike, Truck
   name: string;            // e.g. "SBI"
   updatedAt: string | null;
+
+  // Only populated by the case search, which reads the case document rather than the
+  // workflow row. Absent on the dashboard's own listings.
+  referenceNumber?: string | null;
+  chassisNumber?: string | null;
+  engineNumber?: string | null;
 }
 
 export interface UserDashboardStats {

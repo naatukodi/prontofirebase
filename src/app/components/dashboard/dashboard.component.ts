@@ -2,8 +2,8 @@
 
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin, from, of, EMPTY, Observable } from 'rxjs';
-import { catchError, finalize, map, switchMap, take, timeout } from 'rxjs/operators';
+import { forkJoin, from, of, EMPTY, Observable, Subject } from 'rxjs';
+import { catchError, finalize, map, switchMap, take, timeout, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { ClaimService } from '../../services/claim.service';
 import { UsersService } from '../../services/users.service';
@@ -40,10 +40,24 @@ export class DashboardComponent implements OnInit {
 
   claims: WFValuation[] = [];
   completedCases: WFValuation[] = [];
+  /**
+   * How long a completed case stays on the dashboard after approval.
+   *
+   * A display rule only: the case is untouched and the search still finds it, which
+   * is why search had to move to the server — these rows are no longer loaded here.
+   */
+  private static readonly COMPLETED_VISIBLE_DAYS = 30;
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
 
+  /** Free-text filter over vehicle number, applicant and stakeholder. */
+  searchTerm = '';
+  /** Rows returned by the server search, or null when the box is not driving the table. */
+  searchResults: WFValuation[] | null = null;
+  searching = false;
+  searchNotice: string | null = null;
+  private searchInput$ = new Subject<string>();
   fromDate: Date | null = null;
   toDate: Date | null = null;
 
@@ -90,6 +104,11 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Debounced so a search does not fire a query per keystroke.
+    this.searchInput$
+      .pipe(debounceTime(350), distinctUntilChanged())
+      .subscribe(term => this.runServerSearch(term));
+
     this.loading = true;
 
     from(this.authService.getCurrentUser()).pipe(
@@ -154,7 +173,7 @@ export class DashboardComponent implements OnInit {
       next: (result) => {
         if (result.admin) {
           const all = result.open || [];
-          this.completedCases = result.completed || [];
+          this.completedCases = this.withinCompletedWindow(result.completed || []);
 
           const stepOrder = this.currentUser
             ? this.roleStepOrder[this.currentUser.roleId]
@@ -171,7 +190,7 @@ export class DashboardComponent implements OnInit {
           const stats = result.stats;
           this.userStats = stats;
           this.claims = stats.openCases || [];
-          this.completedCases = stats.completedCases || [];
+          this.completedCases = this.withinCompletedWindow(stats.completedCases || []);
 
           this.claims.sort((a, b) =>
             new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
@@ -229,9 +248,77 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  /** True when the row matches the current search box, which may be empty. */
+  private matchesSearch(v: WFValuation): boolean {
+    const q = this.searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return [v.vehicleNumber, v.applicantName, v.name, v.assignedTo]
+      .some(f => (f || '').toLowerCase().includes(q));
+  }
+
+  /**
+   * Keeps only completed cases approved within the visible window.
+   *
+   * Older ones are still in the system and still searchable; they just stop crowding
+   * a dashboard that is meant to show what is live.
+   */
+  private withinCompletedWindow(rows: WFValuation[]): WFValuation[] {
+    const cutoff = Date.now() - DashboardComponent.COMPLETED_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+    return (rows || []).filter(v => {
+      const t = v.completedAt || v.updatedAt || v.createdAt;
+      if (!t) return true;                       // no date: keep rather than hide
+      const d = new Date(t).getTime();
+      return isNaN(d) ? true : d >= cutoff;
+    });
+  }
+
+  /** Minimum term the server search accepts; below this the local filter is used. */
+  private static readonly MIN_SERVER_SEARCH = 3;
+
+  /**
+   * Runs the search box.
+   *
+   * Short terms filter the rows already on screen, which is instant. Anything longer
+   * goes to the server, because chassis and engine numbers are not on these rows and
+   * completed cases past the window are not loaded at all.
+   */
+  onSearchChanged(term: string): void {
+    this.searchTerm = term;
+    this.searchInput$.next(term);
+  }
+
+  private runServerSearch(term: string): void {
+    const q = (term || '').trim();
+    if (q.length < DashboardComponent.MIN_SERVER_SEARCH) {
+      this.searchResults = null;
+      this.searching = false;
+      this.searchNotice = null;
+      this.applyFilter();
+      return;
+    }
+
+    this.searching = true;
+    this.searchNotice = null;
+    this.claimService.searchCases(q).subscribe(rows => {
+      this.searching = false;
+      this.searchResults = rows;
+      this.searchNotice = rows.length === 0
+        ? `No case matches "${q}" by reference, vehicle, chassis or engine number.`
+        : null;
+      this.applyFilter();
+    });
+  }
+
   applyFilter(): void {
+    // A server search answers across every case, closed and archived included, so it
+    // replaces the local list rather than being filtered by it.
+    if (this.searchResults !== null) {
+      this.filteredClaims = this.searchResults;
+      return;
+    }
+
     if (this.selectedStep === 'Complete' || this.selectedStep === 'MyComplete') {
-      this.filteredClaims = this.completedCases;
+      this.filteredClaims = this.completedCases.filter(v => this.matchesSearch(v));
       return;
     }
 
@@ -262,7 +349,7 @@ export class DashboardComponent implements OnInit {
         matchesDate = itemDate >= start && itemDate <= end;
       }
 
-      return matchesStep && matchesDate;
+      return matchesStep && matchesDate && this.matchesSearch(v);
     });
   }
 
@@ -345,7 +432,7 @@ export class DashboardComponent implements OnInit {
     `${v.valuationId}:${v.vehicleNumber}:${v.applicantContact}`;
 
   // ══════════════════════════════════════════════════════════════
-  // Dashboard overview widgets (KPIs · donut · trend · today)
+  // Dashboard overview widgets (KPIs · donut · today)
   // ══════════════════════════════════════════════════════════════
 
   get greeting(): string {
@@ -388,57 +475,6 @@ export class DashboardComponent implements OnInit {
       stops.push(`${s.color} ${start}deg ${end}deg`);
     }
     return `conic-gradient(${stops.join(', ')})`;
-  }
-
-  /** Cases created per weekday (Mon→Sun) → SVG geometry for the trend chart. */
-  get trend(): {
-    labels: string[];
-    max: number;
-    linePoints: string;
-    areaPoints: string;
-    dots: Array<{ x: number; y: number; v: number }>;
-  } {
-    const dayCounts = new Array(7).fill(0); // 0=Sun..6=Sat
-    for (const v of this.claims) {
-      if (!v.createdAt) continue;
-      const d = new Date(v.createdAt);
-      if (isNaN(d.getTime())) continue;
-      dayCounts[d.getDay()]++;
-    }
-    const order = [1, 2, 3, 4, 5, 6, 0];
-    const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const labels = order.map(i => names[i]);
-    const values = order.map(i => dayCounts[i]);
-
-    const W = 700, H = 200, padX = 20, padY = 24;
-    const max = Math.max(1, ...values);
-    const step = (W - padX * 2) / (values.length - 1);
-    const dots = values.map((v, i) => ({
-      x: padX + i * step,
-      y: H - padY - (v / max) * (H - padY * 2),
-      v,
-    }));
-    const linePoints = dots.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    const areaPoints =
-      `${padX},${H - padY} ` + linePoints + ` ${W - padX},${H - padY}`;
-    return { labels, max, linePoints, areaPoints, dots };
-  }
-
-  /** Percentage change in case volume vs the previous 7 days (for the trend header). */
-  get weekTrendPct(): number {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-    let thisWeek = 0, lastWeek = 0;
-    for (const v of this.claims) {
-      if (!v.createdAt) continue;
-      const t = new Date(v.createdAt).getTime();
-      if (isNaN(t)) continue;
-      const age = now - t;
-      if (age <= 7 * day) thisWeek++;
-      else if (age <= 14 * day) lastWeek++;
-    }
-    if (lastWeek === 0) return thisWeek > 0 ? 100 : 0;
-    return Math.round(((thisWeek - lastWeek) / lastWeek) * 100);
   }
 
   /** Cases created or updated today — powers the "Today's cases" panel. */

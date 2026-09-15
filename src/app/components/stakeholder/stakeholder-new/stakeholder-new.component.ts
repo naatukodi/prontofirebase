@@ -1,6 +1,8 @@
 // src/app/components/stakeholder/stakeholder-new/stakeholder-new.component.ts
 
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { reportInvalidForm } from '../../../shared/form-errors';
 import {
   FormBuilder,
   FormGroup,
@@ -10,6 +12,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap, map, take } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
+import { brandName } from '../../../services/brand.service';
 import { Subscription, of, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Auth, User, authState } from '@angular/fire/auth';
@@ -25,6 +28,22 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
 
+/** Control names whose humanised form would not match the on-screen label. */
+const STAKEHOLDER_FIELD_LABELS: Record<string, string> = {
+  stakeholderName: 'Name of Stakeholder',
+  stakeholderExecutiveName: 'Executive Name',
+  stakeholderExecutiveContact: 'Contact Number',
+  stakeholderExecutiveWhatsapp: 'WhatsApp Number',
+  stakeholderExecutiveEmail: 'Email',
+  valuationType: 'Valuation Type',
+  applicantName: 'Applicant Name',
+  applicantContact: 'Applicant Contact',
+  applicantAlternativeContact: 'Alternative Contact',
+  vehicleNumber: 'Vehicle Number',
+  vehicleSegment: 'Vehicle Segment',
+  block: 'Block / City',
+};
+
 @Component({
   selector: 'app-stakeholder-new',
   standalone: true,
@@ -33,6 +52,9 @@ import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate
   styleUrls: ['./stakeholder-new.component.scss']
 })
 export class StakeholderNewComponent implements OnInit, OnDestroy {
+  /** Dedupe spans both companies, so each match has to say which one it sits in. */
+  readonly brandName = brandName;
+
   form!: FormGroup;
   valuationId!: string;
   vehicleNumber!: string;
@@ -54,29 +76,30 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
   showDuplicateWarning = false;
 
   stakeholderOptions: string[] = [
-    'State Bank of India (SBI)',
+    'State Bank of India',
     'HDFC Bank',
     'ICICI Bank',
     'Axis Bank',
     'IndusInd Bank',
-    'Punjab National Bank (PNB)',
+    'Punjab National Bank',
     'Federal Bank',
     'Union Bank of India',
     'Bank of Baroda',
-    'IDFC FIRST Bank',
+    'IDFC First Bank',
     'Karur Vysya Bank',
     'Kotak Mahindra Bank',
-    'Mahindra Finance',
-    'Bajaj Finserv',
-    'Hero FinCorp',
-    'TVS Credit Services',
-    'Shriram Finance',
-    'Muthoot Capital Services',
+    'Mahindra & Mahindra Financial Services',
+    'Bajaj Finance Limited',
+    'Hero FinCorp Limited',
+    'TVS Credit Services Limited',
+    'Shriram Finance Limited',
+    'Muthoot Capital Services Limited',
     'Cholamandalam Investment and Finance Company',
-    'Sundaram Finance',
-    'Manappuram Finance',
-    'L&T Finance',
-    'Equitas Small Finance Bank'
+    'Sundaram Finance Limited',
+    'Manappuram Finance Limited',
+    'Larsen & Toubro Finance',
+    'Equitas Small Finance Bank',
+    'Sakthi Finance Limited'
   ];
 
   saving = false;
@@ -105,7 +128,8 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     private workflowSvc: WorkflowService,
     private valuationSvc: ValuationService,
     private historyLogger: HistoryLoggerService,
-    private auth: Auth
+    private auth: Auth,
+    private _snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -122,7 +146,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       stakeholderName:              ['', Validators.required],
       branch:                       [''],
       stakeholderExecutiveName:     ['', Validators.required],
-      stakeholderExecutiveContact:  ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      stakeholderExecutiveContact:  ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       stakeholderExecutiveWhatsapp: ['', Validators.pattern(/^[0-9]{10}$/)],
       sameAsContact:                [false],
       stakeholderExecutiveEmail:    ['', Validators.email],
@@ -133,7 +157,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       state:                        [''],
       country:                      [''],
       applicantName:                ['', Validators.required],
-      applicantContact:             ['', Validators.required, Validators.pattern(/^[0-9]{10}$/)],
+      applicantContact:             ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       applicantAlternativeContact:  ['', Validators.pattern(/^[0-9]{10}$/)],
       vehicleNumber:                ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9]+$/)]],
       vehicleSegment:               [''],
@@ -300,17 +324,42 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
     return fd;
   }
 
+  /**
+   * The vehicle number and applicant contact this case is keyed by.
+   *
+   * Taken from the form, because on a NEW registration the component's own
+   * `vehicleNumber` / `applicantContact` come from query parameters that are not
+   * there — the user is typing those values for the first time. Sending the empty
+   * fields made the workflow endpoints return 400 ("The vehicleNumber field is
+   * required"), which onSubmit already avoided by reading the form and onSave did
+   * not. Falls back to the query parameters for the returned-case flow, where the
+   * form may not be populated yet.
+   */
+  private caseKeys(): { vn: string; ac: string } {
+    return {
+      vn: (this.form.get('vehicleNumber')?.value || this.vehicleNumber || '').toString().trim(),
+      ac: (this.form.get('applicantContact')?.value || this.applicantContact || '').toString().trim(),
+    };
+  }
+
   onSave() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.notifyError(reportInvalidForm(this.form, STAKEHOLDER_FIELD_LABELS));
       return;
     }
+
+    const { vn, ac } = this.caseKeys();
+    if (!vn || !ac) {
+      this.notifyError('Enter the vehicle number and applicant contact before saving.');
+      return;
+    }
+
     this.saving = this.saveInProgress = true;
     this.svc
       .updateStakeholder(
         this.valuationId,
-        this.vehicleNumber,
-        this.applicantContact,
+        vn,
+        ac,
         this.buildFormData()
       )
       .pipe(
@@ -318,15 +367,15 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
           this.workflowSvc.startWorkflow(
             this.valuationId,
             1,
-            this.vehicleNumber,
-            encodeURIComponent(this.applicantContact)
+            vn,
+            encodeURIComponent(ac)
           )
         ),
         switchMap(() =>
           this.workflowSvc.updateWorkflowTable(
             this.valuationId,
-            this.vehicleNumber,
-            this.applicantContact,
+            vn,
+            ac,
             {
               workflow: 'Stakeholder',
               workflowStepOrder: 1
@@ -343,13 +392,27 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: () => (this.saving = this.saveInProgress = false),
-        error: e => {
-          this.error = e.message;
+        next: () => {
           this.saving = this.saveInProgress = false;
+          // `saved` gates the Submit button. It used to be set only in the error
+          // handler, so a successful save left Submit disabled and a failed one
+          // enabled it — exactly backwards.
           this.saved = true;
+          this._snackBar.open('✅ Stakeholder details saved', 'Close',
+            { duration: 3000, horizontalPosition: 'center', verticalPosition: 'top' });
+        },
+        error: e => {
+          this.error = e.message || 'Save failed.';
+          this.saving = this.saveInProgress = false;
+          this.notifyError(this.error);
         }
       });
+  }
+
+  /** Surfaces a blocked or failed action; the buttons sit below a long form. */
+  private notifyError(message: string | null): void {
+    this._snackBar.open('⚠ ' + (message || 'Something went wrong.'), 'Close',
+      { duration: 6000, horizontalPosition: 'center', verticalPosition: 'top' });
   }
 
   private resolveDisplayName(u: User | null): Observable<string> {
@@ -386,7 +449,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.notifyError(reportInvalidForm(this.form, STAKEHOLDER_FIELD_LABELS));
       return;
     }
 
@@ -404,8 +467,7 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
 
     this.saving = this.submitInProgress = true;
     const payload = this.buildFormData();
-    const vn = this.form.get('vehicleNumber')!.value;
-    const ac = this.form.get('applicantContact')!.value;
+    const { vn, ac } = this.caseKeys();
 
     this.svc
       .updateStakeholder(this.valuationId, vn, ac, payload)
@@ -474,6 +536,22 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
+          // The reference the case will be known by. Completing the stakeholder
+          // step mints it in the background, so this may assign it instead — the
+          // endpoint is idempotent either way. Registration used to end with a
+          // silent redirect and nothing the user could quote afterwards.
+          this.valuationSvc
+            .getReferenceNumber(this.valuationId, vn, ac)
+            .subscribe(ref => {
+              this._snackBar.open(
+                ref ? `✅ Case registered — reference ${ref}` : '✅ Case registered',
+                'Copy',
+                { duration: 10000, horizontalPosition: 'center', verticalPosition: 'top' }
+              ).onAction().subscribe(() => {
+                if (ref) navigator.clipboard?.writeText(ref);
+              });
+            });
+
           // The case has moved to Backend — follow it there. This also fixes a
           // wrong path: the route is /valuation (singular), so the old plural
           // form fell through the wildcard and landed on the dashboard.
@@ -487,7 +565,8 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
         },
         error: err => {
           this.error = err.message || 'Submit failed';
-          this.saving = this.submitInProgress = this.saving = false;
+          this.saving = this.submitInProgress = false;
+          this.notifyError(this.error);
         }
       });
   }

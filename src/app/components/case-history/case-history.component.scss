@@ -1,0 +1,63 @@
+/* Case history dialog contents. The panel shell — head, scrolling body, foot
+   and the buttons in it — is shared with the other case dialogs and lives in
+   styles.css under .case-dialog-panel. Only the entry list is styled here. */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  font-family: 'Plus Jakarta Sans', 'Public Sans', system-ui, sans-serif;
+  color: var(--ink-900);
+}
+
+.hist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hist__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.hist__action {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+/* Which stage the case moved between, kept subordinate to the action so the
+   line reads as one sentence rather than two competing labels. */
+.hist__flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  border: 1px solid var(--brand-100);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hist__arrow { color: var(--ink-300); }
+
+.hist__remarks {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--brand-100);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-700);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

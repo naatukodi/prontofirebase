@@ -1,6 +1,7 @@
 // src/app/components/qc/quality-control-view/quality-control-view.component.ts
 
 import { Component, OnInit, inject, HostListener, ChangeDetectorRef } from '@angular/core';
+import { splitEvidence } from '../../../shared/evidence';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -9,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { QualityControlService } from '../../../services/quality-control.service';
+import { QualityControlService, QcAiReadings } from '../../../services/quality-control.service';
 import { ValuationService } from '../../../services/valuation.service';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service'; 
@@ -48,7 +49,59 @@ export class QualityControlViewComponent implements OnInit {
   aiError: string | null = null;
   aiReadAt: string | null = null;
   aiVerified = new Set<string>();
+  /** What the reader saw. Feeds the damage and missing-parts cards. */
+  aiReadings: QcAiReadings | null = null;
   private savedByReviewer = new Set<string>();
+  /** The checklist as last saved, so a rebuild can put the reviewer's work back. */
+  private qcChecklistSaved: Record<string, string | null> | null = null;
+
+  /**
+   * Checklist keys the photo reader answers. Everything else on the checklist is
+   * derived in the browser and is never waiting on a read.
+   * Keep in step with the keys QcVisionAuditService writes.
+   */
+  private static readonly AI_ANSWERED_KEYS = new Set<string>([
+    'accChassis', 'accChassisPhotos', 'accDaylight', 'accGPS', 'accOdo', 'accPhotoLoc', 'accPlate',
+    'accReg', 'accVIN', 'docChassis', 'recEngine', 'recExterior', 'recTyre',
+  ]);
+
+  /**
+   * True while the reader is still working on this particular check.
+   *
+   * The read takes twenty to forty seconds across a full photo set and used to
+   * happen with nothing on screen, so the checklist's own default verdict sat
+   * there looking like the answer until the real one quietly replaced it.
+   * A verdict the reviewer has already saved is not waiting on anything.
+   */
+  aiPending(key: string): boolean {
+    return this.aiRunning
+        && QualityControlViewComponent.AI_ANSWERED_KEYS.has(key)
+        && !this.savedByReviewer.has(key);
+  }
+
+  /** Evidence lines the reviewer has opened out. Keyed by checklist key. */
+  private expandedEvidence = new Set<string>();
+
+  /** The cause, for the face of the card. */
+  evidenceLead(key: string): string {
+    return splitEvidence(this.clWhy[key]).lead;
+  }
+
+  /** Whether there is more to the explanation than the card is showing. */
+  evidenceHasMore(key: string): boolean {
+    return splitEvidence(this.clWhy[key]).full !== null;
+  }
+
+  isEvidenceOpen(key: string): boolean {
+    return this.expandedEvidence.has(key);
+  }
+
+  /** Opens or closes the full explanation behind the ⓘ on a card. */
+  toggleEvidence(key: string): void {
+    if (!this.evidenceHasMore(key)) return;
+    if (this.expandedEvidence.has(key)) this.expandedEvidence.delete(key);
+    else this.expandedEvidence.add(key);
+  }
 
   isAi(key: string): boolean { return this.aiVerified.has(key); }
 
@@ -68,6 +121,13 @@ export class QualityControlViewComponent implements OnInit {
         next: (audit) => {
           this.aiRunning = false;
           this.aiReadAt = audit.readAt || null;
+          this.aiReadings = audit.readings ?? null;
+
+          // Damage and missing parts are derived here from the findings, so rebuild
+          // them now the read has landed, then put the reviewer's saved work back.
+          this.prefillChecklist();
+          applySavedChecklist({ cl: this.cl, why: this.clWhy }, this.qcChecklistSaved,
+                              [...this.savedByReviewer]);
 
           if (audit.error) {
             this.aiError = audit.error;
@@ -219,7 +279,14 @@ export class QualityControlViewComponent implements OnInit {
       highRange: this.viewModel?.highRange,
       photoKeys: this.photoKeys as string[],
       vehicleSegment: this.report?.stakeholder?.vehicleSegment,
-      valuationType: this.valuationType
+      valuationType: this.valuationType,
+      aiFindings: this.aiReadings
+        ? {
+            damage: this.aiReadings.damageFound ?? [],
+            missingParts: this.aiReadings.missingParts ?? [],
+            photosRead: true,
+          }
+        : null,
     });
 
     this.cl = result.cl;
@@ -409,19 +476,19 @@ export class QualityControlViewComponent implements OnInit {
         // Approval" until the officer confirms & saves on the edit page
 
         // Override prefilled values with whatever was previously saved by the QC officer
-        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist);
+        this.qcChecklistSaved = qcData.qcChecklist ?? null;
+        applySavedChecklist({ cl: this.cl, why: this.clWhy }, qcData.qcChecklist,
+                            qcData.qcChecklistReviewerKeys ?? []);
+
+        // Same protection as the update page. This was never seeded here, so the photo
+        // reader's verdict overwrote a reviewer's saved one and the read-only view could
+        // disagree with the form it is showing.
+        (qcData.qcChecklistReviewerKeys || []).forEach((k: string) => this.savedByReviewer.add(k));
         if (qcData.qcChecklistRemarks) {
           Object.entries(qcData.qcChecklistRemarks).forEach(([k, v]) => {
             if (v) this.clRemarks[k] = v;
           });
         }
-
-        // Whatever the reviewer saved is theirs; the reading lands after this.
-        this.savedByReviewer = new Set(
-          Object.entries(qcData.qcChecklist || {})
-            .filter(([, v]) => v !== null && v !== undefined)
-            .map(([k]) => k)
-        );
 
         this.loading = false;
 

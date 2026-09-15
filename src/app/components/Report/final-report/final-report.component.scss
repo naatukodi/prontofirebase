@@ -229,6 +229,17 @@
 .rphv-mid  { .rphv-rl, .rphv-rv { color: #037076; } }
 .rphv-high { .rphv-rl, .rphv-rv { color: #16a34a; } }
 
+.rphv-range-none {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
 .rphv-in-range {
   font-size: 0.65rem;
   font-weight: 700;

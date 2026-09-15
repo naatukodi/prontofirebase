@@ -1,7 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
+import { formatDdMmYyyyHhMm } from '../../shared/date-format';
 import { CommonModule } from '@angular/common';
 import { WorkflowService } from '../../services/workflow.service';
-import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Optional } from '@angular/core';
 
@@ -33,8 +34,9 @@ export interface LeadHistoryDto {
 @Component({
   selector: 'app-case-history',
   standalone: true,
-  imports: [CommonModule, MatDialogModule],
-  templateUrl: './case-history.component.html'
+  imports: [CommonModule],
+  templateUrl: './case-history.component.html',
+  styleUrls: ['./case-history.component.scss']
 })
 export class CaseHistoryComponent implements OnInit {
 
@@ -87,7 +89,7 @@ export class CaseHistoryComponent implements OnInit {
   }
 
   formatDate(date: Date | string): string {
-    const d = new Date(date);
-    return d.toLocaleString();
+    // Was toLocaleString(), which renders per the viewer's browser locale.
+    return formatDdMmYyyyHhMm(date);
   }
 }

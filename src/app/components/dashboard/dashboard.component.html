@@ -85,37 +85,8 @@
         </div>
       </div>
 
-      <!-- ══ Insights row: trend chart + today's cases ══ -->
+      <!-- ══ Insights row: today's cases ══ -->
       <div class="insights-row">
-
-        <!-- Cases trend -->
-        <div class="panel trend-panel">
-          <div class="panel-head">
-            <div class="panel-title"><span class="title-dot"></span>Cases Trend</div>
-            <div class="trend-delta" [class.up]="weekTrendPct >= 0" [class.down]="weekTrendPct < 0">
-              <i class="bi" [ngClass]="weekTrendPct >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right'"></i>
-              {{ weekTrendPct >= 0 ? '+' : '' }}{{ weekTrendPct }}% vs last week
-            </div>
-          </div>
-          <ng-container *ngIf="trend as t">
-            <svg class="trend-svg" viewBox="0 0 700 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"  style="stop-color:#037076; stop-opacity:0.28"/>
-                  <stop offset="100%" style="stop-color:#037076; stop-opacity:0"/>
-                </linearGradient>
-              </defs>
-              <polygon [attr.points]="t.areaPoints" fill="url(#trendFill)"/>
-              <polyline [attr.points]="t.linePoints" fill="none" stroke="#037076" stroke-width="3"
-                        stroke-linecap="round" stroke-linejoin="round"/>
-              <circle *ngFor="let d of t.dots" [attr.cx]="d.x" [attr.cy]="d.y" r="4"
-                      fill="#ffffff" stroke="#037076" stroke-width="2.5"/>
-            </svg>
-            <div class="trend-axis">
-              <span *ngFor="let l of t.labels">{{ l }}</span>
-            </div>
-          </ng-container>
-        </div>
 
         <!-- Today's cases -->
         <div class="panel today-panel">
@@ -131,10 +102,21 @@
                 <div class="today-name">{{ v.applicantName || v.vehicleNumber }}</div>
                 <div class="today-sub">{{ v.vehicleNumber }}</div>
               </div>
+              <span class="tat-badge" [ngClass]="ageClass(v)" [title]="isAdmin ? 'Days since the case was created' : 'Hours since the case was last updated'">{{ tatLabel(v) }}</span>
               <span class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">{{ stepName(v) }}</span>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- A server search answers across closed and archived cases, so say when
+           the table is showing its results rather than the live list. -->
+      <div class="search-state" *ngIf="searching || searchResults !== null">
+        <ng-container *ngIf="searching">Searching all cases…</ng-container>
+        <ng-container *ngIf="!searching && searchNotice">{{ searchNotice }}</ng-container>
+        <ng-container *ngIf="!searching && !searchNotice && searchResults !== null">
+          Showing {{ searchResults.length }} matching case(s) from all records, including completed and archived.
+        </ng-container>
       </div>
 
       <!-- Filter row: tabs + date -->
@@ -167,6 +149,20 @@
             <i class="bi bi-check2-circle"></i> My Completed ({{ completedCases.length }})
           </button>
         </div>
+
+        <mat-form-field appearance="fill" subscriptSizing="dynamic" class="search-field">
+          <mat-label>Search</mat-label>
+          <input matInput
+                 [ngModel]="searchTerm"
+                 (ngModelChange)="onSearchChanged($event)"
+                 placeholder="Unique ID, vehicle, chassis or engine no.">
+          <i class="bi bi-search" matPrefix></i>
+          <button type="button" class="search-clear" matSuffix
+                  *ngIf="searchTerm" (click)="onSearchChanged('')"
+                  aria-label="Clear search">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </mat-form-field>
 
         <mat-form-field appearance="fill" subscriptSizing="dynamic" class="date-field">
           <mat-label>Filter by Date</mat-label>
@@ -234,7 +230,7 @@
 
           <ng-container matColumnDef="createdAt">
             <th mat-header-cell *matHeaderCellDef>Created On</th>
-            <td mat-cell *matCellDef="let v">{{ v.createdAt | date:'dd MMM yy' }}</td>
+            <td mat-cell *matCellDef="let v">{{ v.createdAt | date }}</td>
           </ng-container>
 
           <ng-container matColumnDef="age">

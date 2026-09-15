@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { switchMap, debounceTime, distinctUntilChanged, take, catchError } from 'rxjs/operators';
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
+import { brandName } from '../../../services/brand.service';
 import { RouterModule } from '@angular/router';
 import { Auth, User, authState } from '@angular/fire/auth';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -33,6 +34,9 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
   styleUrls: ['./valuation-update.component.scss']
 })
 export class ValuationUpdateComponent implements OnInit, OnDestroy {
+  /** Dedupe spans both companies, so each match has to say which one it sits in. */
+  readonly brandName = brandName;
+
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -563,7 +567,13 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
   private toIsoDate(val: any): string {
     if (!val) return '';
-    if (val instanceof Date) return val.toISOString().slice(0, 10);
+    // Material hands back a Date at LOCAL midnight. toISOString() converts to UTC,
+    // so in IST (+05:30) that is 18:30 the previous day and slicing the date off
+    // stored every picked date one day early. Read the local parts instead.
+    if (val instanceof Date) {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return val.getFullYear() + '-' + pad(val.getMonth() + 1) + '-' + pad(val.getDate());
+    }
     if (typeof val === 'string') return val.slice(0, 10);
     return '';
   }

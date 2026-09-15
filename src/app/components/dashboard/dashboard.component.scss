@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    Dashboard — Vehga design system (screenshot-matched)
    Brand teal #037076 · accent orange #de7b33
-   Overview KPIs · greeting + donut · trend · today's cases · table
+   Overview KPIs · greeting + donut · today's cases · table
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Wrapper ───────────────────────────────────────────────────── */
@@ -168,38 +168,12 @@
   .legend-val   { margin-left: auto; font-weight: 800; color: var(--ink-900); }
 }
 
-/* ── Insights row: trend + today ───────────────────────────────── */
+/* ── Insights row: today ───────────────────────────────── */
 .insights-row {
   display: grid;
-  grid-template-columns: 1.9fr 1fr;
+  grid-template-columns: 1fr;
   gap: 18px;
   margin-bottom: 18px;
-
-  @media (max-width: 1100px) { grid-template-columns: 1fr; }
-}
-
-/* Trend */
-.trend-delta {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 0.72rem; font-weight: 800;
-  padding: 4px 10px; border-radius: 999px;
-
-  &.up   { background: var(--success-bg); color: var(--success); }
-  &.down { background: var(--danger-bg);  color: var(--danger); }
-}
-.trend-svg {
-  width: 100%;
-  height: 190px;
-  display: block;
-  overflow: visible;
-}
-.trend-axis {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px 0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--ink-500);
 }
 
 /* Today's cases */
@@ -258,6 +232,18 @@
   flex-wrap: wrap;
 }
 .step-filter { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+
+.search-field {
+  min-width: 260px;
+
+  i.bi-search { margin-right: 8px; color: var(--ink-500); font-size: 0.85rem; }
+}
+.search-clear {
+  border: none; background: none; cursor: pointer;
+  color: var(--ink-500); font-size: 0.75rem; padding: 0 4px;
+
+  &:hover { color: var(--ink-900); }
+}
 
 .pill {
   border: 1px solid transparent;
@@ -437,6 +423,14 @@ td.age-ok       .tat-badge { background: var(--success-bg); color: var(--success
 td.age-warn     .tat-badge { background: var(--warning-bg); color: var(--warning); }
 td.age-critical .tat-badge { background: var(--danger-bg); color: var(--danger); }
 
+/* Same badge inside Today's Cases, where ageClass sits on the badge itself. */
+.tat-badge.age-1        { background: #fff3bf;           color: #9c7700; }
+.tat-badge.age-2        { background: var(--warning-bg); color: var(--warning); }
+.tat-badge.age-3plus    { background: var(--danger-bg);  color: var(--danger); }
+.tat-badge.age-ok       { background: var(--success-bg); color: var(--success); }
+.tat-badge.age-warn     { background: var(--warning-bg); color: var(--warning); }
+.tat-badge.age-critical { background: var(--danger-bg);  color: var(--danger); }
+
 .flag-icon { font-size: 0.9rem; }
 
 /* Enter button */
@@ -461,4 +455,16 @@ td.age-critical .tat-badge { background: var(--danger-bg); color: var(--danger);
   color: var(--danger); background: var(--danger-bg);
   border: 1px solid #f5c6c0; border-radius: var(--radius-sm);
   font-weight: 600; font-size: 0.9rem;
+}
+
+/* Says when the table is showing search results rather than the live list. */
+.search-state {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-700);
+  background: var(--brand-50, #f0fdfa);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  margin-bottom: 12px;
 }

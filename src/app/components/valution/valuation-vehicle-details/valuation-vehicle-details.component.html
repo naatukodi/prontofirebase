@@ -131,7 +131,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Date of Registration</mat-label>
-        <input matInput [value]="vehicleDetails.dateOfRegistration | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.dateOfRegistration | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -156,7 +156,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Maker Variant</mat-label>
-        <input matInput [value]="vehicleDetails.makerVariant" readonly />
+        <input matInput [value]="vehicleDetails.makerVariant || 'N/A'" readonly />
       </mat-form-field>
 
     </div>
@@ -215,12 +215,12 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Insurance Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.insuranceValidUpTo | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.insuranceValidUpTo | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
         <mat-label>IDV</mat-label>
-        <input matInput [value]="vehicleDetails.idv" readonly />
+        <input matInput [value]="vehicleDetails.idv || 'N/A'" readonly />
       </mat-form-field>
 
     </div>
@@ -237,7 +237,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Permit Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.permitValidUpTo | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.permitValidUpTo | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -247,12 +247,12 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Permit Issued On</mat-label>
-        <input matInput [value]="vehicleDetails.permitIssued | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.permitIssued | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
         <mat-label>Permit From</mat-label>
-        <input matInput [value]="vehicleDetails.permitFrom | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.permitFrom | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -262,7 +262,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Fitness Valid To</mat-label>
-        <input matInput [value]="vehicleDetails.fitnessValidTo | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.fitnessValidTo | date" readonly />
       </mat-form-field>
 
     </div>
@@ -279,12 +279,12 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Pollution Certificate Valid Up To</mat-label>
-        <input matInput [value]="vehicleDetails.pollutionCertificateUpto | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.pollutionCertificateUpto | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
         <mat-label>Tax Up To</mat-label>
-        <input matInput [value]="vehicleDetails.taxUpto | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.taxUpto | date" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -316,7 +316,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Manufactured Date</mat-label>
-        <input matInput [value]="vehicleDetails.manufacturedDate | date:'yyyy-MM-dd'" readonly />
+        <input matInput [value]="vehicleDetails.manufacturedDate | date" readonly />
       </mat-form-field>
 
     </div>

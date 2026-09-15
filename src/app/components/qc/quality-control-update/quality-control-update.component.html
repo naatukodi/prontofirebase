@@ -9,9 +9,9 @@
   </app-workflow-buttons>
 
   <div *ngIf="loading">Loading quality control details …</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="error || loadError" class="error">{{ error || loadError }}</div>
 
-  <ng-container *ngIf="!loading && !error">
+  <ng-container *ngIf="!loading && !loadError">
 
     <!-- ── Core QC Fields ── -->
     <div class="qc-section">
@@ -84,7 +84,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['docRC']==='ok'" [class.card-flag]="cl['docRC']==='flag'">
           <div class="qc-card-title">Registration Certificate (RC)</div>
-          <div class="qc-card-why" *ngIf="clWhy['docRC']"><span class="qc-ai-tag" *ngIf="isAi('docRC')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docRC'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docRC']"><span class="qc-ai-tag" *ngIf="isAi('docRC')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docRC')" (click)="toggleEvidence('docRC')" [attr.aria-expanded]="isEvidenceOpen('docRC')" [title]="isEvidenceOpen('docRC') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docRC')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docRC') ? clWhy['docRC'] : evidenceLead('docRC') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docRC']==='ok'" (click)="setCl('docRC','ok')">✓ OK</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docRC']==='flag'" (click)="setCl('docRC','flag')">✗ Flag</button>
@@ -93,25 +93,26 @@
 
         <div class="qc-card" [class.card-ok]="cl['docIns']==='ok'" [class.card-flag]="cl['docIns']==='flag'">
           <div class="qc-card-title">Insurance Policy</div>
-          <div class="qc-card-why" *ngIf="clWhy['docIns']"><span class="qc-ai-tag" *ngIf="isAi('docIns')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docIns'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docIns']"><span class="qc-ai-tag" *ngIf="isAi('docIns')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docIns')" (click)="toggleEvidence('docIns')" [attr.aria-expanded]="isEvidenceOpen('docIns')" [title]="isEvidenceOpen('docIns') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docIns')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docIns') ? clWhy['docIns'] : evidenceLead('docIns') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docIns']==='ok'" (click)="setCl('docIns','ok')">✓ OK</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docIns']==='flag'" (click)="setCl('docIns','flag')">✗ Flag</button>
           </div>
         </div>
 
-        <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'">
+        <div class="qc-card" [class.card-ok]="cl['docPermit']==='ok'" [class.card-flag]="cl['docPermit']==='flag'" [class.card-na]="cl['docPermit']==='na'">
           <div class="qc-card-title">Permit</div>
-          <div class="qc-card-why" *ngIf="clWhy['docPermit']"><span class="qc-ai-tag" *ngIf="isAi('docPermit')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docPermit'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docPermit']"><span class="qc-ai-tag" *ngIf="isAi('docPermit')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docPermit')" (click)="toggleEvidence('docPermit')" [attr.aria-expanded]="isEvidenceOpen('docPermit')" [title]="isEvidenceOpen('docPermit') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docPermit')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docPermit') ? clWhy['docPermit'] : evidenceLead('docPermit') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docPermit']==='ok'" (click)="setCl('docPermit','ok')">✓ OK</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docPermit']==='flag'" (click)="setCl('docPermit','flag')">✗ Flag</button>
+            <button type="button" class="qc-pill na" [class.active]="cl['docPermit']==='na'" (click)="setCl('docPermit','na')">— N/A</button>
           </div>
         </div>
 
         <div class="qc-card" [class.card-ok]="cl['docFitness']==='ok'" [class.card-flag]="cl['docFitness']==='flag'">
           <div class="qc-card-title">Fitness Certificate</div>
-          <div class="qc-card-why" *ngIf="clWhy['docFitness']"><span class="qc-ai-tag" *ngIf="isAi('docFitness')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docFitness'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docFitness']"><span class="qc-ai-tag" *ngIf="isAi('docFitness')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docFitness')" (click)="toggleEvidence('docFitness')" [attr.aria-expanded]="isEvidenceOpen('docFitness')" [title]="isEvidenceOpen('docFitness') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docFitness')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docFitness') ? clWhy['docFitness'] : evidenceLead('docFitness') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docFitness']==='ok'" (click)="setCl('docFitness','ok')">✓ OK</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docFitness']==='flag'" (click)="setCl('docFitness','flag')">✗ Flag</button>
@@ -120,7 +121,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['docTax']==='ok'" [class.card-flag]="cl['docTax']==='flag'">
           <div class="qc-card-title">Road Tax</div>
-          <div class="qc-card-why" *ngIf="clWhy['docTax']"><span class="qc-ai-tag" *ngIf="isAi('docTax')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docTax'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docTax']"><span class="qc-ai-tag" *ngIf="isAi('docTax')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docTax')" (click)="toggleEvidence('docTax')" [attr.aria-expanded]="isEvidenceOpen('docTax')" [title]="isEvidenceOpen('docTax') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docTax')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docTax') ? clWhy['docTax'] : evidenceLead('docTax') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docTax']==='ok'" (click)="setCl('docTax','ok')">✓ OK</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docTax']==='flag'" (click)="setCl('docTax','flag')">✗ Flag</button>
@@ -131,7 +132,7 @@
           [class.card-ok]="cl['docHypo']==='no'"
           [class.card-warn]="cl['docHypo']==='yes'">
           <div class="qc-card-title">Hypothecation</div>
-          <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-ai-tag" *ngIf="isAi('docHypo')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docHypo'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['docHypo']"><span class="qc-ai-tag" *ngIf="isAi('docHypo')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docHypo')" (click)="toggleEvidence('docHypo')" [attr.aria-expanded]="isEvidenceOpen('docHypo')" [title]="isEvidenceOpen('docHypo') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docHypo')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docHypo') ? clWhy['docHypo'] : evidenceLead('docHypo') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docHypo']==='no'" (click)="setCl('docHypo','no')">✓ No</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['docHypo']==='yes'" (click)="setCl('docHypo','yes')">● Yes</button>
@@ -162,6 +163,11 @@
         ⚠ {{ aiError }} — every check below is still yours to decide by eye.
       </div>
 
+      <div class="qc-ai-reading" *ngIf="aiRunning && !aiError">
+        <span class="qc-reading-dot"></span>
+        Reading the inspection photos… the checks below will update when it finishes.
+      </div>
+
 
 
       <div class="qc-columns">
@@ -171,7 +177,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accReg']==='pass'" [class.card-flag]="cl['accReg']==='fail'">
           <div class="qc-card-title">Registration Number matches photos & RC<small>Verify plate visible in front &amp; rear photos</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accReg']"><span class="qc-ai-tag" *ngIf="isAi('accReg')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accReg'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accReg')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accReg') && clWhy['accReg']"><span class="qc-ai-tag" *ngIf="isAi('accReg')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accReg')" (click)="toggleEvidence('accReg')" [attr.aria-expanded]="isEvidenceOpen('accReg')" [title]="isEvidenceOpen('accReg') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accReg')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accReg') ? clWhy['accReg'] : evidenceLead('accReg') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accReg']==='pass'" (click)="setCl('accReg','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accReg']==='fail'" (click)="setCl('accReg','fail')">✗ Fail</button>
@@ -180,16 +187,50 @@
 
         <div class="qc-card" [class.card-ok]="cl['accChassis']==='pass'" [class.card-flag]="cl['accChassis']==='fail'">
           <div class="qc-card-title">Chassis Number matches photos, RC & stencil<small>Compare across all 3 sources</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accChassis']"><span class="qc-ai-tag" *ngIf="isAi('accChassis')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accChassis'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accChassis')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accChassis') && clWhy['accChassis']"><span class="qc-ai-tag" *ngIf="isAi('accChassis')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accChassis')" (click)="toggleEvidence('accChassis')" [attr.aria-expanded]="isEvidenceOpen('accChassis')" [title]="isEvidenceOpen('accChassis') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accChassis')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accChassis') ? clWhy['accChassis'] : evidenceLead('accChassis') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accChassis']==='pass'" (click)="setCl('accChassis','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accChassis']==='fail'" (click)="setCl('accChassis','fail')">✗ Fail</button>
           </div>
         </div>
 
+        <div class="qc-card" [class.card-ok]="cl['accChassisPhotos']==='pass'" [class.card-flag]="cl['accChassisPhotos']==='fail'">
+          <div class="qc-card-title">Every chassis photo shows the same number<small>Catches one photo taken of a different vehicle</small></div>
+          <div class="qc-card-reading" *ngIf="aiPending('accChassisPhotos')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accChassisPhotos') && clWhy['accChassisPhotos']"><span class="qc-ai-tag" *ngIf="isAi('accChassisPhotos')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accChassisPhotos')" (click)="toggleEvidence('accChassisPhotos')" [attr.aria-expanded]="isEvidenceOpen('accChassisPhotos')" [title]="isEvidenceOpen('accChassisPhotos') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accChassisPhotos')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accChassisPhotos') ? clWhy['accChassisPhotos'] : evidenceLead('accChassisPhotos') }}</span></div>
+          <div class="qc-card-actions">
+            <button type="button" class="qc-pill ok" [class.active]="cl['accChassisPhotos']==='pass'" (click)="setCl('accChassisPhotos','pass')">✓ Pass</button>
+            <button type="button" class="qc-pill flag" [class.active]="cl['accChassisPhotos']==='fail'" (click)="setCl('accChassisPhotos','fail')">✗ Fail</button>
+          </div>
+        </div>
+
         <div class="qc-card" [class.card-ok]="cl['accOdo']==='pass'" [class.card-flag]="cl['accOdo']==='fail'">
           <div class="qc-card-title">Odometer in photo matches reported KM<small>Compare dashboard photo vs report KM</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accOdo']"><span class="qc-ai-tag" *ngIf="isAi('accOdo')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accOdo'] }}</div>
+
+          <!-- The reader already extracts the dial figure; it was never shown. -->
+          <div class="qc-evidence" *ngIf="avoOdometer !== null || photoOdometer !== null">
+            <div class="qc-ev-row">
+              <span class="qc-ev-l">AVO recorded</span>
+              <span class="qc-ev-v">{{ avoOdometer !== null ? (avoOdometer | number) + ' km' : 'not recorded' }}</span>
+            </div>
+            <div class="qc-ev-row">
+              <span class="qc-ev-l">Photo reads</span>
+              <span class="qc-ev-v">
+                {{ photoOdometer !== null ? (photoOdometer | number) + ' km'
+                   : aiUnresolved('accOdo') ? 'could not be read' : 'not read yet' }}
+              </span>
+            </div>
+            <div class="qc-ev-row" *ngIf="odometerDelta !== null">
+              <span class="qc-ev-l">Difference</span>
+              <span class="qc-ev-v" [class.qc-ev-bad]="odometerDelta !== 0">
+                {{ odometerDelta === 0 ? 'none' : (odometerDelta > 0 ? '+' : '') + (odometerDelta | number) + ' km' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="qc-card-reading" *ngIf="aiPending('accOdo')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accOdo') && clWhy['accOdo']"><span class="qc-ai-tag" *ngIf="isAi('accOdo')" title="Read from the photos by the AI reader">AI</span><span class="qc-ai-tag qc-ai-tag--unresolved" *ngIf="aiUnresolved('accOdo')" title="The reader looked at the photos but could not settle this">READ, INCONCLUSIVE</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accOdo')" (click)="toggleEvidence('accOdo')" [attr.aria-expanded]="isEvidenceOpen('accOdo')" [title]="isEvidenceOpen('accOdo') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accOdo')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accOdo') ? clWhy['accOdo'] : evidenceLead('accOdo') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accOdo']==='pass'" (click)="setCl('accOdo','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accOdo']==='fail'" (click)="setCl('accOdo','fail')">✗ Fail</button>
@@ -198,7 +239,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accVIN']==='pass'" [class.card-flag]="cl['accVIN']==='fail'">
           <div class="qc-card-title">VIN plate matches RC & inspection report<small>Check VIN plate photo matches report exactly</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accVIN']"><span class="qc-ai-tag" *ngIf="isAi('accVIN')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accVIN'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accVIN')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accVIN') && clWhy['accVIN']"><span class="qc-ai-tag" *ngIf="isAi('accVIN')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accVIN')" (click)="toggleEvidence('accVIN')" [attr.aria-expanded]="isEvidenceOpen('accVIN')" [title]="isEvidenceOpen('accVIN') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accVIN')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accVIN') ? clWhy['accVIN'] : evidenceLead('accVIN') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accVIN']==='pass'" (click)="setCl('accVIN','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accVIN']==='fail'" (click)="setCl('accVIN','fail')">✗ Fail</button>
@@ -207,7 +249,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['accMfgReg']==='pass'" [class.card-flag]="cl['accMfgReg']==='fail'">
           <div class="qc-card-title">Manufacture year vs registration gap is logical<small>Registration typically within 12 months of manufacture</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accMfgReg']"><span class="qc-ai-tag" *ngIf="isAi('accMfgReg')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accMfgReg'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['accMfgReg']"><span class="qc-ai-tag" *ngIf="isAi('accMfgReg')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accMfgReg')" (click)="toggleEvidence('accMfgReg')" [attr.aria-expanded]="isEvidenceOpen('accMfgReg')" [title]="isEvidenceOpen('accMfgReg') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accMfgReg')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accMfgReg') ? clWhy['accMfgReg'] : evidenceLead('accMfgReg') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accMfgReg']==='pass'" (click)="setCl('accMfgReg','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accMfgReg']==='fail'" (click)="setCl('accMfgReg','fail')">✗ Fail</button>
@@ -216,7 +258,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['accVahan']==='pass'" [class.card-flag]="cl['accVahan']==='fail'">
           <div class="qc-card-title">VAHAN data matches physical inspection<small>Make, model, colour, engine CC, body type</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accVahan']"><span class="qc-ai-tag" *ngIf="isAi('accVahan')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accVahan'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['accVahan']"><span class="qc-ai-tag" *ngIf="isAi('accVahan')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accVahan')" (click)="toggleEvidence('accVahan')" [attr.aria-expanded]="isEvidenceOpen('accVahan')" [title]="isEvidenceOpen('accVahan') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accVahan')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accVahan') ? clWhy['accVahan'] : evidenceLead('accVahan') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accVahan']==='pass'" (click)="setCl('accVahan','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accVahan']==='fail'" (click)="setCl('accVahan','fail')">✗ Fail</button>
@@ -227,41 +269,16 @@
         </div>
 
         <div class="qc-column">
-      <div class="qc-sub-header">OWNER / APPLICANT VERIFICATION</div>
-      <div class="qc-card-list">
-
-        <div class="qc-card" [class.card-ok]="cl['accOwner']==='pass'" [class.card-flag]="cl['accOwner']==='fail'">
-          <div class="qc-card-title">Owner & applicant identity verified from docs</div>
-          <div class="qc-card-why" *ngIf="clWhy['accOwner']"><span class="qc-ai-tag" *ngIf="isAi('accOwner')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accOwner'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['accOwner']==='pass'" (click)="setCl('accOwner','pass')">✓ Pass</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['accOwner']==='fail'" (click)="setCl('accOwner','fail')">✗ Fail</button>
-          </div>
-        </div>
-
-
-      </div>
-        </div>
-
-        <div class="qc-column">
       <div class="qc-sub-header">TECHNICAL SPECIFICATIONS</div>
       <div class="qc-card-list">
 
-        <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'">
-          <div class="qc-card-title">Transmission type matches RC & vehicle class<small>Manual / Automatic declared matches RC and photos</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accTransmission']"><span class="qc-ai-tag" *ngIf="isAi('accTransmission')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accTransmission'] }}</div>
+        <div class="qc-card" [class.card-ok]="cl['accTransmission']==='pass'" [class.card-flag]="cl['accTransmission']==='fail'" [class.card-na]="cl['accTransmission']==='na'">
+          <div class="qc-card-title">Transmission type consistent with RC variant<small>VAHAN returns no gearbox field; compared against the variant name where it states one</small></div>
+          <div class="qc-card-why" *ngIf="clWhy['accTransmission']"><span class="qc-ai-tag" *ngIf="isAi('accTransmission')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accTransmission')" (click)="toggleEvidence('accTransmission')" [attr.aria-expanded]="isEvidenceOpen('accTransmission')" [title]="isEvidenceOpen('accTransmission') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accTransmission')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accTransmission') ? clWhy['accTransmission'] : evidenceLead('accTransmission') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accTransmission']==='pass'" (click)="setCl('accTransmission','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accTransmission']==='fail'" (click)="setCl('accTransmission','fail')">✗ Fail</button>
-          </div>
-        </div>
-
-        <div class="qc-card" [class.card-ok]="cl['accFuel']==='pass'" [class.card-flag]="cl['accFuel']==='fail'">
-          <div class="qc-card-title">Fuel type matches engine specs & RC<small>Petrol / Diesel / CNG must match engine type on RC</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accFuel']"><span class="qc-ai-tag" *ngIf="isAi('accFuel')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accFuel'] }}</div>
-          <div class="qc-card-actions">
-            <button type="button" class="qc-pill ok" [class.active]="cl['accFuel']==='pass'" (click)="setCl('accFuel','pass')">✓ Pass</button>
-            <button type="button" class="qc-pill flag" [class.active]="cl['accFuel']==='fail'" (click)="setCl('accFuel','fail')">✗ Fail</button>
+            <button type="button" class="qc-pill na" [class.active]="cl['accTransmission']==='na'" (click)="setCl('accTransmission','na')">— N/A</button>
           </div>
         </div>
 
@@ -274,7 +291,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accPhotoLoc']==='pass'" [class.card-flag]="cl['accPhotoLoc']==='fail'">
           <div class="qc-card-title">All photos taken at the same location<small>Background, GPS tags and timestamp consistent</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accPhotoLoc']"><span class="qc-ai-tag" *ngIf="isAi('accPhotoLoc')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accPhotoLoc'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accPhotoLoc')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accPhotoLoc') && clWhy['accPhotoLoc']"><span class="qc-ai-tag" *ngIf="isAi('accPhotoLoc')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accPhotoLoc')" (click)="toggleEvidence('accPhotoLoc')" [attr.aria-expanded]="isEvidenceOpen('accPhotoLoc')" [title]="isEvidenceOpen('accPhotoLoc') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accPhotoLoc')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accPhotoLoc') ? clWhy['accPhotoLoc'] : evidenceLead('accPhotoLoc') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accPhotoLoc']==='pass'" (click)="setCl('accPhotoLoc','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accPhotoLoc']==='fail'" (click)="setCl('accPhotoLoc','fail')">✗ Fail</button>
@@ -283,7 +301,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accDaylight']==='pass'" [class.card-flag]="cl['accDaylight']==='fail'">
           <div class="qc-card-title">Vehicle photos taken in clear daylight<small>No dark, blurry or indoors photos</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accDaylight']"><span class="qc-ai-tag" *ngIf="isAi('accDaylight')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accDaylight'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accDaylight')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accDaylight') && clWhy['accDaylight']"><span class="qc-ai-tag" *ngIf="isAi('accDaylight')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accDaylight')" (click)="toggleEvidence('accDaylight')" [attr.aria-expanded]="isEvidenceOpen('accDaylight')" [title]="isEvidenceOpen('accDaylight') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accDaylight')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accDaylight') ? clWhy['accDaylight'] : evidenceLead('accDaylight') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accDaylight']==='pass'" (click)="setCl('accDaylight','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accDaylight']==='fail'" (click)="setCl('accDaylight','fail')">✗ Fail</button>
@@ -292,7 +311,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accPlate']==='pass'" [class.card-flag]="cl['accPlate']==='fail'">
           <div class="qc-card-title">Number plate clearly visible in front & rear<small>Plate must be legible — not covered, dirty or angled</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['accPlate']"><span class="qc-ai-tag" *ngIf="isAi('accPlate')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accPlate'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accPlate')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accPlate') && clWhy['accPlate']"><span class="qc-ai-tag" *ngIf="isAi('accPlate')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accPlate')" (click)="toggleEvidence('accPlate')" [attr.aria-expanded]="isEvidenceOpen('accPlate')" [title]="isEvidenceOpen('accPlate') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accPlate')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accPlate') ? clWhy['accPlate'] : evidenceLead('accPlate') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accPlate']==='pass'" (click)="setCl('accPlate','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accPlate']==='fail'" (click)="setCl('accPlate','fail')">✗ Fail</button>
@@ -301,7 +321,8 @@
 
         <div class="qc-card" [class.card-ok]="cl['accGPS']==='pass'" [class.card-flag]="cl['accGPS']==='fail'">
           <div class="qc-card-title">GPS timestamp matches declared inspection date</div>
-          <div class="qc-card-why" *ngIf="clWhy['accGPS']"><span class="qc-ai-tag" *ngIf="isAi('accGPS')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['accGPS'] }}</div>
+          <div class="qc-card-reading" *ngIf="aiPending('accGPS')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('accGPS') && clWhy['accGPS']"><span class="qc-ai-tag" *ngIf="isAi('accGPS')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('accGPS')" (click)="toggleEvidence('accGPS')" [attr.aria-expanded]="isEvidenceOpen('accGPS')" [title]="isEvidenceOpen('accGPS') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('accGPS')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('accGPS') ? clWhy['accGPS'] : evidenceLead('accGPS') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['accGPS']==='pass'" (click)="setCl('accGPS','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['accGPS']==='fail'" (click)="setCl('accGPS','fail')">✗ Fail</button>
@@ -312,8 +333,9 @@
           [class.card-ok]="cl['recExterior']==='good'"
           [class.card-warn]="cl['recExterior']==='minor'"
           [class.card-flag]="cl['recExterior']==='major'">
-          <div class="qc-card-title">Exterior Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recExterior'] }}</div>
+          <div class="qc-card-title">Exterior Condition<small>Judged from the body panels in the photos</small></div>
+          <div class="qc-card-reading" *ngIf="aiPending('recExterior')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('recExterior') && clWhy['recExterior']"><span class="qc-ai-tag" *ngIf="isAi('recExterior')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recExterior')" (click)="toggleEvidence('recExterior')" [attr.aria-expanded]="isEvidenceOpen('recExterior')" [title]="isEvidenceOpen('recExterior') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recExterior')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recExterior') ? clWhy['recExterior'] : evidenceLead('recExterior') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recExterior']==='good'"  (click)="setCl('recExterior','good')">✨ Good</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recExterior']==='minor'" (click)="setCl('recExterior','minor')">🔧 Minor Damage</button>
@@ -325,8 +347,9 @@
           [class.card-ok]="cl['recEngine']==='good'"
           [class.card-warn]="cl['recEngine']==='average'"
           [class.card-flag]="cl['recEngine']==='poor'">
-          <div class="qc-card-title">Engine / Mechanical Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recEngine'] }}</div>
+          <div class="qc-card-title">Engine / Mechanical Condition<small>Judged from the engine bay photo</small></div>
+          <div class="qc-card-reading" *ngIf="aiPending('recEngine')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('recEngine') && clWhy['recEngine']"><span class="qc-ai-tag" *ngIf="isAi('recEngine')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recEngine')" (click)="toggleEvidence('recEngine')" [attr.aria-expanded]="isEvidenceOpen('recEngine')" [title]="isEvidenceOpen('recEngine') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recEngine')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recEngine') ? clWhy['recEngine'] : evidenceLead('recEngine') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recEngine']==='good'"    (click)="setCl('recEngine','good')">⚙️ Good</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recEngine']==='average'" (click)="setCl('recEngine','average')">⚠️ Average</button>
@@ -338,8 +361,9 @@
           [class.card-ok]="cl['recTyre']==='good'"
           [class.card-warn]="cl['recTyre']==='average'"
           [class.card-flag]="cl['recTyre']==='replacement'">
-          <div class="qc-card-title">Tyre Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recTyre'] }}</div>
+          <div class="qc-card-title">Tyre Condition<small>Worst tyre visible across the wheel photos</small></div>
+          <div class="qc-card-reading" *ngIf="aiPending('recTyre')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('recTyre') && clWhy['recTyre']"><span class="qc-ai-tag" *ngIf="isAi('recTyre')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recTyre')" (click)="toggleEvidence('recTyre')" [attr.aria-expanded]="isEvidenceOpen('recTyre')" [title]="isEvidenceOpen('recTyre') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recTyre')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recTyre') ? clWhy['recTyre'] : evidenceLead('recTyre') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recTyre']==='good'"        (click)="setCl('recTyre','good')">🟢 Good</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recTyre']==='average'"     (click)="setCl('recTyre','average')">🟡 Average</button>
@@ -352,7 +376,7 @@
           [class.card-warn]="cl['recDamage']==='minor'"
           [class.card-flag]="cl['recDamage']==='major'">
           <div class="qc-card-title">Damage Detected</div>
-          <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recDamage'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['recDamage']"><span class="qc-ai-tag" *ngIf="isAi('recDamage')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recDamage')" (click)="toggleEvidence('recDamage')" [attr.aria-expanded]="isEvidenceOpen('recDamage')" [title]="isEvidenceOpen('recDamage') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recDamage')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recDamage') ? clWhy['recDamage'] : evidenceLead('recDamage') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recDamage']==='none'"  (click)="setCl('recDamage','none')">✅ None</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recDamage']==='minor'" (click)="setCl('recDamage','minor')">⚠️ Minor</button>
@@ -364,7 +388,7 @@
           [class.card-ok]="cl['recMissingParts']==='none'"
           [class.card-flag]="cl['recMissingParts']==='present'">
           <div class="qc-card-title">Missing Parts</div>
-          <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recMissingParts'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['recMissingParts']"><span class="qc-ai-tag" *ngIf="isAi('recMissingParts')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recMissingParts')" (click)="toggleEvidence('recMissingParts')" [attr.aria-expanded]="isEvidenceOpen('recMissingParts')" [title]="isEvidenceOpen('recMissingParts') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recMissingParts')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recMissingParts') ? clWhy['recMissingParts'] : evidenceLead('recMissingParts') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recMissingParts']==='none'"    (click)="setCl('recMissingParts','none')">✅ None</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['recMissingParts']==='present'" (click)="setCl('recMissingParts','present')">❌ Parts Missing</button>
@@ -392,7 +416,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">
           <div class="qc-card-title">Minimum required photos uploaded<small>Front, Rear, Left, Right, Odometer, Engine, Chassis, Stencil</small></div>
-          <div class="qc-card-why" *ngIf="clWhy['valMinPhotos']"><span class="qc-ai-tag" *ngIf="isAi('valMinPhotos')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valMinPhotos'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['valMinPhotos']"><span class="qc-ai-tag" *ngIf="isAi('valMinPhotos')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('valMinPhotos')" (click)="toggleEvidence('valMinPhotos')" [attr.aria-expanded]="isEvidenceOpen('valMinPhotos')" [title]="isEvidenceOpen('valMinPhotos') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('valMinPhotos')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('valMinPhotos') ? clWhy['valMinPhotos'] : evidenceLead('valMinPhotos') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['valMinPhotos']==='pass'" (click)="setCl('valMinPhotos','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['valMinPhotos']==='fail'" (click)="setCl('valMinPhotos','fail')">✗ Fail</button>
@@ -402,7 +426,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['valDedupe']==='pass'" [class.card-flag]="cl['valDedupe']==='fail'">
           <div class="qc-card-title">Blacklist check — not stolen or blacklisted</div>
-          <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-ai-tag" *ngIf="isAi('valDedupe')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valDedupe'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['valDedupe']"><span class="qc-ai-tag" *ngIf="isAi('valDedupe')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('valDedupe')" (click)="toggleEvidence('valDedupe')" [attr.aria-expanded]="isEvidenceOpen('valDedupe')" [title]="isEvidenceOpen('valDedupe') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('valDedupe')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('valDedupe') ? clWhy['valDedupe'] : evidenceLead('valDedupe') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['valDedupe']==='pass'" (click)="setCl('valDedupe','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['valDedupe']==='fail'" (click)="setCl('valDedupe','fail')">✗ Fail</button>
@@ -411,7 +435,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['valAgeOdo']==='pass'" [class.card-flag]="cl['valAgeOdo']==='fail'">
           <div class="qc-card-title">Age & odometer consistent with condition rating</div>
-          <div class="qc-card-why" *ngIf="clWhy['valAgeOdo']"><span class="qc-ai-tag" *ngIf="isAi('valAgeOdo')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valAgeOdo'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['valAgeOdo']"><span class="qc-ai-tag" *ngIf="isAi('valAgeOdo')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('valAgeOdo')" (click)="toggleEvidence('valAgeOdo')" [attr.aria-expanded]="isEvidenceOpen('valAgeOdo')" [title]="isEvidenceOpen('valAgeOdo') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('valAgeOdo')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('valAgeOdo') ? clWhy['valAgeOdo'] : evidenceLead('valAgeOdo') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['valAgeOdo']==='pass'" (click)="setCl('valAgeOdo','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['valAgeOdo']==='fail'" (click)="setCl('valAgeOdo','fail')">✗ Fail</button>
@@ -420,7 +444,7 @@
 
         <div class="qc-card" [class.card-ok]="cl['valScore']==='pass'" [class.card-flag]="cl['valScore']==='fail'">
           <div class="qc-card-title">Inspection checklist supports overall vehicle score</div>
-          <div class="qc-card-why" *ngIf="clWhy['valScore']"><span class="qc-ai-tag" *ngIf="isAi('valScore')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['valScore'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['valScore']"><span class="qc-ai-tag" *ngIf="isAi('valScore')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('valScore')" (click)="toggleEvidence('valScore')" [attr.aria-expanded]="isEvidenceOpen('valScore')" [title]="isEvidenceOpen('valScore') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('valScore')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('valScore') ? clWhy['valScore'] : evidenceLead('valScore') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['valScore']==='pass'" (click)="setCl('valScore','pass')">✓ Pass</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['valScore']==='fail'" (click)="setCl('valScore','fail')">✗ Fail</button>
@@ -465,7 +489,7 @@
           [class.card-warn]="cl['recCondition']==='average'"
           [class.card-flag]="cl['recCondition']==='poor'">
           <div class="qc-card-title">1. Overall Vehicle Condition</div>
-          <div class="qc-card-why" *ngIf="clWhy['recCondition']"><span class="qc-ai-tag" *ngIf="isAi('recCondition')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['recCondition'] }}</div>
+          <div class="qc-card-why" *ngIf="clWhy['recCondition']"><span class="qc-ai-tag" *ngIf="isAi('recCondition')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('recCondition')" (click)="toggleEvidence('recCondition')" [attr.aria-expanded]="isEvidenceOpen('recCondition')" [title]="isEvidenceOpen('recCondition') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('recCondition')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('recCondition') ? clWhy['recCondition'] : evidenceLead('recCondition') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok"   [class.active]="cl['recCondition']==='good'"    (click)="setCl('recCondition','good')">🟢 Good</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['recCondition']==='average'" (click)="setCl('recCondition','average')">🟡 Average</button>
@@ -476,12 +500,16 @@
         <div class="qc-card"
           [class.card-ok]="cl['docChassis']==='original'"
           [class.card-flag]="cl['docChassis']==='repunched' || cl['docChassis']==='tampered'">
-          <div class="qc-card-title">2. Chassis Punch</div>
-          <div class="qc-card-why" *ngIf="clWhy['docChassis']"><span class="qc-ai-tag" *ngIf="isAi('docChassis')" title="Read from the photos by the AI reader">AI</span><span class="qc-why-icon">🛈</span>{{ clWhy['docChassis'] }}</div>
+          <div class="qc-card-title">2. Chassis Punch <span class="qc-req">*</span></div>
+          <div class="qc-card-reading" *ngIf="aiPending('docChassis')"><span class="qc-reading-dot"></span>Reading photos…</div>
+          <div class="qc-card-why" *ngIf="!aiPending('docChassis') && clWhy['docChassis']"><span class="qc-ai-tag" *ngIf="isAi('docChassis')" title="Read from the photos by the AI reader">AI</span><button type="button" class="qc-why-icon qc-why-icon--btn" *ngIf="evidenceHasMore('docChassis')" (click)="toggleEvidence('docChassis')" [attr.aria-expanded]="isEvidenceOpen('docChassis')" [title]="isEvidenceOpen('docChassis') ? 'Hide the full explanation' : 'Show the full explanation'">🛈</button><span class="qc-why-icon" *ngIf="!evidenceHasMore('docChassis')">🛈</span><span class="qc-why-text">{{ isEvidenceOpen('docChassis') ? clWhy['docChassis'] : evidenceLead('docChassis') }}</span></div>
           <div class="qc-card-actions">
             <button type="button" class="qc-pill ok" [class.active]="cl['docChassis']==='original'" (click)="setCl('docChassis','original'); form.patchValue({chassisPunch:'Original'})">✓ Original</button>
             <button type="button" class="qc-pill warn" [class.active]="cl['docChassis']==='repunched'" (click)="setCl('docChassis','repunched'); form.patchValue({chassisPunch:'Re-Punched'})">~ Re-Punched</button>
             <button type="button" class="qc-pill flag" [class.active]="cl['docChassis']==='tampered'" (click)="setCl('docChassis','tampered'); form.patchValue({chassisPunch:'Tampered'})">✗ Tampered</button>
+          </div>
+          <div class="qc-card-required" *ngIf="form.get('chassisPunch')?.invalid && form.get('chassisPunch')?.touched">
+            Record the chassis punch before submitting — the report prints “NOT RECORDED” otherwise.
           </div>
         </div>
 

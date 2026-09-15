@@ -12,6 +12,7 @@
 // permanent em-dash.
 
 import { FinalReport } from '../models/final-report.model';
+import { formatDdMmYyyy } from './date-format';
 import { getFieldRegistry, normalizeVehicleType } from './inspection-field-registry';
 import { mapVerdict } from './inspection-score';
 
@@ -34,6 +35,19 @@ export interface QcChecklistInput {
   vehicleSegment?: string | null;
   /** Stakeholder valuation type, used when no segment was resolved. */
   valuationType?: string | null;
+
+  /**
+   * What the photo reader saw, once it has run. Damage and missing parts are
+   * judged from the images; the AVO's own entries are quoted beside them rather
+   * than being the source, so a disagreement is visible instead of invisible.
+   * Absent until the read lands, and the cards say so rather than guessing.
+   */
+  aiFindings?: {
+    damage: string[];
+    missingParts: string[];
+    /** True once the photos have actually been read for this case. */
+    photosRead: boolean;
+  } | null;
 }
 
 export interface QcChecklistResult {
@@ -44,9 +58,9 @@ export interface QcChecklistResult {
 }
 
 function fmtDate(iso?: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN');
+  // toLocaleDateString('en-IN') gives 15/5/2024; these strings are persisted on
+  // the case and reprinted on the report, so they must match the app's format.
+  return formatDdMmYyyy(iso);
 }
 
 /**
@@ -74,18 +88,93 @@ function transmissionFromVariant(variant?: string | null): string | null {
   if (!v) return null;
   const has = (token: string) => new RegExp(`(^|[^A-Z0-9])${token}([^A-Z0-9]|$)`).test(v);
 
+  // Specific gearbox names first, then explicit MANUAL markers, and only then
+  // the loose automatic tokens. 'AT' used to be tested before 'MT'/'MANUAL', so
+  // a variant naming both was read as an automatic.
   if (has('AMT')) return 'AMT';
   if (has('CVT')) return 'CVT';
   if (has('DCT') || has('DSG')) return 'DCT';
+  if (has('MANUAL') || has('IMT') || has('MT')) return 'MANUAL';
   if (has('AUTOMATIC') || has('AUTO') || has('AT')) return 'AUTOMATIC';
-  if (has('MANUAL') || has('MT') || has('IMT')) return 'MANUAL';
   return null;
 }
 
-/** AMT, CVT and DCT are all automatics — comparing families avoids flagging
- *  "AVO said AUTOMATIC, variant says AMT" as a mismatch when it is not one. */
-function isAutomatic(type: string): boolean {
-  return type !== 'MANUAL';
+/**
+ * The gearbox family a value belongs to, or null when it is not recognised.
+ *
+ * AMT, CVT and DCT are all automatics — comparing families avoids flagging
+ * "AVO said AUTOMATIC, variant says AMT" as a mismatch when it is not one.
+ *
+ * Returns null rather than guessing. The previous form was `type !== 'MANUAL'`,
+ * which classified every unrecognised string — a typo, a legacy free-text value —
+ * as an automatic and produced false mismatches against a correct MANUAL.
+ */
+function transmissionFamily(type: string): 'MANUAL' | 'AUTOMATIC' | null {
+  const t = (type || '').toUpperCase().trim();
+  if (t === 'MANUAL' || t === 'MT' || t === 'IMT') return 'MANUAL';
+  if (t === 'AUTOMATIC' || t === 'AUTO' || t === 'AT' ||
+      t === 'AMT' || t === 'CVT' || t === 'DCT' || t === 'DSG') return 'AUTOMATIC';
+  return null;
+}
+
+
+/**
+ * Whether a permit is required for this vehicle at all.
+ *
+ * A private car has no permit and never will, so flagging its missing permit
+ * expiry — which is what this check did for every one of them — is noise that
+ * trains reviewers to ignore the card.
+ *
+ * Evidence is taken in descending order of authority:
+ *   1. The RC's own permit fields. If VAHAN returned one, the vehicle has a
+ *      permit and the question is settled.
+ *   2. VAHAN's vehicle category / class. This is the registering authority's
+ *      own classification and is the right basis for the decision.
+ *   3. Only then the portal's vehicleSegment, which is a human-chosen label.
+ *
+ * Anything still undecided returns 'unknown', which keeps the old flagging
+ * behaviour. Deliberately NOT defaulted to a vehicle-type key: the PDF's
+ * ResolveVehicleTypeKey defaults a blank segment to "cv" (commercial), which
+ * would re-flag exactly the private cars this is meant to exempt.
+ */
+export type PermitApplicability = 'required' | 'not-applicable' | 'unknown';
+
+const NON_TRANSPORT_CODES = new Set([
+  'LMV', 'LMVNT', 'MCWG', 'MCWOG', 'MCWGNT', 'MC', 'MCY', '2WN', '2WNT', '3WN',
+]);
+const TRANSPORT_CODES = new Set([
+  'HGV', 'HPV', 'MGV', 'MPV', 'LGV', 'LPV', 'HTV', 'MTV', 'LTV',
+  '3WT', '4WT', 'TRAILER', 'ERICKSHAW', 'ERICKSHAWWITHCART',
+]);
+
+export function permitApplicability(
+  vd: { permitNo?: string | null; permitType?: string | null; permitValidUpTo?: string | null;
+        categoryCode?: string | null; classOfVehicle?: string | null } | null | undefined,
+  vehicleSegment?: string | null,
+  valuationType?: string | null
+): PermitApplicability {
+  // 1. The RC carries a permit — nothing else can override that.
+  if (vd?.permitNo || vd?.permitType || vd?.permitValidUpTo) return 'required';
+
+  const code  = (vd?.categoryCode   || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const klass = (vd?.classOfVehicle || '').toUpperCase();
+
+  // 2. VAHAN's own classification.
+  if (code && NON_TRANSPORT_CODES.has(code)) return 'not-applicable';
+  if (code && TRANSPORT_CODES.has(code))     return 'required';
+
+  if (/\bNON[- ]?TRANSPORT\b/.test(klass) || /\(NT\)/.test(klass) || /\bNT\b/.test(klass)) {
+    return 'not-applicable';
+  }
+  if (/MOTOR CAR|MOTOR CYCLE|M-?CYCLE|SCOOTER|MOPED/.test(klass)) return 'not-applicable';
+  if (/TRANSPORT|GOODS|CARRIER|BUS|TAXI|MAXI|TRACTOR|TRAILER/.test(klass)) return 'required';
+
+  // 3. The portal's own label, only if VAHAN said nothing usable.
+  const vk = normalizeVehicleType(vehicleSegment) ?? normalizeVehicleType(valuationType);
+  if (vk === '4w' || vk === '2w') return 'not-applicable';
+  if (vk) return 'required';   // cv, bus, 3w, ce, fe — autorickshaws do carry permits
+
+  return 'unknown';
 }
 
 export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
@@ -93,9 +182,12 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   const why: Record<string, string> = {};
 
   /** Records a verdict together with the evidence used to reach it. */
-  const mark = (key: string, verdict: string | null, reason: string) => {
+  const mark = (key: string, verdict: string | null, reason: string, detail?: string) => {
     if (verdict !== null) cl[key] = verdict;
-    why[key] = reason;
+    // `reason` is the cause shown on the card. Where a rule has more to say it passes
+    // `detail`, which splitEvidence keeps behind the ⓘ; otherwise the card text is
+    // split on its own natural break as before.
+    why[key] = detail ? `${reason} \u2014 ${detail}` : reason;
   };
 
   const report = input.report;
@@ -154,7 +246,14 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   }
 
   checkExpiry('docIns',     'Insurance' + (vd?.insurer   ? ` (${vd.insurer})` : ''), vd?.insuranceValidUpTo);
-  checkExpiry('docPermit',  'Permit'    + (vd?.permitNo  ? ` ${vd.permitNo}`  : ''), vd?.permitValidUpTo);
+  const permitNeeded = permitApplicability(vd, input.vehicleSegment, input.valuationType);
+  if (permitNeeded === 'not-applicable') {
+    const basis = vd?.categoryCode || vd?.classOfVehicle || input.vehicleSegment || input.valuationType;
+    mark('docPermit', 'na',
+      `No permit required${basis ? ` for a ${basis}` : ''} \u2014 non-transport vehicles do not carry one.`);
+  } else {
+    checkExpiry('docPermit',  'Permit'    + (vd?.permitNo  ? ` ${vd.permitNo}`  : ''), vd?.permitValidUpTo);
+  }
   checkExpiry('docFitness', 'Fitness'   + (vd?.fitnessNo ? ` ${vd.fitnessNo}` : ''), vd?.fitnessValidTo);
   checkExpiry('docTax',     'Road tax',                                              vd?.taxUpto);
 
@@ -250,58 +349,49 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
     mark('accVahan', 'fail', 'Cannot be compared: VAHAN returned no make/model, so there is nothing to check the inspection entry against.');
   }
 
-  // ── Data Accuracy: owner / applicant ──────────────────────────────────────
-  const applicant = report?.stakeholder?.applicant?.name;
-  if (applicant && vd?.ownerName) {
-    const norm = (x: string) => x.trim().toUpperCase().replace(/\s+/g, ' ');
-    const same = norm(applicant) === norm(vd.ownerName);
-    mark('accOwner', same ? 'pass' : 'fail',
-      `Applicant "${applicant}" vs RC owner "${vd.ownerName}"` +
-      (same ? ' — exact match.' : ' — the two names differ; confirm from the ID documents before approving.'));
-  } else {
-    mark('accOwner', 'fail', `Cannot be compared: ${!applicant && !vd?.ownerName
-      ? 'neither the applicant name nor the RC owner name is on record'
-      : !applicant ? 'no applicant name is on record' : 'VAHAN returned no owner name'}.`);
-  }
-
   // ── Data Accuracy: technical specifications ───────────────────────────────
   // VAHAN has no transmission field, so there is no direct value to compare the
-  // AVO's answer against. The variant string often carries one though — "SWIFT
-  // VDI AMT", "CITY ZX CVT" — and where it does, that is a real comparison.
-  // Where it does not, the recorded value is shown and the verdict is left to
+  // AVO's answer against. The variant and model strings often carry one though —
+  // "SWIFT VDI AMT", "CITY ZX CVT" — and where they do, that is a real comparison.
+  // Where they do not, the recorded value is shown and the verdict is left to
   // the reviewer rather than invented.
+  //
+  // Falls back to the MODEL, not classOfVehicle. The latter is VAHAN's category
+  // description — "Motor Car(LMV)", "M-Cycle/Scooter(2WN)" — which cannot name a
+  // gearbox under any circumstances, so reading it could only ever add noise.
   const recordedTx = (ins?.transmissionType || '').toUpperCase().trim();
-  const rcVariant  = vd?.makerVariant || vd?.classOfVehicle || '';
+  const rcVariant  = vd?.makerVariant || vd?.model || '';
   const rcTx       = transmissionFromVariant(rcVariant);
+
+  const recordedFamily = transmissionFamily(recordedTx);
+  const rcFamily       = rcTx ? transmissionFamily(rcTx) : null;
 
   if (!recordedTx) {
     mark('accTransmission', 'fail', rcVariant
       ? `AVO did not record a transmission type. RC lists ${rcVariant} — confirm from the variant and the interior photos.`
       : 'Cannot be compared: AVO did not record a transmission type, and the RC returned no variant to infer one from.');
-  } else if (!rcTx) {
-    // The AVO had the vehicle in front of them and VAHAN has no transmission
-    // field at all, so their answer is the authoritative one. With nothing to
-    // contradict it, this passes on the recorded value rather than making the
-    // reviewer re-decide something already established at inspection.
-    mark('accTransmission', 'pass',
-      `AVO recorded ${recordedTx} at inspection.` +
+  } else if (!rcFamily) {
+    // VAHAN has no transmission field at all; the variant string is the only
+    // possible source and this one does not name a gearbox. Previously this
+    // passed, which read as "checked and matched" when nothing had been
+    // compared. Reported as not-applicable instead, with the recorded value
+    // shown so the reviewer can judge it against the interior photos.
+    mark('accTransmission', 'na',
+      `AVO recorded ${recordedTx} at inspection. ` +
       (rcVariant
-        ? ` RC lists ${rcVariant}, which does not state a transmission, so there is nothing to contradict it.`
-        : ' The RC variant was not captured, so there is nothing to contradict it.'));
-  } else if (isAutomatic(rcTx) === isAutomatic(recordedTx)) {
+        ? `RC lists ${rcVariant}, which does not state a gearbox`
+        : 'The RC variant was not captured') +
+      ', and VAHAN does not return a transmission field — so there is nothing to compare against.');
+  } else if (!recordedFamily) {
+    mark('accTransmission', 'fail',
+      `AVO recorded "${recordedTx}", which is not a recognised gearbox type. ` +
+      `RC variant ${rcVariant} indicates ${rcTx} — confirm from the interior photos.`);
+  } else if (recordedFamily === rcFamily) {
     mark('accTransmission', 'pass',
       `AVO recorded ${recordedTx} and the RC variant ${rcVariant} indicates ${rcTx} — consistent.`);
   } else {
     mark('accTransmission', 'fail',
       `AVO recorded ${recordedTx} but the RC variant ${rcVariant} indicates ${rcTx} — check the interior photos before approving.`);
-  }
-
-  if (vd?.fuel) {
-    mark('accFuel', 'pass', `RC fuel type ${vd.fuel}` +
-      (vd.engineCC  ? ` with a ${vd.engineCC}cc engine` : '') +
-      (vd.normsType ? `, ${vd.normsType}` : '') + '.');
-  } else {
-    mark('accFuel', 'fail', 'Cannot be compared: VAHAN returned no fuel type for this vehicle.');
   }
 
   // ── Data Accuracy: photo quality & completeness ───────────────────────────
@@ -454,22 +544,57 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   const list = (xs: string[], cap = 6) =>
     xs.slice(0, cap).join(', ') + (xs.length > cap ? `, +${xs.length - cap} more` : '');
 
-  if (!vk || !ins) {
-    mark('recDamage', 'major', 'No inspection entries could be read for this vehicle type — check the photos before approving.');
-  } else if (damaged.length === 0) {
-    mark('recDamage', 'none', 'No inspection entry is marked DAMAGED or POOR.');
-  } else if (damaged.length <= 2) {
-    mark('recDamage', 'minor', `${damaged.length} entr(y/ies) marked DAMAGED or POOR: ${list(damaged)}.`);
-  } else {
-    mark('recDamage', 'major', `${damaged.length} entries marked DAMAGED or POOR: ${list(damaged)}.`);
-  }
+  // How the AVO's own entries read, quoted beside the photo findings below.
+  const avoDamageNote = !vk || !ins
+    ? 'no inspection entries could be read for this vehicle type'
+    : damaged.length === 0
+      ? 'AVO marked nothing damaged'
+      : `AVO marked ${damaged.length}: ${list(damaged)}`;
 
-  if (!vk || !ins) {
-    mark('recMissingParts', 'present', 'No inspection entries could be read for this vehicle type — check the photos before approving.');
-  } else if (missing.length === 0) {
-    mark('recMissingParts', 'none', 'No inspection entry is marked MISSING / NOT PRESENT or NO.');
+  const avoMissingNote = !vk || !ins
+    ? 'no inspection entries could be read for this vehicle type'
+    : missing.length === 0
+      ? 'AVO marked nothing missing'
+      : `AVO marked ${missing.length}: ${list(missing)}`;
+
+  const ai = input.aiFindings;
+
+  if (!ai?.photosRead) {
+    // Until the photos have been read there is nothing to judge from, and the AVO's
+    // typed entries are not evidence of what the images show.
+    mark('recDamage', null,
+      'Not judged yet: the photos have not been read.',
+      `Damage is taken from the images, not from the inspection form. Until the photo read completes there is nothing to judge from — ${avoDamageNote}.`);
+    mark('recMissingParts', null,
+      'Not judged yet: the photos have not been read.',
+      `Missing parts are taken from the images, not from the inspection form. Until the photo read completes there is nothing to judge from — ${avoMissingNote}.`);
   } else {
-    mark('recMissingParts', 'present', `${missing.length} entr(y/ies) marked missing or not present: ${list(missing)}.`);
+    const seenDamage = ai.damage ?? [];
+    const seenMissing = ai.missingParts ?? [];
+
+    const damageVerdict =
+      seenDamage.length === 0 ? 'none' : seenDamage.length <= 2 ? 'minor' : 'major';
+    mark('recDamage', damageVerdict,
+      seenDamage.length === 0
+        ? 'No visible damage in the photos'
+        : `${seenDamage.length} visible defect${seenDamage.length === 1 ? '' : 's'} in the photos: ${list(seenDamage)}`,
+      (seenDamage.length === 0
+        ? 'The photos show no visible damage to the body.'
+        : `Photos show ${seenDamage.length} defect(s): ${list(seenDamage, 10)}.`) +
+      ` For comparison, ${avoDamageNote}.`);
+
+    // Absence is harder to see than presence: a part out of frame looks the same as
+    // one that is gone. The reader is told to list only what a photo shows to be
+    // absent, so an empty list means nothing was SEEN missing — not that the vehicle
+    // is complete, and the note says so.
+    mark('recMissingParts', seenMissing.length === 0 ? 'none' : 'present',
+      seenMissing.length === 0
+        ? 'No part seen missing in the photos'
+        : `${seenMissing.length} part${seenMissing.length === 1 ? '' : 's'} seen missing: ${list(seenMissing)}`,
+      (seenMissing.length === 0
+        ? 'No externally visible part was seen to be missing. Parts outside the frame cannot be judged, so this is not a completeness guarantee.'
+        : `Photos show these parts absent: ${list(seenMissing, 10)}.`) +
+      ` For comparison, ${avoMissingNote}.`);
   }
 
   if (chassisPunch === 'TAMPERED' || overallRating === 'POOR') {
@@ -493,19 +618,38 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
  */
 export function applySavedChecklist(
   result: QcChecklistResult,
-  saved: Record<string, string | null> | null | undefined
+  saved: Record<string, string | null> | null | undefined,
+  reviewerKeys?: Iterable<string> | null
 ): void {
   if (!saved) return;
+
+  // Which keys a person actually decided. The page persists the WHOLE checklist,
+  // machine verdicts included, so "this key has a saved value" says nothing about
+  // who chose it — labelling on that basis put "Saved by the reviewer, overriding
+  // the automatic verdict" on cards nobody had touched.
+  //
+  // Undefined (rather than empty) means the caller has no record of who decided
+  // what — cases saved before reviewer keys were tracked — and the old behaviour
+  // is kept for those rather than crediting the reviewer with nothing.
+  const byReviewer = reviewerKeys === undefined ? null : new Set(reviewerKeys ?? []);
+
   Object.entries(saved).forEach(([k, rawV]) => {
     if (rawV === null || rawV === undefined) return;
     // docHypo was same/different before it became yes/no.
     const v = k === 'docHypo'
       ? (rawV === 'same' ? 'no' : rawV === 'different' ? 'yes' : rawV)
       : rawV;
-    if (result.cl[k] !== v) {
+
+    const changed = result.cl[k] !== v;
+    const isReviewers = byReviewer === null ? changed : byReviewer.has(k);
+
+    if (changed && isReviewers) {
       result.why[k] = 'Saved by the reviewer' +
         (result.cl[k] ? `, overriding the automatic verdict — ${result.why[k] || ''}` : '.');
     }
+    // A machine verdict is restored without comment: the value stands in until the
+    // photo read lands and recomputes it, but the evidence on the card stays the
+    // one the rules just produced rather than being credited to a person.
     result.cl[k] = v;
   });
 }

@@ -1,98 +1,69 @@
-<div class="common-notes-container">
-
-  <div *ngIf="showHeader" class="notes-header">
-    <div class="header-title">
-      <h3>
-        Notes
-        <span class="notes-count" *ngIf="!isLoading">
-          ({{ getNotesCount() }})
-        </span>
-      </h3>
-
-      <button
-        *ngIf="collapsible"
-        class="btn-collapse"
-        (click)="toggleCollapse()">
-        {{ isCollapsed ? '▶' : '▼' }}
-      </button>
+<div class="cd-head">
+  <div>
+    <div class="cd-title">
+      Notes
+      <span class="cd-count" *ngIf="!isLoading">{{ getNotesCount() }}</span>
     </div>
+    <div class="cd-sub">Everything the team has recorded against this case</div>
+  </div>
+  <button type="button" class="cd-close" (click)="closeDialog()" aria-label="Close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
 
-    <button class="btn-add" (click)="toggleForm()">
-      {{ showForm ? '✕ Close' : '+ Add Note' }}
-    </button>
+<div class="cd-body">
+
+  <div *ngIf="error" class="cd-error">
+    {{ error }}
+    <button type="button" class="cd-error__dismiss" (click)="error = null" aria-label="Dismiss">×</button>
   </div>
 
-  <div *ngIf="!isCollapsed || !collapsible" class="notes-content">
+  <div *ngIf="isLoading" class="cd-loading">Loading notes…</div>
 
-    <div *ngIf="error" class="alert alert-error">
-      {{ error }}
-      <button class="close-btn" (click)="error = null">×</button>
+  <ng-container *ngIf="!isLoading">
+
+    <!-- Add form. Opened from the foot, so the buttons that save or abandon it
+         sit in the same band as every other dialog's actions. -->
+    <div *ngIf="showForm" class="note-form">
+      <span class="note-form__label">New note</span>
+      <textarea class="input"
+                rows="4"
+                [(ngModel)]="newNoteText"
+                placeholder="Enter your note here..."></textarea>
     </div>
 
-    <div *ngIf="isLoading" class="loading">
-      Loading notes...
-    </div>
-
-    <!-- Add Form -->
-    <div *ngIf="showForm && !isLoading" class="add-note-form">
-      <textarea
-        [(ngModel)]="newNoteText"
-        placeholder="Enter your note here..."
-        class="note-textarea">
-      </textarea>
-
-      <div class="form-buttons">
-        <button class="btn-primary" (click)="createNote()">Save Note</button>
-        <button class="btn-secondary" (click)="toggleForm()">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!isLoading && notes.length === 0 && !showForm" class="empty-state">
+    <div *ngIf="notes.length === 0 && !showForm" class="cd-empty">
       No notes yet. Click "Add Note" to create one.
     </div>
 
-    <!-- Notes List -->
-    <div *ngIf="!isLoading" class="notes-list">
+    <div *ngIf="notes.length" class="notes-list">
+      <div *ngFor="let note of notes" class="cd-card note">
+        <div class="note__text">{{ note.note }}</div>
 
-      <div *ngFor="let note of notes" class="note-item">
-
-        <div class="note-view">
-
-          <div class="note-content">
-            {{ note.note }}
-          </div>
-
-          <div class="note-meta">
-            <span class="entity-tag">
-              {{ note.entityType }}
-            </span>
-
-            <span class="creator">
-              👤 {{ note.createdBy || 'Unknown User' }}
-            </span>
-
-            <span class="date">
-              📅 {{ formatDate(note.createdDate) }}
-            </span>
-
-            <span *ngIf="note.modifiedDate" class="modified">
-              ✏️ {{ formatDate(note.modifiedDate) }}
-            </span>
-          </div>
-
+        <div class="cd-meta">
+          <span class="note__tag">{{ note.entityType }}</span>
+          <span>👤 {{ note.createdBy || 'Unknown User' }}</span>
+          <span>📅 {{ formatDate(note.createdDate) }}</span>
+          <span *ngIf="note.modifiedDate" class="note__modified">
+            ✏️ {{ formatDate(note.modifiedDate) }}
+          </span>
         </div>
-
       </div>
     </div>
 
-  </div>
+  </ng-container>
+</div>
 
-  <!-- Close Button -->
-  <div class="dialog-actions">
-    <button mat-raised-button color="primary" (click)="closeDialog()">
-      Close
-    </button>
-  </div>
+<div class="cd-foot">
+  <ng-container *ngIf="showForm; else browseActions">
+    <button type="button" class="cd-btn cd-btn--secondary" (click)="toggleForm()">Cancel</button>
+    <button type="button" class="cd-btn cd-btn--primary"
+            (click)="createNote()" [disabled]="!newNoteText.trim()">Save Note</button>
+  </ng-container>
 
+  <ng-template #browseActions>
+    <button type="button" class="cd-btn cd-btn--secondary" (click)="closeDialog()">Close</button>
+    <button type="button" class="cd-btn cd-btn--primary" (click)="toggleForm()">+ Add Note</button>
+  </ng-template>
 </div>

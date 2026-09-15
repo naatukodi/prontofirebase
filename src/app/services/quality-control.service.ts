@@ -19,6 +19,10 @@ export interface QcAiReadings {
   captureDates: string[];
   stampedPhotos: number;
   totalPhotos: number;
+  /** Visible defects, "part - what is wrong". Findings, not a verdict. */
+  damageFound?: string[];
+  /** Externally visible parts the photos show to be absent. */
+  missingParts?: string[];
 }
 
 /** What the photo audit returns: verdicts, the evidence behind each, and any note. */
@@ -27,6 +31,12 @@ export interface QcAiAudit {
   cl: Record<string, string>;
   /** Checklist key to what was compared. Always populated, even when cl is not. */
   why: Record<string, string>;
+  /**
+   * Checklist key to 'resolved' | 'unresolved', for keys the reader examined.
+   * Absent means the reader never looked, which is not the same as looking and
+   * being unable to decide. Empty on readings stored before this was added.
+   */
+  status?: Record<string, string>;
   observations: string[];
   /** What the reader actually saw, as opposed to what was concluded. */
   readings?: QcAiReadings | null;

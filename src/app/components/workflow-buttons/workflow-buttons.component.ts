@@ -21,6 +21,13 @@ import { VehicleDuplicateCheckResponse } from '../../models/vehicle-duplicate-ch
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DuplicateDialogComponent } from '../duplicate-dialog/duplicate-dialog.component';
 
+/**
+ * Every case action opens the same panel: head, scrolling body, pinned foot.
+ * The class strips MatDialog's own surface padding so those bands reach the
+ * panel edges, and carries the shell the four dialogs share — see styles.css.
+ */
+const CASE_DIALOG_PANEL = 'case-dialog-panel';
+
 @Component({
   selector: 'app-workflow-buttons',
   templateUrl: './workflow-buttons.component.html',
@@ -136,10 +143,14 @@ export class WorkflowButtonsComponent {
     private snackBar: MatSnackBar
   ) {}
 
+  /** The case reference, e.g. VG-519499-K. Null until it loads. */
+  referenceNumber: string | null = null;
+
   async ngOnInit(): Promise<void> {
     this.loadAssignedUser();
     this.loadPaymentBadge();
     this.loadDedupeBadge();
+    this.loadReferenceNumber();
 
     const user = await this.authService.getCurrentUser();
     this.currentUserName =
@@ -147,6 +158,20 @@ export class WorkflowButtonsComponent {
       user?.phoneNumber ||
       user?.email ||
       'Unknown';
+  }
+
+  /**
+   * The reference this case is known by, shown beside the vehicle number.
+   *
+   * This panel is on every stage page, so one call here puts the number in front of
+   * whoever is working the case. Idempotent on the server, and a failure just leaves
+   * the field out rather than holding up the panel.
+   */
+  private loadReferenceNumber(): void {
+    if (!this.id || !this.vehicleNumber || !this.applicantContact) return;
+    this.valuationService
+      .getReferenceNumber(this.id, this.vehicleNumber, this.applicantContact)
+      .subscribe(ref => (this.referenceNumber = ref));
   }
 
   private loadAssignedUser() {
@@ -235,7 +260,9 @@ export class WorkflowButtonsComponent {
     const open = (response: VehicleDuplicateCheckResponse) =>
       this.dialog.open(DuplicateDialogComponent, {
         width: '950px',
-        maxHeight: '90vh',
+        maxWidth: 'calc(100vw - 32px)',
+        maxHeight: '86vh',
+        panelClass: CASE_DIALOG_PANEL,
         data: response
       });
 
@@ -256,8 +283,10 @@ export class WorkflowButtonsComponent {
 
   openNotesPopup(): void {
     const dialogRef = this.dialog.open(CommonNotesComponent, {
-      width: '800px',
-      maxHeight: '90vh'
+      width: '720px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: '86vh',
+      panelClass: CASE_DIALOG_PANEL
     });
 
     dialogRef.componentInstance.entityType = 'Valuation';
@@ -267,8 +296,10 @@ export class WorkflowButtonsComponent {
 
   openHistoryPopup(): void {
     this.dialog.open(CaseHistoryComponent, {
-      width: '800px',
-      maxHeight: '90vh',
+      width: '720px',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: '86vh',
+      panelClass: CASE_DIALOG_PANEL,
       data: {
         valuationId: this.id
       }
@@ -280,9 +311,7 @@ export class WorkflowButtonsComponent {
       width: '640px',
       maxWidth: 'calc(100vw - 32px)',
       maxHeight: '86vh',
-      // Strips MatDialog's own surface padding so the dialog's head and foot
-      // bands reach the panel edges — see styles.css.
-      panelClass: 'payment-dialog-panel',
+      panelClass: CASE_DIALOG_PANEL,
       data: {
         valuationId: this.id,
         vehicleNumber: this.vehicleNumber,

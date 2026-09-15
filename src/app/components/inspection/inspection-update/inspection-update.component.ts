@@ -27,12 +27,23 @@ import {
   InspectionSection
 } from '../../../shared/inspection-field-registry';
 import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
+import { reportInvalidForm } from '../../../shared/form-errors';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
 import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-buttons.component';
 
 type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | 'tractor' | 'ce' | 'bus';
+
+/** Control names whose humanised form would not match the on-screen label. */
+const AVO_FIELD_LABELS: Record<string, string> = {
+  odometer: 'Odometer (km)',
+  vehicleInspectedBy: 'Vehicle inspected by',
+  inspectionDate: 'Date of inspection',
+  inspectionLocation: 'Inspection location',
+  vinPlate: 'VIN plate present',
+  transmissionType: 'Transmission type',
+};
 
 @Component({
   selector: 'app-valuation-inspection-update',
@@ -50,7 +61,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   form!: FormGroup;
   loading = true;
+  /** A save/submit failure. The form stays on screen so the work is not lost. */
   error: string | null = null;
+  /** A load failure. There is genuinely nothing to render, so the form is hidden. */
+  loadError: string | null = null;
   saving = false;
   saveInProgress = false;
   submitInProgress = false;
@@ -143,7 +157,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   private visibilityMap: Record<string, string[]> = {
     'four-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'transmissionType','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
@@ -152,7 +166,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'airBags','sunRoof','sideFenders','headLamps','batteryCondition'
     ],
     'cv': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
@@ -164,7 +178,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'hydraulicLift','sideUnderRunProtection','headLamps','batteryCondition','sunRoof','airBags'
     ],
     'two-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
@@ -174,7 +188,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
     ],
     'three-wheeler': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
@@ -184,7 +198,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
     ],
     'tractor': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
@@ -195,7 +209,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
     ],
     'ce': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
@@ -207,7 +221,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
     ],
     'bus': [
-      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','bodyType','engineCondition',
+      'vehicleInspectedBy','inspectionDate','inspectionLocation','frontPhoto','odometer','engineCondition',
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','cabinCondition','exteriorCondition',
       'interiorCondition','gearboxAssembly','clutchSystem','propellerShaft','differentialAssy',
@@ -292,7 +306,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         this.loadInspection();
       } else {
         this.loading = false;
-        this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
+        this.loadError = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
     });
   }
@@ -349,7 +363,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       inspectionLocation: ['', Validators.required],
       vehicleMoved: [false],
       engineStarted: [false],
-      odometer: [0, Validators.min(0)],
+      // A vehicle cannot have travelled 0 km; 0 was being submitted as a real reading.
+      odometer: [null, [Validators.required, Validators.min(1)]],
       vinPlate: [false],
       bodyType: [''],
       transmissionType: [''],
@@ -589,9 +604,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     this.recomputeScores();
   }
 
+  /** Save failures used to show only a red line at the top of a long form. */
+  private showSaveError(message: string | null): void {
+    this._snackBar.open('⚠ ' + (message || 'Something went wrong.'), 'Close',
+      { duration: 6000, horizontalPosition: 'center', verticalPosition: 'top' });
+  }
+
   private loadInspection() {
     this.loading = true;
     this.error = null;
+    this.loadError = null;
     this.inspectionSvc.getInspectionDetails(this.valuationId, this.vehicleNumber, this.applicantContact).subscribe({
       next: data => {
         console.log('✅ Inspection Data Loaded:', data);
@@ -611,7 +633,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       },
       error: err => {
         console.error('❌ Error Loading Inspection:', err);
-        this.error = err.message || 'Failed to load inspection details.';
+        this.loadError = err.message || 'Failed to load inspection details.';
         this.loading = false;
       }
     });
@@ -632,7 +654,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       inspectionLocation: data.inspectionLocation || '',
       vehicleMoved: toBool(data.vehicleMoved) ?? false,
       engineStarted: toBool(data.engineStarted) ?? false,
-      odometer: data.odometer || 0,
+      odometer: data.odometer ?? null,
       vinPlate: toBool(data.vinPlate) ?? false,
       bodyType: data.bodyType || '',
       transmissionType: nc(data.transmissionType),
@@ -1063,7 +1085,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     if (this.isViewOnly) return; // Prevent action if read only
 
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.showSaveError(reportInvalidForm(this.form, AVO_FIELD_LABELS));
       return;
     }
 
@@ -1086,6 +1108,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       this.saving = false;
       this.saveInProgress = false;
       this.error = 'Failed to save inspection details.';
+      this.showSaveError(this.error);
       this.cdr.detectChanges();
       return;
     }
@@ -1138,6 +1161,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err.message || 'Save failed.';
+          this.showSaveError(this.error);
           this.saveInProgress = false;
           this.saving = false;
         }
@@ -1148,7 +1172,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     if (this.isViewOnly) return; // Prevent action if read only
 
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.showSaveError(reportInvalidForm(this.form, AVO_FIELD_LABELS));
       return;
     }
 
@@ -1170,7 +1194,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         switchMap(() => this.workflowSvc.completeWorkflow(this.valuationId, 3, this.vehicleNumber, encodeURIComponent(this.applicantContact)).pipe(catchError(() => of(null)))),
         switchMap(() => this.workflowSvc.startWorkflow(this.valuationId, 4, this.vehicleNumber, encodeURIComponent(this.applicantContact))),
         // AI market-value estimate is best-effort — never block the submit if it fails
-        switchMap(() => this.qualityControlSvc.getValuationDetailsfromAI(this.valuationId, this.vehicleNumber, this.applicantContact).pipe(catchError(() => of(null)))),
+        // The market range used to be requested here: inside the submit pipeline,
+        // with its result discarded and its failures swallowed. Completing step 3 now
+        // warms it server-side, and the approval page asks for it directly, so a
+        // failure is visible there instead of vanishing at submit time.
         switchMap(() => this.workflowSvc.updateWorkflowTable(this.valuationId, this.vehicleNumber, this.applicantContact, {
           workflow: 'QC',
           workflowStepOrder: 4,
@@ -1199,6 +1226,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.error = err.message || 'Submit failed.';
+          this.showSaveError(this.error);
           this.submitInProgress = false;
           this.saving = false;
         }

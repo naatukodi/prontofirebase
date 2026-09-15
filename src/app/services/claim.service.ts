@@ -51,6 +51,48 @@ export class ClaimService {
       .pipe(this.emptyOn404<{ count: number }>({ count: 0 }), map(r => r.count));
   }
 
+  /**
+   * Finds a case by reference, vehicle number, chassis number or engine number.
+   *
+   * Server-side on purpose: chassis and engine number are not on the workflow row at
+   * all, and completed cases past the dashboard's 30-day cutoff are not loaded. The
+   * dashboard's own box can only filter what it already has.
+   */
+  searchCases(term: string): Observable<WFValuation[]> {
+    const params = new HttpParams().set('q', term.trim());
+    return this.http
+      .get<any[]>(`${environment.apiBaseUrl}valuations/search`, { params })
+      .pipe(
+        map(rows => (rows || []).map(r => ({
+          valuationId: r.valuationId,
+          vehicleNumber: r.vehicleNumber,
+          applicantName: r.applicantName,
+          applicantContact: r.applicantContact,
+          workflow: r.workflow,
+          workflowStepOrder: r.workflowStepOrder,
+          status: r.status,
+          createdAt: r.createdAt,
+          completedAt: r.completedAt,
+          name: r.name,
+          valuationType: r.valuationType,
+          referenceNumber: r.referenceNumber,
+          chassisNumber: r.chassisNumber,
+          engineNumber: r.engineNumber,
+          assignedTo: null,
+          assignedToPhoneNumber: null,
+          assignedToEmail: null,
+          assignedToWhatsapp: null,
+          redFlag: null,
+          remarks: null,
+          location: null,
+          updatedAt: r.completedAt ?? r.createdAt,
+        }) as WFValuation)),
+        // A search that cannot reach the server shows nothing rather than an error
+        // page; the box says so and the rest of the dashboard keeps working.
+        catchError(() => of([] as WFValuation[]))
+      );
+  }
+
   getCompletedCases(): Observable<WFValuation[]> {
     return this.http.get<WFValuation[]>(`${this.apiUrl}/workflows/open/completed`)
       .pipe(this.emptyOn404<WFValuation[]>([]));

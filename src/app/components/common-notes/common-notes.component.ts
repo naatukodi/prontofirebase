@@ -7,6 +7,7 @@ import {
   SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { formatDdMmYyyyHhMm } from '../../shared/date-format';
 import { FormsModule } from '@angular/forms';
 import { CommonNoteService } from '../../services/common-note.service';
 import {
@@ -30,15 +31,12 @@ export class CommonNotesComponent
   @Input() entityType: string = '';
   @Input() entityId: string = '';
   @Input() currentUser: string = '';
-  @Input() showHeader = true;
-  @Input() collapsible = false;
 
   notes: CommonNote[] = [];
   isLoading = false;
   error: string | null = null;
   showForm = false;
   newNoteText = '';
-  isCollapsed = false;
 
   private destroy$ = new Subject<void>();
 
@@ -127,10 +125,6 @@ export class CommonNotesComponent
     if (!this.showForm) this.newNoteText = '';
   }
 
-  toggleCollapse(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
-
   closeDialog(): void {
     if (this.dialogRef) {
       this.dialogRef.close();
@@ -138,12 +132,8 @@ export class CommonNotesComponent
   }
 
   formatDate(date: Date | string): string {
-    const d = new Date(date);
-    return (
-      d.toLocaleDateString() +
-      ' ' +
-      d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    );
+    // Was toLocaleDateString(), which renders per the viewer's browser locale.
+    return formatDdMmYyyyHhMm(date);
   }
 
   getNotesCount(): number {

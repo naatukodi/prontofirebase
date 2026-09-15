@@ -48,7 +48,7 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Date of Inspection</mat-label>
-        <input matInput [value]="inspection.dateOfInspection | date:'mediumDate':'+0530'" readonly />
+        <input matInput [value]="inspection.dateOfInspection | date:'dd-MM-yyyy':'+0530'" readonly />
       </mat-form-field>
 
       <mat-form-field appearance="fill">
@@ -77,10 +77,6 @@
       <mat-form-field appearance="fill">
         <mat-label>VIN Plate Present</mat-label>
         <input matInput [value]="inspection.vinPlate ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Body Type</mat-label>
-        <input matInput [value]="inspection.bodyType" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Transmission Type</mat-label>

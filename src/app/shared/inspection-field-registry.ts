@@ -12,11 +12,26 @@ export interface InspectionField {
   label: string;     // display label shown in form and PDF
   type: FieldType;   // 'condition' → GOOD/AVERAGE/POOR  |  'yes-no' → YES/NO
   default?: string;  // default value from Excel checklist
+  /**
+   * Whether this field contributes to its section's score. Defaults to true.
+   *
+   * Distinct from answering N/A, which excludes a single vehicle's field at the
+   * point of inspection. This excludes the field for every vehicle, because the
+   * answer is a fact about the vehicle rather than a judgement of its condition
+   * — ABS being fitted or not is not something to mark a vehicle down for.
+   * Keep in sync with FieldDef.Scored in ProntoPDFGeneration's PdfReportService.
+   */
+  scored?: boolean;
 }
 
 export interface InspectionSection {
   section: string;
   fields: InspectionField[];
+  /**
+   * Whether this section contributes to the overall vehicle score. Defaults to
+   * true. Keep in sync with SectionDef.Scored in ProntoPDFGeneration.
+   */
+  scored?: boolean;
 }
 
 // ─── Options ─────────────────────────────────────────────────────────────────
@@ -57,15 +72,21 @@ export function normalizeVehicleType(raw: string | null | undefined): VehicleTyp
 }
 
 // ─── Page-1 Condition Verdict labels per vehicle type ────────────────────────
-// These are the 4 summary boxes shown on the cover page.
+// The summary boxes shown on the cover page.
+//
+// NOTE: nothing in the portal reads this today — the cover is composed by
+// ProntoPDFGeneration's ResolveCoverVerdicts. It is kept as the written record of
+// which sections the cover speaks for, and must be changed alongside that method.
+// OTHER SYSTEMS was dropped from both when it stopped being scored: a band printed
+// on the cover is a score, and the section no longer has one.
 export const VERDICT_SECTIONS: Record<VehicleTypeKey, string[]> = {
-  cv:  ['ENGINE',   'CABIN',    'LOAD BODY', 'OTHER SYSTEMS'],
-  '4w':['ENGINE',   'EXTERIOR', 'INTERIOR',  'OTHER SYSTEMS'],
-  '2w':['ENGINE',   'EXTERIOR', 'BODY',      'OTHER SYSTEMS'],
-  '3w':['ENGINE',   'CABIN',    'LOAD BODY', 'OTHER SYSTEMS'],
-  ce:  ['ENGINE',   'CABIN',    'ATTACHMENTS','OTHER SYSTEMS'],
-  bus: ['ENGINE',   'COACH',    'BODY ASSY', 'OTHER SYSTEMS'],
-  fe:  ['ENGINE',   'CABIN',    'BODY ASSY', 'OTHER SYSTEMS'],
+  cv:  ['ENGINE',   'CABIN',    'LOAD BODY'],
+  '4w':['ENGINE',   'EXTERIOR', 'INTERIOR'],
+  '2w':['ENGINE',   'EXTERIOR', 'BODY'],
+  '3w':['ENGINE',   'CABIN',    'LOAD BODY'],
+  ce:  ['ENGINE',   'CABIN',    'ATTACHMENTS'],
+  bus: ['ENGINE',   'COACH',    'BODY ASSY'],
+  fe:  ['ENGINE',   'CABIN',    'BODY ASSY'],
 };
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
@@ -116,7 +137,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'yes-no', default: 'YES', scored: false },
       ],
     },
     {
@@ -162,6 +183,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'airConditioner',        label: 'Air Conditioner',          type: 'condition', default: 'NO' },
         { key: 'audio',                  label: 'Audio',                    type: 'condition', default: 'NO' },
@@ -219,7 +243,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'condition',    default: 'NO' },
+        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO', scored: false },
       ],
     },
     {
@@ -265,6 +289,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
         { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
@@ -321,7 +348,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',      label: 'Front Brakes',        type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',       label: 'Rear Brakes',         type: 'condition', default: 'GOOD' },
         { key: 'brakeLeversFluid', label: 'Brake Levers / Fluid',type: 'condition', default: 'GOOD' },
-        { key: 'abs',              label: 'ABS',                 type: 'condition',    default: 'NO' },
+        { key: 'abs',              label: 'ABS',                 type: 'yes-no',    default: 'NO', scored: false },
       ],
     },
     {
@@ -367,6 +394,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'mainStand',       label: 'Main Stand',          type: 'condition', default: 'NO' },
         { key: 'sideStand',       label: 'Side Stand',          type: 'condition', default: 'NO' },
@@ -424,7 +454,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'condition',    default: 'NO' },
+        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO', scored: false },
       ],
     },
     {
@@ -470,6 +500,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
         { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
@@ -573,6 +606,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'swingMechanism', label: 'Swing Mechanism', type: 'condition',    default: 'NO' },
         { key: 'trackChains',    label: 'Track Chains',    type: 'condition',    default: 'NO' },
@@ -630,7 +666,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'yes-no', default: 'YES', scored: false },
       ],
     },
     {
@@ -676,6 +712,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
         { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
@@ -779,6 +818,9 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     },
     {
       section: 'OTHER SYSTEMS',
+      // Accessories and fitments, not condition findings — recorded and printed,
+      // but they no longer pull the vehicle's score around.
+      scored: false,
       fields: [
         { key: 'muffler',        label: 'Muffler',         type: 'condition',    default: 'NO' },
         { key: 'airFilter',      label: 'Air Filter',      type: 'condition',    default: 'NO' },

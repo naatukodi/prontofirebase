@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs'; // ✅ ADD 'of'
-import { catchError } from 'rxjs/operators';    
+import { catchError, map } from 'rxjs/operators';    
 import { VehicleDetails } from '../models/VehicleDetails';
 import { WorkflowService } from '../services/workflow.service';
 import { environment } from '../../environments/environment';
@@ -95,6 +95,53 @@ export class ValuationService {
       + `&assignedToEmail=${encodeURIComponent(email)}`
       + `&assignedToWhatsapp=${encodeURIComponent(whatsapp)}`;
     return this.http.post<void>(url, '');
+  }
+
+  /**
+   * The case's human-readable reference, e.g. VG-519499-K.
+   *
+   * Idempotent on the server: it returns the stored value, or assigns one if the
+   * background mint at registration has not landed yet. Safe to call on any page.
+   */
+  getReferenceNumber(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string
+  ): Observable<string | null> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact);
+
+    return this.http
+      .get<{ referenceNumber: string }>(`${this.baseUrl}/${valuationId}/reference`, { params })
+      .pipe(
+        map(r => r?.referenceNumber ?? null),
+        // A missing reference must never block a page: every caller falls back to
+        // showing nothing rather than an error.
+        catchError(() => of(null))
+      );
+  }
+
+  /**
+   * The AI market range for a case.
+   *
+   * Cheap on the server unless the case has no stored range, in which case it
+   * generates one. Pass force to discard the stored value and ask again.
+   */
+  getMarketRange(
+    valuationId: string,
+    vehicleNumber: string,
+    applicantContact: string,
+    force = false
+  ): Observable<{ lowRange?: number | null; midRange?: number | null; highRange?: number | null } | null> {
+    const params = new HttpParams()
+      .set('vehicleNumber', vehicleNumber)
+      .set('applicantContact', applicantContact)
+      .set('force', String(force));
+
+    return this.http
+      .get<any>(`${this.baseUrl}/${valuationId}/valuation`, { params })
+      .pipe(catchError(() => of(null)));
   }
 
   getFinalReport(

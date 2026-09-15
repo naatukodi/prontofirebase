@@ -1,12 +1,15 @@
-/* Payment dialog — head / body / foot panel.
-   Colours come from the global brand tokens rather than fixed hex, so the
-   dialog follows whichever company the session is in (Vehga teal, Pronto green)
-   instead of pinning one brand's accent into a shared screen. */
+/* Payment dialog contents.
 
-/* The dialog surface itself is an ancestor of this host, so ::ng-deep cannot
-   reach it — its padding is stripped from styles.css via the panel class set in
-   workflow-buttons.component.ts. Here we only lay out the panel's own contents:
-   head and foot pinned, body scrolling between them. */
+   The panel shell — head, scrolling body, foot, and the buttons in it —
+   is shared with the other case dialogs and lives in styles.css under
+   .case-dialog-panel. What is left here is only what payment itself adds:
+   its field grid, its controls, the live-clock chip and the read-back of
+   whatever is already saved on the case.
+
+   Colours come from the global brand tokens rather than fixed hex, so the
+   dialog follows whichever company the session is in (Vehga teal, Pronto
+   green) instead of pinning one brand's accent into a shared screen. */
+
 :host {
   display: flex;
   flex-direction: column;
@@ -16,66 +19,7 @@
   color: var(--ink-900);
 }
 
-/* ── Head ─────────────────────────────────────────────────────────────── */
-.pay-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 22px 26px;
-  border-bottom: 1px solid var(--line);
-  flex-shrink: 0;
-}
-
-.pay-title {
-  font-weight: 800;
-  font-size: 18px;
-  line-height: 1.25;
-  color: var(--ink-900);
-}
-
-.pay-sub {
-  font-size: 12.5px;
-  color: var(--ink-500);
-  margin-top: 2px;
-}
-
-.pay-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--brand-50);
-  color: var(--ink-500);
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
-
-  &:hover { background: var(--brand-100); color: var(--ink-900); }
-  &:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-}
-
-/* ── Body ─────────────────────────────────────────────────────────────── */
-.pay-body {
-  padding: 24px 26px;
-  overflow-y: auto;
-  min-height: 0;
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.pay-loading {
-  text-align: center;
-  padding: 20px;
-  color: var(--ink-500);
-  font-size: 13.5px;
-}
-
+/* ── Field layout ─────────────────────────────────────────────────────── */
 .pay-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -260,53 +204,8 @@ select.input {
   }
 }
 
-/* ── Foot ─────────────────────────────────────────────────────────────── */
-.pay-foot {
-  padding: 16px 26px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 9px;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 13.5px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  padding: 11px 20px;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-
-  &:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
-}
-
-.btn--primary {
-  background: var(--brand);
-  color: #fff;
-
-  &:hover:not(:disabled) { background: var(--brand-700); }
-}
-
-.btn--secondary {
-  background: var(--surface);
-  color: var(--ink-900);
-  border-color: var(--line);
-
-  &:hover { border-color: var(--brand); color: var(--brand-700); }
-}
-
 /* ── Narrow screens ───────────────────────────────────────────────────── */
 @media (max-width: 560px) {
-  .pay-head, .pay-body, .pay-foot { padding-left: 18px; padding-right: 18px; }
   .pay-grid,
   .saved-card__grid { grid-template-columns: 1fr; }
-  .pay-foot .btn { flex: 1; justify-content: center; }
 }
