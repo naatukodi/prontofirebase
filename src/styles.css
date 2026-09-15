@@ -406,7 +406,8 @@ button[mat-raised-button][color="warn"] {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 220px;
+    /* 220px clipped ordinary stakeholder and applicant names mid-word. */
+    max-width: 340px;
     vertical-align: middle;
     font-size: 0.85rem;
     color: var(--ink-700);
