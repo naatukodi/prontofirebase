@@ -242,7 +242,7 @@ input::placeholder, textarea::placeholder {
 .pg-card-title {
     background: transparent;
     color: var(--brand-700);
-    padding: 14px 20px 10px;
+    padding: 12px 20px 9px;
     font-size: 0.95rem;
     font-weight: 800;
     display: flex;
@@ -260,7 +260,7 @@ input::placeholder, textarea::placeholder {
     flex-shrink: 0;
 }
 .pg-card-body {
-    padding: 20px 24px;
+    padding: 14px 20px;
 }
 
 /* ── Form sections ─────────────────────────────────────────────── */
@@ -448,7 +448,7 @@ button[mat-raised-button][color="warn"] {
     color: var(--brand-700) !important;
     font-weight: 800 !important;
     font-size: 0.9rem !important;
-    padding: 13px 20px 9px !important;
+    padding: 11px 20px 8px !important;
     margin: 0 !important;
     line-height: 1.4;
     letter-spacing: 0.02em;
@@ -460,55 +460,78 @@ button[mat-raised-button][color="warn"] {
 .pg-wrap fieldset.nested-group > div,
 .pg-wrap fieldset.nested-group > mat-form-field,
 .pg-wrap fieldset.nested-group > app-common-notes {
-    padding: 18px 20px;
+    padding: 14px 20px;
     box-sizing: border-box;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TWO-UP SECTION LAYOUT — sections sit side by side to cut scrolling.
-   Applies to any .pg-content or form that directly holds section
-   cards (fieldset.nested-group / .pg-card) on view & update pages.
+   TWO-COLUMN SECTION LAYOUT — section cards stack down two columns to
+   cut scrolling, so a short card never leaves a hole beside a tall one.
+   Cards fill the left column top to bottom, then the right. Applies to
+   any .pg-content or form that directly holds section cards
+   (fieldset.nested-group / .pg-card) on view & update pages.
    ═══════════════════════════════════════════════════════════════ */
 .pg-content:has(> fieldset.nested-group),
 .pg-content:has(> .pg-card),
 form:has(> fieldset.nested-group),
 form:has(> .pg-card) {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px 20px;
-    align-items: start;
+    display: block;
+    column-count: 2;
+    column-gap: 16px;
 }
 
-/* Anything that is not a section card spans the full row
+/* A card never splits across the two columns */
+.pg-content:has(> fieldset.nested-group) > fieldset.nested-group,
+.pg-content:has(> .pg-card) > .pg-card,
+form:has(> fieldset.nested-group) > fieldset.nested-group,
+form:has(> .pg-card) > .pg-card {
+    break-inside: avoid;
+    margin-bottom: 14px;
+}
+
+/* Anything that is not a section card spans both columns
    (workflow buttons, banners, action rows, nested wrappers) */
 .pg-content:has(> fieldset.nested-group) > *:not(fieldset.nested-group):not(.pg-card),
 .pg-content:has(> .pg-card) > *:not(fieldset.nested-group):not(.pg-card),
 form:has(> fieldset.nested-group) > *:not(fieldset.nested-group):not(.pg-card),
 form:has(> .pg-card) > *:not(fieldset.nested-group):not(.pg-card) {
-    grid-column: 1 / -1;
+    column-span: all;
 }
 
 /* Long-content sections read better across the full width:
-   remarks (textarea), notes, and sections holding tables */
+   remarks (textarea), notes, and sections holding tables.
+   Any other card can ask for the full width with .pg-card--wide. */
 .pg-content > fieldset.nested-group:has(textarea),
 .pg-content > .pg-card:has(textarea),
 .pg-content > fieldset.nested-group:has(app-common-notes),
 .pg-content > .pg-card:has(app-common-notes),
 .pg-content > .pg-card:has(.pg-table),
+.pg-content > .pg-card--wide,
 form > fieldset.nested-group:has(textarea),
 form > .pg-card:has(textarea),
 form > fieldset.nested-group:has(app-common-notes),
 form > .pg-card:has(app-common-notes),
-form > .pg-card:has(.pg-table) {
-    grid-column: 1 / -1;
+form > .pg-card:has(.pg-table),
+form > .pg-card--wide {
+    column-span: all;
 }
 
-/* Grid gap replaces the cards' own bottom margins */
-.pg-content:has(> fieldset.nested-group) > fieldset.nested-group,
-.pg-content:has(> .pg-card) > .pg-card,
-form:has(> fieldset.nested-group) > fieldset.nested-group,
-form:has(> .pg-card) > .pg-card {
-    margin-bottom: 0;
+/* A wide card's fields spread across its whole width instead of leaving
+   empty field slots at the end of a short row. */
+.pg-wrap .pg-card--wide .pg-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Gaps where full-width sections meet the columns. Where the columns end,
+   the last card's bottom margin is dropped, so a full-width section straight
+   after a stacked card brings its own gap; and a full-width section right
+   before the cards (a summary box, an action row) gets one below it. */
+:is(.pg-content, form) > :is(fieldset.nested-group:not(.pg-card--wide, :has(textarea, app-common-notes)), .pg-card:not(.pg-card--wide, :has(textarea, app-common-notes, .pg-table)))
+    + :is(:not(fieldset.nested-group, .pg-card), .pg-card--wide, fieldset.nested-group:has(textarea, app-common-notes), .pg-card:has(textarea, app-common-notes, .pg-table)) {
+    margin-top: 14px;
+}
+:is(.pg-content, form):has(> fieldset.nested-group, > .pg-card) > :not(fieldset.nested-group, .pg-card):has(+ :is(fieldset.nested-group, .pg-card)) {
+    margin-bottom: 14px;
 }
 
 /* Narrow screens: back to a single column */
@@ -517,7 +540,7 @@ form:has(> .pg-card) > .pg-card {
     .pg-content:has(> .pg-card),
     form:has(> fieldset.nested-group),
     form:has(> .pg-card) {
-        grid-template-columns: 1fr;
+        column-count: 1;
     }
 }
 
@@ -544,7 +567,7 @@ form:has(> .pg-card) > .pg-card {
 .pg-wrap .pg-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px 14px;
+    gap: 10px 14px;
     align-items: start;
 }
 
@@ -567,7 +590,7 @@ form:has(> .pg-card) > .pg-card {
 .pg-wrap .mat-mdc-form-field .duplicate-indicator {
     position: absolute;
     right: 0;
-    top: 26px;
+    top: 22px;
     font-size: 0.95rem;
     line-height: 1;
     pointer-events: none;
@@ -593,7 +616,7 @@ form:has(> .pg-card) > .pg-card {
 }
 .pg-wrap .mat-mdc-form-field-infix {
     min-height: unset;
-    padding: 0 0 9px !important;
+    padding: 0 0 2px !important;
     border-top: none !important;
 }
 
@@ -608,7 +631,7 @@ form:has(> .pg-card) > .pg-card {
     letter-spacing: 0.07em;
     color: var(--ink-500) !important;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     display: block;
 }
 .pg-wrap .mat-mdc-floating-label.mdc-floating-label { position: static !important; }
@@ -629,6 +652,7 @@ form:has(> .pg-card) > .pg-card {
 /* Editable fields keep a faint underline for affordance; readonly
    view fields stay fully bare like the reference */
 .pg-wrap .mat-mdc-form-field:not(:has(input[readonly])) .mat-mdc-form-field-infix {
+    padding-bottom: 6px !important;
     border-bottom: 1px solid var(--line);
     transition: border-color 0.15s ease;
 }
@@ -636,14 +660,24 @@ form:has(> .pg-card) > .pg-card {
     border-bottom-color: var(--brand);
 }
 
-/* Trim the hint/error row so it doesn't add box-like weight */
+/* Material keeps an empty line under every field in case a hint or error
+   appears — that line was most of the space between rows. Collapse it
+   (what subscriptSizing="dynamic" does), so a field is only as tall as its
+   label and value, and a hint or error pushes the row down when present. */
 .pg-wrap .mat-mdc-form-field-subscript-wrapper {
     padding: 0 !important;
-    margin-top: 2px;
+    margin-top: 0;
+}
+.pg-wrap .mat-mdc-form-field-bottom-align::before {
+    content: none;
 }
 .pg-wrap .mat-mdc-form-field-hint-wrapper,
 .pg-wrap .mat-mdc-form-field-error-wrapper {
+    position: static;
     padding: 0 !important;
+}
+.pg-wrap .mat-mdc-form-field-error-wrapper {
+    padding-top: 3px !important;
 }
 
 /* "fill" appearance draws an animated underline (line-ripple) and
