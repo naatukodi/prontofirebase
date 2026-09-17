@@ -3,8 +3,9 @@ export interface Inspection {
   vehicleInspectedBy: string;
   dateOfInspection: string;      // ISO date‐time string
   inspectionLocation: string;
-  vehicleMoved: boolean;
-  engineStarted: boolean;
+  // FUNCTIONALITY answers (YES / NO / GOOD …) since the 2026-09 checklist; true/false before it.
+  vehicleMoved: string;
+  engineStarted: string;
   odometer: number;
   vinPlate: boolean;
   bodyType: string;
@@ -241,4 +242,13 @@ export interface Inspection {
   airFilter?: string;
   dropArm?: string;
   attachmentHitch?: string;
+
+  // 2026-09 checklist
+  fluidLeaks?: string;
+  clusterUnit?: string;
+  warningIndicatorLights?: string;
+  numberOfTyres?: string;   // typed as a number, stored as text
+  missingTyres?: string;
+  testDrive?: string;
+  warningLights?: string;
 }

@@ -43,6 +43,24 @@ const AVO_FIELD_LABELS: Record<string, string> = {
   inspectionLocation: 'Inspection location',
   vinPlate: 'VIN plate present',
   transmissionType: 'Transmission type',
+  numberOfTyres: 'Number of tyres',
+  missingTyres: 'Missing tyres',
+};
+
+/** Blank, or a whole number of 0 or more. A tyre count is typed, so it can be anything. */
+const wholeNumber: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
+  const v = c.value;
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 ? null : { wholeNumber: true };
+};
+
+/** Missing tyres can't be more than the vehicle has, when both have been entered. */
+const notMoreThanTyres: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
+  const total = c.parent?.get('numberOfTyres')?.value;
+  const v = c.value;
+  if (v === '' || v === null || v === undefined || total === '' || total === null || total === undefined) return null;
+  return Number(v) <= Number(total) ? null : { moreThanTyres: true };
 };
 
 @Component({
@@ -129,6 +147,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   // schedule change detection and the badges would freeze at their first value.
   sectionScores: Record<string, number | null> = {};
   private scoreSub?: Subscription;
+  private tyreSub?: Subscription;
 
   /** Colour band for a score — drives the badge class. */
   band(score: number | null): ScoreBand | null {
@@ -161,7 +180,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'chassisCondition','steeringSystem','brakeSystem','suspensionSystem','fuelSystem',
       'transmissionType','bodyCondition','cabinCondition','exteriorCondition','interiorCondition',
       'gearboxAssembly','clutchSystem','driveShafts','propellerShaft','differentialAssy',
-      'radiator','interCooler','allHosePipes','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'radiator','interCooler','allHosePipes','paintWork','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
       'airBags','sunRoof','sideFenders','headLamps','batteryCondition'
     ],
@@ -173,7 +192,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
       'upholstery','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'rightSideWing','leftSideWing','tailGate','loadFloor','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
       'hydraulicLift','sideUnderRunProtection','headLamps','batteryCondition','sunRoof','airBags'
     ],
@@ -182,7 +201,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'chassisCondition','steeringSystem','brakeSystem','electricAssembly','suspensionSystem',
       'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','steeringHandle','frontForkAssy','mudguards','frontFairing','rearCowls',
-      'seats','speedoMeter','front','rear','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'seats','speedoMeter','front','rear','paintWork','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'mainStand','sideStand','frontMudGuard','rearMudGuard','fuelTankCondition','chainSprocket',
       'frontBrakeCondition','rearBrakeCondition','headLight','tailLight','indicators',
       'hornCondition','mirrorCondition','seatCondition','handleBarGrips','footRest','alloyWheelRim'
@@ -194,7 +213,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'interiorCondition','gearboxAssembly','clutchSystem','driveShafts','radiator','interCooler',
       'allHosePipes','steeringColumn','steeringBox','steeringLinkages','steeringHandle',
       'frontForkAssy','mudguards','allGlasses','dashboard','seats','upholstery','interiorTrims',
-      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'front','rear','axles','airConditioner','audio','paintWork','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard'
     ],
     'tractor': [
@@ -203,7 +222,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'fuelSystem','transmissionType','bodyCondition','exteriorCondition','gearboxAssembly',
       'clutchSystem','differentialAssy','radiator','interCooler','allHosePipes','steeringWheel',
       'steeringColumn','steeringBox','steeringLinkages','bonnet','bumpers','mudguards','seats',
-      'front','rear','axles','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'front','rear','axles','paintWork','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'rightIndividualBrakes','leftIndividualBrakes','threePointLinkage','powerTakeOff',
       'hitchSystem','hydraulicLiftFe','frontWeights','rearWeights','ropsCanopy',
       'frontTyreCondition','rearTyreCondition','implementAttachments','fuelTankFe','frontAxleFe','rearDrawbar'
@@ -215,7 +234,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'interiorCondition','gearboxAssembly','clutchSystem','radiator','interCooler','allHosePipes',
       'steeringWheel','steeringColumn','steeringBox','steeringLinkages','bonnet','mudguards',
       'allGlasses','boom','bucket','chainTrack','hydraulicCylinders','swingUnit','dashboard',
-      'seats','upholstery','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'seats','upholstery','interiorTrims','front','rear','axles','airConditioner','paintWork','vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'retarder','differentialLock','pto','hydraulicSystem','boomArm','bucketCondition',
       'bladeCondition','liftingCapacity','tyreConditionCe','underCarriage','crawlerTracks',
       'steelRims','attachmentCondition','cabCondition','counterWeight','rockBreaker'
@@ -228,7 +247,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       'radiator','interCooler','allHosePipes','steeringWheel','steeringColumn','steeringBox',
       'steeringLinkages','bumpers','doors','mudguards','allGlasses','dashboard','seats',
       'upholstery','interiorTrims','front','rear','axles','airConditioner','audio','paintWork',
-      'vinPlate','vehicleMoved','engineStarted','roadWorthyCondition','otherAccessoryFitment',
+      'vinPlate','roadWorthyCondition','otherAccessoryFitment',
       'parkingBrake','abs','tailLightsIndicators','wiringAssy','frontCrashGuard','rearCrashGuard',
       'coachCondition','passengerSeats','emergencyExits','luggageCompartment','acSystem','destinationBoard','sideMirrors'
     ]
@@ -313,6 +332,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.scoreSub?.unsubscribe();
+    this.tyreSub?.unsubscribe();
   }
 
   showField(key: string): boolean {
@@ -361,8 +381,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       vehicleInspectedBy: ['', Validators.required],
       dateOfInspection: ['', [Validators.required, this.pastOrTodayValidator()]],
       inspectionLocation: ['', Validators.required],
-      vehicleMoved: [false],
-      engineStarted: [false],
+      // FUNCTIONALITY dropdowns now (the registry renders them), not General Condition's Yes/No.
+      vehicleMoved: [''],
+      engineStarted: [''],
       // A vehicle cannot have travelled 0 km; 0 was being submitted as a real reading.
       odometer: [null, [Validators.required, Validators.min(1)]],
       vinPlate: [false],
@@ -592,7 +613,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       muffler: [''],
       airFilter: [''],
       dropArm: [''],
-      attachmentHitch: ['']
+      attachmentHitch: [''],
+
+      // 2026-09 checklist
+      fluidLeaks: [''],
+      clusterUnit: [''],
+      warningIndicatorLights: [''],
+      numberOfTyres: ['', wholeNumber],
+      missingTyres: ['', [wholeNumber, notMoreThanTyres]],
+      testDrive: [''],
+      warningLights: ['']
     });
 
     // Keep the section badges in step with what the inspector is choosing.
@@ -601,6 +631,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       this.recomputeScores();
       this.cdr.detectChanges();
     });
+
+    // Missing tyres is checked against the total, so changing the total re-checks it.
+    this.tyreSub?.unsubscribe();
+    this.tyreSub = this.form.get('numberOfTyres')!.valueChanges.subscribe(() =>
+      this.form.get('missingTyres')!.updateValueAndValidity({ emitEvent: false }));
     this.recomputeScores();
   }
 
@@ -647,13 +682,23 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     // Normalize string dropdown values to UPPERCASE to match CONDITION_OPTIONS / YES_NO_OPTIONS
     const nc = (v: any): string => typeof v === 'string' && v ? v.trim().toUpperCase() : '';
 
+    // Vehicle Moved / Engine Started were true/false before the 2026-09 checklist. The API
+    // now returns YES / NO for old cases, but read a raw boolean the same way regardless.
+    const yn = (v: any): string => {
+      const b = toBool(v);
+      return b === null ? nc(v) : b ? 'YES' : 'NO';
+    };
+
+    // Tyre counts go into a number box, so keep the digits rather than upper-casing them.
+    const count = (v: any): string => v === null || v === undefined ? '' : String(v).trim();
+
     const v = this.form;
     v.patchValue({
       vehicleInspectedBy: data.vehicleInspectedBy || '',
       dateOfInspection: this.toLocalDateOnly(data.dateOfInspection),
       inspectionLocation: data.inspectionLocation || '',
-      vehicleMoved: toBool(data.vehicleMoved) ?? false,
-      engineStarted: toBool(data.engineStarted) ?? false,
+      vehicleMoved: yn(data.vehicleMoved),
+      engineStarted: yn(data.engineStarted),
       odometer: data.odometer ?? null,
       vinPlate: toBool(data.vinPlate) ?? false,
       bodyType: data.bodyType || '',
@@ -873,7 +918,16 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       muffler: nc((data as any).muffler),
       airFilter: nc((data as any).airFilter),
       dropArm: nc((data as any).dropArm),
-      attachmentHitch: nc((data as any).attachmentHitch)
+      attachmentHitch: nc((data as any).attachmentHitch),
+
+      // 2026-09 checklist
+      fluidLeaks: nc(data.fluidLeaks),
+      clusterUnit: nc(data.clusterUnit),
+      warningIndicatorLights: nc(data.warningIndicatorLights),
+      numberOfTyres: count(data.numberOfTyres),
+      missingTyres: count(data.missingTyres),
+      testDrive: nc(data.testDrive),
+      warningLights: nc(data.warningLights)
     });
   }
 
@@ -978,8 +1032,6 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
    * deliberately absent — the inspector fills those in by hand.
    */
   private static readonly STATIC_DEFAULTS: { control: string; visibility: string; value: any }[] = [
-    { control: 'vehicleMoved',          visibility: 'vehicleMoved',          value: true   },
-    { control: 'engineStarted',         visibility: 'engineStarted',         value: true   },
     { control: 'vinPlate',              visibility: 'vinPlate',              value: true   },
     { control: 'otherAccessoryFitment', visibility: 'otherAccessoryFitment', value: false  },
     { control: 'roadWorthyCondition',   visibility: 'roadWorthyCondition',   value: true   },
@@ -1004,6 +1056,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       for (const field of section.fields) {
         const control = this.form.get(field.key);
         if (control && isBlank(control.value)) {
+          // A number box with no default (Number of Tyres) is left for the inspector to count.
+          if (field.type === 'number' && field.default === undefined) continue;
           defaults[field.key] = field.default ?? (field.type === 'condition' ? 'GOOD' : 'YES');
         }
       }

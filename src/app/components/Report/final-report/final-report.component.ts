@@ -18,7 +18,7 @@ import { WorkflowButtonsComponent } from '../../workflow-buttons/workflow-button
 import { AuthorizationService } from '../../../services/authorization.service';
 import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
-import { scoreInspection, SectionScore, mapVerdict } from '../../../shared/inspection-score';
+import { scoreInspection, SectionScore, mapVerdict, scoreBand } from '../../../shared/inspection-score';
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 
 @Component({
@@ -72,6 +72,21 @@ export class FinalReportComponent implements OnInit, OnDestroy {
   // ── Section scores, carried over from the AVO inspection ──
   sectionScores: SectionScore[] = [];
   overallScore: number | null = null;
+
+  /** The BRAKES card's score. The 2026-09 checklist no longer asks the single Brake System question this tile used to show. */
+  get brakesScore(): number | null {
+    return this.sectionScores.find(s => s.section === 'BRAKES')?.score ?? null;
+  }
+
+  /** Tile colour for a 0–10 score, on the same bands as the section badges. */
+  scoreClass(score: number | null): string {
+    switch (scoreBand(score)) {
+      case 'good':    return 'cv-green';
+      case 'average': return 'cv-amber';
+      case 'poor':    return 'cv-red';
+      default:        return '';
+    }
+  }
 
   // ── Hero lightbox (browses ALL photos, unaffected by QC's gallery selection) ──
   lightboxOpen = false;
