@@ -58,18 +58,11 @@
     </div>
   </fieldset>
 
-  <!-- 2. GENERAL CONDITION -->
+  <!-- 2. GENERAL CONDITION — Vehicle Moved and Engine Started are under FUNCTIONALITY below.
+       They used to read `x ? 'Yes' : 'No'`, which shows the text "NO" as Yes. -->
   <fieldset class="nested-group">
     <legend>General Condition</legend>
     <div class="grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Vehicle Moved</mat-label>
-        <input matInput [value]="inspection.vehicleMoved ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Engine Started</mat-label>
-        <input matInput [value]="inspection.engineStarted ? 'Yes' : 'No'" readonly />
-      </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Odometer (km)</mat-label>
         <input matInput [value]="inspection.odometer" readonly />

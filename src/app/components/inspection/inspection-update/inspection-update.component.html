@@ -83,23 +83,10 @@
     </fieldset>
 
     <!-- 2. GENERAL CONDITION -->
-    <fieldset class="nested-group" *ngIf="hv(['vehicleMoved','engineStarted','odometer','vinPlate','bodyType','tyreCondition','otherAccessoryFitment','roadWorthyCondition'])">
+    <!-- Vehicle Moved and Engine Started are asked under FUNCTIONALITY below. -->
+    <fieldset class="nested-group" *ngIf="hv(['odometer','vinPlate','bodyType','tyreCondition','otherAccessoryFitment','roadWorthyCondition'])">
       <legend>General Condition</legend>
       <div class="grid">
-        <mat-form-field *ngIf="showField('vehicleMoved')" appearance="fill">
-          <mat-label>Vehicle Moved</mat-label>
-          <mat-select formControlName="vehicleMoved">
-            <mat-option [value]="true">Yes</mat-option>
-            <mat-option [value]="false">No</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field *ngIf="showField('engineStarted')" appearance="fill">
-          <mat-label>Engine Started</mat-label>
-          <mat-select formControlName="engineStarted">
-            <mat-option [value]="true">Yes</mat-option>
-            <mat-option [value]="false">No</mat-option>
-          </mat-select>
-        </mat-form-field>
         <mat-form-field *ngIf="showField('odometer')" appearance="fill">
           <mat-label>Odometer (km)</mat-label>
           <input matInput type="number" formControlName="odometer" />
@@ -167,6 +154,12 @@
               <mat-select [formControlName]="field.key">
                 <mat-option *ngFor="let opt of yesNoOptions" [value]="opt">{{ opt }}</mat-option>
               </mat-select>
+            </mat-form-field>
+            <mat-form-field *ngIf="field.type === 'number'" appearance="fill">
+              <mat-label>{{ field.label }}</mat-label>
+              <input matInput type="number" min="0" step="1" inputmode="numeric" [formControlName]="field.key" />
+              <mat-error *ngIf="form.get(field.key)?.hasError('wholeNumber')">Enter a whole number, 0 or more</mat-error>
+              <mat-error *ngIf="form.get(field.key)?.hasError('moreThanTyres')">Can't be more than the number of tyres</mat-error>
             </mat-form-field>
           </ng-container>
         </div>

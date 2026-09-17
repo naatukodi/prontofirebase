@@ -202,7 +202,7 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   /** What the reviewer actually sees on the form — shown in the notes verbatim. */
   const ratingShown   = (input.overallRating ?? '').toString().trim();
   const engineCond    = (ins?.engineCondition      || '').toUpperCase();
-  // Tyre condition now comes from the registry field in BASIC SYSTEMS. The old
+  // Tyre condition now comes from the registry field in TIRES. The old
   // General Condition control was replaced by Transmission Type, so it is only
   // a fallback for cases inspected before that swap.
   const tyreCond      = (ins?.tyreCondition || ins?.overallTyreCondition || '').toUpperCase();
@@ -534,8 +534,23 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   const missing: string[] = [];
   if (vk && ins) {
     for (const section of getFieldRegistry(vk)) {
+      // Engine Started, Test Drive and the rest are checks, not parts: a NO there is
+      // already in the score and is not something missing from the vehicle.
+      if (section.section === 'FUNCTIONALITY') continue;
       for (const f of section.fields) {
-        const v = mapVerdict((ins as unknown as Record<string, unknown>)[f.key] as string);
+        const raw = (ins as unknown as Record<string, unknown>)[f.key];
+        // Counts: 0 missing tyres is not damage, and the total is not a finding at all.
+        if (f.type === 'number') {
+          if (f.scoring === 'zero-is-good' && Number(raw) > 0) missing.push(`${f.label} (${raw})`);
+          continue;
+        }
+        // Fluid Leaks asks about a fault: NO is the good answer, YES is the finding.
+        if (f.scoring === 'no-is-good') {
+          const answer = String(raw ?? '').trim().toLowerCase();
+          if (answer === 'no') continue;
+          if (answer === 'yes') { damaged.push(f.label); continue; }
+        }
+        const v = mapVerdict(raw as string);
         if (v === 'DAMAGED' || v === 'POOR' || v === 'BAD') damaged.push(f.label);
         else if (v === 'MISSING' || v === 'NO') missing.push(f.label);
       }

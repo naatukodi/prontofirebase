@@ -207,8 +207,8 @@
           </div>
           <div class="rp-cond-item">
             <div class="rp-cond-label">Engine Started</div>
-            <div class="rp-cond-val" [class.cv-green]="report.inspectionDetails?.engineStarted" [class.cv-red]="!report.inspectionDetails?.engineStarted">
-              {{ report.inspectionDetails?.engineStarted ? 'YES' : 'NO' }}
+            <div class="rp-cond-val" [ngClass]="condClass(report.inspectionDetails?.engineStarted)">
+              {{ report.inspectionDetails?.engineStarted || '—' }}
             </div>
           </div>
           <div class="rp-cond-item">
@@ -222,8 +222,8 @@
             <div class="rp-cond-val cv-plain">{{ report.inspectionDetails?.transmissionType || '—' }}</div>
           </div>
           <div class="rp-cond-item">
-            <div class="rp-cond-label">Brake System</div>
-            <div class="rp-cond-val" [ngClass]="condClass(report.inspectionDetails?.brakeSystem)">{{ report.inspectionDetails?.brakeSystem || '—' }}</div>
+            <div class="rp-cond-label">Brakes</div>
+            <div class="rp-cond-val" [ngClass]="scoreClass(brakesScore)">{{ brakesScore !== null ? (brakesScore | number:'1.1-1') + ' / 10' : '—' }}</div>
           </div>
         </div>
         <div class="rps-remarks" *ngIf="clRemarks['rec']">

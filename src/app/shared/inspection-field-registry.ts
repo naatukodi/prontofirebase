@@ -1,17 +1,29 @@
 // inspection-field-registry.ts
 // Single source of truth for inspection form fields across all vehicle types.
-// Matches the VEHGA VEHICLE INSPECTION CHECKLIST Excel (all 7 sheets).
+// Matches the VEHGA VEHICLE INSPECTION CHECKLIST Excel
+// (VEHGA_REPORT_ALL_SEGMENTS_UPDATED, all 7 sheets, 2026-09). Sections run down the
+// sheet's MECHANICAL column, then STRUCTURAL, then FUNCTIONALITY and OTHER SYSTEMS.
 // Both Angular and Flutter reference the same structure — keep in sync with
 // inspection_field_registry.dart in prontomoto_app/lib/.
 
 export type FieldType = 'condition' | 'yes-no' | 'text' | 'date' | 'number';
 export type VehicleTypeKey = 'cv' | '4w' | '2w' | '3w' | 'ce' | 'bus' | 'fe';
 
+/**
+ * How a field's answer turns into points (see answerPoints in inspection-score.ts).
+ * - 'condition' (the default): GOOD 8.5, AVERAGE 5.5 … NO 1.0.
+ * - 'no-is-good': the question asks about a fault, so NO is the good answer —
+ *   Fluid Leaks: NO scores 8.5 and YES scores 1.0. Other answers score as usual.
+ * - 'zero-is-good': a count of faults — Missing Tyres: 0 scores 8.5, 1 or more 1.0.
+ */
+export type FieldScoring = 'condition' | 'no-is-good' | 'zero-is-good';
+
 export interface InspectionField {
   key: string;       // camelCase — matches Inspection model property
   label: string;     // display label shown in form and PDF
-  type: FieldType;   // 'condition' → GOOD/AVERAGE/POOR  |  'yes-no' → YES/NO
-  default?: string;  // default value from Excel checklist
+  type: FieldType;   // 'condition' → the CONDITION_OPTIONS dropdown  |  'number' → a whole-number box
+  default?: string;  // prefilled by "Set Default Values"; a field without one is left for the inspector
+  scoring?: FieldScoring;
   /**
    * Whether this field contributes to its section's score. Defaults to true.
    *
@@ -98,18 +110,46 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   cv: [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'cabinAssy',        label: 'Cabin Assy',        type: 'condition', default: 'GOOD' },
-        { key: 'loadBodyAssy',     label: 'Load Body Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TRANSMISSION SYSTEM',
+      fields: [
+        { key: 'gearBoxAssy',     label: 'Gearbox Assy',      type: 'condition', default: 'GOOD' },
+        { key: 'clutchSystem',    label: 'Clutch System',     type: 'condition', default: 'GOOD' },
+        { key: 'differentialAssy',label: 'Differential Assy', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'BRAKES',
+      fields: [
+        { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
+        { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
+        { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'YES', scored: false },
+      ],
+    },
+    {
+      section: 'STEERING SYSTEM',
+      fields: [
+        { key: 'steeringWheel',  label: 'Steering Wheel',  type: 'condition', default: 'GOOD' },
+        { key: 'steeringColumn', label: 'Steering Column', type: 'condition', default: 'GOOD' },
+        { key: 'steeringBox',    label: 'Steering Box',    type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'SUSPENSION SYSTEM',
+      fields: [
+        { key: 'frontSuspension', label: 'Front Suspension',   type: 'condition', default: 'GOOD' },
+        { key: 'rearSuspension',  label: 'Rear Suspension',    type: 'condition', default: 'GOOD' },
+        { key: 'axles',           label: 'Front & Rear Axles', type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -125,60 +165,42 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'LOAD BODY',
       fields: [
-        { key: 'rightSideGate', label: 'Right Side Gate', type: 'condition', default: 'GOOD' },
-        { key: 'leftSideGate',  label: 'Left Side Gate',  type: 'condition', default: 'GOOD' },
-        { key: 'tailGate',      label: 'Tail Gate',       type: 'condition', default: 'GOOD' },
-        { key: 'loadFloor',     label: 'Load Floor',      type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BRAKES',
-      fields: [
-        { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
-        { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
-        { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no', default: 'YES', scored: false },
+        { key: 'bodyCondition',    label: 'Body Condition',          type: 'condition', default: 'GOOD' },
+        { key: 'rightSideGate',    label: 'Right Side Gate',         type: 'condition', default: 'GOOD' },
+        { key: 'leftSideGate',     label: 'Left Side Gate',          type: 'condition', default: 'GOOD' },
+        { key: 'tailGate',         label: 'Tail Gate',               type: 'condition', default: 'GOOD' },
+        { key: 'loadFloor',        label: 'Load Floor',              type: 'condition', default: 'GOOD' },
+        { key: 'chassisCondition', label: 'Chassis / Vehicle Frame', type: 'condition', default: 'GOOD' },
+        { key: 'paintWork',        label: 'Paint Work',              type: 'condition', default: 'GOOD' },
       ],
     },
     {
       section: 'ELECTRICAL SYSTEM',
       fields: [
-        { key: 'headLights',          label: 'Head Lights',           type: 'condition', default: 'GOOD' },
+        { key: 'headLights',          label: 'Head Lights',              type: 'condition', default: 'GOOD' },
         { key: 'tailLightsIndicators',label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',    label: 'Battery',               type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',          label: 'Wiring Assy',           type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',    label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',          label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'clusterUnit',         label: 'Cluster Unit',             type: 'condition', default: 'GOOD' },
       ],
     },
     {
-      section: 'COOLING SYSTEM',
+      section: 'TIRES',
       fields: [
-        { key: 'radiator',    label: 'Radiator',     type: 'condition', default: 'GOOD' },
-        { key: 'intercooler', label: 'Inter Cooler', type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes',label: 'All Hose Pipes',type: 'condition', default: 'GOOD' },
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        // How many tyres the vehicle has is a fact, not a finding — shown, never scored,
+        // and left blank by "Set Default Values" for the inspector to count.
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
       ],
     },
     {
-      section: 'TRANSMISSION SYSTEM',
+      section: 'FUNCTIONALITY',
       fields: [
-        { key: 'gearBoxAssy',    label: 'Gearbox Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'clutchSystem',   label: 'Clutch System',   type: 'condition', default: 'GOOD' },
-        { key: 'differentialAssy',label: 'Differential Assy',type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'STEERING SYSTEM',
-      fields: [
-        { key: 'steeringWheel',  label: 'Steering Wheel',  type: 'condition', default: 'GOOD' },
-        { key: 'steeringColumn', label: 'Steering Column', type: 'condition', default: 'GOOD' },
-        { key: 'steeringBox',    label: 'Steering Box',    type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'SUSPENSION SYSTEM',
-      fields: [
-        { key: 'frontSuspension', label: 'Front Suspension',   type: 'condition', default: 'GOOD' },
-        { key: 'rearSuspension',  label: 'Rear Suspension',    type: 'condition', default: 'GOOD' },
-        { key: 'axles',           label: 'Front & Rear Axles', type: 'condition', default: 'GOOD' },
+        { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
       ],
     },
     {
@@ -187,14 +209,12 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'airConditioner',        label: 'Air Conditioner',          type: 'condition', default: 'NO' },
-        { key: 'audio',                  label: 'Audio',                    type: 'condition', default: 'NO' },
-        { key: 'upholstery',             label: 'Upholstery',               type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicLift',          label: 'Hydraulic Lift',           type: 'condition', default: 'YES' },
-        { key: 'frontCrashGuard',        label: 'Front Crash Guard',        type: 'condition', default: 'NO' },
-        { key: 'rearCrashGuard',         label: 'Rear Crash Guard',         type: 'condition', default: 'NO' },
-        { key: 'sideUnderRunProtection', label: 'Side Under Run Protection',type: 'condition', default: 'NO' },
-        { key: 'paintWork',              label: 'Paint Work',               type: 'condition', default: 'GOOD' },
+        { key: 'audio',                  label: 'Audio',                     type: 'condition', default: 'NO' },
+        { key: 'upholstery',             label: 'Upholstery',                type: 'condition', default: 'GOOD' },
+        { key: 'hydraulicLift',          label: 'Hydraulic Lift',            type: 'condition', default: 'YES' },
+        { key: 'frontCrashGuard',        label: 'Front Crash Guard',         type: 'condition', default: 'NO' },
+        { key: 'rearCrashGuard',         label: 'Rear Crash Guard',          type: 'condition', default: 'NO' },
+        { key: 'sideUnderRunProtection', label: 'Side Under Run Protection', type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -204,63 +224,13 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   '4w': [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'cabinAssy',        label: 'Cabin Assy',        type: 'condition', default: 'GOOD' },
-        { key: 'bodyAssy',         label: 'Body Assy',         type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
-      ],
-    },
-    {
-      section: 'EXTERIOR',
-      fields: [
-        { key: 'bonnet',      label: 'Bonnet Assy',  type: 'condition', default: 'GOOD' },
-        { key: 'bumpers',     label: 'Bumpers',      type: 'condition', default: 'GOOD' },
-        { key: 'doors',       label: 'Doors',        type: 'condition', default: 'GOOD' },
-        { key: 'allGlasses',  label: 'All Glasses',  type: 'condition', default: 'GOOD' },
-        { key: 'sideFenders', label: 'Side Fenders', type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'INTERIOR',
-      fields: [
-        { key: 'dashboard',    label: 'Dash Board',      type: 'condition', default: 'GOOD' },
-        { key: 'seats',        label: 'Seats & Mats',    type: 'condition', default: 'GOOD' },
-        { key: 'upholstery',   label: 'Upholstery',      type: 'condition', default: 'GOOD' },
-        { key: 'interiorTrims',label: 'Interior Trims',  type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BRAKES',
-      fields: [
-        { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
-        { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
-        { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO', scored: false },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',           label: 'Head Lights',            type: 'condition', default: 'GOOD' },
-        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',     label: 'Battery',                type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',           label: 'Wiring Assy',            type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',     label: 'Radiator',      type: 'condition', default: 'GOOD' },
-        { key: 'intercooler',  label: 'Inter Cooler',  type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes', label: 'All Hose Pipes',type: 'condition', default: 'GOOD' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -272,6 +242,15 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'BRAKES',
+      fields: [
+        { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
+        { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
+        { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'NO', scored: false },
+      ],
+    },
+    {
       section: 'STEERING SYSTEM',
       fields: [
         { key: 'steeringWheel',  label: 'Steering Wheel',  type: 'condition', default: 'GOOD' },
@@ -288,18 +267,64 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'EXTERIOR',
+      fields: [
+        { key: 'bonnet',      label: 'Bonnet Assy',  type: 'condition', default: 'GOOD' },
+        { key: 'bumpers',     label: 'Bumpers',      type: 'condition', default: 'GOOD' },
+        { key: 'doors',       label: 'Doors',        type: 'condition', default: 'GOOD' },
+        { key: 'allGlasses',  label: 'All Glasses',  type: 'condition', default: 'GOOD' },
+        { key: 'sideFenders', label: 'Side Fenders', type: 'condition', default: 'GOOD' },
+        // Not on the 4W sheet, but kept on request (2026-09-17); scored with the other panels.
+        { key: 'paintWork',   label: 'Paint Work',   type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'INTERIOR',
+      fields: [
+        { key: 'dashboard',    label: 'Dash Board',     type: 'condition', default: 'GOOD' },
+        { key: 'seats',        label: 'Seats & Mats',   type: 'condition', default: 'GOOD' },
+        { key: 'interiorTrims',label: 'Interior Trims', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',           label: 'Head Lights',              type: 'condition', default: 'GOOD' },
+        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',     label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',           label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'clusterUnit',          label: 'Cluster Unit',             type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRES',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+      ],
+    },
+    {
       section: 'OTHER SYSTEMS',
       // Accessories and fitments, not condition findings — recorded and printed,
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
-        { key: 'airBags',        label: 'Air Bags',        type: 'condition', default: 'GOOD' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
-        { key: 'sunRoof',        label: 'Sun Roof',        type: 'condition',    default: 'NO' },
-        { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
+        { key: 'audio',           label: 'Audio',             type: 'condition', default: 'NO' },
+        { key: 'airConditioner',  label: 'Air Conditioner',   type: 'condition', default: 'NO' },
+        { key: 'upholstery',      label: 'Upholstery',        type: 'condition', default: 'GOOD' },
+        { key: 'sunRoof',         label: 'Sun Roof',          type: 'condition', default: 'NO' },
+        { key: 'rearCrashGuard',  label: 'Rear Crash Guard',  type: 'condition', default: 'NO' },
+        { key: 'frontCrashGuard', label: 'Front Crash Guard', type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -309,71 +334,31 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   '2w': [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'cabinAssy',        label: 'Cabin Assy',        type: 'condition', default: 'GOOD' },
-        { key: 'bodyCondition',    label: 'Body Condition',    type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
-      ],
-    },
-    {
-      section: 'EXTERIOR',
-      fields: [
-        { key: 'fuelTankCondition', label: 'Fuel Tank Assy',     type: 'condition', default: 'GOOD' },
-        { key: 'frontScoop',        label: 'Front Scoop',        type: 'condition', default: 'GOOD' },
-        { key: 'seatCondition',     label: 'Seat',               type: 'condition', default: 'GOOD' },
-        { key: 'rvMirrors',         label: 'R/V Mirrors',        type: 'condition', default: 'GOOD' },
-        { key: 'lockSet',           label: 'Lock Set',           type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BODY',
-      fields: [
-        { key: 'frontMudGuard', label: 'Mud Guard - Front',     type: 'condition', default: 'GOOD' },
-        { key: 'rearMudGuard',  label: 'Mud Guard - Rear',      type: 'condition', default: 'GOOD' },
-        { key: 'sideCovers',    label: 'Side Covers (LH, RH)',  type: 'condition', default: 'GOOD' },
-        { key: 'bellyPanels',   label: 'Belly / Floor Panels',  type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BRAKES',
-      fields: [
-        { key: 'frontBrakes',      label: 'Front Brakes',        type: 'condition', default: 'GOOD' },
-        { key: 'rearBrakes',       label: 'Rear Brakes',         type: 'condition', default: 'GOOD' },
-        { key: 'brakeLeversFluid', label: 'Brake Levers / Fluid',type: 'condition', default: 'GOOD' },
-        { key: 'abs',              label: 'ABS',                 type: 'yes-no',    default: 'NO', scored: false },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',           label: 'Head Lights',            type: 'condition', default: 'GOOD' },
-        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',     label: 'Battery',                type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',           label: 'Wiring Assy',            type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',      label: 'Radiator',       type: 'condition', default: 'GOOD' },
-        { key: 'silencer',      label: 'Silencer',       type: 'condition', default: 'GOOD' },
-        { key: 'silencerCover', label: 'Silencer Cover', type: 'condition', default: 'GOOD' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
       section: 'TRANSMISSION SYSTEM',
       fields: [
-        { key: 'gearBoxAssy',  label: 'Gearbox Assy',  type: 'condition', default: 'GOOD' },
-        { key: 'clutchSystem', label: 'Clutch System', type: 'condition', default: 'GOOD' },
-        { key: 'accelerator',  label: 'Accelerator',   type: 'condition', default: 'GOOD' },
+        { key: 'gearBoxAssy',  label: 'Gearbox Assy',        type: 'condition', default: 'GOOD' },
+        { key: 'clutchSystem', label: 'Clutch System',       type: 'condition', default: 'GOOD' },
+        // The same part CE records as Final Drive, so it shares that key.
+        { key: 'finalDrive',   label: 'Final Drive / Chain', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'BRAKES',
+      fields: [
+        { key: 'frontBrakes',      label: 'Front Brake',          type: 'condition', default: 'GOOD' },
+        { key: 'rearBrakes',       label: 'Rear Brake',           type: 'condition', default: 'GOOD' },
+        { key: 'brakeLeversFluid', label: 'Brake Levers / Fluid', type: 'condition', default: 'GOOD' },
+        { key: 'abs',              label: 'ABS',                  type: 'condition', default: 'NO', scored: false },
       ],
     },
     {
@@ -393,19 +378,63 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'EXTERIOR',
+      fields: [
+        { key: 'fuelTankCondition', label: 'Fuel Tank Assy', type: 'condition', default: 'GOOD' },
+        { key: 'frontScoop',        label: 'Front Scoop',    type: 'condition', default: 'GOOD' },
+        { key: 'seatCondition',     label: 'Seat',           type: 'condition', default: 'GOOD' },
+        { key: 'rvMirrors',         label: 'R/V Mirrors',    type: 'condition', default: 'GOOD' },
+        { key: 'lockSet',           label: 'Lock Set',       type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'BODY',
+      fields: [
+        { key: 'frontMudGuard', label: 'Mudguard - Front',     type: 'condition', default: 'GOOD' },
+        { key: 'rearMudGuard',  label: 'Mudguard - Rear',      type: 'condition', default: 'GOOD' },
+        { key: 'sideCovers',    label: 'Side Covers (LH, RH)', type: 'condition', default: 'GOOD' },
+        { key: 'bellyPanels',   label: 'Belly / Floor Panels', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',           label: 'Head Lights',              type: 'condition', default: 'GOOD' },
+        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',     label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',           label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'switches',             label: 'Switches',                 type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRES',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Test Ride',      type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+      ],
+    },
+    {
       section: 'OTHER SYSTEMS',
       // Accessories and fitments, not condition findings — recorded and printed,
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'mainStand',       label: 'Main Stand',          type: 'condition', default: 'NO' },
-        { key: 'sideStand',       label: 'Side Stand',          type: 'condition', default: 'NO' },
-        { key: 'legGuard',        label: 'Leg Guard',           type: 'condition', default: 'GOOD' },
-        { key: 'sareeGuard',      label: 'Saree Guard',         type: 'condition', default: 'YES' },
-        { key: 'horn',            label: 'Horn',                type: 'condition', default: 'NO' },
-        { key: 'kickPedalFootRest',label: 'Kick Pedal / Foot Rest',type: 'condition', default: 'NO' },
-        { key: 'chainGuard',      label: 'Chain Guard',         type: 'condition', default: 'NO' },
-        { key: 'selfStart',       label: 'Self Start',          type: 'condition', default: 'NO' },
+        { key: 'mainStand',        label: 'Main Stand',             type: 'condition', default: 'NO' },
+        { key: 'sideStand',        label: 'Side Stand',             type: 'condition', default: 'NO' },
+        { key: 'horn',             label: 'Horn',                   type: 'condition', default: 'NO' },
+        { key: 'kickPedalFootRest',label: 'Kick Pedal / Foot Rest', type: 'condition', default: 'NO' },
+        { key: 'chainGuard',       label: 'Chain Guard',            type: 'condition', default: 'NO' },
+        { key: 'selfStart',        label: 'Self Start',             type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -415,37 +444,21 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   '3w': [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'cabinAssy',        label: 'Cabin Assy',        type: 'condition', default: 'GOOD' },
-        { key: 'loadBodyAssy',     label: 'Load Body Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
-      section: 'CABIN ASSEMBLY',
+      section: 'TRANSMISSION SYSTEM',
       fields: [
-        { key: 'frontPanel',      label: 'Front Panel',    type: 'condition', default: 'GOOD' },
-        { key: 'frontGlassFrame', label: 'Fr Glass Frame', type: 'condition', default: 'GOOD' },
-        { key: 'dashboard',       label: 'Dash Board',     type: 'condition', default: 'GOOD' },
-        { key: 'seats',           label: 'Seats & Mats',   type: 'condition', default: 'GOOD' },
-        { key: 'mudguards',       label: 'Mudguards',      type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'LOAD BODY',
-      fields: [
-        { key: 'rightSideGate', label: 'Right Side Gate', type: 'condition', default: 'GOOD' },
-        { key: 'leftSideGate',  label: 'Left Side Gate',  type: 'condition', default: 'GOOD' },
-        { key: 'tailGate',      label: 'Tail Gate',       type: 'condition', default: 'GOOD' },
-        { key: 'loadFloor',     label: 'Load Floor',      type: 'condition', default: 'GOOD' },
+        { key: 'gearBoxAssy',     label: 'Gearbox Assy',      type: 'condition', default: 'GOOD' },
+        { key: 'clutchSystem',    label: 'Clutch System',     type: 'condition', default: 'GOOD' },
+        { key: 'differentialAssy',label: 'Differential Assy', type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -454,32 +467,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no',    default: 'NO', scored: false },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',      label: 'Lights',      type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',label: 'Battery',     type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',      label: 'Wiring Assy', type: 'condition', default: 'GOOD' },
-        { key: 'switches',        label: 'Switches',    type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',    label: 'Radiator',     type: 'condition', default: 'GOOD' },
-        { key: 'intercooler', label: 'Inter Cooler', type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes',label: 'All Hose Pipes',type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'TRANSMISSION SYSTEM',
-      fields: [
-        { key: 'gearBoxAssy',    label: 'Gearbox Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'clutchSystem',   label: 'Clutch System',   type: 'condition', default: 'GOOD' },
-        { key: 'differentialAssy',label: 'Differential Assy',type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'NO', scored: false },
       ],
     },
     {
@@ -499,19 +487,65 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'CABIN ASSEMBLY',
+      fields: [
+        { key: 'frontPanel',      label: 'Front Panel',    type: 'condition', default: 'GOOD' },
+        { key: 'frontGlassFrame', label: 'Fr Glass Frame', type: 'condition', default: 'GOOD' },
+        { key: 'dashboard',       label: 'Dash Board',     type: 'condition', default: 'GOOD' },
+        { key: 'seats',           label: 'Seats & Mats',   type: 'condition', default: 'GOOD' },
+        { key: 'mudguards',       label: 'Mudguards',      type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'LOAD BODY',
+      fields: [
+        { key: 'rightSideGate',    label: 'Right Side Gate',         type: 'condition', default: 'GOOD' },
+        { key: 'leftSideGate',     label: 'Left Side Gate',          type: 'condition', default: 'GOOD' },
+        { key: 'tailGate',         label: 'Tail Gate',               type: 'condition', default: 'GOOD' },
+        { key: 'loadFloor',        label: 'Load Floor',              type: 'condition', default: 'GOOD' },
+        { key: 'chassisCondition', label: 'Chassis / Vehicle Frame', type: 'condition', default: 'GOOD' },
+        { key: 'paintWork',        label: 'Paint Work',              type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',           label: 'Lights',                   type: 'condition', default: 'GOOD' },
+        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',     label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',           label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'switches',             label: 'Switches',                 type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRES',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+      ],
+    },
+    {
       section: 'OTHER SYSTEMS',
       // Accessories and fitments, not condition findings — recorded and printed,
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
-        { key: 'upholstery',     label: 'Upholstery',      type: 'condition', default: 'GOOD' },
-        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'condition',    default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
-        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'condition',    default: 'NO' },
-        { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
+        { key: 'audio',           label: 'Audio',             type: 'condition', default: 'NO' },
+        { key: 'upholstery',      label: 'Upholstery',        type: 'condition', default: 'GOOD' },
+        { key: 'loadCarrier',     label: 'Load Carrier',      type: 'condition', default: 'YES' },
+        { key: 'frontCrashGuard', label: 'Front Crash Guard', type: 'condition', default: 'NO' },
+        { key: 'rearCrashGuard',  label: 'Rear Crash Guard',  type: 'condition', default: 'NO' },
+        { key: 'sideMirrors',     label: 'Side Mirrors',      type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -521,37 +555,21 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   ce: [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',      label: 'Engine Condition',         type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition',     label: 'Chassis / Frame Condition',type: 'condition', default: 'GOOD' },
-        { key: 'cabinAssy',            label: 'Cabin Assy',               type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicSystem',      label: 'Hydraulic System',         type: 'condition', default: 'GOOD' },
-        { key: 'steeringControlSystem',label: 'Steering / Control System',type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',          label: 'Brake System',             type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem',     label: 'Electrical System',        type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem',     label: 'Suspension System',        type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',           label: 'Fuel System',              type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',        label: 'Tyre / Track Condition',   type: 'condition', default: 'AVERAGE' },
+        { key: 'engineCondition',   label: 'Engine Condition',     type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',        label: 'Fluid Leaks',          type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',          label: 'Radiator',             type: 'condition', default: 'GOOD' },
+        { key: 'hydraulicOilCooler',label: 'Hydraulic Oil Cooler', type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',        label: 'Fuel System',          type: 'condition', default: 'GOOD' },
       ],
     },
     {
-      section: 'CABIN ASSY',
+      section: 'TRANSMISSION SYSTEM',
       fields: [
-        { key: 'cabinStructure',   label: 'Cabin Structure',       type: 'condition', default: 'GOOD' },
-        { key: 'dashboardControls',label: 'Dashboard & Controls',  type: 'condition', default: 'GOOD' },
-        { key: 'doors',            label: 'Doors',                 type: 'condition', default: 'GOOD' },
-        { key: 'glassPanels',      label: 'Glass Panels',          type: 'condition', default: 'GOOD' },
-        { key: 'seats',            label: 'Seat',                  type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'ATTACHMENTS',
-      fields: [
-        { key: 'boomArm',      label: 'Boom / Arm',      type: 'condition', default: 'GOOD' },
-        { key: 'bucketBlade',  label: 'Bucket / Blade',  type: 'condition', default: 'GOOD' },
-        { key: 'counterWeight',label: 'Counter Weight',  type: 'condition', default: 'GOOD' },
-        { key: 'pinsAndBushes',label: 'Pins & Bushes',   type: 'condition', default: 'GOOD' },
+        { key: 'gearBoxAssy',    label: 'Gearbox Assy',     type: 'condition', default: 'GOOD' },
+        { key: 'torqueConverter',label: 'Torque Converter', type: 'condition', default: 'GOOD' },
+        { key: 'finalDrive',     label: 'Final Drive',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -560,32 +578,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'serviceBrake',  label: 'Service Brake',  type: 'condition', default: 'GOOD' },
         { key: 'retarder',      label: 'Retarder',       type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake',  label: 'Parking Brake',  type: 'condition', default: 'GOOD' },
-        { key: 'emergencyStop', label: 'Emergency Stop', type: 'condition',    default: 'NO' },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',      label: 'Lights',      type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',label: 'Battery',     type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',      label: 'Wiring Assy', type: 'condition', default: 'GOOD' },
-        { key: 'sensors',         label: 'Sensors',     type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',         label: 'Radiator',           type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicOilCooler',label: 'Hydraulic Oil Cooler',type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes',     label: 'All Hose Pipes',     type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'TRANSMISSION SYSTEM',
-      fields: [
-        { key: 'gearBoxAssy',    label: 'Gearbox Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'torqueConverter',label: 'Torque Converter',type: 'condition', default: 'GOOD' },
-        { key: 'finalDrive',     label: 'Final Drive',     type: 'condition', default: 'GOOD' },
+        { key: 'emergencyStop', label: 'Emergency Stop', type: 'condition', default: 'NO' },
       ],
     },
     {
@@ -599,9 +592,55 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
     {
       section: 'HYDRAULIC SYSTEM',
       fields: [
-        { key: 'hydraulicPump',   label: 'Hydraulic Pump',   type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicCylinders',label: 'Cylinders',      type: 'condition', default: 'GOOD' },
-        { key: 'hosesAndFittings',label: 'Hoses & Fittings', type: 'condition', default: 'GOOD' },
+        { key: 'hydraulicPump',     label: 'Hydraulic Pump',   type: 'condition', default: 'GOOD' },
+        { key: 'hydraulicCylinders',label: 'Cylinders',        type: 'condition', default: 'GOOD' },
+        { key: 'hosesAndFittings',  label: 'Hoses & Fittings', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'CABIN ASSEMBLY',
+      fields: [
+        { key: 'cabinStructure',   label: 'Cabin Structure',       type: 'condition', default: 'GOOD' },
+        { key: 'dashboardControls',label: 'Dash Board & Controls', type: 'condition', default: 'GOOD' },
+        { key: 'doors',            label: 'Doors',                 type: 'condition', default: 'GOOD' },
+        { key: 'glassPanels',      label: 'Glass Panels',          type: 'condition', default: 'GOOD' },
+        { key: 'seats',            label: 'Seat',                  type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ATTACHMENTS',
+      fields: [
+        { key: 'boomArm',      label: 'Boom / Arm',     type: 'condition', default: 'GOOD' },
+        { key: 'bucketBlade',  label: 'Bucket / Blade', type: 'condition', default: 'GOOD' },
+        { key: 'counterWeight',label: 'Counter Weight', type: 'condition', default: 'GOOD' },
+        { key: 'paintWork',    label: 'Paint Work',     type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',             label: 'Lights',                     type: 'condition', default: 'GOOD' },
+        { key: 'warningIndicatorLights', label: 'Warning / Indicator Lights', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',       label: 'Battery',                    type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',             label: 'Wiring Assy',                type: 'condition', default: 'GOOD' },
+        { key: 'sensors',                label: 'Sensors',                    type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRE / TRACK',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre / Track Condition',   type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres / Tracks', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing / Damaged',        type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started',  type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Functional Test', type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Machine Moved',   type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights',  type: 'condition', default: 'YES' },
       ],
     },
     {
@@ -610,14 +649,12 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'swingMechanism', label: 'Swing Mechanism', type: 'condition',    default: 'NO' },
-        { key: 'trackChains',    label: 'Track Chains',    type: 'condition',    default: 'NO' },
+        { key: 'swingMechanism', label: 'Swing Mechanism', type: 'condition', default: 'NO' },
+        { key: 'trackChains',    label: 'Track Chains',    type: 'condition', default: 'NO' },
         { key: 'sprockets',      label: 'Sprockets',       type: 'condition', default: 'GOOD' },
         { key: 'rollers',        label: 'Rollers',         type: 'condition', default: 'GOOD' },
-        { key: 'hourMeter',      label: 'Hour Meter',      type: 'condition',    default: 'NO' },
-        { key: 'bonnetGuard',    label: 'Bonnet / Guard',  type: 'condition',    default: 'NO' },
-        { key: 'rockBreaker',    label: 'Rock Breaker',    type: 'condition',    default: 'NO' },
-        { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
+        { key: 'hourMeter',      label: 'Hour Meter',      type: 'condition', default: 'NO' },
+        { key: 'rockBreaker',    label: 'Rock Breaker',    type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -627,37 +664,21 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   bus: [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'coachCondition',   label: 'Coach Condition',   type: 'condition', default: 'GOOD' },
-        { key: 'bodyStructure',    label: 'Body Structure',    type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
-      section: 'COACH ASSEMBLY',
+      section: 'TRANSMISSION SYSTEM',
       fields: [
-        { key: 'driverCabin',      label: 'Driver Cabin',      type: 'condition', default: 'GOOD' },
-        { key: 'dashboard',        label: 'Dashboard',         type: 'condition', default: 'GOOD' },
-        { key: 'doors',            label: 'Doors',             type: 'condition', default: 'GOOD' },
-        { key: 'allGlasses',       label: 'All Glasses',       type: 'condition', default: 'GOOD' },
-        { key: 'bumpersAndGrilles',label: 'Bumpers & Grilles', type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BODY ASSY',
-      fields: [
-        { key: 'seatsAndBerths',label: 'Seats & Berths',    type: 'condition', default: 'GOOD' },
-        { key: 'interiorTrims', label: 'Interior Trims',    type: 'condition', default: 'GOOD' },
-        { key: 'sideBodyPanels',label: 'Side Body Panels',  type: 'condition', default: 'GOOD' },
-        { key: 'rearBodyPanels',label: 'Rear Body Panels',  type: 'condition', default: 'GOOD' },
+        { key: 'gearBoxAssy',     label: 'Gearbox Assy',      type: 'condition', default: 'GOOD' },
+        { key: 'clutchSystem',    label: 'Clutch System',     type: 'condition', default: 'GOOD' },
+        { key: 'differentialAssy',label: 'Differential Assy', type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -666,32 +687,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'frontBrakes',  label: 'Front Brakes',  type: 'condition', default: 'GOOD' },
         { key: 'rearBrakes',   label: 'Rear Brakes',   type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake', label: 'Parking Brake', type: 'condition', default: 'GOOD' },
-        { key: 'abs',          label: 'ABS',           type: 'yes-no', default: 'YES', scored: false },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',           label: 'Head Lights',            type: 'condition', default: 'GOOD' },
-        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',     label: 'Battery',                type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',           label: 'Wiring Assy',            type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',    label: 'Radiator',     type: 'condition', default: 'GOOD' },
-        { key: 'intercooler', label: 'Inter Cooler', type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes',label: 'All Hose Pipes',type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'TRANSMISSION SYSTEM',
-      fields: [
-        { key: 'gearBoxAssy',    label: 'Gearbox Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'clutchSystem',   label: 'Clutch System',   type: 'condition', default: 'GOOD' },
-        { key: 'differentialAssy',label: 'Differential Assy',type: 'condition', default: 'GOOD' },
+        { key: 'abs',          label: 'ABS',           type: 'condition', default: 'YES', scored: false },
       ],
     },
     {
@@ -711,19 +707,65 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'COACH ASSEMBLY',
+      fields: [
+        { key: 'driverCabin',      label: 'Driver Cabin',      type: 'condition', default: 'GOOD' },
+        { key: 'dashboard',        label: 'Dashboard',         type: 'condition', default: 'GOOD' },
+        { key: 'doors',            label: 'Doors',             type: 'condition', default: 'GOOD' },
+        { key: 'allGlasses',       label: 'All Glasses',       type: 'condition', default: 'GOOD' },
+        { key: 'bumpersAndGrilles',label: 'Bumpers & Grilles', type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'BODY ASSEMBLY',
+      fields: [
+        { key: 'seatsAndBerths',   label: 'Seats & Berths',       type: 'condition', default: 'GOOD' },
+        { key: 'interiorTrims',    label: 'Interior Trims',       type: 'condition', default: 'GOOD' },
+        { key: 'sideBodyPanels',   label: 'Side Body Panels',     type: 'condition', default: 'GOOD' },
+        { key: 'rearBodyPanels',   label: 'Rear Body Panels',     type: 'condition', default: 'GOOD' },
+        { key: 'chassisCondition', label: 'Chassis / Body Frame', type: 'condition', default: 'GOOD' },
+        { key: 'paintWork',        label: 'Paint Work',           type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',           label: 'Head Lights',              type: 'condition', default: 'GOOD' },
+        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',     label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',           label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'clusterUnit',          label: 'Cluster Unit',             type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRES',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+      ],
+    },
+    {
       section: 'OTHER SYSTEMS',
       // Accessories and fitments, not condition findings — recorded and printed,
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'airConditioner', label: 'Air Conditioner', type: 'condition',    default: 'NO' },
-        { key: 'audio',          label: 'Audio',           type: 'condition',    default: 'NO' },
-        { key: 'upholstery',     label: 'Upholstery',      type: 'condition', default: 'GOOD' },
-        { key: 'loadCarrier',    label: 'Load Carrier',    type: 'condition',    default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
-        { key: 'rearCrashGuard', label: 'Rear Crash Guard', type: 'condition',   default: 'NO' },
-        { key: 'sideMirrors',    label: 'Side Mirrors',    type: 'condition',    default: 'NO' },
-        { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
+        { key: 'airConditioner',  label: 'Air Conditioner',   type: 'condition', default: 'NO' },
+        { key: 'audio',           label: 'Audio',             type: 'condition', default: 'NO' },
+        { key: 'upholstery',      label: 'Upholstery',        type: 'condition', default: 'GOOD' },
+        { key: 'loadCarrier',     label: 'Load Carrier',      type: 'condition', default: 'YES' },
+        { key: 'frontCrashGuard', label: 'Front Crash Guard', type: 'condition', default: 'NO' },
+        { key: 'rearCrashGuard',  label: 'Rear Crash Guard',  type: 'condition', default: 'NO' },
       ],
     },
   ],
@@ -733,37 +775,21 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
   // ═══════════════════════════════════════════════════════════════════════════
   fe: [
     {
-      section: 'BASIC SYSTEMS',
+      section: 'ENGINE CONDITION',
       fields: [
-        { key: 'engineCondition',  label: 'Engine Condition',  type: 'condition', default: 'GOOD' },
-        { key: 'chassisCondition', label: 'Chassis Condition', type: 'condition', default: 'GOOD' },
-        { key: 'operatorPlatform', label: 'Operator Platform', type: 'condition', default: 'GOOD' },
-        { key: 'bodyAssy',         label: 'Body Assy',         type: 'condition', default: 'GOOD' },
-        { key: 'steeringSystem',   label: 'Steering System',   type: 'condition', default: 'GOOD' },
-        { key: 'brakeSystem',      label: 'Brake System',      type: 'condition', default: 'GOOD' },
-        { key: 'electricalSystem', label: 'Electrical System', type: 'condition', default: 'GOOD' },
-        { key: 'suspensionSystem', label: 'Suspension System', type: 'condition', default: 'GOOD' },
-        { key: 'fuelSystem',       label: 'Fuel System',       type: 'condition', default: 'GOOD' },
-        { key: 'tyreCondition',    label: 'Tyre Condition',    type: 'condition', default: 'AVERAGE' },
+        { key: 'engineCondition', label: 'Engine Condition', type: 'condition', default: 'GOOD' },
+        { key: 'fluidLeaks',      label: 'Fluid Leaks',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
+        { key: 'radiator',        label: 'Radiator',         type: 'condition', default: 'GOOD' },
+        { key: 'allHosePipes',    label: 'All Hose Pipes',   type: 'condition', default: 'GOOD' },
+        { key: 'fuelSystem',      label: 'Fuel System',      type: 'condition', default: 'GOOD' },
       ],
     },
     {
-      section: 'CABIN ASSEMBLY',
+      section: 'TRANSMISSION SYSTEM',
       fields: [
-        { key: 'operatorStation', label: 'Operator Station', type: 'condition', default: 'GOOD' },
-        { key: 'dashboard',       label: 'Dash Board',       type: 'condition', default: 'GOOD' },
-        { key: 'canopy',          label: 'Canopy',           type: 'condition', default: 'GOOD' },
-        { key: 'lockSet',         label: 'Lock Set',         type: 'condition', default: 'GOOD' },
-        { key: 'seats',           label: 'Seat',             type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'BODY ASSY',
-      fields: [
-        { key: 'bonnet',      label: 'Bonnet',       type: 'condition', default: 'GOOD' },
-        { key: 'frontGrilles',label: 'Front Grilles',type: 'condition', default: 'GOOD' },
-        { key: 'sideFenders', label: 'Side Fenders', type: 'condition', default: 'GOOD' },
-        { key: 'fuelTankFe',  label: 'Fuel Tank',    type: 'condition', default: 'GOOD' },
+        { key: 'gearBoxAssy',     label: 'Gearbox Assy',      type: 'condition', default: 'GOOD' },
+        { key: 'clutchSystem',    label: 'Clutch System',     type: 'condition', default: 'GOOD' },
+        { key: 'differentialAssy',label: 'Differential Assy', type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -773,31 +799,6 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'leftIndividualBrakes', label: 'Left Individual Brakes', type: 'condition', default: 'GOOD' },
         { key: 'parkingBrake',         label: 'Parking Brake',          type: 'condition', default: 'GOOD' },
         { key: 'brakeEqualization',    label: 'Brake Equalization',     type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'ELECTRICAL SYSTEM',
-      fields: [
-        { key: 'headLights',           label: 'Head Lights',            type: 'condition', default: 'GOOD' },
-        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
-        { key: 'batteryCondition',     label: 'Battery',                type: 'condition', default: 'GOOD' },
-        { key: 'wiringAssy',           label: 'Wiring Assy',            type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'COOLING SYSTEM',
-      fields: [
-        { key: 'radiator',     label: 'Radiator',      type: 'condition', default: 'GOOD' },
-        { key: 'fanAssy',      label: 'Fan Assy',      type: 'condition', default: 'GOOD' },
-        { key: 'allHosePipes', label: 'All Hose Pipes',type: 'condition', default: 'GOOD' },
-      ],
-    },
-    {
-      section: 'TRANSMISSION SYSTEM',
-      fields: [
-        { key: 'gearBoxAssy',    label: 'Gearbox Assy',    type: 'condition', default: 'GOOD' },
-        { key: 'clutchSystem',   label: 'Clutch System',   type: 'condition', default: 'GOOD' },
-        { key: 'differentialAssy',label: 'Differential Assy',type: 'condition', default: 'GOOD' },
       ],
     },
     {
@@ -817,19 +818,65 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
       ],
     },
     {
+      section: 'CABIN ASSEMBLY',
+      fields: [
+        { key: 'operatorStation', label: 'Operator Station', type: 'condition', default: 'GOOD' },
+        { key: 'dashboard',       label: 'Dash Board',       type: 'condition', default: 'GOOD' },
+        { key: 'canopy',          label: 'Canopy',           type: 'condition', default: 'GOOD' },
+        { key: 'lockSet',         label: 'Lock Set',         type: 'condition', default: 'GOOD' },
+        { key: 'seats',           label: 'Seat',             type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'BODY ASSEMBLY',
+      fields: [
+        { key: 'bonnet',           label: 'Bonnet',            type: 'condition', default: 'GOOD' },
+        { key: 'frontGrilles',     label: 'Front Grilles',     type: 'condition', default: 'GOOD' },
+        { key: 'sideFenders',      label: 'Side Fenders',      type: 'condition', default: 'GOOD' },
+        { key: 'fuelTankFe',       label: 'Fuel Tank',         type: 'condition', default: 'GOOD' },
+        { key: 'operatorPlatform', label: 'Operator Platform', type: 'condition', default: 'GOOD' },
+        { key: 'paintWork',        label: 'Paint Work',        type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'ELECTRICAL SYSTEM',
+      fields: [
+        { key: 'headLights',           label: 'Head Lights',              type: 'condition', default: 'GOOD' },
+        { key: 'tailLightsIndicators', label: 'Tail Lights / Indicators', type: 'condition', default: 'GOOD' },
+        { key: 'batteryCondition',     label: 'Battery',                  type: 'condition', default: 'GOOD' },
+        { key: 'wiringAssy',           label: 'Wiring Assy',              type: 'condition', default: 'GOOD' },
+        { key: 'switches',             label: 'Switches',                 type: 'condition', default: 'GOOD' },
+      ],
+    },
+    {
+      section: 'TIRES',
+      fields: [
+        { key: 'tyreCondition', label: 'Tyre Condition',  type: 'condition', default: 'AVERAGE' },
+        { key: 'numberOfTyres', label: 'Number of Tyres', type: 'number', scored: false },
+        { key: 'missingTyres',  label: 'Missing Tyres',   type: 'number', default: '0', scoring: 'zero-is-good' },
+      ],
+    },
+    {
+      section: 'FUNCTIONALITY',
+      fields: [
+        { key: 'engineStarted', label: 'Engine Started',      type: 'condition', default: 'YES' },
+        { key: 'testDrive',     label: 'Field Function Test', type: 'condition', default: 'YES' },
+        { key: 'vehicleMoved',  label: 'Vehicle Moved',       type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights',      type: 'condition', default: 'YES' },
+      ],
+    },
+    {
       section: 'OTHER SYSTEMS',
       // Accessories and fitments, not condition findings — recorded and printed,
       // but they no longer pull the vehicle's score around.
       scored: false,
       fields: [
-        { key: 'muffler',        label: 'Muffler',         type: 'condition',    default: 'NO' },
-        { key: 'airFilter',      label: 'Air Filter',      type: 'condition',    default: 'NO' },
-        { key: 'attachmentHitch',label: 'Attachment Hitch',type: 'condition', default: 'GOOD' },
-        { key: 'hydraulicLiftFe',label: 'Hydraulic Lift Arm',type: 'condition',  default: 'YES' },
-        { key: 'frontCrashGuard',label: 'Front Crash Guard',type: 'condition',   default: 'NO' },
-        { key: 'dropArm',        label: 'Drop Arm',        type: 'condition',    default: 'NO' },
-        { key: 'rearDrawbar',    label: 'Rear Drawbar',    type: 'condition',    default: 'NO' },
-        { key: 'paintWork',      label: 'Paint Work',      type: 'condition', default: 'GOOD' },
+        { key: 'muffler',        label: 'Muffler',            type: 'condition', default: 'NO' },
+        { key: 'airFilter',      label: 'Air Filter',         type: 'condition', default: 'NO' },
+        { key: 'attachmentHitch',label: 'Attachment Hitch',   type: 'condition', default: 'GOOD' },
+        { key: 'hydraulicLiftFe',label: 'Hydraulic Lift Arm', type: 'condition', default: 'YES' },
+        { key: 'dropArm',        label: 'Drop Arm',           type: 'condition', default: 'NO' },
+        { key: 'rearDrawbar',    label: 'Rear Drawbar',       type: 'condition', default: 'NO' },
       ],
     },
   ],

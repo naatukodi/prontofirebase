@@ -28,8 +28,14 @@
 // the mean of the 9 scored sections. A report regenerated for that vehicle will
 // therefore show a higher overall than the one on file, which is the point — the
 // old figure was marked down for accessories the vehicle never had.
+//
+// The 2026-09 checklist added two answers that the NO-is-bad rule gets backwards,
+// so a field can name its own rule (`scoring` in the registry, see answerPoints):
+// Fluid Leaks, where NO is the good answer, and Missing Tyres, a count where 0 is.
+// PdfReportService does the same in ScoresAs — change the two together.
 
 import {
+  InspectionField,
   InspectionSection,
   VehicleTypeKey,
   getFieldRegistry,
@@ -38,17 +44,22 @@ import {
 
 /**
  * Normalises a stored inspection value to one of
- * GOOD / AVERAGE / POOR / DAMAGED / MISSING / NO / NA.
+ * GOOD / AVERAGE / POOR / DAMAGED / MISSING / YES / NO / NA.
  * Anything else is returned upper-cased and handled as a possible number.
+ *
+ * YES is its own verdict so the report can print it (ENGINE STARTED: YES, not GOOD);
+ * it scores the same as GOOD. true/false are pre-2026-09 Engine Started / Vehicle Moved
+ * answers and read as YES / NO.
  */
 export function mapVerdict(input: string | null | undefined): string {
   if (input === null || input === undefined || !String(input).trim()) return 'NA';
   const raw = String(input);
   const lower = raw.toLowerCase().trim();
 
-  if (['true', 'yes', '1', 'good', 'ok'].includes(lower)) return 'GOOD';
-  if (['false', '0', 'bad', 'poor'].includes(lower)) return 'POOR';
-  if (lower === 'no') return 'NO';
+  if (['yes', 'true'].includes(lower)) return 'YES';
+  if (['1', 'good', 'ok'].includes(lower)) return 'GOOD';
+  if (['0', 'bad', 'poor'].includes(lower)) return 'POOR';
+  if (['no', 'false'].includes(lower)) return 'NO';
   if (['average', 'fair'].includes(lower)) return 'AVERAGE';
   if (['damaged', 'damage'].includes(lower)) return 'DAMAGED';
   if (lower.startsWith('missing') || ['not present', 'absent'].includes(lower)) return 'MISSING';
@@ -78,10 +89,41 @@ function verdictPoints(verdict: string): number | null {
   }
 }
 
+/**
+ * Points one field's answer contributes, by the field's `scoring` rule.
+ * `null` means "excluded from the average".
+ */
+export function answerPoints(field: InspectionField, value: unknown): number | null {
+  const raw = value === null || value === undefined ? '' : String(value).trim();
+  switch (field.scoring) {
+    case 'no-is-good': {
+      // Only the YES / NO pair swaps; GOOD, POOR, N/A and the rest score as usual.
+      const lower = raw.toLowerCase();
+      if (lower === 'no'  || lower === 'false') return 8.5;
+      if (lower === 'yes' || lower === 'true')  return 1.0;
+      break;
+    }
+    case 'zero-is-good': {
+      if (!raw) return null;
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0) return null;
+      return n === 0 ? 8.5 : 1.0;
+    }
+  }
+  return verdictPoints(mapVerdict(raw));
+}
+
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+/** Mean of the points that could be scored, to one decimal place; null when there are none. */
+function meanOrNull(points: Array<number | null>): number | null {
+  const scored = points.filter((p): p is number => p !== null);
+  if (scored.length === 0) return null;
+  return round1(scored.reduce((a, b) => a + b, 0) / scored.length);
+}
+
 /**
- * Mean of the scorable values, to one decimal place.
+ * Mean of the scorable values, to one decimal place, by the plain condition rule.
  *
  * Returns null when nothing in the section could be scored — every field blank
  * or N/A. The PDF substitutes 8.0 in that case; this deliberately does not,
@@ -89,13 +131,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
  * pass. Callers that need parity with the printed badge can use `?? 8.0`.
  */
 export function sectionScoreOrNull(values: Array<string | null | undefined>): number | null {
-  const points: number[] = [];
-  for (const v of values) {
-    const p = verdictPoints(mapVerdict(v));
-    if (p !== null) points.push(p);
-  }
-  if (points.length === 0) return null;
-  return round1(points.reduce((a, b) => a + b, 0) / points.length);
+  return meanOrNull(values.map(v => verdictPoints(mapVerdict(v))));
 }
 
 /** Mean of the section scores that could be computed. Unscored sections drop out. */
@@ -130,11 +166,11 @@ export interface SectionScore {
  */
 export function sectionScoreFor(
   section: InspectionSection,
-  readValue: (key: string) => string | null | undefined
+  readValue: (key: string) => unknown
 ): number | null {
   if (section.scored === false) return null;
-  return sectionScoreOrNull(
-    section.fields.filter(f => f.scored !== false).map(f => readValue(f.key))
+  return meanOrNull(
+    section.fields.filter(f => f.scored !== false).map(f => answerPoints(f, readValue(f.key)))
   );
 }
 
@@ -147,18 +183,18 @@ export function sectionScoreFor(
  */
 export function scoreSections(
   vehicleType: VehicleTypeKey | null,
-  readValue: (key: string) => string | null | undefined
+  readValue: (key: string) => unknown
 ): SectionScore[] {
   if (!vehicleType) return [];
   return getFieldRegistry(vehicleType).map((section: InspectionSection) => {
     const scorable = section.scored === false
       ? []
       : section.fields.filter(f => f.scored !== false);
-    const values = scorable.map(f => readValue(f.key));
-    const rated = values.filter(v => verdictPoints(mapVerdict(v)) !== null).length;
+    const points = scorable.map(f => answerPoints(f, readValue(f.key)));
+    const rated = points.filter(p => p !== null).length;
     return {
       section: section.section,
-      score: scorable.length === 0 ? null : sectionScoreOrNull(values),
+      score: scorable.length === 0 ? null : meanOrNull(points),
       rated,
       // Counts only the fields that can move the score, so "3 of 4 rated" does
       // not silently include one that never counts.
