@@ -1,5 +1,11 @@
 /* Workflow buttons — Vehga design system (brand teal #037076) */
 
+/* A custom element is inline by default, and an inline box can't span the
+   two card columns — it would be split into them, halving the bar. */
+:host {
+  display: block;
+}
+
 /* Single-line bar: workflow steps + case actions side by side.
    Wraps to two lines only when the screen is too narrow. */
 .action-bar {

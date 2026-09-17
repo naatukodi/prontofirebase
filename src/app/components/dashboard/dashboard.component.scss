@@ -168,13 +168,22 @@
   .legend-val   { margin-left: auto; font-weight: 800; color: var(--ink-900); }
 }
 
-/* ── Insights row: today ───────────────────────────────── */
+/* ── Insights row: today + search ──────────────────────── */
+/* Same split as .overview-row, so Today's Cases lines up under Overview
+   and Search under the greeting panel. */
 .insights-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1.9fr 1fr;
   gap: 18px;
   margin-bottom: 18px;
+
+  @media (max-width: 1100px) { grid-template-columns: 1fr; }
 }
+
+/* Search */
+.search-panel .search-field { width: 100%; }
+.search-hint { font-size: 0.72rem; color: var(--ink-500); margin-top: 8px; }
+.search-panel .search-state { margin: 12px 0 0; }
 
 /* Today's cases */
 .today-count {
@@ -234,8 +243,6 @@
 .step-filter { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
 
 .search-field {
-  min-width: 260px;
-
   i.bi-search { margin-right: 8px; color: var(--ink-500); font-size: 0.85rem; }
 }
 .search-clear {
