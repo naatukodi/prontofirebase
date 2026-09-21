@@ -35,9 +35,13 @@
 // PdfReportService does the same in ScoresAs — change the two together.
 
 import {
+  InspectionCategory,
+  InspectionCategoryKey,
   InspectionField,
   InspectionSection,
   VehicleTypeKey,
+  INSPECTION_CATEGORIES,
+  categoryOf,
   getFieldRegistry,
   normalizeVehicleType,
 } from './inspection-field-registry';
@@ -220,4 +224,79 @@ export function scoreInspection(
     return v === null || v === undefined ? null : String(v);
   });
   return { sections, overall: overallScoreOrNull(sections.map(s => s.score)) };
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────────
+// The four figures the report's cover shows, computed here so the portal and the
+// PDF cannot disagree about them. Mirrors CoverScores() in
+// ProntoPDFGeneration's PdfReportService.Cover.cs — change the two together.
+
+export interface CategoryScore {
+  category: InspectionCategoryKey;
+  title: string;
+  score: number | null;
+  /** How many fields contributed — the rest were blank or marked N/A. */
+  rated: number;
+  total: number;
+}
+
+/**
+ * Score per category, pooling ITEMS across the category's sections.
+ *
+ * Not the mean of the section scores. MECHANICAL covers five sections holding
+ * eighteen questions between them, and averaging the five would give BRAKES's
+ * four questions the same say as ENGINE CONDITION's five. Pooling weights every
+ * question equally, which is what the cover's single figure is claiming to be.
+ *
+ * Sections marked `scored: false`, and those categoryOf() leaves unfiled, are
+ * skipped entirely.
+ */
+export function scoreCategories(
+  vehicleType: VehicleTypeKey | null,
+  readValue: (key: string) => unknown
+): CategoryScore[] {
+  if (!vehicleType) return [];
+  const registry = getFieldRegistry(vehicleType);
+
+  return INSPECTION_CATEGORIES.map((cat: InspectionCategory) => {
+    const fields = registry
+      .filter((sec: InspectionSection) => sec.scored !== false && categoryOf(sec.section) === cat.key)
+      .flatMap((sec: InspectionSection) => sec.fields.filter((f: InspectionField) => f.scored !== false));
+
+    const points = fields.map((f: InspectionField) => answerPoints(f, readValue(f.key)));
+    return {
+      category: cat.key,
+      title: cat.title,
+      score: fields.length === 0 ? null : meanOrNull(points),
+      rated: points.filter(p => p !== null).length,
+      total: fields.length,
+    };
+  });
+}
+
+/**
+ * Category scores for a saved inspection, alongside the overall.
+ *
+ * The overall is deliberately NOT the mean of these four — it stays the mean
+ * across scored SECTIONS, as `scoreInspection` computes it. Averaging the four
+ * gives TYRES's two questions the same weight as MECHANICAL's eighteen, and
+ * prints a different number from the one the QC screen shows.
+ */
+export function scoreInspectionCategories(
+  vehicleSegment: string | null | undefined,
+  inspection: Record<string, unknown> | null | undefined,
+  fallbackType?: string | null
+): { categories: CategoryScore[]; overall: number | null } {
+  const vk = normalizeVehicleType(vehicleSegment) ?? normalizeVehicleType(fallbackType);
+  if (!vk || !inspection) return { categories: [], overall: null };
+
+  const read = (key: string) => {
+    const v = (inspection as Record<string, unknown>)[key];
+    return v === null || v === undefined ? null : String(v);
+  };
+
+  return {
+    categories: scoreCategories(vk, read),
+    overall: scoreInspection(vehicleSegment, inspection, fallbackType).overall,
+  };
 }
