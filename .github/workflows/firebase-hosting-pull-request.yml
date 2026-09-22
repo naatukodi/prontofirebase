@@ -13,7 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build -- --configuration=production
+      # Previews use the staging build (old Azure servers) so a preview link never
+      # touches production data. The live site builds with --configuration=production.
+      - run: npm ci && npm run build -- --configuration=staging
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
