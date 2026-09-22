@@ -46,6 +46,54 @@ export interface InspectionSection {
   scored?: boolean;
 }
 
+// ─── Categories ──────────────────────────────────────────────────────────────
+// The four systems the report's cover rates. They are a VIEW over the sections
+// below, not a replacement for them: the AVO form still collects the eleven
+// sections, and nothing about the saved shape changes.
+//
+// Derived from the section NAME rather than stored per section, deliberately.
+// The PDF folds the same way in CategoryOf() in PdfReportService.Cover.cs, and a
+// rule expressed twice can be compared; a per-section label duplicated across
+// seven vehicle types and nineteen sections would drift silently. Keep the two
+// functions identical — if this one changes, change that one.
+
+export type InspectionCategoryKey = 'mechanical' | 'structural' | 'electrical' | 'tyres';
+
+export interface InspectionCategory {
+  key: InspectionCategoryKey;
+  /** As the checklist page heads it. */
+  title: string;
+  /** As the cover tile labels it. */
+  tileTitle: string;
+}
+
+/** In the order the report prints them. */
+export const INSPECTION_CATEGORIES: readonly InspectionCategory[] = [
+  { key: 'mechanical', title: 'MECHANICAL', tileTitle: 'MECHANICAL SYSTEMS' },
+  { key: 'structural', title: 'STRUCTURAL', tileTitle: 'STRUCTURAL SYSTEMS' },
+  { key: 'electrical', title: 'ELECTRICAL', tileTitle: 'ELECTRICAL' },
+  { key: 'tyres',      title: 'TYRES',      tileTitle: 'TYRES' },
+] as const;
+
+/**
+ * Which category a section belongs to, or null when it is listed but never rated.
+ *
+ * FUNCTIONALITY and OTHER SYSTEMS return null: the report captions the tiles as
+ * ratings, and a section it does not score has no rating to show. Anything
+ * unrecognised falls to 'structural', which is where the body, cabin and
+ * attachment sections differ by vehicle type — so a new body-style section is
+ * filed correctly without touching this function.
+ */
+export function categoryOf(sectionName: string): InspectionCategoryKey | null {
+  const n = sectionName.trim().toUpperCase();
+  if (n === 'FUNCTIONALITY' || n === 'OTHER SYSTEMS') return null;
+  if (n === 'ELECTRICAL SYSTEM') return 'electrical';
+  if (n.startsWith('TIRE') || n.startsWith('TYRE')) return 'tyres';
+  if (['ENGINE CONDITION', 'TRANSMISSION SYSTEM', 'BRAKES',
+       'STEERING SYSTEM', 'SUSPENSION SYSTEM', 'HYDRAULIC SYSTEM'].includes(n)) return 'mechanical';
+  return 'structural';
+}
+
 // ─── Options ─────────────────────────────────────────────────────────────────
 // Every non-boolean inspection dropdown offers the same list, so an inspector can
 // record a part as damaged / missing / not applicable instead of forcing a
