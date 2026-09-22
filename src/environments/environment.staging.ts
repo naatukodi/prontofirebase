@@ -1,3 +1,6 @@
+// Staging build (ng build --configuration=staging), used for pull-request previews.
+// Points at the old Azure servers, which serve as staging after the switch-over,
+// so a preview link never reads or writes production data.
 export const environment = {
   production: true,
   // Which company this deployment serves. null = one site for both, so the user picks
@@ -12,7 +15,6 @@ export const environment = {
   messagingSenderId: "1045526546178",
   appId: "1:1045526546178:web:534e7bfb27b3fa5e5d641b"
   },
-  // Production: the vehgaprod resource group in the company Azure account.
-  apiBaseUrl: 'https://vehgaprd-ech3ewccc8dxcgcz.centralindia-01.azurewebsites.net/api/',
-  pdfApiBaseUrl: 'https://vehgapdf-c4hrbehgauf8gtez.centralindia-01.azurewebsites.net'
+  apiBaseUrl: 'https://prontobackend-bhdnbec2fvd3ecfk.eastus2-01.azurewebsites.net/api/',
+  pdfApiBaseUrl: 'https://prontopdf-cxgxbvcjhcg6hdfz.eastus2-01.azurewebsites.net'
 };
