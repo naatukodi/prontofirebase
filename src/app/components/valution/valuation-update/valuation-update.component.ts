@@ -1,6 +1,6 @@
 // src/app/components/valuation/valuation-update/valuation-update.component.ts
 
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ValuationService } from '../../../services/valuation.service';
@@ -21,6 +21,8 @@ import { AssignableUser, UserModel } from '../../../models/user.model';
 import { ClaimService } from '../../../services/claim.service';
 import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate-check.interface';
 import { AuthorizationService } from '../../../services/authorization.service';
+import { StakeholderService } from '../../../services/stakeholder.service';
+import { isTvsCredit } from '../../../shared/client-rules';
 
 // ✅ USE EXISTING SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
@@ -45,6 +47,11 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   private usersSvc = inject(UsersService);
   private historyLogger = inject(HistoryLoggerService);  // ✅ INJECT EXISTING SERVICE
   private authz = inject(AuthorizationService);
+  private stakeholderSvc = inject(StakeholderService);
+  private cdr = inject(ChangeDetectorRef);
+
+  /** TVS Credit's report prints an estimated life remaining, entered here. */
+  isTvs = false;
 
   form!: FormGroup;
   loading = true;
@@ -124,6 +131,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
         this.initForm();
+        this.loadClient();
         this.loadVehicleDetails();
         this.setupDuplicateCheck();
       } else {
@@ -212,6 +220,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       // Additional
       idv: [null],
       exShowroomPrice: [null],
+      // Years. Required on TVS Credit cases only, see loadClient.
+      estimatedLifeRemaining: [null, [Validators.min(0), Validators.max(50), Validators.pattern(/^\d+$/)]],
       backlistStatus: [false],
       rcStatus: [false],
       manufacturedDate: [''],
@@ -443,6 +453,22 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   }
 
 
+  /** The client decides whether Estimated Life Remaining is asked, and so required. */
+  private loadClient(): void {
+    this.stakeholderSvc
+      .getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .pipe(take(1), catchError(() => of(null)))
+      .subscribe(s => {
+        this.isTvs = isTvsCredit(s?.name);
+        const c = this.form.get('estimatedLifeRemaining')!;
+        if (this.isTvs) c.addValidators(Validators.required);
+        else c.removeValidators(Validators.required);
+        c.updateValueAndValidity({ emitEvent: false });
+        // Zoneless: a value set in a subscription schedules no render by itself.
+        this.cdr.markForCheck();
+      });
+  }
+
   private loadVehicleDetails() {
     this.loading = true;
     this.error = null;
@@ -518,6 +544,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       taxUpto: data.taxUpto?.slice(0, 10) || '',
       idv: data.idv,
       exShowroomPrice: data.exShowroomPrice,
+      estimatedLifeRemaining: data.estimatedLifeRemaining ?? null,
       backlistStatus: data.backlistStatus,
       rcStatus: data.rcStatus,
       manufacturedDate: data.manufacturedDate?.slice(0, 10) || '',
@@ -630,6 +657,9 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     }
     if (v.exShowroomPrice !== null) {
       fd.append('exShowroomPrice', v.exShowroomPrice.toString());
+    }
+    if (v.estimatedLifeRemaining !== null && v.estimatedLifeRemaining !== '') {
+      fd.append('estimatedLifeRemaining', v.estimatedLifeRemaining.toString());
     }
     fd.append('backlistStatus', v.backlistStatus ? 'true' : 'false');
     fd.append('rcStatus', v.rcStatus ? 'true' : 'false');

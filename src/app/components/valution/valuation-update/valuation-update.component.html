@@ -404,6 +404,14 @@
           <input matInput type="number" formControlName="exShowroomPrice"/>
         </mat-form-field>
 
+        <!-- Only TVS Credit's report prints it (page 3, Additional Details). -->
+        <mat-form-field *ngIf="isTvs" appearance="fill">
+          <mat-label>Estimated Life Remaining (years)</mat-label>
+          <input matInput type="number" min="0" max="50" step="1" formControlName="estimatedLifeRemaining"/>
+          <mat-error *ngIf="form.get('estimatedLifeRemaining')?.hasError('required')">Required for TVS Credit cases</mat-error>
+          <mat-error *ngIf="form.get('estimatedLifeRemaining')?.hasError('pattern') || form.get('estimatedLifeRemaining')?.hasError('min') || form.get('estimatedLifeRemaining')?.hasError('max')">Enter whole years, 0 to 50</mat-error>
+        </mat-form-field>
+
         <!-- Both come back from the Surepass RC fetch. They are booleans on the
              model, but a bare checkbox reads as "tick to opt in" rather than as a
              looked-up fact, so they are stated in the same words the view page
