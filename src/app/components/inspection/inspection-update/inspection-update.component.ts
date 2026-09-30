@@ -28,6 +28,7 @@ import {
 } from '../../../shared/inspection-field-registry';
 import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
 import { reportInvalidForm } from '../../../shared/form-errors';
+import { isTvsCredit, VIN_PLATE_MISSING_TEXT } from '../../../shared/client-rules';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -42,6 +43,8 @@ const AVO_FIELD_LABELS: Record<string, string> = {
   inspectionDate: 'Date of inspection',
   inspectionLocation: 'Inspection location',
   vinPlate: 'VIN plate present',
+  accidental: 'Accident status',
+  seizedByOtherFinancier: 'Seized by another finance company',
   transmissionType: 'Transmission type',
   numberOfTyres: 'Number of tyres',
   missingTyres: 'Missing tyres',
@@ -101,6 +104,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   // Resolved vehicle type: falls back to the stakeholder's vehicleSegment when
   // valuationType (e.g. "Retail") doesn't map to a vehicle type.
   effectiveVehicleType: string | null = null;
+
+  /** TVS Credit's report adds an Additional Details box, so its AVO answers more. */
+  isTvs = false;
+  readonly vinPlateMissingText = VIN_PLATE_MISSING_TEXT;
 
   // Maps normalized registry keys to visibilityMap keys
   private static readonly VISIBILITY_KEY: Record<string, string> = {
@@ -270,16 +277,22 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
-  private resolveVehicleType(): void {
+  /**
+   * Reads the stakeholder for two things: the client, which decides whether the
+   * TVS Credit questions are asked, and the vehicle segment, the fallback when
+   * valuationType (e.g. "Retail") doesn't map to a vehicle type.
+   */
+  private resolveCase(): void {
     this.effectiveVehicleType = this.valuationType;
-    if (normalizeVehicleType(this.valuationType)) return;
 
     this.stakeholderSvc
       .getStakeholder(this.valuationId, this.vehicleNumber, this.applicantContact)
       .pipe(take(1), catchError(() => of(null)))
       .subscribe(s => {
+        this.applyClientRules(isTvsCredit(s?.name));
+
         const seg = (s as any)?.vehicleSegment;
-        if (seg && normalizeVehicleType(seg)) {
+        if (!normalizeVehicleType(this.valuationType) && seg && normalizeVehicleType(seg)) {
           this.effectiveVehicleType = seg;
         }
         // The registry — and therefore which sections exist at all — only
@@ -288,6 +301,20 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
         this.recomputeScores();
         this.cdr.detectChanges();
       });
+  }
+
+  /**
+   * On a TVS Credit case the seized question appears, and it and the VIN plate
+   * become required: page 3 prints both, and a VIN plate left at No would print
+   * that the plate is missing.
+   */
+  private applyClientRules(isTvs: boolean): void {
+    this.isTvs = isTvs;
+    for (const key of ['vinPlate', 'seizedByOtherFinancier']) {
+      const c = this.form.get(key)!;
+      c.setValidators(isTvs ? Validators.required : null);
+      c.updateValueAndValidity({ emitEvent: false });
+    }
   }
 
   ngOnInit(): void {
@@ -320,8 +347,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
-        this.resolveVehicleType();
         this.initForm();
+        this.resolveCase();
         this.loadInspection();
       } else {
         this.loading = false;
@@ -386,7 +413,12 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       engineStarted: [''],
       // A vehicle cannot have travelled 0 km; 0 was being submitted as a real reading.
       odometer: [null, [Validators.required, Validators.min(1)]],
-      vinPlate: [false],
+      // Blank until answered, not a preselected No: on a TVS Credit case No prints that the
+      // plate is missing. Required there, see applyClientRules.
+      vinPlate: [null],
+      // Printed on every cover, so asked on every case, and never defaulted.
+      accidental: [null, Validators.required],
+      seizedByOtherFinancier: [null],
       bodyType: [''],
       transmissionType: [''],
       otherAccessoryFitment: [false],
@@ -700,7 +732,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       vehicleMoved: yn(data.vehicleMoved),
       engineStarted: yn(data.engineStarted),
       odometer: data.odometer ?? null,
-      vinPlate: toBool(data.vinPlate) ?? false,
+      vinPlate: toBool(data.vinPlate),
+      accidental: toBool(data.accidental),
+      seizedByOtherFinancier: toBool(data.seizedByOtherFinancier),
       bodyType: data.bodyType || '',
       transmissionType: nc(data.transmissionType),
       otherAccessoryFitment: toBool(data.otherAccessoryFitment) ?? false,

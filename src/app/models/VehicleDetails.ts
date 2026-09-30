@@ -44,6 +44,8 @@ export interface VehicleDetails {
   rto: string;
   lender: string;
   exShowroomPrice: number;
+  /** Estimated further life, in years. Asked on TVS Credit cases only. */
+  estimatedLifeRemaining?: number | null;
   categoryCode: string;
   normsType: string;
   makerVariant: string;

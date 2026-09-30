@@ -8,6 +8,10 @@ export interface Inspection {
   engineStarted: string;
   odometer: number;
   vinPlate: boolean;
+  /** Accident status. Asked on every case; printed on the report cover. */
+  accidental?: boolean | null;
+  /** Seized by another finance company. Asked on TVS Credit cases only. */
+  seizedByOtherFinancier?: boolean | null;
   bodyType: string;
   transmissionType: string;
   overallTyreCondition: string;

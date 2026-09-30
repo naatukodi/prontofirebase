@@ -72,6 +72,15 @@
         <input matInput [value]="inspection.vinPlate ? 'Yes' : 'No'" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
+        <mat-label>Accident Status</mat-label>
+        <input matInput [value]="inspection.accidental === true ? 'Yes' : inspection.accidental === false ? 'No' : '—'" readonly />
+      </mat-form-field>
+      <!-- Asked on TVS Credit cases only, so shown only where it was answered. -->
+      <mat-form-field *ngIf="inspection.seizedByOtherFinancier != null" appearance="fill">
+        <mat-label>Seized by Another Finance Company</mat-label>
+        <input matInput [value]="inspection.seizedByOtherFinancier ? 'Yes' : 'No'" readonly />
+      </mat-form-field>
+      <mat-form-field appearance="fill">
         <mat-label>Transmission Type</mat-label>
         <input matInput [value]="inspection.transmissionType || '—'" readonly />
       </mat-form-field>

@@ -304,6 +304,12 @@
         <input matInput [value]="vehicleDetails.exShowroomPrice" readonly />
       </mat-form-field>
 
+      <!-- Entered on TVS Credit cases only, so shown only where it was. -->
+      <mat-form-field *ngIf="vehicleDetails.estimatedLifeRemaining != null" appearance="fill">
+        <mat-label>Estimated Life Remaining</mat-label>
+        <input matInput [value]="vehicleDetails.estimatedLifeRemaining + ' years'" readonly />
+      </mat-form-field>
+
       <mat-form-field appearance="fill">
         <mat-label>Blacklist Status</mat-label>
         <input matInput [value]="vehicleDetails.backlistStatus ? 'Yes' : 'No'" readonly />
