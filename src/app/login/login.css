@@ -234,6 +234,53 @@
   margin-top: 0.9rem;
 }
 
+.btn:disabled {
+  cursor: default;
+  opacity: 0.65;
+  transform: none;
+}
+
+/* Secondary actions: switch between password and OTP sign-in, resend, skip */
+.link-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 0.35rem;
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.link-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+  text-decoration: none;
+}
+
+.form-hint {
+  margin-top: 0.35rem;
+  color: var(--ink-500);
+  font-size: 0.78rem;
+}
+
+.form-error {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .form-foot {
   margin-top: 2.2rem;
   text-align: center;
