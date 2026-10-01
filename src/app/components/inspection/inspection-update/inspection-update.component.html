@@ -100,7 +100,7 @@
             <mat-option [value]="false">No</mat-option>
           </mat-select>
           <!-- TVS Credit's page 3 turns a No into a sentence, so say what it will print. -->
-          <mat-hint *ngIf="isTvs && form.get('vinPlate')?.value === false">Report: {{ vinPlateMissingText }}</mat-hint>
+          <mat-hint *ngIf="isTvs && form.get('vinPlate')?.value === false">Added to report remarks: {{ vinPlateMissingText }}</mat-hint>
           <mat-error *ngIf="form.get('vinPlate')?.hasError('required')">Required for TVS Credit cases</mat-error>
         </mat-form-field>
         <mat-form-field appearance="fill">
@@ -113,7 +113,7 @@
         </mat-form-field>
         <!-- Only TVS Credit's report asks this, so only its cases do. -->
         <mat-form-field *ngIf="isTvs" appearance="fill">
-          <mat-label>Seized by Other Financier</mat-label>
+          <mat-label>Is the Vehicle Seized by Other Financier</mat-label>
           <mat-select formControlName="seizedByOtherFinancier">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>

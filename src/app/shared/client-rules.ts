@@ -17,6 +17,9 @@ export function isTvsCredit(clientName?: string | null): boolean {
   return /\btvs\s*credit\b/i.test(clientName ?? '');
 }
 
-/** What page 3 prints for a VIN plate the AVO found missing. The client's own wording. */
+/**
+ * What a TVS Credit report adds to the cover's REMARKS when the AVO found no VIN
+ * plate (its Additional Details box just says NOT AVAILABLE). The client's own wording.
+ */
 export const VIN_PLATE_MISSING_TEXT =
   'VIN plate not found. Chassis number physically inspected and found original.';

@@ -628,7 +628,9 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       overallRating: v.overallRating,
       valuationAmount: v.valuationAmount,
       chassisPunch: v.chassisPunch,
-      remarks: v.remarks || null,
+      // An emptied box is sent as "", not null: the API skips null as "not sent", so
+      // deleted remarks used to come back. The report prints the standard remark for "".
+      remarks: (v.remarks ?? '').trim(),
       assignedTo: this.assignedTo,
       assignedToPhoneNumber: this.assignedToPhoneNumber,
       assignedToEmail: this.assignedToEmail,
