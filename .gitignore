@@ -43,3 +43,4 @@ Thumbs.db
 
 # Local tooling
 .claude/
+firebase-debug*.log
