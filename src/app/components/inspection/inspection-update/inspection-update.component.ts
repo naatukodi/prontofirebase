@@ -44,7 +44,7 @@ const AVO_FIELD_LABELS: Record<string, string> = {
   inspectionLocation: 'Inspection location',
   vinPlate: 'VIN plate present',
   accidental: 'Accident status',
-  seizedByOtherFinancier: 'Seized by another finance company',
+  seizedByOtherFinancier: 'Seized by other financier',
   transmissionType: 'Transmission type',
   numberOfTyres: 'Number of tyres',
   missingTyres: 'Missing tyres',

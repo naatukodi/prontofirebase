@@ -113,7 +113,7 @@
         </mat-form-field>
         <!-- Only TVS Credit's report asks this, so only its cases do. -->
         <mat-form-field *ngIf="isTvs" appearance="fill">
-          <mat-label>Seized by Another Finance Company</mat-label>
+          <mat-label>Seized by Other Financier</mat-label>
           <mat-select formControlName="seizedByOtherFinancier">
             <mat-option [value]="true">Yes</mat-option>
             <mat-option [value]="false">No</mat-option>

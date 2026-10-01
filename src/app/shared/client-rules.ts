@@ -19,4 +19,4 @@ export function isTvsCredit(clientName?: string | null): boolean {
 
 /** What page 3 prints for a VIN plate the AVO found missing. The client's own wording. */
 export const VIN_PLATE_MISSING_TEXT =
-  'Not available on the vehicle, whereas chassis number verified physically and found genuine';
+  'VIN plate not found. Chassis number physically inspected and found original.';
