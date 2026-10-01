@@ -14,6 +14,8 @@ export type VehicleTypeKey = 'cv' | '4w' | '2w' | '3w' | 'ce' | 'bus' | 'fe';
  * - 'condition' (the default): GOOD 8.5, AVERAGE 5.5 … NO 1.0.
  * - 'no-is-good': the question asks about a fault, so NO is the good answer —
  *   Fluid Leaks: NO scores 8.5 and YES scores 1.0. Other answers score as usual.
+ *   Warning Lights On too, since 2026-10-01: until then it read as "do the lights
+ *   work", YES scored 8.5, and a YES now prints red on the report.
  * - 'zero-is-good': a count of faults — Missing Tyres: 0 scores 8.5, 1 or more 1.0.
  */
 export type FieldScoring = 'condition' | 'no-is-good' | 'zero-is-good';
@@ -248,7 +250,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On', type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -358,7 +360,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On', type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -468,7 +470,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Test Ride',      type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On', type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -579,7 +581,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On', type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -688,7 +690,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started',  type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Functional Test', type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Machine Moved',   type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights',  type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On',  type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -799,7 +801,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started', type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Test Drive',     type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',  type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights', type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On', type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {
@@ -910,7 +912,7 @@ const FIELD_REGISTRY: Record<VehicleTypeKey, InspectionSection[]> = {
         { key: 'engineStarted', label: 'Engine Started',      type: 'condition', default: 'YES' },
         { key: 'testDrive',     label: 'Field Function Test', type: 'condition', default: 'YES' },
         { key: 'vehicleMoved',  label: 'Vehicle Moved',       type: 'condition', default: 'YES' },
-        { key: 'warningLights', label: 'Warning Lights',      type: 'condition', default: 'YES' },
+        { key: 'warningLights', label: 'Warning Lights On',      type: 'condition', default: 'NO', scoring: 'no-is-good' },
       ],
     },
     {

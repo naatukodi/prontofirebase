@@ -77,7 +77,7 @@
       </mat-form-field>
       <!-- Asked on TVS Credit cases only, so shown only where it was answered. -->
       <mat-form-field *ngIf="inspection.seizedByOtherFinancier != null" appearance="fill">
-        <mat-label>Seized by Another Finance Company</mat-label>
+        <mat-label>Seized by Other Financier</mat-label>
         <input matInput [value]="inspection.seizedByOtherFinancier ? 'Yes' : 'No'" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
