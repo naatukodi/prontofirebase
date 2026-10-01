@@ -76,6 +76,8 @@ export class LoginComponent implements OnInit {
   confirmPassword = '';
   /** True when the account already has a password, so this step changes it. */
   hasPassword = false;
+  /** The signed-in number, given to the browser's password manager as the username. */
+  accountPhone = '';
   readonly minPasswordLength = MIN_PASSWORD_LENGTH;
 
   // Ensure phone is always 13 characters including '+91'
@@ -208,8 +210,10 @@ export class LoginComponent implements OnInit {
       await (userCred.user as User).reload();
       await this.auth.currentUser!.getIdToken(true);
       const hasPassword = this.auth.currentUser!.providerData.some(p => p.providerId === 'password');
+      const accountPhone = this.auth.currentUser!.phoneNumber ?? this.phone;
       this.zone.run(() => {
         this.hasPassword = hasPassword;
+        this.accountPhone = accountPhone;
         this.mode = 'setPassword';
       });
     } catch (err) {

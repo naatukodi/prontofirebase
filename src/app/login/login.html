@@ -73,7 +73,7 @@
               [(ngModel)]="phone"
               name="phone"
               placeholder="+91XXXXXXXXXX"
-              autocomplete="tel"
+              [attr.autocomplete]="mode === 'password' ? 'username' : 'tel'"
               required
             />
           </div>
@@ -140,6 +140,9 @@
 
         <!-- After an OTP login: set or change the password -->
         <ng-container *ngIf="mode === 'setPassword'">
+          <!-- Not shown: tells the browser's password manager which number this password is for. -->
+          <input type="text" name="username" autocomplete="username" [value]="accountPhone" readonly hidden />
+
           <div class="form-group">
             <label for="newPassword">New password</label>
             <input
