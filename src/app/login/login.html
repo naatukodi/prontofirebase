@@ -30,62 +30,154 @@
   <!-- RIGHT FORM -->
   <div class="login-form">
     <div class="form-inner">
-      <h2>Sign in</h2>
-      <p class="form-sub">Enter your registered mobile number to receive an OTP</p>
+      <ng-container [ngSwitch]="mode">
+        <ng-container *ngSwitchCase="'password'">
+          <h2>Sign in</h2>
+          <p class="form-sub">Enter your registered mobile number and password</p>
+        </ng-container>
+        <ng-container *ngSwitchCase="'otp'">
+          <h2>Sign in with OTP</h2>
+          <p class="form-sub">We'll send a one-time code to your registered mobile number. After signing in you can set a password.</p>
+        </ng-container>
+        <ng-container *ngSwitchCase="'setPassword'">
+          <h2>{{ hasPassword ? 'Set a new password' : 'Set a password' }}</h2>
+          <p class="form-sub">Next time, sign in with your phone number and this password. No OTP needed.</p>
+        </ng-container>
+      </ng-container>
 
-      <form (submit)="$event.preventDefault()">
-        <!-- Company picker. Hidden when this deployment is pinned to one brand, which
-             is how a future per-brand site drops it without a code change. -->
-        <div class="form-group" *ngIf="!brand.isPinned">
-          <label for="brand">Company</label>
-          <div class="brand-choice">
-            <button
-              *ngFor="let b of brands"
-              type="button"
-              class="brand-option"
-              [class.selected]="brand.active() === b.key"
-              (click)="chooseBrand(b.key)"
-            >
-              <img [src]="b.logo" [alt]="b.name" class="brand-option-logo" />
-              <span>{{ b.name }}</span>
+      <form (submit)="$event.preventDefault(); onSubmit()">
+        <ng-container *ngIf="mode !== 'setPassword'">
+          <!-- Company picker. Hidden when this deployment is pinned to one brand, which
+               is how a future per-brand site drops it without a code change. -->
+          <div class="form-group" *ngIf="!brand.isPinned">
+            <label for="brand">Company</label>
+            <div class="brand-choice">
+              <button
+                *ngFor="let b of brands"
+                type="button"
+                class="brand-option"
+                [class.selected]="brand.active() === b.key"
+                (click)="chooseBrand(b.key)"
+              >
+                <img [src]="b.logo" [alt]="b.name" class="brand-option-logo" />
+                <span>{{ b.name }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone number</label>
+            <input
+              id="phone"
+              type="tel"
+              [(ngModel)]="phone"
+              name="phone"
+              placeholder="+91XXXXXXXXXX"
+              autocomplete="tel"
+              required
+            />
+          </div>
+        </ng-container>
+
+        <!-- Password login (default) -->
+        <ng-container *ngIf="mode === 'password'">
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              [(ngModel)]="password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+
+          <p class="form-error" *ngIf="error" role="alert">{{ error }}</p>
+
+          <button type="submit" class="btn primary" [disabled]="busy">
+            {{ busy ? 'Signing in…' : 'Sign in' }}
+          </button>
+
+          <button type="button" class="link-btn" (click)="useMode('otp')">
+            First time, or forgot your password? Sign in with OTP
+          </button>
+        </ng-container>
+
+        <!-- OTP login: first time, or forgotten password -->
+        <ng-container *ngIf="mode === 'otp'">
+          <p class="form-error" *ngIf="error && !confirmation" role="alert">{{ error }}</p>
+
+          <button *ngIf="!confirmation" type="submit" class="btn primary" [disabled]="busy">
+            {{ busy ? 'Sending…' : 'Send OTP' }}
+          </button>
+
+          <div *ngIf="confirmation" class="otp-group">
+            <label for="otp">Enter OTP</label>
+            <input
+              id="otp"
+              type="text"
+              inputmode="numeric"
+              [(ngModel)]="otp"
+              name="otp"
+              placeholder="6-digit code"
+              autocomplete="one-time-code"
+              required
+            />
+            <p class="form-error" *ngIf="error" role="alert">{{ error }}</p>
+            <button type="submit" class="btn primary" [disabled]="busy">
+              {{ busy ? 'Checking…' : 'Verify and continue' }}
+            </button>
+            <button type="button" class="link-btn" (click)="sendOTP()" [disabled]="busy">
+              Didn't get it? Send the OTP again
             </button>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="phone">Phone number</label>
-          <input
-            id="phone"
-            type="tel"
-            [(ngModel)]="phone"
-            name="phone"
-            placeholder="+91XXXXXXXXXX"
-            autocomplete="tel"
-            required
-          />
-        </div>
-
-        <button type="button" class="btn primary" (click)="sendOTP()">
-          Send OTP
-        </button>
-
-        <div *ngIf="confirmation" class="otp-group">
-          <label for="otp">Enter OTP</label>
-          <input
-            id="otp"
-            type="text"
-            inputmode="numeric"
-            [(ngModel)]="otp"
-            name="otp"
-            placeholder="6-digit code"
-            autocomplete="one-time-code"
-            required
-          />
-          <button type="button" class="btn primary" (click)="verifyOTP()">
-            Verify &amp; continue
+          <button type="button" class="link-btn" (click)="useMode('password')">
+            Back to password sign-in
           </button>
-        </div>
+        </ng-container>
 
+        <!-- After an OTP login: set or change the password -->
+        <ng-container *ngIf="mode === 'setPassword'">
+          <div class="form-group">
+            <label for="newPassword">New password</label>
+            <input
+              id="newPassword"
+              type="password"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              autocomplete="new-password"
+              [attr.minlength]="minPasswordLength"
+              required
+            />
+            <span class="form-hint">At least {{ minPasswordLength }} characters. Mix letters and numbers.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirm password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <p class="form-error" *ngIf="error" role="alert">{{ error }}</p>
+
+          <button type="submit" class="btn primary" [disabled]="busy">
+            {{ busy ? 'Saving…' : 'Save password and continue' }}
+          </button>
+
+          <button type="button" class="link-btn" (click)="continueToApp()" [disabled]="busy">
+            Skip for now
+          </button>
+        </ng-container>
+
+        <!-- Always in the page: the invisible reCAPTCHA for OTP is bound to it on load. -->
         <div id="recaptcha-container"></div>
       </form>
 
