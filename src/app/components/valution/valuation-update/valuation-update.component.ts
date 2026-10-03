@@ -165,7 +165,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   private initForm() {
     this.form = this.fb.group({
       // Vehicle Identification
-      registrationNumber: [{ value: '', disabled: true }],
+      // Editable for when Surepass had nothing; the case stays keyed on vehicleNumber
+      registrationNumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9 ]+$/)]],
       make: ['', Validators.required],
       model: ['', Validators.required],
       bodyType: ['', Validators.required],
@@ -504,7 +505,10 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
   private patchForm(data: VehicleDetails) {
     this.form.patchValue({
-      registrationNumber: data.registrationNumber,
+      // Surepass's number when it returned one, else this case's own
+      registrationNumber: data.registrationNumber && data.registrationNumber !== 'null'
+        ? data.registrationNumber
+        : this.vehicleNumber,
       make: data.make,
       model: data.model,
       bodyType: data.bodyType,
@@ -592,6 +596,12 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   }
 
 
+  // Flags a hand-typed number that will print differently from the case it is filed under
+  get registrationDiffersFromCase(): boolean {
+    const reg = (this.form?.get('registrationNumber')?.value || '').replace(/\s+/g, '').toUpperCase();
+    return !!reg && reg !== (this.vehicleNumber || '').toUpperCase();
+  }
+
   private toIsoDate(val: any): string {
     if (!val) return '';
     // Material hands back a Date at LOCAL midnight. toISOString() converts to UTC,
@@ -609,7 +619,8 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
     const fd = new FormData();
     const v = this.form.getRawValue();
 
-    fd.append('registrationNumber', v.registrationNumber);
+    fd.append('registrationNumber',
+      (v.registrationNumber || this.vehicleNumber).replace(/\s+/g, '').toUpperCase());
     fd.append('make', v.make);
     fd.append('model', v.model);
     fd.append('bodyType', v.bodyType);
