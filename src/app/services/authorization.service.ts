@@ -55,7 +55,9 @@ export class AuthorizationService {
       return roles;
     } catch (err) {
       console.error('❌ Error fetching roles:', err);
-      this.perms = [];
+      // Not cached: one failed fetch used to leave the whole session on the
+      // "no permission" page until a reload. The next navigation retries.
+      this.perms = null;
       return [];
     }
   }

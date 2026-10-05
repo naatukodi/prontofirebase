@@ -173,7 +173,17 @@ export class EditUserComponent implements OnInit {
       region: user.region,
       block: user.block,
       state: user.state,
-      country: user.country
+      country: user.country,
+      // Location is required but only chosen from the PIN lookup, so a loaded
+      // user stayed invalid and Save never got past "Please fix the errors above".
+      // compareByName matches this against the lookup's option by name.
+      location: user.circle
+        ? {
+            name: user.circle, block: user.block, district: user.district,
+            division: user.division, state: user.state, country: user.country,
+            pincode: user.pincode
+          } as PincodeModel
+        : null
     });
   }
 
@@ -196,9 +206,16 @@ export class EditUserComponent implements OnInit {
   this.usersSvc.getStates().pipe(
     tap(states => this.allStates = states),
     // 2️⃣ then fetch user’s
-    switchMap(() => this.usersSvc.getUserStates(uid))
+    // the API answers 404 for a user with no states yet; that is an empty list
+    switchMap(() => this.usersSvc.getUserStates(uid).pipe(catchError(() => of([] as string[]))))
   ).subscribe({
-    next: userStates => this.userStates = userStates,
+    next: userStates => {
+      this.userStates = userStates;
+      // The district picker started empty, so a user's saved districts only
+      // showed after a state was picked by hand. Open it on their first state.
+      const first = this.userStateOptions[0];
+      if (first && !this.selectedStateKey) this.onDistrictStateChange(first.key);
+    },
     error: () => this.submitError = 'Failed to load states'
   });
 }
@@ -215,6 +232,14 @@ toggleState(stateName: string) {
   const call$ = already
     ? this.usersSvc.removeState(uid, stateName)
     : this.usersSvc.addState(uid, stateName);
+
+  const stateKey = this.allStates.find(s => s.name === stateName)?.key ?? null;
+  if (!already && !this.selectedStateKey && stateKey) {
+    this.onDistrictStateChange(stateKey);
+  } else if (already && this.selectedStateKey === stateKey) {
+    this.selectedStateKey = null;
+    this.allDistricts = [];
+  }
 
   call$.subscribe({
     error: () => {
@@ -345,6 +370,7 @@ toggleDistrict(district: string) {
 
   submit() {
     if (this.form.invalid) {
+      this.form.markAllAsTouched();   // show which field is holding the save up
       this.submitError = 'Please fix the errors above';
       return;
     }
