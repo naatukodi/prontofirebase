@@ -67,11 +67,14 @@
       </div>
     </div>
 
-    <div *ngIf="loading" class="pg-loading"><mat-spinner diameter="40"></mat-spinner></div>
+    <div *ngIf="loading" class="pg-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="pg-loading-note">Searching listing sites for similar vehicles. This can take up to a minute.</p>
+    </div>
 
     <div *ngIf="aiResult" class="pg-card">
       <div class="pg-card-title"><span class="pg-card-title-accent"></span>AI Valuation Result</div>
-      <div class="pg-card-body">{{ aiResult }}</div>
+      <div class="pg-card-body mv-result">{{ aiResult }}</div>
     </div>
 
     <div *ngIf="error" class="pg-error">{{ error }}</div>
