@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { AuthorizationService } from '../services/authorization.service';
 import { BrandService, BRANDS, BrandKey } from '../services/brand.service';
 
 import { FormsModule } from '@angular/forms';
@@ -49,6 +50,7 @@ export class LoginComponent implements OnInit {
      /login is the first page loaded (raw getAuth() crashed here) */
   private auth = inject(Auth);
   private authSvc = inject(AuthService);
+  private authz = inject(AuthorizationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private zone = inject(NgZone);
@@ -154,6 +156,9 @@ export class LoginComponent implements OnInit {
     try {
       await signInWithEmailAndPassword(this.auth, this.passwordLoginEmail(this.phone), this.password);
       await this.auth.currentUser!.getIdToken(true);
+      // Roles are cached in localStorage and only cleared on Logout, so a sign-in
+      // without one inherited the last session's list and hit "no permission".
+      this.authz.clearPermissions();
       this.zone.run(() => this.router.navigateByUrl(this.authSvc.returnUrl));
     } catch (err: any) {
       console.error(err);
@@ -209,6 +214,7 @@ export class LoginComponent implements OnInit {
       const userCred = await this.confirmation.confirm(this.otp);
       await (userCred.user as User).reload();
       await this.auth.currentUser!.getIdToken(true);
+      this.authz.clearPermissions();
       const hasPassword = this.auth.currentUser!.providerData.some(p => p.providerId === 'password');
       const accountPhone = this.auth.currentUser!.phoneNumber ?? this.phone;
       this.zone.run(() => {
