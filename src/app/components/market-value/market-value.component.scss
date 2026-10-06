@@ -56,3 +56,15 @@ h2 {
   white-space: pre-wrap; /* Preserves line breaks from the AI */
   padding: 8px 0;
 }
+
+/* The answer is a paragraph followed by the listings checked, one per line,
+   each with its link. Keep the line breaks and let long links wrap. */
+.mv-result {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+.pg-loading-note {
+  margin: 12px 0 0;
+}

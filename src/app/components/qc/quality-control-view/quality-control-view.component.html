@@ -504,6 +504,19 @@
           <div class="qc-vinfo-card"><div class="qc-vinfo-label">VEHICLE SCORE</div><div class="qc-vinfo-val">{{ report.qualityControl?.overallRating || '—' }}</div></div>
         </div>
 
+        <ng-container *ngIf="marketComparables.length">
+          <div class="qc-sub-header">
+            MARKET RANGE FROM {{ marketComparables.length }} LISTING{{ marketComparables.length === 1 ? '' : 'S' }}<span *ngIf="marketRangeReadAt"> · READ {{ marketRangeReadAt | date:'d MMM y' | uppercase }}</span>
+          </div>
+          <div class="qc-listings">
+            <a class="qc-listing" *ngFor="let c of marketComparables" [href]="c.url" target="_blank" rel="noopener noreferrer">
+              <span class="qc-listing-price">₹{{ c.price | number }}</span>
+              <span class="qc-listing-facts">{{ c.site }}<ng-container *ngIf="c.year"> · {{ c.year }}</ng-container><ng-container *ngIf="c.km"> · {{ c.km | number }} km</ng-container><ng-container *ngIf="c.location"> · {{ c.location }}</ng-container></span>
+            </a>
+          </div>
+          <p class="qc-listing-why" *ngIf="marketRationale">{{ marketRationale }}</p>
+        </ng-container>
+
         <div class="qc-sub-header">VALUATION ACCURACY</div>
         <div class="qc-card-grid qc-card-grid--fill">
           <div class="qc-card" [class.card-ok]="cl['valMinPhotos']==='pass'" [class.card-flag]="cl['valMinPhotos']==='fail'">

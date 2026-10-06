@@ -19,6 +19,7 @@ import { UsersService } from '../../../services/users.service';
 // Models
 import { QualityControlViewModel } from '../../../models/QualityControlViewModel';
 import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
+import { ValuationComparable } from '../../../models/ValuationEstimate';
 import { environment } from '../../../../environments/environment';
 
 // Shared QC verification engine (also used by the QC update page)
@@ -43,6 +44,13 @@ export class QualityControlViewComponent implements OnInit {
   private authz = inject(AuthorizationService);
 
   viewModel: QualityControlViewModel | null = null;
+
+  // What the AI market range was worked out from, so a reviewer can open the
+  // listings and judge the range rather than take it on trust. Empty on ranges
+  // made before the backend searched listing sites.
+  marketComparables: ValuationComparable[] = [];
+  marketRationale: string | null = null;
+  marketRangeReadAt: string | null = null;
 
   // ── What the photos say (read-only mirror of the update page) ───────────
   aiRunning = false;
@@ -470,6 +478,9 @@ export class QualityControlViewComponent implements OnInit {
           highRange:   ve?.highRange   ?? (ve as any)?.HighRange,
           rawResponse: ve?.rawResponse ?? (ve as any)?.RawResponse
         };
+        this.marketComparables = ve?.comparables ?? [];
+        this.marketRationale = ve?.rationale ?? null;
+        this.marketRangeReadAt = ve?.generatedAt ?? null;
         this.prefillChecklist();
 
         // Saved-only value for the quick-compare badge: stays "Waiting for

@@ -36,10 +36,10 @@ export class MarketValueComponent {
   aiResult: string | null = null;
   error: string | null = null;
 
-  // Slightly above the backend's own 30s ceiling on the AI call, so its
-  // "took too long" response wins under normal conditions and this only fires
-  // if the API itself is unreachable.
-  private readonly requestTimeoutMs = 35000;
+  // The backend now searches listing sites, which takes 15–70 seconds. This sits
+  // above its own 110s ceiling on the AI call, so its "took too long" response
+  // wins under normal conditions and this only fires if the API is unreachable.
+  private readonly requestTimeoutMs = 120000;
 
   constructor(
     private fb: FormBuilder,
