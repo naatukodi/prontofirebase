@@ -130,17 +130,21 @@ export class VehicleInspectionService {
     ).pipe(catchError(this.handleError));
   }
 
-  // ... (Existing checkMandatoryPhotos method - NO CHANGES) ...
+  /**
+   * Whether the case has the photos and video it needs to leave AVO. mediaOptional
+   * is true for clients that need none at all (an App Service setting on the
+   * backend, ClientRules__MediaOptionalClients); isComplete is then always true.
+   */
   checkMandatoryPhotos(
     valuationId: string,
     vehicleNumber: string,
     applicantContact: string
-  ): Observable<{ isComplete: boolean; missingPhotos: string[] }> {
+  ): Observable<{ isComplete: boolean; missingPhotos: string[]; mediaOptional?: boolean }> {
     const params = new HttpParams()
       .set('vehicleNumber', vehicleNumber)
       .set('applicantContact', applicantContact);
 
-    return this.http.get<{ isComplete: boolean; missingPhotos: string[] }>(
+    return this.http.get<{ isComplete: boolean; missingPhotos: string[]; mediaOptional?: boolean }>(
       `${this.baseUrl}/${valuationId}/photos/validate`,
       { params }
     ).pipe(
