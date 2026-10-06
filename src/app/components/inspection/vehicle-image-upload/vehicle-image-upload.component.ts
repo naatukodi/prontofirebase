@@ -36,6 +36,8 @@ interface MediaField {
 }
 
 interface PhotoGroup {
+  /** Stable across re-renders and across the switch to one group; see trackGroup. */
+  id: 'standard' | 'optional';
   title: string;
   hint: string;
   fields: MediaField[];
@@ -119,12 +121,22 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
   uploadError:    Partial<Record<MediaKey, string>> = {};
 
   /**
+   * Some clients send only a few photos and sometimes no video, so nothing is
+   * required on their cases. The backend decides which clients (an App Service
+   * setting) and says so in its photo check; until that answers, the page shows
+   * the usual split.
+   */
+  mediaOptional = false;
+
+  /**
    * Mandatory slots block Save on the AVO page; optional ones never do. Grouping
    * them makes that split visible instead of tagging individual cards in one
-   * undifferentiated grid.
+   * undifferentiated grid. On a case where nothing is required, there is no split
+   * to show: one group, the usual slots first.
    */
   get photoGroups(): PhotoGroup[] {
-    const build = (title: string, hint: string, fields: MediaField[]): PhotoGroup => ({
+    const build = (id: PhotoGroup['id'], title: string, hint: string, fields: MediaField[]): PhotoGroup => ({
+      id,
       title,
       hint,
       fields,
@@ -134,13 +146,24 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
       busy: fields.some(f => this.isUploading[f.key])
     });
 
+    const standard = this.mediaFields.filter(f => !f.optional);
+    const optional = this.mediaFields.filter(f => f.optional);
+
+    if (this.mediaOptional) {
+      return [
+        build('standard', 'Photos',
+              'Nothing here is required for this client. Upload whatever photos and video you have.',
+              [...standard, ...optional])
+      ];
+    }
+
     return [
-      build('Mandatory Photos',
+      build('standard', 'Mandatory Photos',
             'All of these are required before the inspection can be saved.',
-            this.mediaFields.filter(f => !f.optional)),
-      build('Optional Photos',
+            standard),
+      build('optional', 'Optional Photos',
             'Upload these when they apply — they never block saving.',
-            this.mediaFields.filter(f => f.optional))
+            optional)
     ];
   }
 
@@ -152,14 +175,16 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
    * element was replaced moments later, and the file chosen in the dialog landed on
    * a detached input: the selection silently disappeared every time.
    *
-   * Tracking by a stable key keeps the inputs alive across re-renders.
+   * Tracking by a stable key keeps the inputs alive across re-renders. The key is
+   * the group's id, not its title, so the standard group survives being renamed
+   * when the client turns out to need no photos.
    */
-  trackGroup = (_: number, g: PhotoGroup): string => g.title;
+  trackGroup = (_: number, g: PhotoGroup): string => g.id;
   trackField = (_: number, f: MediaField): MediaKey => f.key;
 
   /** A required slot with nothing uploaded yet — outlined in red on the card. */
   isMissingMandatory(field: MediaField): boolean {
-    return !field.optional && !this.uploadedUrls[field.key];
+    return !this.mediaOptional && !field.optional && !this.uploadedUrls[field.key];
   }
 
   // ── Bulk download ────────────────────────────────────────────────────────
@@ -289,6 +314,7 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
         this.loadExistingMedia();
         this.loadExistingMetadata();
         this.loadSavedCustomPhotos();
+        this.loadClientMediaRule();
       } else {
         this.error = 'Missing vehicleNumber or applicantContact in query parameters.';
       }
@@ -309,6 +335,24 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: (err) => console.warn('No existing media', err)
+      });
+  }
+
+  /**
+   * Asks the backend's photo check whether this case's client needs any photos.
+   * The same check gates Save on the AVO page, so the page and the gate cannot
+   * disagree. A failure leaves the usual Mandatory/Optional split: showing a
+   * requirement that isn't enforced is better than hiding one that is.
+   */
+  private loadClientMediaRule(): void {
+    this.vehicleInspectionService
+      .checkMandatoryPhotos(this.valuationId, this.vehicleNumber, this.applicantContact)
+      .subscribe({
+        next: (res) => {
+          this.mediaOptional = !!res?.mediaOptional;
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.warn('Could not check which photos are required', err)
       });
   }
 
