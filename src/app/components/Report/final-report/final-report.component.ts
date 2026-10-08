@@ -521,12 +521,6 @@ export class FinalReportComponent implements OnInit, OnDestroy {
     });
   }
 
-  onEdit(): void {
-    this.router.navigate(['/valuation', this.valuationId, 'final-report', 'update'], {
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
-    });
-  }
-
   onDelete(): void {
     if (!confirm('Delete this final report?')) return;
     this.valuationResponseService
@@ -537,8 +531,12 @@ export class FinalReportComponent implements OnInit, OnDestroy {
       });
   }
 
-  canEditFinalReport(): boolean {
-    return this.authz.hasAnyPermission(['CanCreateFinalReport', 'CanEditFinalReport']);
+  /** Approve, return or reject: final report staff and every admin. */
+  canDecideFinalReport(): boolean {
+    return this.authz.hasAnyPermission([
+      'CanCreateFinalReport', 'CanEditFinalReport',
+      'Admin', 'StateAdmin', 'SuperAdmin'
+    ]);
   }
   canDeleteFinalReport(): boolean {
     return this.authz.hasAnyPermission(['CanDeleteFinalReport']);

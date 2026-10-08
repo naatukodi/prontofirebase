@@ -305,7 +305,7 @@
     </div><!-- /report-paper -->
 
     <!-- Approver Decision (only for permitted users) -->
-    <div class="apr-action-bar" *ngIf="canEditFinalReport()">
+    <div class="apr-action-bar" *ngIf="canDecideFinalReport()">
       <button type="button" class="aab-btn aab-approve" (click)="onApprove()">
         <span class="aab-icon">✅</span>
         <div class="aab-title">Approve Case</div>
@@ -332,7 +332,6 @@
                                     : 'Preview the report and approve the case to unlock the download'">
         {{ downloadingPdf ? '⏳ Generating...' : caseApproved ? '⬇ Download PDF' : '🔒 Download PDF' }}
       </button>
-      <button *ngIf="canEditFinalReport()"   mat-raised-button color="primary" (click)="onEdit()">Edit</button>
       <button *ngIf="canDeleteFinalReport()" mat-raised-button color="warn"    (click)="onDelete()">Delete</button>
       <button mat-raised-button (click)="onBack()">Back</button>
     </div>
@@ -408,7 +407,7 @@
         </span>
         <button class="btn-cancel" (click)="closeModals()">Close</button>
         <button class="btn-confirm" style="background:#10b981"
-                *ngIf="!caseApproved && canEditFinalReport()"
+                *ngIf="!caseApproved && canDecideFinalReport()"
                 (click)="approveFromPreview()">✅ Approve Case</button>
         <button class="btn-confirm" *ngIf="caseApproved"
                 [disabled]="downloadingPdf" (click)="downloadPdf()">⬇ Download PDF</button>
