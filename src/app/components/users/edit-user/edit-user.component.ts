@@ -42,6 +42,7 @@ export class EditUserComponent implements OnInit {
     'CanEditQualityControl',
     'CanEditStakeholder',
     'CanEditVehicleDetails',
+    'CanEditFinalReport',
     'CanViewDashboard',
     'CanViewFinalReport',
     'CanViewInspection',
