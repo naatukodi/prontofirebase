@@ -336,6 +336,8 @@ toggleDistrict(district: string) {
   }
 
   formatRole(key: string) {
+    // The final report has no edit page: this permission approves, returns or rejects.
+    if (key === 'CanEditFinalReport') return 'Approve Final Report';
     return key
       .replace(/^Can/, '')
       .replace(/([A-Z])/g, ' $1')
