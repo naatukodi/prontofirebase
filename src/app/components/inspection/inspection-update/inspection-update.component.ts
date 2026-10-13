@@ -29,6 +29,7 @@ import {
 import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
 import { reportInvalidForm } from '../../../shared/form-errors';
 import { isTvsCredit, VIN_PLATE_MISSING_TEXT } from '../../../shared/client-rules';
+import { odometerValidator, parseOdometer } from '../../../shared/odometer';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -411,8 +412,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       // FUNCTIONALITY dropdowns now (the registry renders them), not General Condition's Yes/No.
       vehicleMoved: [''],
       engineStarted: [''],
+      // The km reading, or words such as NOT WORKING when the dial cannot be read.
       // A vehicle cannot have travelled 0 km; 0 was being submitted as a real reading.
-      odometer: [null, [Validators.required, Validators.min(1)]],
+      odometer: [null, [Validators.required, odometerValidator()]],
       // Blank until answered, not a preselected No: on a TVS Credit case No prints that the
       // plate is missing. Required there, see applyClientRules.
       vinPlate: [null],
@@ -731,7 +733,8 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       inspectionLocation: data.inspectionLocation || '',
       vehicleMoved: yn(data.vehicleMoved),
       engineStarted: yn(data.engineStarted),
-      odometer: data.odometer ?? null,
+      // Text, like the box: a number here would read as changed once the AVO types.
+      odometer: data.odometer != null ? String(data.odometer) : (data.odometerRemark || null),
       vinPlate: toBool(data.vinPlate),
       accidental: toBool(data.accidental),
       seizedByOtherFinancier: toBool(data.seizedByOtherFinancier),
@@ -1023,6 +1026,14 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const v = this.form.getRawValue();
     
     Object.keys(v).forEach(k => {
+      // The odometer box holds a reading or words; the API takes them as two fields.
+      if (k === 'odometer') {
+        const text = String(v[k] ?? '').trim();
+        const km = parseOdometer(text);
+        if (km !== null) fd.append('odometer', String(km));
+        else if (text) fd.append('odometerRemark', text.toUpperCase());
+        return;
+      }
       const value = this.formatDateValue(k, v[k]);
       // Append only if value is not null/undefined to avoid sending "null" strings
       if (value !== null && value !== undefined) {

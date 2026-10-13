@@ -304,7 +304,7 @@ export class InspectionViewComponent implements OnInit {
             inspectionLocation: data.inspectionLocation,
             vehicleMoved: data.vehicleMoved,
             engineStarted: data.engineStarted,
-            odometer: data.odometer,
+            odometer: data.odometer ?? data.odometerRemark,
             vinPlate: data.vinPlate,
             bodyType: data.bodyType,
             transmissionType: data.transmissionType,
