@@ -89,9 +89,11 @@
       <div class="grid">
         <mat-form-field *ngIf="showField('odometer')" appearance="fill">
           <mat-label>Odometer (km)</mat-label>
-          <input matInput type="number" formControlName="odometer" />
+          <input matInput formControlName="odometer" maxlength="25" autocomplete="off" />
+          <mat-hint>Km reading, or words like NOT WORKING</mat-hint>
           <mat-error *ngIf="form.get('odometer')?.hasError('required')">Odometer reading is required</mat-error>
           <mat-error *ngIf="form.get('odometer')?.hasError('min')">Enter the reading shown on the dial — 0 km is not a valid reading</mat-error>
+          <mat-error *ngIf="form.get('odometer')?.hasError('odometerMixed')">Type the reading in digits only (45000), or words only (NOT WORKING)</mat-error>
         </mat-form-field>
         <mat-form-field *ngIf="showField('vinPlate')" appearance="fill">
           <mat-label>VIN Plate Present</mat-label>

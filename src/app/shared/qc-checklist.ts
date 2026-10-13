@@ -15,6 +15,7 @@ import { FinalReport } from '../models/final-report.model';
 import { formatDdMmYyyy } from './date-format';
 import { getFieldRegistry, normalizeVehicleType } from './inspection-field-registry';
 import { mapVerdict } from './inspection-score';
+import { odometerRemark } from './odometer';
 
 export interface QcChecklistInput {
   report: FinalReport | null | undefined;
@@ -300,11 +301,14 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   }
 
   const odo = ins?.odometer ?? 0;
+  const odoRemark = odometerRemark(ins);
   if (odo > 0) {
     const odoShot = has('Odometer', 'InstrumentCluster');
     mark('accOdo', 'fail', odoShot
       ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} km and an odometer photo is on file — read the dial off it by eye.`
       : `Cannot be compared: no odometer photo was uploaded to read the dial from. AVO recorded ${inr(odo)} km.`);
+  } else if (odoRemark) {
+    mark('accOdo', 'fail', `Cannot be compared: AVO recorded the odometer as ${odoRemark} instead of a reading.`);
   } else {
     mark('accOdo', 'fail', 'Cannot be compared: AVO recorded no odometer reading.');
   }
@@ -489,7 +493,8 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
   } else {
     mark('valAgeOdo', 'fail', `Cannot be derived: ${!mfgYear && !odo
       ? 'neither the manufacture year nor an odometer reading was captured'
-      : !mfgYear ? 'no manufacture year was captured' : 'AVO recorded no odometer reading'}, so usage per year cannot be calculated.`);
+      : !mfgYear ? 'no manufacture year was captured'
+      : odoRemark ? `AVO recorded the odometer as ${odoRemark}` : 'AVO recorded no odometer reading'}, so usage per year cannot be calculated.`);
   }
 
   if (overallRating === 'GOOD')      mark('valScore', 'pass', `Overall vehicle score ${ratingShown} — in the GOOD band (7 and above).`);

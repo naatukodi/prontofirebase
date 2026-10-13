@@ -7,6 +7,9 @@ export interface Inspection {
   vehicleMoved: string;
   engineStarted: string;
   odometer: number;
+  /** Words typed in place of a reading when the odometer cannot be read ("NOT WORKING").
+   *  Set only while `odometer` is empty. */
+  odometerRemark?: string | null;
   vinPlate: boolean;
   /** Accident status. Asked on every case; printed on the report cover. */
   accidental?: boolean | null;

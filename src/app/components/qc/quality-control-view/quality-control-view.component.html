@@ -105,7 +105,7 @@
               </div>
               <div class="qcd-cell">
                 <div class="qcd-label">ODO METER</div>
-                <div class="qcd-value">{{ report.inspectionDetails?.odometer | number }} km</div>
+                <div class="qcd-value">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' km' : (report.inspectionDetails?.odometerRemark || '—') }}</div>
               </div>
             </div>
             <div class="qc-data-row">
@@ -261,7 +261,7 @@
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Odometer (km)</mat-label>
-            <input matInput [value]="(report.inspectionDetails?.odometer | number) || '—'" readonly />
+            <input matInput [value]="(report.inspectionDetails?.odometer | number) || report.inspectionDetails?.odometerRemark || '—'" readonly />
           </mat-form-field>
         </div>
       </div>

@@ -134,7 +134,7 @@
           <div class="rps-row"><span class="rps-l">Inspected By</span><span class="rps-v">{{ report.inspectionDetails?.vehicleInspectedBy || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Date of Inspection</span><span class="rps-v">{{ report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy' }}</span></div>
           <div class="rps-row"><span class="rps-l">Inspection Location</span><span class="rps-v">{{ report.inspectionDetails?.inspectionLocation || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Odometer Reading</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer | number }} km</span></div>
+          <div class="rps-row"><span class="rps-l">Odometer Reading</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' km' : (report.inspectionDetails?.odometerRemark || '—') }}</span></div>
         </div>
         <div class="rps-remarks" *ngIf="report.inspectionDetails?.remarks">
           <strong>Remarks:</strong> {{ report.inspectionDetails?.remarks }}

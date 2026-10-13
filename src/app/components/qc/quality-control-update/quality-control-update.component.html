@@ -210,10 +210,10 @@
           <div class="qc-card-title">Odometer in photo matches reported KM<small>Compare dashboard photo vs report KM</small></div>
 
           <!-- The reader already extracts the dial figure; it was never shown. -->
-          <div class="qc-evidence" *ngIf="avoOdometer !== null || photoOdometer !== null">
+          <div class="qc-evidence" *ngIf="avoOdometer !== null || avoOdometerRemark || photoOdometer !== null">
             <div class="qc-ev-row">
               <span class="qc-ev-l">AVO recorded</span>
-              <span class="qc-ev-v">{{ avoOdometer !== null ? (avoOdometer | number) + ' km' : 'not recorded' }}</span>
+              <span class="qc-ev-v">{{ avoOdometer !== null ? (avoOdometer | number) + ' km' : (avoOdometerRemark || 'not recorded') }}</span>
             </div>
             <div class="qc-ev-row">
               <span class="qc-ev-l">Photo reads</span>

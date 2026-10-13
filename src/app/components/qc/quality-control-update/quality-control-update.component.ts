@@ -24,6 +24,7 @@ import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 import { reportInvalidForm } from '../../../shared/form-errors';
 import { splitEvidence } from '../../../shared/evidence';
+import { odometerRemark } from '../../../shared/odometer';
 import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
 
 // Components
@@ -457,6 +458,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   get avoOdometer(): number | null {
     const v = this.report?.inspectionDetails?.odometer;
     return typeof v === 'number' && v > 0 ? v : null;
+  }
+
+  /** Words the AVO typed instead of a reading ("NOT WORKING"), when there is no reading. */
+  get avoOdometerRemark(): string | null {
+    return this.avoOdometer === null ? odometerRemark(this.report?.inspectionDetails) : null;
   }
 
   /** The odometer the reader took off the dial, when it managed to read one. */
