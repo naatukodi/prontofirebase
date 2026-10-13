@@ -47,6 +47,11 @@ export class DashboardComponent implements OnInit {
    * is why search had to move to the server — these rows are no longer loaded here.
    */
   private static readonly COMPLETED_VISIBLE_DAYS = 30;
+  /**
+   * How long an open case stays on the dashboard after it was created. The same kind
+   * of display rule: an older open case is only left off the list, and search finds it.
+   */
+  private static readonly OPEN_VISIBLE_DAYS = 60;
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
@@ -172,8 +177,8 @@ export class DashboardComponent implements OnInit {
     .subscribe({
       next: (result) => {
         if (result.admin) {
-          const all = result.open || [];
-          this.completedCases = this.withinCompletedWindow(result.completed || []);
+          const all = this.withinOpenWindow(result.open || []);
+          this.completedCases = this.newestApprovedFirst(this.withinCompletedWindow(result.completed || []));
 
           const stepOrder = this.currentUser
             ? this.roleStepOrder[this.currentUser.roleId]
@@ -189,8 +194,8 @@ export class DashboardComponent implements OnInit {
         } else {
           const stats = result.stats;
           this.userStats = stats;
-          this.claims = stats.openCases || [];
-          this.completedCases = this.withinCompletedWindow(stats.completedCases || []);
+          this.claims = this.withinOpenWindow(stats.openCases || []);
+          this.completedCases = this.newestApprovedFirst(this.withinCompletedWindow(stats.completedCases || []));
 
           this.claims.sort((a, b) =>
             new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
@@ -263,13 +268,38 @@ export class DashboardComponent implements OnInit {
    * a dashboard that is meant to show what is live.
    */
   private withinCompletedWindow(rows: WFValuation[]): WFValuation[] {
-    const cutoff = Date.now() - DashboardComponent.COMPLETED_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+    return this.withinDays(rows, DashboardComponent.COMPLETED_VISIBLE_DAYS,
+                           v => v.completedAt || v.updatedAt || v.createdAt);
+  }
+
+  /**
+   * Keeps only open cases created within the visible window.
+   *
+   * Counted from creation, the date the TAT column shows. Every count on the page is
+   * taken from this list, so the tiles, tabs and donut follow it.
+   */
+  private withinOpenWindow(rows: WFValuation[]): WFValuation[] {
+    return this.withinDays(rows, DashboardComponent.OPEN_VISIBLE_DAYS, v => v.createdAt);
+  }
+
+  private withinDays(rows: WFValuation[], days: number,
+                     dateOf: (v: WFValuation) => string | null | undefined): WFValuation[] {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     return (rows || []).filter(v => {
-      const t = v.completedAt || v.updatedAt || v.createdAt;
+      const t = dateOf(v);
       if (!t) return true;                       // no date: keep rather than hide
       const d = new Date(t).getTime();
       return isNaN(d) ? true : d >= cutoff;
     });
+  }
+
+  /** Latest approval first, so the list opens on what was finished most recently. */
+  private newestApprovedFirst(rows: WFValuation[]): WFValuation[] {
+    const when = (v: WFValuation) => {
+      const d = new Date(v.completedAt || v.updatedAt || v.createdAt || 0).getTime();
+      return isNaN(d) ? 0 : d;
+    };
+    return [...rows].sort((a, b) => when(b) - when(a));
   }
 
   /** Minimum term the server search accepts; below this the local filter is used. */
