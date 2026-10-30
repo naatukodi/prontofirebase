@@ -55,6 +55,56 @@
           </ul>
         </li>
 
+        <!-- Photo uploads from the camera app — AVO, QC, Approver and admin roles -->
+        <li class="nav-item uploads" *ngIf="showUploads$ | async">
+          <a class="nav-link bell" (click)="toggleUploads($event)"
+             title="Photo uploads from the camera app" aria-label="Photo uploads">
+            <i class="bi bi-bell-fill"></i>
+            <span class="d-lg-none">Uploads</span>
+            <span class="bell-count" *ngIf="uploads.unreadCount() > 0">
+              {{ uploads.unreadCount() > 99 ? '99+' : uploads.unreadCount() }}
+            </span>
+          </a>
+
+          <div class="uploads-panel" *ngIf="uploadsOpen" (click)="$event.stopPropagation()">
+            <div class="uploads-head">
+              <span>Photo uploads</span>
+              <button type="button" class="link-btn"
+                      [disabled]="uploads.unreadCount() === 0" (click)="uploads.markAllRead()">
+                Mark all read
+              </button>
+            </div>
+
+            <div class="uploads-empty" *ngIf="uploads.uploads().length === 0">
+              No uploads from the camera app in the last 7 days.
+            </div>
+
+            <div class="upload-item" *ngFor="let u of uploads.uploads()" [class.unread]="uploads.isUnread(u)">
+              <button type="button" class="upload-main" (click)="openUpload(u)">
+                <div class="upload-top">
+                  <strong>{{ u.vehicleNumber }}</strong>
+                  <span class="upload-ref" *ngIf="u.referenceNumber">{{ u.referenceNumber }}</span>
+                  <span class="upload-time">{{ u.lastUploadedAt | date: timeFormat(u) }}</span>
+                </div>
+                <div class="upload-sub">
+                  {{ uploads.summary(u) }} uploaded from the {{ uploads.sourceLabel(u) }}<ng-container *ngIf="u.uploadedBy"> by {{ u.uploadedBy }}</ng-container>
+                </div>
+                <div class="upload-status ok" *ngIf="u.mediaOptional || u.missingMandatory.length === 0">
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ u.mediaOptional ? 'No photos required for this client' : 'All mandatory photos received' }}
+                </div>
+                <div class="upload-status warn" *ngIf="!u.mediaOptional && u.missingMandatory.length > 0">
+                  <i class="bi bi-exclamation-triangle-fill"></i> Missing: {{ missingText(u) }}
+                </div>
+              </button>
+              <button type="button" class="link-btn" (click)="toggleDetails(u)">
+                {{ expanded.has(u.id) ? 'Hide photos' : 'Show photos' }}
+              </button>
+              <div class="upload-photos" *ngIf="expanded.has(u.id)">{{ photoList(u) }}</div>
+            </div>
+          </div>
+        </li>
+
         <li class="nav-item">
           <a class="nav-link" (click)="onLogout()">
             <i class="bi bi-box-arrow-right"></i> Logout

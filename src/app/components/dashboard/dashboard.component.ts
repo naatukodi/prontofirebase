@@ -1,6 +1,6 @@
 // src/app/components/dashboard/dashboard.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin, from, of, EMPTY, Observable, Subject } from 'rxjs';
 import { catchError, finalize, map, switchMap, take, timeout, debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { WFValuation, UserDashboardStats } from '../../models/valuation.model';
 import { UserModel } from '../../models/user.model';
 import { SharedModule } from '../shared/shared.module/shared.module';
 import { stageLabel } from '../../shared/stage-labels';
+import { MediaUpload, MediaUploadService } from '../../services/media-upload.service';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +40,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class DashboardComponent implements OnInit {
   readonly stageLabel = stageLabel;
+  /** Camera-app uploads, for the badge on a case's row. */
+  readonly uploads = inject(MediaUploadService);
 
   claims: WFValuation[] = [];
   completedCases: WFValuation[] = [];
@@ -398,6 +401,19 @@ export class DashboardComponent implements OnInit {
   getStepIndex(v: WFValuation): number {
     const idx = (v.workflowStepOrder ?? 1) - 1;
     return Math.min(Math.max(idx, 0), 4);
+  }
+
+  /** The case's camera-app upload from the last day, if it had one. */
+  recentUpload(v: WFValuation): MediaUpload | undefined {
+    return this.uploads.recentByCase().get(v.valuationId);
+  }
+
+  uploadTitle(u: MediaUpload): string {
+    const at = new Date(u.lastUploadedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    const missing = u.mediaOptional || u.missingMandatory.length === 0
+      ? 'All mandatory photos received.'
+      : `Missing: ${u.missingMandatory.join(', ')}.`;
+    return `${this.uploads.summary(u)} uploaded from the ${this.uploads.sourceLabel(u)} at ${at}. ${missing}`;
   }
 
   /** True for a row from the completed list, whichever list is showing it. */

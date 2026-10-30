@@ -206,7 +206,13 @@
 
           <ng-container matColumnDef="vehicleNumber">
             <th mat-header-cell *matHeaderCellDef>Vehicle No.</th>
-            <td mat-cell *matCellDef="let v"><strong>{{ v.vehicleNumber }}</strong></td>
+            <td mat-cell *matCellDef="let v">
+              <strong>{{ v.vehicleNumber }}</strong>
+              <span *ngIf="recentUpload(v) as u" class="upload-badge"
+                    [class.upload-badge-new]="uploads.isUnread(u)" [title]="uploadTitle(u)">
+                <i class="bi bi-camera-fill"></i> Photos {{ u.lastUploadedAt | date: 'h:mm a' }}
+              </span>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="applicant">
