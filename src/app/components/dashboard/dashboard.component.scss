@@ -106,6 +106,12 @@
 
   &:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 
+  // The tiles are buttons that open their cases below.
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  &.active { box-shadow: var(--shadow-md); outline: 2px solid var(--brand); outline-offset: -1px; }
+
   .kpi-chip {
     width: 36px; height: 36px;
     border-radius: 10px;
@@ -191,7 +197,7 @@
   background: var(--brand-100); color: var(--brand-700);
   padding: 3px 11px; border-radius: 999px;
 }
-.today-list { display: flex; flex-direction: column; }
+.today-list { display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
 .today-empty { text-align: center; padding: 28px 10px; color: var(--ink-500); font-size: 0.78rem; }
 .today-item {
   display: flex; align-items: center; gap: 11px;

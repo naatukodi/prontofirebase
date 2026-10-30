@@ -23,6 +23,8 @@ import { VehicleDuplicateCheckResponse } from '../../../models/vehicle-duplicate
 import { AuthorizationService } from '../../../services/authorization.service';
 import { StakeholderService } from '../../../services/stakeholder.service';
 import { isTvsCredit } from '../../../shared/client-rules';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
+import { reportInvalidForm } from '../../../shared/form-errors';
 
 // ✅ USE EXISTING SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
@@ -699,9 +701,16 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
   }
 
 
+  /** Takes the user to the first field holding the save up and names what is missing. */
+  private reportInvalid(): void {
+    this._snackBar.open(reportInvalidForm(this.form), 'Close', {
+      duration: 6000, horizontalPosition: 'center', verticalPosition: 'top'
+    });
+  }
+
   onSave() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.reportInvalid();
       return;
     }
     this.saving = true;
@@ -775,7 +784,7 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.reportInvalid();
       return;
     }
 
@@ -844,13 +853,12 @@ export class ValuationUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          // The case has moved to AVO — follow it rather than staying here.
-          this.router.navigate(['/valuation', this.valuationId, 'inspection'], {
-            queryParams: {
-              vehicleNumber: this.vehicleNumber,
-              applicantContact: this.applicantContact,
-              valuationType: this.valuationType
-            }
+          // The case has moved to AVO — follow it there if this user can open
+          // that page, otherwise back to their dashboard.
+          followCaseOrGoHome(this.router, this.authz, this.valuationId, 'inspection', {
+            vehicleNumber: this.vehicleNumber,
+            applicantContact: this.applicantContact,
+            valuationType: this.valuationType
           });
         },
         error: (err) => {

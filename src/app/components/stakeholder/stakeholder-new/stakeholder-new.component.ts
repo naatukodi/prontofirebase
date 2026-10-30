@@ -3,6 +3,8 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { reportInvalidForm } from '../../../shared/form-errors';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
+import { AuthorizationService } from '../../../services/authorization.service';
 import {
   FormBuilder,
   FormGroup,
@@ -52,6 +54,8 @@ const STAKEHOLDER_FIELD_LABELS: Record<string, string> = {
   styleUrls: ['./stakeholder-new.component.scss']
 })
 export class StakeholderNewComponent implements OnInit, OnDestroy {
+  private authz = inject(AuthorizationService);
+
   /** Dedupe spans both companies, so each match has to say which one it sits in. */
   readonly brandName = brandName;
 
@@ -552,15 +556,12 @@ export class StakeholderNewComponent implements OnInit, OnDestroy {
               });
             });
 
-          // The case has moved to Backend — follow it there. This also fixes a
-          // wrong path: the route is /valuation (singular), so the old plural
-          // form fell through the wildcard and landed on the dashboard.
-          this.router.navigate(['/valuation', this.valuationId, 'vehicle-details'], {
-            queryParams: {
-              vehicleNumber: vn,
-              applicantContact: ac,
-              valuationType: this.form.get('valuationType')?.value
-            }
+          // The case has moved to Backend — follow it there if this user can
+          // open that page, otherwise back to their dashboard.
+          followCaseOrGoHome(this.router, this.authz, this.valuationId, 'vehicle-details', {
+            vehicleNumber: vn,
+            applicantContact: ac,
+            valuationType: this.form.get('valuationType')?.value
           });
         },
         error: err => {

@@ -68,7 +68,7 @@ export class WorkflowButtonsComponent {
     { order: 2, label: 'Backend',      route: 'vehicle-details', can: () => this.canViewVehicleDetails() },
     { order: 3, label: 'AVO',          route: 'inspection',      can: () => this.canViewInspection() },
     { order: 4, label: 'QC',           route: 'quality-control', can: () => this.canViewQualityControl() },
-    { order: 5, label: 'Final Report', route: 'final-report',    can: () => this.canViewFinalReport() },
+    { order: 5, label: 'Approver',     route: 'final-report',    can: () => this.canViewFinalReport() },
   ];
 
   /** Query params every stage link carries. */

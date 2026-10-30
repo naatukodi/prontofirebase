@@ -39,7 +39,7 @@
 
           <ng-container matColumnDef="roleId">
             <th mat-header-cell *matHeaderCellDef>Role</th>
-            <td mat-cell *matCellDef="let u">{{ u.roleId }}</td>
+            <td mat-cell *matCellDef="let u">{{ stageLabel(u.roleId) }}</td>
           </ng-container>
 
           <ng-container matColumnDef="whatsapp">

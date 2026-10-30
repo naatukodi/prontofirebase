@@ -232,6 +232,19 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
     return this.mediaFields.filter(f => this.isMissingMandatory(f)).length;
   }
 
+  /**
+   * Set when the AVO page sent the user here because Save found photos missing
+   * (`?missing=1`), so the page opens on the first red card instead of the top.
+   */
+  private jumpToMissing = false;
+
+  private scrollToFirstMissing(): void {
+    setTimeout(() => {
+      document.querySelector<HTMLElement>('.card-missing')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
   /** Uploads every file selected in this group, one at a time. */
   async uploadGroup(group: PhotoGroup): Promise<void> {
     for (const key of group.pending) {
@@ -308,6 +321,7 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
       const vn = params.get('vehicleNumber');
       const ac = params.get('applicantContact');
       this.valuationType = params.get('valuationType')!;
+      this.jumpToMissing = params.get('missing') === '1';
       if (vn && ac) {
         this.vehicleNumber = vn;
         this.applicantContact = ac;
@@ -333,6 +347,10 @@ export class VehicleImageUploadComponent implements OnInit, OnDestroy {
             }
           });
           this.cdr.detectChanges();
+          if (this.jumpToMissing) {
+            this.jumpToMissing = false;
+            this.scrollToFirstMissing();
+          }
         },
         error: (err) => console.warn('No existing media', err)
       });

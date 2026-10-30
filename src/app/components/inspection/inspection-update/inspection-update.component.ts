@@ -1,6 +1,6 @@
 // src/app/valuation-inspection-update/inspection-update.component.ts
 
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -28,6 +28,8 @@ import {
 } from '../../../shared/inspection-field-registry';
 import { sectionScoreFor, scoreBand, ScoreBand } from '../../../shared/inspection-score';
 import { reportInvalidForm } from '../../../shared/form-errors';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
+import { AuthorizationService } from '../../../services/authorization.service';
 import { isTvsCredit, VIN_PLATE_MISSING_TEXT } from '../../../shared/client-rules';
 import { odometerValidator, parseOdometer } from '../../../shared/odometer';
 
@@ -75,6 +77,7 @@ const notMoreThanTyres: ValidatorFn = (c: AbstractControl): ValidationErrors | n
   styleUrls: ['./inspection-update.component.scss']
 })
 export class InspectionUpdateComponent implements OnInit, OnDestroy {
+  private authz = inject(AuthorizationService);
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -1141,14 +1144,18 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
     const message =
       `✅ Inspection details saved.\n\n` +
       `⚠️ ${this.missingPhotos.length} mandatory images are still missing:\n\n${missingList}\n\n` +
-      `Upload them to move this case forward. Your entered details are safe.`;
-    alert(message);
+      `Upload them to move this case forward. Your entered details are safe.\n\n` +
+      `Go to the photos now? The missing ones are marked in red.`;
+    if (confirm(message)) this.goBackToPhotoUpload(true);
   }
 
-  goBackToPhotoUpload(): void {
+  goBackToPhotoUpload(toMissing = false): void {
     this.router.navigate(['/valuation', this.valuationId, 'inspection', 'vehicle-image-upload'], {
       // [ADDED FOR PDF READ-ONLY VIEW] Pass viewOnly back
-      queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType, viewOnly: this.isViewOnly }
+      queryParams: {
+        vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType, viewOnly: this.isViewOnly,
+        ...(toMissing ? { missing: 1 } : {})
+      }
     });
   }
 
@@ -1277,7 +1284,10 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
 
     const photosValid = await this.checkMandatoryPhotosBeforeSave();
     if (!photosValid) {
-      this.showMissingPhotosDialog();
+      // Do what Save does: keep the typed details, then say which photos are
+      // missing and offer to go to them. Submit used to stop here without saving
+      // while the message said "Inspection details saved".
+      await this.onSave();
       return;
     }
 
@@ -1317,10 +1327,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          // The case has moved to QC, so follow it there. Landing back on the
+          // The case has moved to QC, so follow it there if this user can open
+          // that page, otherwise back to their dashboard. Landing back on the
           // AVO page left people wondering whether the submit had worked.
-          this.router.navigate(['/valuation', this.valuationId, 'quality-control'], {
-            queryParams: { vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType }
+          followCaseOrGoHome(this.router, this.authz, this.valuationId, 'quality-control', {
+            vehicleNumber: this.vehicleNumber, applicantContact: this.applicantContact, valuationType: this.valuationType
           });
         },
         error: (err) => {
