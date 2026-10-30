@@ -1,6 +1,6 @@
 // src/app/components/report-completion-update/report-completion-update.component.ts
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -12,6 +12,9 @@ import { ValuationResponseService } from '../../../services/valuation-response.s
 import { UsersService } from '../../../services/users.service';
 import { RouterModule } from '@angular/router';
 import { WorkflowService } from '../../../services/workflow.service';
+import { AuthorizationService } from '../../../services/authorization.service';
+import { reportInvalidForm } from '../../../shared/form-errors';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
 
 // ✅ IMPORT HISTORY LOGGER SERVICE
 import { HistoryLoggerService } from '../../../services/history-logger.service';
@@ -25,6 +28,7 @@ import { HistoryLoggerService } from '../../../services/history-logger.service';
   styleUrls: ['./report-completion-update.component.scss']
 })
 export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
+  private authz = inject(AuthorizationService);
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -192,9 +196,16 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
     };
   }
 
+  /** Takes the user to the first field holding the save up and names what is missing. */
+  private reportInvalid(): void {
+    this._snackBar.open(reportInvalidForm(this.form), 'Close', {
+      duration: 6000, horizontalPosition: 'center', verticalPosition: 'top'
+    });
+  }
+
   onSaveDraft(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.reportInvalid();
       return;
     }
     this.saving = true;
@@ -234,7 +245,7 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
 
   onSubmitForReview(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.reportInvalid();
       return;
     }
 
@@ -284,16 +295,10 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
           verticalPosition: 'top'
         });
 
-        this.router.navigate([
-          '/valuation',
-          this.valuationId,
-          'final-report'
-        ], {
-          queryParams: {
-            vehicleNumber: this.vehicleNumber,
-            applicantContact: this.applicantContact,
-            valuationType: this.valuationType
-          }
+        followCaseOrGoHome(this.router, this.authz, this.valuationId, 'final-report', {
+          vehicleNumber: this.vehicleNumber,
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         });
       },
       error: (err) => {
@@ -306,7 +311,7 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      this.reportInvalid();
       return;
     }
     this.saving = true;
@@ -357,12 +362,10 @@ export class ReportCompletionUpdateComponent implements OnInit, OnDestroy {
           verticalPosition: 'top' 
         });
 
-        this.router.navigate(['/valuation', this.valuationId, 'final-report'], {
-          queryParams: {
-            vehicleNumber: this.vehicleNumber,
-            applicantContact: this.applicantContact,
-            valuationType: this.valuationType
-          }
+        followCaseOrGoHome(this.router, this.authz, this.valuationId, 'final-report', {
+          vehicleNumber: this.vehicleNumber,
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
         });
       },
       error: (err) => {

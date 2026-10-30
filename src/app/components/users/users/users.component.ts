@@ -4,6 +4,7 @@ import { CommonModule }          from '@angular/common';
 import { UsersService }          from '../../../services/users.service';
 import { UserModel }             from '../../../models/user.model';
 import { SharedModule } from '../../shared/shared.module/shared.module';
+import { stageLabel } from '../../../shared/stage-labels';
 import { Router } from '@angular/router';
 
 @Component({
@@ -17,6 +18,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./users.component.scss']
 })
 export class UsersComponent implements OnInit {
+  readonly stageLabel = stageLabel;
   users: UserModel[] = [];
   loading = true;
   error: string | null = null;

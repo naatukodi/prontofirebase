@@ -1,6 +1,6 @@
 ﻿// src/app/valuation-quality-control/quality-control-update.component.ts
 
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,6 +23,8 @@ import { FinalReport, PhotoUrls } from '../../../models/final-report.model';
 // Shared QC verification engine (also used by the QC view page)
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 import { reportInvalidForm } from '../../../shared/form-errors';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
+import { AuthorizationService } from '../../../services/authorization.service';
 import { splitEvidence } from '../../../shared/evidence';
 import { odometerRemark } from '../../../shared/odometer';
 import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
@@ -83,6 +85,7 @@ const QC_FIELD_LABELS: Record<string, string> = {
   styleUrls: ['./quality-control-update.component.scss']
 })
 export class QualityControlUpdateComponent implements OnInit, OnDestroy {
+  private authz = inject(AuthorizationService);
   valuationId!: string;
   vehicleNumber!: string;
   applicantContact!: string;
@@ -881,13 +884,12 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          // The case has moved to Final Report — follow it rather than staying here.
-          this.router.navigate(['/valuation', this.valuationId, 'final-report'], {
-            queryParams: {
-              vehicleNumber: this.vehicleNumber,
-              applicantContact: this.applicantContact,
-              valuationType: this.valuationType
-            }
+          // The case has moved to the Approver — follow it there if this user can
+          // open that page, otherwise back to their dashboard.
+          followCaseOrGoHome(this.router, this.authz, this.valuationId, 'final-report', {
+            vehicleNumber: this.vehicleNumber,
+            applicantContact: this.applicantContact,
+            valuationType: this.valuationType
           });
         },
         error: (err) => {

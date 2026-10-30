@@ -8,6 +8,7 @@ import { UserModel } from '../../../models/user.model';
 import { switchMap, debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '../../shared/shared.module/shared.module';
+import { stageLabel } from '../../../shared/stage-labels';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
@@ -30,6 +31,7 @@ pincodeError: string | null = null;
 submitError: string | null = null;
 
 roleOptions = ['SuperAdmin','StateAdmin','Admin', 'Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
+readonly stageLabel = stageLabel;
 branchTypes = ['Head Office', 'onField', 'Branch'];
 serviceStatuses = ['Servicable', 'Non-Servicable'];
 locationOptions: PincodeModel[] = [];

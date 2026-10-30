@@ -20,7 +20,7 @@
           <mat-form-field appearance="fill">
             <mat-label>Role</mat-label>
             <mat-select formControlName="roleId">
-              <mat-option *ngFor="let r of roleOptions" [value]="r">{{ r }}</mat-option>
+              <mat-option *ngFor="let r of roleOptions" [value]="r">{{ stageLabel(r) }}</mat-option>
             </mat-select>
             <mat-error *ngIf="form.get('roleId')!.hasError('required')">Required</mat-error>
           </mat-form-field>

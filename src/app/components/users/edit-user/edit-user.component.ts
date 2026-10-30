@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module/shared.module';
+import { stageLabel } from '../../../shared/stage-labels';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -71,6 +72,7 @@ export class EditUserComponent implements OnInit {
   userDistricts: string[] = [];
 
   roleOptions = ['SuperAdmin', 'StateAdmin', 'Admin', 'Stakeholder', 'BackEnd', 'AVO', 'QC', 'FinalReport'];
+  readonly stageLabel = stageLabel;
   branchTypes = ['Head Office', 'onField', 'Branch'];
   serviceStatuses = ['Servicable', 'Non-Servicable'];
 

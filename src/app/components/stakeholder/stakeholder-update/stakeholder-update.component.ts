@@ -3,6 +3,8 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { reportInvalidForm } from '../../../shared/form-errors';
+import { followCaseOrGoHome } from '../../../shared/next-stage';
+import { AuthorizationService } from '../../../services/authorization.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, Observable, Subscription } from 'rxjs';
@@ -44,6 +46,7 @@ const STAKEHOLDER_FIELD_LABELS: Record<string, string> = {
   styleUrls: ['./stakeholder-update.component.scss']
 })
 export class StakeholderUpdateComponent implements OnInit, OnDestroy {
+  private authz = inject(AuthorizationService);
   loading = false;
   form!: FormGroup;
   valuationId!: string;
@@ -448,17 +451,13 @@ export class StakeholderUpdateComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: () => {
-        // The case has moved to Backend — follow it rather than staying here.
-        this.router.navigate(
-          ['/valuation', this.valuationId, 'vehicle-details'],
-          {
-            queryParams: {
-              vehicleNumber: this.vehicleNumber,
-              applicantContact: this.applicantContact,
-              valuationType: this.valuationType
-            }
-          }
-        );
+        // The case has moved to Backend — follow it there if this user can
+        // open that page, otherwise back to their dashboard.
+        followCaseOrGoHome(this.router, this.authz, this.valuationId, 'vehicle-details', {
+          vehicleNumber: this.vehicleNumber,
+          applicantContact: this.applicantContact,
+          valuationType: this.valuationType
+        });
       },
       error: err => {
         this.error = err.message || 'Submit failed';

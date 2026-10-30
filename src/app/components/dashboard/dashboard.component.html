@@ -30,31 +30,37 @@
             <div class="panel-title"><span class="title-dot"></span>Overview</div>
           </div>
           <div class="kpi-grid">
-            <div class="kpi kpi-total">
+            <!-- Each tile opens its cases in the table below. -->
+            <button type="button" class="kpi kpi-total"
+                    [class.active]="selectedStep === 'Everything'" (click)="showCases('Everything')">
               <div class="kpi-chip"><i class="bi bi-briefcase-fill"></i></div>
               <div class="kpi-value">{{ totalCases }}</div>
               <div class="kpi-label">Total Cases</div>
-            </div>
-            <div class="kpi kpi-progress">
+            </button>
+            <button type="button" class="kpi kpi-progress"
+                    [class.active]="selectedStep === 'InProgress'" (click)="showCases('InProgress')">
               <div class="kpi-chip"><i class="bi bi-hourglass-split"></i></div>
               <div class="kpi-value">{{ inProgressCount }}</div>
               <div class="kpi-label">In Progress</div>
-            </div>
-            <div class="kpi kpi-complete">
+            </button>
+            <button type="button" class="kpi kpi-complete"
+                    [class.active]="selectedStep === completeStep" (click)="showCases(completeStep)">
               <div class="kpi-chip"><i class="bi bi-check-circle-fill"></i></div>
               <div class="kpi-value">{{ completeCount }}</div>
               <div class="kpi-label">Complete</div>
-            </div>
-            <div class="kpi kpi-returned">
+            </button>
+            <button type="button" class="kpi kpi-returned"
+                    [class.active]="selectedStep === 'Returned'" (click)="showCases('Returned')">
               <div class="kpi-chip"><i class="bi bi-arrow-return-left"></i></div>
               <div class="kpi-value">{{ returnedCount }}</div>
               <div class="kpi-label">Returned</div>
-            </div>
-            <div class="kpi kpi-final">
+            </button>
+            <button type="button" class="kpi kpi-final"
+                    [class.active]="selectedStep === 'FinalReport'" (click)="showCases('FinalReport')">
               <div class="kpi-chip"><i class="bi bi-file-earmark-text-fill"></i></div>
               <div class="kpi-value">{{ finalReportCount }}</div>
-              <div class="kpi-label">Final Report</div>
-            </div>
+              <div class="kpi-label">{{ stageLabel('FinalReport') }}</div>
+            </button>
           </div>
         </div>
 
@@ -64,14 +70,14 @@
             <div>
               <div class="greet-hi">{{ greeting }}!</div>
               <div class="greet-name">{{ currentUser?.name || 'Welcome' }}</div>
-              <div class="greet-role">{{ currentUser?.roleId || '' }}</div>
+              <div class="greet-role">{{ stageLabel(currentUser?.roleId) }}</div>
             </div>
           </div>
           <div class="donut-wrap">
             <div class="donut" [style.background]="donutGradient">
               <div class="donut-hole">
-                <div class="donut-total">{{ totalCases }}</div>
-                <div class="donut-total-label">Total Cases</div>
+                <div class="donut-total">{{ claims.length }}</div>
+                <div class="donut-total-label">Open Cases</div>
               </div>
             </div>
             <div class="donut-legend">
@@ -95,7 +101,7 @@
             <span class="today-count">{{ todaysCases.length }}</span>
           </div>
           <div class="today-list">
-            <div class="today-empty" *ngIf="todaysCases.length === 0">No cases created or updated today.</div>
+            <div class="today-empty" *ngIf="todaysCases.length === 0">No cases created, updated or completed today.</div>
             <div class="today-item" *ngFor="let v of todaysCases" (click)="openCase(v)">
               <div class="today-avatar">{{ initials(v.assignedTo || v.applicantName) }}</div>
               <div class="today-info">
@@ -103,7 +109,8 @@
                 <div class="today-sub">{{ v.vehicleNumber }}</div>
               </div>
               <span class="tat-badge" [ngClass]="ageClass(v)" [title]="isAdmin ? 'Days since the case was created' : 'Hours since the case was last updated'">{{ tatLabel(v) }}</span>
-              <span class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">{{ stepName(v) }}</span>
+              <span *ngIf="isCompletedRow(v)" class="stage-badge stage-final">Completed</span>
+              <span *ngIf="!isCompletedRow(v)" class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">{{ stageLabel(stepName(v)) }}</span>
             </div>
           </div>
         </div>
@@ -153,7 +160,7 @@
                     [class]="'pill ' + s.toLowerCase() + '-pill'"
                     [disabled]="s !== 'Returned' && (stepCounts[s] || 0) === 0"
                     (click)="selectedStep=s; applyFilter()">
-              {{ s }} ({{ stepCounts[s] || 0 }})
+              {{ stageLabel(s) }} ({{ stepCounts[s] || 0 }})
             </button>
           </ng-container>
           <button [class.active]="selectedStep === 'Complete' && isAdmin"
@@ -188,10 +195,10 @@
         {{ claims.length === 0 ? 'No cases yet.' : 'No cases match this filter.' }}
       </div>
 
-      <div *ngIf="filteredClaims.length > 0" class="table-card">
+      <div *ngIf="filteredClaims.length > 0" class="table-card" id="cases-table">
         <div class="table-title">
           <span class="title-accent"></span>
-          {{ selectedStep === 'Complete' ? (isAdmin ? 'Completed Cases' : 'Cases Completed by Me') : 'Valuation Cases' }}
+          {{ tableTitle }}
           <span class="record-count">{{ filteredClaims.length }} records</span>
         </div>
 
@@ -199,7 +206,13 @@
 
           <ng-container matColumnDef="vehicleNumber">
             <th mat-header-cell *matHeaderCellDef>Vehicle No.</th>
-            <td mat-cell *matCellDef="let v"><strong>{{ v.vehicleNumber }}</strong></td>
+            <td mat-cell *matCellDef="let v">
+              <strong>{{ v.vehicleNumber }}</strong>
+              <span *ngIf="recentUpload(v) as u" class="upload-badge"
+                    [class.upload-badge-new]="uploads.isUnread(u)" [title]="uploadTitle(u)">
+                <i class="bi bi-camera-fill"></i> Photos {{ u.lastUploadedAt | date: 'h:mm a' }}
+              </span>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="applicant">
@@ -257,11 +270,11 @@
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>Status</th>
             <td mat-cell *matCellDef="let v">
-              <span *ngIf="selectedStep === 'Complete' || selectedStep === 'MyComplete'"
+              <span *ngIf="isCompletedRow(v)"
                     class="stage-badge stage-final">Completed</span>
-              <span *ngIf="selectedStep !== 'Complete' && selectedStep !== 'MyComplete'"
+              <span *ngIf="!isCompletedRow(v)"
                     class="stage-badge" [ngClass]="'stage-' + stepName(v).toLowerCase()">
-                {{ stepName(v) }}
+                {{ stageLabel(stepName(v)) }}
               </span>
             </td>
           </ng-container>

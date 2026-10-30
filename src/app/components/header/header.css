@@ -134,3 +134,85 @@ nav.app-navbar .navbar-brand {
   .nav-link.active { color: var(--brand-700) !important; }
   .nav-cta { margin: 8px 8px; }
 }
+
+/* Photo uploads bell — camera-app uploads the office has not looked at yet */
+.uploads { position: relative; }
+.bell { position: relative; }
+.bell-count {
+  position: absolute;
+  top: 12px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger, #d32f2f);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+.uploads-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1050;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.15));
+}
+.uploads-head {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface, #fff);
+  border-bottom: 1px solid var(--line);
+  font-weight: 800;
+  color: var(--ink-900);
+}
+.uploads-empty { padding: 24px 14px; text-align: center; color: var(--ink-500); font-size: 0.85rem; }
+.upload-item { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.upload-item:last-child { border-bottom: none; }
+.upload-item.unread { background: var(--brand-50, #e6f4f4); }
+.upload-main {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.upload-top { display: flex; align-items: baseline; gap: 8px; }
+.upload-top strong { color: var(--ink-900); }
+.upload-ref { font-size: 0.75rem; color: var(--ink-500); }
+.upload-time { margin-left: auto; font-size: 0.75rem; color: var(--ink-500); white-space: nowrap; }
+.upload-sub { margin-top: 2px; font-size: 0.82rem; color: var(--ink-700); }
+.upload-status { margin-top: 4px; font-size: 0.78rem; font-weight: 600; }
+.upload-status.ok { color: var(--success, #2e7d32); }
+.upload-status.warn { color: var(--danger, #d32f2f); }
+.upload-photos { margin-top: 4px; font-size: 0.78rem; color: var(--ink-700); }
+.link-btn {
+  padding: 0;
+  margin-top: 4px;
+  border: none;
+  background: none;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.link-btn:disabled { color: var(--ink-500); cursor: default; }
+@media (max-width: 991.98px) {
+  .uploads-panel { position: static; width: 100%; margin-bottom: 8px; }
+  .bell-count { position: static; margin-left: 4px; }
+}

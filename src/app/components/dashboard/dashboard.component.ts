@@ -1,6 +1,6 @@
 // src/app/components/dashboard/dashboard.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin, from, of, EMPTY, Observable, Subject } from 'rxjs';
 import { catchError, finalize, map, switchMap, take, timeout, debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -12,6 +12,8 @@ import { AuthService } from '../../services/auth.service';
 import { WFValuation, UserDashboardStats } from '../../models/valuation.model';
 import { UserModel } from '../../models/user.model';
 import { SharedModule } from '../shared/shared.module/shared.module';
+import { stageLabel } from '../../shared/stage-labels';
+import { MediaUpload, MediaUploadService } from '../../services/media-upload.service';
 import { RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +39,9 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  readonly stageLabel = stageLabel;
+  /** Camera-app uploads, for the badge on a case's row. */
+  readonly uploads = inject(MediaUploadService);
 
   claims: WFValuation[] = [];
   completedCases: WFValuation[] = [];
@@ -47,6 +52,11 @@ export class DashboardComponent implements OnInit {
    * is why search had to move to the server — these rows are no longer loaded here.
    */
   private static readonly COMPLETED_VISIBLE_DAYS = 30;
+  /**
+   * How long an open case stays on the dashboard after it was created. The same kind
+   * of display rule: an older open case is only left off the list, and search finds it.
+   */
+  private static readonly OPEN_VISIBLE_DAYS = 60;
   filteredClaims: WFValuation[] = [];
   loading = true;
   error: string | null = null;
@@ -79,7 +89,7 @@ export class DashboardComponent implements OnInit {
     { key: 'BackEnd',     label: 'Backend',     color: 'var(--stage-backend)' },
     { key: 'AVO',         label: 'AVO',         color: 'var(--stage-avo)' },
     { key: 'QC',          label: 'QC',          color: 'var(--stage-qc)' },
-    { key: 'FinalReport', label: 'Final Report',color: 'var(--stage-final)' },
+    { key: 'FinalReport', label: stageLabel('FinalReport'), color: 'var(--stage-final)' },
   ];
 
   private readonly noAssignmentExemptRoles = ['Admin','StateAdmin','SuperAdmin'];
@@ -172,8 +182,8 @@ export class DashboardComponent implements OnInit {
     .subscribe({
       next: (result) => {
         if (result.admin) {
-          const all = result.open || [];
-          this.completedCases = this.withinCompletedWindow(result.completed || []);
+          const all = this.withinOpenWindow(result.open || []);
+          this.completedCases = this.newestApprovedFirst(this.withinCompletedWindow(result.completed || []));
 
           const stepOrder = this.currentUser
             ? this.roleStepOrder[this.currentUser.roleId]
@@ -189,8 +199,8 @@ export class DashboardComponent implements OnInit {
         } else {
           const stats = result.stats;
           this.userStats = stats;
-          this.claims = stats.openCases || [];
-          this.completedCases = this.withinCompletedWindow(stats.completedCases || []);
+          this.claims = this.withinOpenWindow(stats.openCases || []);
+          this.completedCases = this.newestApprovedFirst(this.withinCompletedWindow(stats.completedCases || []));
 
           this.claims.sort((a, b) =>
             new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
@@ -263,13 +273,38 @@ export class DashboardComponent implements OnInit {
    * a dashboard that is meant to show what is live.
    */
   private withinCompletedWindow(rows: WFValuation[]): WFValuation[] {
-    const cutoff = Date.now() - DashboardComponent.COMPLETED_VISIBLE_DAYS * 24 * 60 * 60 * 1000;
+    return this.withinDays(rows, DashboardComponent.COMPLETED_VISIBLE_DAYS,
+                           v => v.completedAt || v.updatedAt || v.createdAt);
+  }
+
+  /**
+   * Keeps only open cases created within the visible window.
+   *
+   * Counted from creation, the date the TAT column shows. Every count on the page is
+   * taken from this list, so the tiles, tabs and donut follow it.
+   */
+  private withinOpenWindow(rows: WFValuation[]): WFValuation[] {
+    return this.withinDays(rows, DashboardComponent.OPEN_VISIBLE_DAYS, v => v.createdAt);
+  }
+
+  private withinDays(rows: WFValuation[], days: number,
+                     dateOf: (v: WFValuation) => string | null | undefined): WFValuation[] {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     return (rows || []).filter(v => {
-      const t = v.completedAt || v.updatedAt || v.createdAt;
+      const t = dateOf(v);
       if (!t) return true;                       // no date: keep rather than hide
       const d = new Date(t).getTime();
       return isNaN(d) ? true : d >= cutoff;
     });
+  }
+
+  /** Latest approval first, so the list opens on what was finished most recently. */
+  private newestApprovedFirst(rows: WFValuation[]): WFValuation[] {
+    const when = (v: WFValuation) => {
+      const d = new Date(v.completedAt || v.updatedAt || v.createdAt || 0).getTime();
+      return isNaN(d) ? 0 : d;
+    };
+    return [...rows].sort((a, b) => when(b) - when(a));
   }
 
   /** Minimum term the server search accepts; below this the local filter is used. */
@@ -322,12 +357,22 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    this.filteredClaims = this.claims.filter(v => {
+    // "Everything" is the Total Cases tile: the open cases, then the completed ones.
+    const rows = this.selectedStep === 'Everything'
+      ? [...this.claims, ...this.completedCases]
+      : this.claims;
+
+    this.filteredClaims = rows.filter(v => {
       const stepIndex = this.getStepIndex(v);
       const currentStepName = this.steps[stepIndex];
 
       let matchesStep = true;
-      if (this.selectedStep) {
+      if (this.selectedStep === 'Everything') {
+        matchesStep = true;
+      } else if (this.selectedStep === 'InProgress') {
+        // The In Progress tile: open, not returned, not yet with the Approver.
+        matchesStep = v.status !== 'Returned' && currentStepName !== 'FinalReport';
+      } else if (this.selectedStep) {
         if (this.selectedStep === 'Returned') {
           matchesStep = v.status === 'Returned';
         } else {
@@ -358,8 +403,55 @@ export class DashboardComponent implements OnInit {
     return Math.min(Math.max(idx, 0), 4);
   }
 
+  /** The case's camera-app upload from the last day, if it had one. */
+  recentUpload(v: WFValuation): MediaUpload | undefined {
+    return this.uploads.recentByCase().get(v.valuationId);
+  }
+
+  uploadTitle(u: MediaUpload): string {
+    const at = new Date(u.lastUploadedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    const missing = u.mediaOptional || u.missingMandatory.length === 0
+      ? 'All mandatory photos received.'
+      : `Missing: ${u.missingMandatory.join(', ')}.`;
+    return `${this.uploads.summary(u)} uploaded from the ${this.uploads.sourceLabel(u)} at ${at}. ${missing}`;
+  }
+
+  /** True for a row from the completed list, whichever list is showing it. */
+  isCompletedRow(v: WFValuation): boolean {
+    return this.completedCases.includes(v);
+  }
+
+  /** The list a non-admin's Complete tile opens: only cases they completed. */
+  get completeStep(): string {
+    return this.isAdmin ? 'Complete' : 'MyComplete';
+  }
+
+  /** Opens an overview tile's cases in the table and scrolls down to them. */
+  showCases(step: string): void {
+    if (this.searchTerm) this.onSearchChanged('');
+    this.searchResults = null;
+    this.selectedStep = step;
+    this.applyFilter();
+    setTimeout(() => {
+      document.getElementById('cases-table')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  get tableTitle(): string {
+    switch (this.selectedStep) {
+      case 'Everything': return 'All Cases';
+      case 'InProgress': return 'In Progress Cases';
+      case 'Complete': return 'Completed Cases';
+      case 'MyComplete': return 'Cases Completed by Me';
+      case 'Returned': return 'Returned Cases';
+      case '': return 'Valuation Cases';
+      default: return `${stageLabel(this.selectedStep)} Cases`;
+    }
+  }
+
   openCase(v: WFValuation) {
-    if (this.selectedStep === 'Complete' || this.selectedStep === 'MyComplete') {
+    if (this.isCompletedRow(v)) {
       this.router.navigate(
         ['/valuation', v.valuationId, 'final-report'],
         {
@@ -442,10 +534,14 @@ export class DashboardComponent implements OnInit {
     return 'Good Evening';
   }
 
-  /** Total open cases in the current user's scope. */
-  get totalCases(): number { return this.claims.length; }
+  /**
+   * Every case on the dashboard: the open ones (returned included) and the
+   * completed ones. It used to count only the open cases, so it matched In
+   * Progress and left the completed ones out of the total.
+   */
+  get totalCases(): number { return this.claims.length + this.completedCases.length; }
 
-  /** Open, not returned, not yet at Final Report. */
+  /** Open, not returned, not yet with the Approver. */
   get inProgressCount(): number {
     return (this.stepCounts['Stakeholder'] || 0)
          + (this.stepCounts['BackEnd'] || 0)
@@ -477,18 +573,24 @@ export class DashboardComponent implements OnInit {
     return `conic-gradient(${stops.join(', ')})`;
   }
 
-  /** Cases created or updated today — powers the "Today's cases" panel. */
+  /**
+   * Cases created, updated or completed today — powers the "Today's cases" panel.
+   *
+   * Completed cases count too: it used to read only the open list, so a case
+   * approved today vanished from the panel at the moment it was finished. The
+   * list was also cut at six while the badge counted the cut list; the panel
+   * now scrolls instead.
+   */
   get todaysCases(): WFValuation[] {
     const start = new Date(); start.setHours(0, 0, 0, 0);
     const end = new Date();   end.setHours(23, 59, 59, 999);
-    return this.claims
-      .filter(v => {
-        const t = v.updatedAt || v.createdAt;
-        if (!t) return false;
-        const d = new Date(t);
-        return !isNaN(d.getTime()) && d >= start && d <= end;
-      })
-      .slice(0, 6);
+    const today = (t?: string | null) => {
+      if (!t) return false;
+      const d = new Date(t);
+      return !isNaN(d.getTime()) && d >= start && d <= end;
+    };
+    return [...this.claims, ...this.completedCases]
+      .filter(v => today(v.completedAt) || today(v.updatedAt || v.createdAt));
   }
 
   stepName(v: WFValuation): string {
