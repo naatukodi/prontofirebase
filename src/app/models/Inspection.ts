@@ -10,6 +10,9 @@ export interface Inspection {
   /** Words typed in place of a reading when the odometer cannot be read ("NOT WORKING").
    *  Set only while `odometer` is empty. */
   odometerRemark?: string | null;
+  /** What `odometer` counts: "KM", or "HOURS" off a tractor's or crane's hour meter.
+   *  Empty on cases saved before 2026-11-19, which are all km. */
+  odometerUnit?: 'KM' | 'HOURS' | null;
   vinPlate: boolean;
   /** Accident status. Asked on every case; printed on the report cover. */
   accidental?: boolean | null;

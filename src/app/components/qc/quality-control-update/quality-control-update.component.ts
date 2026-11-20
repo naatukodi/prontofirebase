@@ -26,7 +26,7 @@ import { reportInvalidForm } from '../../../shared/form-errors';
 import { followCaseOrGoHome } from '../../../shared/next-stage';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { splitEvidence } from '../../../shared/evidence';
-import { odometerRemark } from '../../../shared/odometer';
+import { odometerRemark, odometerUnitLabel } from '../../../shared/odometer';
 import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
 
 // Components
@@ -466,6 +466,11 @@ export class QualityControlUpdateComponent implements OnInit, OnDestroy {
   /** Words the AVO typed instead of a reading ("NOT WORKING"), when there is no reading. */
   get avoOdometerRemark(): string | null {
     return this.avoOdometer === null ? odometerRemark(this.report?.inspectionDetails) : null;
+  }
+
+  /** "km", or "hours" when the AVO read an hour meter (tractors, cranes). */
+  get odoUnit(): string {
+    return odometerUnitLabel(this.report?.inspectionDetails);
   }
 
   /** The odometer the reader took off the dial, when it managed to read one. */

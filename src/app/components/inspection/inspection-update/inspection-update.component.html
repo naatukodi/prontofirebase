@@ -87,13 +87,22 @@
     <fieldset class="nested-group" *ngIf="hv(['odometer','vinPlate','bodyType','tyreCondition','otherAccessoryFitment','roadWorthyCondition'])">
       <legend>General Condition</legend>
       <div class="grid">
+        <!-- Tractors and cranes often have an hour meter instead of an odometer. -->
         <mat-form-field *ngIf="showField('odometer')" appearance="fill">
-          <mat-label>Odometer (km)</mat-label>
+          <mat-label>Reading in</mat-label>
+          <mat-select formControlName="odometerUnit">
+            <mat-option value="KM">Kilometres (odometer)</mat-option>
+            <mat-option value="HOURS">Hours (hour meter)</mat-option>
+          </mat-select>
+          <mat-hint>Pick hours when the machine shows engine hours</mat-hint>
+        </mat-form-field>
+        <mat-form-field *ngIf="showField('odometer')" appearance="fill">
+          <mat-label>{{ odoHours ? 'Hour meter (hours)' : 'Odometer (km)' }}</mat-label>
           <input matInput formControlName="odometer" maxlength="25" autocomplete="off" />
-          <mat-hint>Km reading, or words like NOT WORKING</mat-hint>
-          <mat-error *ngIf="form.get('odometer')?.hasError('required')">Odometer reading is required</mat-error>
-          <mat-error *ngIf="form.get('odometer')?.hasError('min')">Enter the reading shown on the dial — 0 km is not a valid reading</mat-error>
-          <mat-error *ngIf="form.get('odometer')?.hasError('odometerMixed')">Type the reading in digits only (45000), or words only (NOT WORKING)</mat-error>
+          <mat-hint>{{ odoHours ? 'Hours shown (386.0 is saved as 386), or words like NOT WORKING' : 'Km reading, or words like NOT WORKING' }}</mat-hint>
+          <mat-error *ngIf="form.get('odometer')?.hasError('required')">{{ odoHours ? 'Hour meter' : 'Odometer' }} reading is required</mat-error>
+          <mat-error *ngIf="form.get('odometer')?.hasError('min')">Enter the reading shown on the dial — 0 is not a valid reading</mat-error>
+          <mat-error *ngIf="form.get('odometer')?.hasError('odometerMixed')">Type the reading in digits only ({{ odoHours ? '386' : '45000' }}), or words only (NOT WORKING)</mat-error>
         </mat-form-field>
         <mat-form-field *ngIf="showField('vinPlate')" appearance="fill">
           <mat-label>VIN Plate Present</mat-label>

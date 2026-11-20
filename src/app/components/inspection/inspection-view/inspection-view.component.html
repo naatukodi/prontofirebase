@@ -64,7 +64,7 @@
     <legend>General Condition</legend>
     <div class="grid">
       <mat-form-field appearance="fill">
-        <mat-label>Odometer (km)</mat-label>
+        <mat-label>{{ inspection.odometerUnit === 'HOURS' ? 'Hour meter (hours)' : 'Odometer (km)' }}</mat-label>
         <input matInput [value]="inspection.odometer || inspection.odometerRemark || ''" readonly />
       </mat-form-field>
       <mat-form-field appearance="fill">
