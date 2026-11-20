@@ -25,6 +25,8 @@ import { environment } from '../../../../environments/environment';
 // Shared QC verification engine (also used by the QC update page)
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
 import { scoreInspection, scoreBand, ScoreBand, SectionScore } from '../../../shared/inspection-score';
+import { manufacture, vehicleAgeYears } from '../../../shared/manufacture';
+import { odometerUnitLabel } from '../../../shared/odometer';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -217,8 +219,20 @@ export class QualityControlViewComponent implements OnInit {
   }
 
   // ── Helpers ──
-  getVehicleAge(): number {
-    return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
+  /** Whole years since manufacture; null when it is not known. */
+  getVehicleAge(): number | null {
+    return vehicleAgeYears(this.report?.vehicleDetails);
+  }
+
+  /** Year of manufacture: VAHAN's manufacturing date, not the registration year that
+   *  cases saved before 2026-11-19 hold in yearOfMfg. */
+  get mfgYear(): number | null {
+    return manufacture(this.report?.vehicleDetails).year;
+  }
+
+  /** "km", or "hours" when the AVO read an hour meter (tractors, cranes). */
+  get odoUnit(): string {
+    return odometerUnitLabel(this.report?.inspectionDetails);
   }
 
   /**

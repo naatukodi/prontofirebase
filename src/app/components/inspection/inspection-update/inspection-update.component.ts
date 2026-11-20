@@ -31,7 +31,7 @@ import { reportInvalidForm } from '../../../shared/form-errors';
 import { followCaseOrGoHome } from '../../../shared/next-stage';
 import { AuthorizationService } from '../../../services/authorization.service';
 import { isTvsCredit, VIN_PLATE_MISSING_TEXT } from '../../../shared/client-rules';
-import { odometerValidator, parseOdometer } from '../../../shared/odometer';
+import { odometerUnit, odometerValidator, parseOdometer } from '../../../shared/odometer';
 
 // Components
 import { SharedModule } from '../../shared/shared.module/shared.module';
@@ -41,7 +41,8 @@ type ValuationType = 'four-wheeler' | 'cv' | 'two-wheeler' | 'three-wheeler' | '
 
 /** Control names whose humanised form would not match the on-screen label. */
 const AVO_FIELD_LABELS: Record<string, string> = {
-  odometer: 'Odometer (km)',
+  odometer: 'Odometer / hour meter reading',
+  odometerUnit: 'Reading in',
   vehicleInspectedBy: 'Vehicle inspected by',
   inspectionDate: 'Date of inspection',
   inspectionLocation: 'Inspection location',
@@ -112,6 +113,11 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
   /** TVS Credit's report adds an Additional Details box, so its AVO answers more. */
   isTvs = false;
   readonly vinPlateMissingText = VIN_PLATE_MISSING_TEXT;
+
+  /** The AVO picked hours: the reading is off an hour meter (tractors, cranes). */
+  get odoHours(): boolean {
+    return this.form?.get('odometerUnit')?.value === 'HOURS';
+  }
 
   // Maps normalized registry keys to visibilityMap keys
   private static readonly VISIBILITY_KEY: Record<string, string> = {
@@ -418,6 +424,9 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       // The km reading, or words such as NOT WORKING when the dial cannot be read.
       // A vehicle cannot have travelled 0 km; 0 was being submitted as a real reading.
       odometer: [null, [Validators.required, odometerValidator()]],
+      // What the reading counts. Tractors and cranes often have an hour meter instead
+      // of an odometer; km unless the AVO says otherwise.
+      odometerUnit: ['KM'],
       // Blank until answered, not a preselected No: on a TVS Credit case No prints that the
       // plate is missing. Required there, see applyClientRules.
       vinPlate: [null],
@@ -738,6 +747,7 @@ export class InspectionUpdateComponent implements OnInit, OnDestroy {
       engineStarted: yn(data.engineStarted),
       // Text, like the box: a number here would read as changed once the AVO types.
       odometer: data.odometer != null ? String(data.odometer) : (data.odometerRemark || null),
+      odometerUnit: odometerUnit(data),
       vinPlate: toBool(data.vinPlate),
       accidental: toBool(data.accidental),
       seizedByOtherFinancier: toBool(data.seizedByOtherFinancier),

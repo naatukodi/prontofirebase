@@ -100,12 +100,12 @@
                 <div class="qcd-label">YEAR OF MFG</div>
                 <div class="qcd-value">
                   {{ report.vehicleDetails?.manufacturedDate | date:'dd-MM-yyyy' }}
-                  <span class="qcd-age" *ngIf="report.vehicleDetails?.yearOfMfg">({{ getVehicleAge() }} yrs)</span>
+                  <span class="qcd-age" *ngIf="getVehicleAge() !== null">({{ getVehicleAge() }} yrs)</span>
                 </div>
               </div>
               <div class="qcd-cell">
-                <div class="qcd-label">ODO METER</div>
-                <div class="qcd-value">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' km' : (report.inspectionDetails?.odometerRemark || '—') }}</div>
+                <div class="qcd-label">{{ odoUnit === 'hours' ? 'HOUR METER' : 'ODO METER' }}</div>
+                <div class="qcd-value">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' ' + odoUnit : (report.inspectionDetails?.odometerRemark || '—') }}</div>
               </div>
             </div>
             <div class="qc-data-row">
@@ -232,7 +232,7 @@
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>Year / Mfg</mat-label>
-            <input matInput [value]="report.vehicleDetails?.yearOfMfg || '—'" readonly />
+            <input matInput [value]="mfgYear || '—'" readonly />
           </mat-form-field>
           <mat-form-field appearance="fill">
             <mat-label>RTO</mat-label>
@@ -260,7 +260,7 @@
             <input matInput [value]="report.inspectionDetails?.inspectionLocation || '—'" readonly />
           </mat-form-field>
           <mat-form-field appearance="fill">
-            <mat-label>Odometer (km)</mat-label>
+            <mat-label>{{ odoUnit === 'hours' ? 'Hour meter (hours)' : 'Odometer (km)' }}</mat-label>
             <input matInput [value]="(report.inspectionDetails?.odometer | number) || report.inspectionDetails?.odometerRemark || '—'" readonly />
           </mat-form-field>
         </div>

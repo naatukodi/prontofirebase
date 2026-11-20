@@ -15,7 +15,8 @@ import { FinalReport } from '../models/final-report.model';
 import { formatDdMmYyyy } from './date-format';
 import { getFieldRegistry, normalizeVehicleType } from './inspection-field-registry';
 import { mapVerdict } from './inspection-score';
-import { odometerRemark } from './odometer';
+import { odometerRemark, odometerUnitLabel } from './odometer';
+import { manufacture } from './manufacture';
 
 export interface QcChecklistInput {
   report: FinalReport | null | undefined;
@@ -302,15 +303,18 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
 
   const odo = ins?.odometer ?? 0;
   const odoRemark = odometerRemark(ins);
+  // Tractors and cranes often log engine hours on an hour meter instead of km.
+  const odoUnit = odometerUnitLabel(ins);
+  const meter = odoUnit === 'hours' ? 'hour meter' : 'odometer';
   if (odo > 0) {
     const odoShot = has('Odometer', 'InstrumentCluster');
     mark('accOdo', 'fail', odoShot
-      ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} km and an odometer photo is on file — read the dial off it by eye.`
-      : `Cannot be compared: no odometer photo was uploaded to read the dial from. AVO recorded ${inr(odo)} km.`);
+      ? `Not compared yet: the dial has not been read from the photos. AVO recorded ${inr(odo)} ${odoUnit} and an ${meter} photo is on file — read the dial off it by eye.`
+      : `Cannot be compared: no ${meter} photo was uploaded to read the dial from. AVO recorded ${inr(odo)} ${odoUnit}.`);
   } else if (odoRemark) {
-    mark('accOdo', 'fail', `Cannot be compared: AVO recorded the odometer as ${odoRemark} instead of a reading.`);
+    mark('accOdo', 'fail', `Cannot be compared: AVO recorded the ${meter} as ${odoRemark} instead of a reading.`);
   } else {
-    mark('accOdo', 'fail', 'Cannot be compared: AVO recorded no odometer reading.');
+    mark('accOdo', 'fail', `Cannot be compared: AVO recorded no ${meter} reading.`);
   }
 
   if (has('VinPlate')) {
@@ -323,13 +327,17 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
       : 'Cannot be compared: no VIN plate photo was uploaded to read the VIN from.');
   }
 
-  const mfgYear = vd?.yearOfMfg ?? 0;
+  // VAHAN's manufacturing date first: cases saved before 2026-11-19 hold the
+  // registration month in yearOfMfg, which made this gap 0 and the check always pass.
+  const made = manufacture(vd, false);
+  const mfgYear = made.year ?? 0;
   if (mfgYear && vd?.dateOfRegistration) {
     const reg = new Date(vd.dateOfRegistration);
-    const months = (reg.getFullYear() - mfgYear) * 12 + reg.getMonth() - ((vd.monthOfMfg ?? 1) - 1);
+    const months = (reg.getFullYear() - mfgYear) * 12 + reg.getMonth() - ((made.month ?? 1) - 1);
     const ok = months >= 0 && months <= 18;
+    const madeText = made.month ? `${String(made.month).padStart(2, '0')}/${mfgYear}` : `${mfgYear}`;
     mark('accMfgReg', ok ? 'pass' : 'fail',
-      `Manufactured ${mfgYear}, registered ${fmtDate(vd.dateOfRegistration)} — a gap of ${months} month(s), ` +
+      `Manufactured ${madeText}, registered ${fmtDate(vd.dateOfRegistration)} — a gap of ${months} month(s), ` +
       (ok ? 'within the normal 18-month window.' : 'outside the normal 18-month window.'));
   } else {
     mark('accMfgReg', 'fail', `Cannot be compared: ${!mfgYear && !vd?.dateOfRegistration
@@ -485,16 +493,20 @@ export function buildQcChecklist(input: QcChecklistInput): QcChecklistResult {
 
   if (mfgYear && odo > 0) {
     const age = new Date().getFullYear() - mfgYear;
-    const avgKm = age > 0 ? odo / age : odo;
-    const ok = avgKm < 60000;
+    const perYear = age > 0 ? odo / age : odo;
+    // An hour meter counts engine hours: 3,000 a year is a machine running about
+    // eight hours every day of the year, as 60,000 km is for a road vehicle.
+    const limit = odoUnit === 'hours' ? 3000 : 60000;
+    const per = odoUnit === 'hours' ? 'hours/year' : 'km/year';
+    const ok = perYear < limit;
     mark('valAgeOdo', ok ? 'pass' : 'fail',
-      `${inr(Math.round(avgKm))} km/year over ${age || 1} year(s)` +
-      (ok ? ' — within the usual range.' : ' — above the 60,000 km/year threshold.'));
+      `${inr(Math.round(perYear))} ${per} over ${age || 1} year(s)` +
+      (ok ? ' — within the usual range.' : ` — above the ${inr(limit)} ${per} threshold.`));
   } else {
     mark('valAgeOdo', 'fail', `Cannot be derived: ${!mfgYear && !odo
-      ? 'neither the manufacture year nor an odometer reading was captured'
+      ? `neither the manufacture year nor an ${meter} reading was captured`
       : !mfgYear ? 'no manufacture year was captured'
-      : odoRemark ? `AVO recorded the odometer as ${odoRemark}` : 'AVO recorded no odometer reading'}, so usage per year cannot be calculated.`);
+      : odoRemark ? `AVO recorded the ${meter} as ${odoRemark}` : `AVO recorded no ${meter} reading`}, so usage per year cannot be calculated.`);
   }
 
   if (overallRating === 'GOOD')      mark('valScore', 'pass', `Overall vehicle score ${ratingShown} — in the GOOD band (7 and above).`);

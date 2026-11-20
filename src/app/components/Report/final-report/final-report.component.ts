@@ -20,6 +20,8 @@ import { WorkflowService } from '../../../services/workflow.service';
 import { UsersService } from '../../../services/users.service';
 import { scoreInspection, SectionScore, mapVerdict, scoreBand } from '../../../shared/inspection-score';
 import { buildQcChecklist, applySavedChecklist } from '../../../shared/qc-checklist';
+import { manufacture, vehicleAgeYears } from '../../../shared/manufacture';
+import { odometerUnitLabel } from '../../../shared/odometer';
 
 @Component({
   selector: 'app-final-report-view',
@@ -121,7 +123,18 @@ export class FinalReportComponent implements OnInit, OnDestroy {
 
   // ── Helpers ──
   getVehicleAge(): number {
-    return new Date().getFullYear() - (this.report?.vehicleDetails?.yearOfMfg || new Date().getFullYear());
+    return vehicleAgeYears(this.report?.vehicleDetails) ?? 0;
+  }
+
+  /** Year of manufacture: VAHAN's manufacturing date, not the registration year that
+   *  cases saved before 2026-11-19 hold in yearOfMfg. */
+  get mfgYear(): number | null {
+    return manufacture(this.report?.vehicleDetails).year;
+  }
+
+  /** "km", or "hours" when the AVO read an hour meter (tractors, cranes). */
+  get odoUnit(): string {
+    return odometerUnitLabel(this.report?.inspectionDetails);
   }
 
   /**

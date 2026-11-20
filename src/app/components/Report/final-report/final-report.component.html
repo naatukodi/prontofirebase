@@ -39,7 +39,7 @@
           <div class="rph-make">{{ report.vehicleDetails?.make }} {{ report.vehicleDetails?.model }}</div>
           <div class="rph-reg">{{ report.vehicleDetails?.registrationNumber }}</div>
           <div class="rph-meta-row">
-            <span>{{ report.vehicleDetails?.yearOfMfg }}</span>
+            <span>{{ mfgYear }}</span>
             <span class="rph-sep">·</span>
             <span>{{ report.vehicleDetails?.fuel }}</span>
             <span class="rph-sep">·</span>
@@ -102,7 +102,7 @@
           <div class="rps-row"><span class="rps-l">Registration No</span><span class="rps-v rps-mono">{{ report.vehicleDetails?.registrationNumber || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Make</span><span class="rps-v">{{ report.vehicleDetails?.make || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Model</span><span class="rps-v">{{ report.vehicleDetails?.model || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Year of Manufacture</span><span class="rps-v">{{ report.vehicleDetails?.yearOfMfg || '—' }}</span></div>
+          <div class="rps-row"><span class="rps-l">Year of Manufacture</span><span class="rps-v">{{ mfgYear || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Body Type</span><span class="rps-v">{{ report.vehicleDetails?.bodyType || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Fuel Type</span><span class="rps-v">{{ report.vehicleDetails?.fuel || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Colour</span><span class="rps-v">{{ report.vehicleDetails?.colour || '—' }}</span></div>
@@ -134,7 +134,7 @@
           <div class="rps-row"><span class="rps-l">Inspected By</span><span class="rps-v">{{ report.inspectionDetails?.vehicleInspectedBy || '—' }}</span></div>
           <div class="rps-row"><span class="rps-l">Date of Inspection</span><span class="rps-v">{{ report.inspectionDetails?.dateOfInspection | date:'dd-MM-yyyy' }}</span></div>
           <div class="rps-row"><span class="rps-l">Inspection Location</span><span class="rps-v">{{ report.inspectionDetails?.inspectionLocation || '—' }}</span></div>
-          <div class="rps-row"><span class="rps-l">Odometer Reading</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' km' : (report.inspectionDetails?.odometerRemark || '—') }}</span></div>
+          <div class="rps-row"><span class="rps-l">{{ odoUnit === 'hours' ? 'Hour Meter Reading' : 'Odometer Reading' }}</span><span class="rps-v rps-mono">{{ report.inspectionDetails?.odometer ? (report.inspectionDetails?.odometer | number) + ' ' + odoUnit : (report.inspectionDetails?.odometerRemark || '—') }}</span></div>
         </div>
         <div class="rps-remarks" *ngIf="report.inspectionDetails?.remarks">
           <strong>Remarks:</strong> {{ report.inspectionDetails?.remarks }}
